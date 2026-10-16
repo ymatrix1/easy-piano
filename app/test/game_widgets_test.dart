@@ -17,7 +17,7 @@ void main() {
     );
     expect(find.text('PLAY'), findsOneWidget);
     await tester.tap(find.byType(GameButton));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     expect(taps, 1);
   });
 
@@ -59,6 +59,21 @@ void main() {
     expect(find.text('COMPLETED!'), findsOneWidget);
     // 3 empty sockets + 3 filled (the last one half).
     expect(find.byType(GameStar), findsNWidgets(6));
+  });
+
+  testWidgets('reduced motion stops idle loops', (tester) async {
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: _wrap(
+          Center(
+            child: GameButton(label: 'Go', onTap: () {}),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('GO'), findsOneWidget);
   });
 
   test('starPath is one closed contour', () {

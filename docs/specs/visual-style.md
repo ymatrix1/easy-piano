@@ -8,6 +8,11 @@ One theme, polished like a modern battle-arena game menu: deep night-violet back
 
 Inspiration is the genre, not any one game. **No third-party assets**: no logos, fonts, characters, icons or screenshots from Fortnite, Clash of Clans, Simply Piano or any other app. All art is drawn in code (`ShapeDecoration`, gradients, `CustomPainter`, Material icons).
 
+## Type
+
+- Display (`GameText`, kickers, nav labels): **Audiowide** (SIL OFL 1.1), bundled at `app/assets/fonts/audiowide/` with its `OFL.txt`; uppercase, rendered at 0.9× size because it runs wide; caps nudged up 7% of the size to centre optically (the font reserves accent room above capitals).
+- Body: platform sans, w500–w800.
+
 ## Content hierarchy
 
 Validated against the reference app's structure (local teardown, structure only): **section → course box → journey nodes (each with a display name and several levels) → stages**. The reference has no named groups inside a journey; grouping above courses is by section (touch, basic, then main split into two tracks).
@@ -53,16 +58,34 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 
 | Widget | Behaviour |
 |---|---|
-| `Pressable` | Shared press (sink 2 px, shrink 4%, springy release) and hover (brighten, tone glow) |
+| `Pressable` | Shared feedback: hover lifts (2–5 px, smooth), brightens and ticks; press sinks and shrinks with a springy release; click fires a spark burst at the pointer and a sound; disabled surfaces buzz |
 | `GameButton` | Chamfered CTA with dark base edge, gloss band, uppercase label |
 | `GameRoundButton` | Square chamfered icon button (pause, retry, close) |
 | `GameText` | Heavy uppercase display text with hard drop shadow |
 | `GamePanel`, `GameRibbon` | Glass panel; skewed title banner |
 | `GameProgressBar` | Rounded bar with glow, animates to its value |
-| `GameStar`, `StarRow` | Faceted gold stars; staggered pop with flash ring and glint |
+| `GameStar`, `StarRow` | Angular faceted star (sharp points, light/dark facet per arm, miter outline; empty = dark glass with violet edge); staggered pop with flash ring, glint and a bell chime per star |
+| `ShineSweep` | Diagonal shine crossing a surface every few seconds (CTA buttons, continue card) |
 | `CountUp`, `StarCounter` | Animated numbers; currency pill |
 | `PopIn`, `SlideIn`, `Bob` | Entrances; glow pulse |
 | `MenuBackground`, `ResultBackground` | Arena backdrop (beams + rising specks); with turning rays |
+
+## Interaction and motion
+
+| Surface | Hover | Click | Idle / state |
+|---|---|---|---|
+| Yellow CTA | lift 3 px, glow | confirm chime, burst | shine sweep, glow pulse (continue card) |
+| Module card | lift 3 px, brighten | open / close whoosh, burst in card colour | chevron rotates; inner trail rows slide in staggered |
+| Submodule row | slides right 5 px, tint | tap, cyan burst | next node pulses |
+| Nav item | lift 2 px | tab blip | active icon pops (elastic) |
+| Locked module / mode | — | low buzz | — |
+| Outer rail | — | — | light pulses flow down the done/current part |
+| Star counter | — | — | pulses when the total changes |
+| Result | — | — | stars chime in sequence; win arpeggio or lose motif |
+
+## Sound
+
+`app/lib/ui/game/sfx.dart`: every sound is synthesised at runtime (oscillators and filtered noise; no audio files, nothing to license). Web uses Web Audio (`sfx_web.dart`); other platforms are silent until the native audio engine lands (`sfx_stub.dart`). Kinds: hover, tap, confirm, open, close, tab, locked, star ×3, win, lose. Browsers start audio only after a user gesture, so hovers before the first click are silent. Profile → Settings → Sound effects mutes them (in memory). Menu sounds never touch the practice audio clock (rule 7).
 
 ## Motion rules
 
@@ -77,8 +100,9 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 - [x] Learn: continue card, sections, outer module trail, collapsible inner submodule trail, task sheet
 - [x] Content: `sections` and planned modules in `courses.json`, linted
 - [x] Info stage, result screen and pause bar use the kit
-- [ ] Bundled OFL condensed display font (needs a font file; follow-up)
+- [x] Bundled OFL display font (Audiowide)
+- [x] Hover / click / idle animations and synthesised menu sounds with a mute setting
 - [ ] Practice screen palette aligned with the menu (practice-screen spec)
 - [ ] Practice modes beyond free play; persisted progress (settings/progress store)
 - [ ] Localised UI strings (menu labels are English for now)
-- [ ] Sound effects on press / star (needs audio engine)
+- [ ] Menu sounds on native platforms (needs the native audio engine)

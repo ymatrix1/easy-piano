@@ -5,6 +5,7 @@ import '../input/midi_input.dart';
 import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import '../ui/staff/staff_spike_page.dart';
 import 'learn_tab.dart';
 import 'other_tabs.dart';
@@ -253,8 +254,10 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Pressable(
-      onTap: onTap,
+      onTap: active ? null : onTap,
       semanticLabel: label,
+      sound: SfxKind.tab,
+      lift: 2,
       builder: (p, hover) => Transform.scale(
         scale: 1 - 0.05 * p,
         child: AnimatedContainer(
@@ -284,10 +287,19 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 22,
-                color: active ? GameColors.ink : GameColors.textDim,
+              // Icon pops when its tab becomes active.
+              TweenAnimationBuilder<double>(
+                key: ValueKey(active),
+                tween: Tween(begin: active ? 0.6 : 1, end: 1),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.elasticOut,
+                builder: (context, k, child) =>
+                    Transform.scale(scale: k, child: child),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: active ? GameColors.ink : GameColors.textDim,
+                ),
               ),
               const SizedBox(height: 2),
               GameText(

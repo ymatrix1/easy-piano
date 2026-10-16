@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../content/content_repo.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import 'home_page.dart' show Progress;
 
 /// Learn tab: a "continue" hero card, then each section's modules on the
@@ -152,6 +153,15 @@ class _ContinueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ShineSweep(
+      shape: chamfer(22),
+      opacity: 0.16,
+      period: const Duration(milliseconds: 5200),
+      child: _card(),
+    );
+  }
+
+  Widget _card() {
     return Container(
       decoration: ShapeDecoration(
         shape: chamfer(
@@ -233,10 +243,10 @@ class _Kicker extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text.toUpperCase(),
     style: TextStyle(
+      fontFamily: displayFont,
       color: color,
-      fontSize: 12,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 2,
+      fontSize: 11,
+      letterSpacing: 1.6,
     ),
   );
 }
@@ -323,17 +333,9 @@ class _OuterTrailItem extends StatelessWidget {
             top: 58,
             bottom: 4,
             width: 4,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: state == _State.locked
-                      ? const [Color(0xFF2A2850), Color(0xFF2A2850)]
-                      : [fill, GameColors.panelEdge.withValues(alpha: 0.6)],
-                ),
-              ),
+            child: _FlowRail(
+              color: state == _State.locked ? const Color(0xFF2A2850) : fill,
+              flowing: state == _State.current || state == _State.done,
             ),
           ),
         Positioned(left: 0, top: 14, child: marker),
@@ -380,6 +382,10 @@ class _ModuleCard extends StatelessWidget {
     final header = Pressable(
       onTap: onToggle,
       semanticLabel: repo.t(course.title),
+      sound: open ? SfxKind.close : SfxKind.open,
+      lift: 3,
+      burstColor: t.top,
+      onDisabledTap: locked ? () {} : null,
       builder: (p, hover) => Container(
         decoration: ShapeDecoration(
           shape: chamfer(16),
@@ -559,18 +565,22 @@ class _InnerTrail extends StatelessWidget {
       child: Column(
         children: [
           for (final (i, n) in nodes.indexed)
-            _SubmoduleRow(
-              index: i + 1,
-              title: repo.t(n.title),
-              kind: _kind(n.kind),
-              icon: _icon(n.kind),
-              tasks: n.levels.length,
-              stars: progress.nodeStars(n),
-              isNext: n == next,
-              first: i == 0,
-              last: i == nodes.length - 1,
-              accent: accent,
-              onTap: () => onNode(n),
+            SlideIn(
+              delay: Duration(milliseconds: 40 * i),
+              offset: const Offset(-18, 0),
+              child: _SubmoduleRow(
+                index: i + 1,
+                title: repo.t(n.title),
+                kind: _kind(n.kind),
+                icon: _icon(n.kind),
+                tasks: n.levels.length,
+                stars: progress.nodeStars(n),
+                isNext: n == next,
+                first: i == 0,
+                last: i == nodes.length - 1,
+                accent: accent,
+                onTap: () => onNode(n),
+              ),
             ),
         ],
       ),
@@ -638,9 +648,12 @@ class _SubmoduleRow extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       semanticLabel: title,
-      builder: (p, hover) => Container(
-        color: Colors.white.withValues(alpha: hover ? 0.05 : 0),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+      burstColor: GameColors.cyan,
+      builder: (p, hover) => AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        color: Colors.white.withValues(alpha: hover ? 0.06 : 0),
+        padding: EdgeInsets.only(left: hover ? 19 : 14, right: 14),
         child: IntrinsicHeight(
           child: Row(
             children: [
@@ -664,9 +677,9 @@ class _SubmoduleRow extends StatelessWidget {
                       Text(
                         '${kind.toUpperCase()}  ·  $tasks ${tasks == 1 ? 'TASK' : 'TASKS'}',
                         style: TextStyle(
+                          fontFamily: displayFont,
                           color: accent,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 10,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -838,4 +851,92 @@ class _TaskRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Outer-trail connector; on the active part, light pulses flow downward.
+class _FlowRail extends StatefulWidget {
+  const _FlowRail({required this.color, required this.flowing});
+
+  final Color color;
+  final bool flowing;
+
+  @override
+  State<_FlowRail> createState() => _FlowRailState();
+}
+
+class _FlowRailState extends State<_FlowRail>
+    with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.flowing && !reduceMotion(context) && !_c.isAnimating) {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: _FlowPainter(_c, widget.color, widget.flowing));
+}
+
+class _FlowPainter extends CustomPainter {
+  _FlowPainter(this.anim, this.color, this.flowing) : super(repaint: anim);
+
+  final Animation<double> anim;
+  final Color color;
+  final bool flowing;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(size.width / 2),
+    );
+    canvas.drawRRect(
+      r,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color, GameColors.panelEdge.withValues(alpha: 0.5)],
+        ).createShader(r.outerRect),
+    );
+    if (!flowing) return;
+    canvas.save();
+    canvas.clipRRect(r);
+    const pulse = 46.0;
+    for (var k = 0; k < 3; k++) {
+      final y = ((anim.value + k / 3) % 1.0) * (size.height + pulse) - pulse;
+      final rect = Rect.fromLTWH(0, y, size.width, pulse);
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: 0.85),
+              Colors.white.withValues(alpha: 0),
+            ],
+          ).createShader(rect),
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_FlowPainter old) =>
+      old.color != color || old.flowing != flowing;
 }

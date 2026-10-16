@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
+import 'sfx.dart';
 
 /// Display text: heavy, uppercase, tight, with a hard drop shadow.
 class GameText extends StatelessWidget {
@@ -27,16 +28,20 @@ class GameText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
+    final t = Text(
       upper ? text.toUpperCase() : text,
       textAlign: align,
+      textHeightBehavior: const TextHeightBehavior(
+        leadingDistribution: TextLeadingDistribution.even,
+      ),
       maxLines: maxLines,
       overflow: maxLines == null ? null : TextOverflow.ellipsis,
       style: TextStyle(
-        fontSize: size,
-        fontWeight: FontWeight.w900,
-        letterSpacing: size >= 20 ? 0.6 : 1.0,
-        height: 1.05,
+        fontFamily: displayFont,
+        fontSize: size * 0.9, // Audiowide runs wide
+        fontWeight: FontWeight.w400,
+        letterSpacing: size >= 20 ? 0.4 : 0.8,
+        height: 1.1,
         color: color,
         shadows: shadow
             ? [
@@ -48,40 +53,88 @@ class GameText extends StatelessWidget {
             : null,
       ),
     );
+    // Audiowide reserves accent room above capitals, so all-caps text sits
+    // low in its box; nudge it up to centre the caps optically.
+    return upper
+        ? Transform.translate(offset: Offset(0, -size * 0.07), child: t)
+        : t;
   }
 }
 
-/// Press, hover and focus feedback shared by buttons and cards: shrink and
-/// sink on press, brighten on hover.
+/// Press, hover and click feedback shared by every tappable surface:
+/// - hover: smooth lift ([lift] px) and the builder's `hover` flag (glow),
+///   plus a soft hover tick;
+/// - press: shrink and sink, springy release;
+/// - click: a spark burst at the pointer and a [sound];
+/// - disabled: [onDisabledTap] (e.g. a locked buzz).
 class Pressable extends StatefulWidget {
   const Pressable({
     super.key,
     required this.onTap,
     required this.builder,
     this.semanticLabel,
+    this.sound = SfxKind.tap,
+    this.lift = 0,
+    this.burst = true,
+    this.burstColor = GameColors.yellow,
+    this.onDisabledTap,
   });
 
   final VoidCallback? onTap;
   final Widget Function(double press, bool hover) builder;
   final String? semanticLabel;
+  final SfxKind? sound;
+  final double lift;
+  final bool burst;
+  final Color burstColor;
+  final VoidCallback? onDisabledTap;
 
   @override
   State<Pressable> createState() => _PressableState();
 }
 
-class _PressableState extends State<Pressable>
-    with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(
+class _PressableState extends State<Pressable> with TickerProviderStateMixin {
+  late final _press = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 80),
     reverseDuration: const Duration(milliseconds: 260),
   );
+  late final _hoverT = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 160),
+  );
+  late final _burst = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+  Offset _burstAt = Offset.zero;
   bool _hover = false;
 
   @override
   void dispose() {
-    _c.dispose();
+    _press.dispose();
+    _hoverT.dispose();
+    _burst.dispose();
     super.dispose();
+  }
+
+  void _enter() {
+    if (widget.onTap == null) return;
+    setState(() => _hover = true);
+    _hoverT.forward();
+    Sfx.play(SfxKind.hover);
+  }
+
+  void _exit() {
+    setState(() => _hover = false);
+    _hoverT.reverse();
+  }
+
+  void _tap() {
+    final s = widget.sound;
+    if (s != null) Sfx.play(s);
+    if (widget.burst && !reduceMotion(context)) _burst.forward(from: 0);
+    widget.onTap!();
   }
 
   @override
@@ -93,25 +146,186 @@ class _PressableState extends State<Pressable>
       label: widget.semanticLabel,
       child: MouseRegion(
         cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
+        onEnter: (_) => _enter(),
+        onExit: (_) => _exit(),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapDown: enabled ? (_) => _c.forward() : null,
-          onTapUp: enabled ? (_) => _c.reverse() : null,
-          onTapCancel: enabled ? _c.reverse : null,
-          onTap: widget.onTap,
+          onTapDown: (d) {
+            _burstAt = d.localPosition;
+            if (enabled) _press.forward();
+          },
+          onTapUp: enabled ? (_) => _press.reverse() : null,
+          onTapCancel: enabled ? _press.reverse : null,
+          onTap: enabled
+              ? _tap
+              : widget.onDisabledTap == null
+              ? null
+              : () {
+                  Sfx.play(SfxKind.locked);
+                  widget.onDisabledTap!();
+                },
           child: AnimatedBuilder(
-            animation: _c,
+            animation: Listenable.merge([_press, _hoverT]),
             builder: (context, _) {
-              final t = _c.status == AnimationStatus.reverse
-                  ? Curves.easeOutBack.transform(_c.value)
-                  : _c.value;
-              return widget.builder(t, enabled && _hover);
+              final t = _press.status == AnimationStatus.reverse
+                  ? Curves.easeOutBack.transform(_press.value)
+                  : _press.value;
+              final h = Curves.easeOut.transform(_hoverT.value);
+              Widget child = widget.builder(t, enabled && _hover);
+              if (widget.lift > 0) {
+                child = Transform.translate(
+                  offset: Offset(0, -widget.lift * h * (1 - t)),
+                  child: child,
+                );
+              }
+              return Stack(
+                clipBehavior: Clip.none,
+                fit: StackFit.passthrough,
+                children: [
+                  child,
+                  if (widget.burst)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: AnimatedBuilder(
+                          animation: _burst,
+                          builder: (context, _) => _burst.isAnimating
+                              ? CustomPaint(
+                                  painter: _BurstPainter(
+                                    _burst.value,
+                                    _burstAt,
+                                    widget.burstColor,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Click feedback: expanding ring plus eight sparks flying out.
+class _BurstPainter extends CustomPainter {
+  _BurstPainter(this.t, this.at, this.color);
+
+  final double t;
+  final Offset at;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final e = Curves.easeOutCubic.transform(t);
+    final fade = (1 - t).clamp(0.0, 1.0);
+    canvas.drawCircle(
+      at,
+      6 + 40 * e,
+      Paint()
+        ..color = color.withValues(alpha: 0.55 * fade)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * fade + 0.5,
+    );
+    final spark = Paint()
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2.5 * fade + 0.5;
+    for (var i = 0; i < 8; i++) {
+      final a = i * math.pi / 4 + 0.3;
+      final d = Offset(math.cos(a), math.sin(a));
+      final r0 = 10 + 30 * e;
+      final r1 = r0 + 10 * fade;
+      spark.color = (i.isEven ? color : Colors.white).withValues(alpha: fade);
+      canvas.drawLine(at + d * r0, at + d * r1, spark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BurstPainter old) => old.t != t;
+}
+
+/// Periodic diagonal shine sweeping across [child] (idle attention cue).
+class ShineSweep extends StatefulWidget {
+  const ShineSweep({
+    super.key,
+    required this.child,
+    this.shape,
+    this.period = const Duration(milliseconds: 3600),
+    this.opacity = 0.35,
+  });
+
+  final Widget child;
+
+  /// Clip for the shine (defaults to the child's box).
+  final ShapeBorder? shape;
+  final Duration period;
+  final double opacity;
+
+  @override
+  State<ShineSweep> createState() => _ShineSweepState();
+}
+
+class _ShineSweepState extends State<ShineSweep>
+    with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, duration: widget.period);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!reduceMotion(context) && !_c.isAnimating) _c.repeat();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        widget.child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: widget.shape ?? const RoundedRectangleBorder(),
+              ),
+              child: AnimatedBuilder(
+                animation: _c,
+                builder: (context, _) {
+                  // Sweep during the first 30% of the period, rest idle.
+                  final s = (_c.value / 0.3).clamp(0.0, 1.0);
+                  if (s <= 0 || s >= 1) return const SizedBox.shrink();
+                  return FractionalTranslation(
+                    translation: Offset(-1.2 + 2.4 * s, 0),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.skewX(-0.5),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0),
+                              Colors.white.withValues(alpha: widget.opacity),
+                              Colors.white.withValues(alpha: 0),
+                            ],
+                            stops: const [0.35, 0.5, 0.65],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -141,9 +355,12 @@ class GameButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = onTap == null ? GameTone.grey : tone;
     final cut = height * 0.28;
+    final cta = tone == GameTone.gold && onTap != null;
     return Pressable(
       onTap: onTap,
       semanticLabel: label,
+      sound: cta ? SfxKind.confirm : SfxKind.tap,
+      lift: 3,
       builder: (p, hover) => Transform.translate(
         offset: Offset(0, 2 * p),
         child: Transform.scale(
@@ -179,6 +396,13 @@ class GameButton extends StatelessWidget {
               ),
               child: Stack(
                 children: [
+                  if (cta)
+                    Positioned.fill(
+                      child: ShineSweep(
+                        shape: chamfer(cut),
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
                   // Gloss band across the top third.
                   Positioned(
                     left: cut,
@@ -253,6 +477,7 @@ class GameRoundButton extends StatelessWidget {
     final button = Pressable(
       onTap: onTap,
       semanticLabel: tooltip,
+      lift: 2,
       builder: (p, hover) => Transform.translate(
         offset: Offset(0, 2 * p),
         child: Transform.scale(
@@ -741,59 +966,97 @@ class GameStar extends StatelessWidget {
       CustomPaint(size: Size.square(size), painter: _StarPainter(fill));
 }
 
+/// Angular, faceted star in the app's chamfer language: sharp points, flat
+/// light/dark facets per arm (like a cut gem), crisp miter outline.
 class _StarPainter extends CustomPainter {
   _StarPainter(this.fill);
 
   final double fill;
 
+  static const _light = Color(0xFFFFF3A8);
+  static const _mid = GameColors.yellow;
+  static const _dark = Color(0xFFE08A00);
+  static const _edge = Color(0xFF5C2E00);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = (Offset.zero & size).deflate(size.width * 0.06);
-    final path = starPath(rect);
-    canvas.drawPath(path, Paint()..color = const Color(0x66000000));
-    if (fill > 0) {
-      canvas.save();
-      canvas.clipRect(
-        Rect.fromLTWH(0, 0, size.width * fill.clamp(0.0, 1.0), size.height),
-      );
-      if (size.width >= 32) {
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = GameColors.gold.withValues(alpha: 0.5)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width * 0.08),
-        );
-      }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..shader = const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              GameColors.goldLight,
-              GameColors.gold,
-              GameColors.goldDark,
-            ],
-            stops: [0, 0.5, 1],
-          ).createShader(rect),
-      );
-      // Facet: lighter upper-left half.
-      canvas.clipPath(path);
-      canvas.drawRect(
-        Rect.fromLTRB(rect.left, rect.top, rect.center.dx, rect.center.dy),
-        Paint()..color = Colors.white.withValues(alpha: 0.16),
-      );
-      canvas.restore();
+    final rect = (Offset.zero & size).deflate(size.width * 0.07);
+    final c = rect.center + Offset(0, rect.height * 0.04);
+    final r = rect.shortestSide / 2;
+    const inner = 0.4;
+    Offset pt(int i) {
+      final rr = i.isEven ? r : r * inner;
+      final a = -math.pi / 2 + i * math.pi / 5;
+      return c + Offset(math.cos(a) * rr, math.sin(a) * rr);
     }
+
+    final outline = Path()..moveTo(pt(0).dx, pt(0).dy);
+    for (var i = 1; i < 10; i++) {
+      outline.lineTo(pt(i).dx, pt(i).dy);
+    }
+    outline.close();
+    final stroke = math.max(1.2, size.width * 0.055);
+
+    // Empty socket: dark glass with a violet edge.
+    canvas.drawPath(outline, Paint()..color = const Color(0x8C0A0830));
     canvas.drawPath(
-      path,
+      outline,
       Paint()
-        ..color = fill > 0 ? const Color(0xFF7A4300) : const Color(0x40FFFFFF)
+        ..color = GameColors.panelEdge
         ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1, size.width * 0.04)
-        ..strokeJoin = StrokeJoin.round,
+        ..strokeWidth = stroke * 0.8
+        ..strokeJoin = StrokeJoin.miter,
     );
+    if (fill <= 0) return;
+
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTWH(0, 0, size.width * fill.clamp(0.0, 1.0), size.height),
+    );
+    if (size.width >= 28) {
+      canvas.drawPath(
+        outline,
+        Paint()
+          ..color = _mid.withValues(alpha: 0.45)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width * 0.1),
+      );
+    }
+    // Facets: each arm is two triangles (tip, centre, inner vertex). The
+    // half facing the top-left light is bright, the other dark.
+    for (var arm = 0; arm < 5; arm++) {
+      final tip = pt(arm * 2);
+      final left = pt((arm * 2 + 9) % 10);
+      final right = pt(arm * 2 + 1);
+      final lit = arm == 0 || arm == 4; // top and upper-left arms face light
+      final l = Path()
+        ..moveTo(tip.dx, tip.dy)
+        ..lineTo(c.dx, c.dy)
+        ..lineTo(left.dx, left.dy)
+        ..close();
+      final rr = Path()
+        ..moveTo(tip.dx, tip.dy)
+        ..lineTo(c.dx, c.dy)
+        ..lineTo(right.dx, right.dy)
+        ..close();
+      canvas.drawPath(l, Paint()..color = lit ? _light : _mid);
+      canvas.drawPath(rr, Paint()..color = lit ? _mid : _dark);
+    }
+    canvas.restore();
+
+    // Crisp outline over the filled part.
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTWH(0, 0, size.width * fill.clamp(0.0, 1.0), size.height),
+    );
+    canvas.drawPath(
+      outline,
+      Paint()
+        ..color = _edge
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeJoin = StrokeJoin.miter,
+    );
+    canvas.restore();
   }
 
   @override
@@ -825,6 +1088,7 @@ class StarRow extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(bottom: i == 1 ? size * 0.2 : 0),
             child: _StarSlot(
+              index: i,
               fill: (stars - i).clamp(0.0, 1.0),
               size: i == 1 ? size * 1.15 : size,
               delay: delay + Duration(milliseconds: 220 * i),
@@ -837,11 +1101,13 @@ class StarRow extends StatelessWidget {
 
 class _StarSlot extends StatefulWidget {
   const _StarSlot({
+    required this.index,
     required this.fill,
     required this.size,
     required this.delay,
   });
 
+  final int index;
   final double fill;
   final double size;
   final Duration delay;
@@ -856,6 +1122,17 @@ class _StarSlotState extends State<_StarSlot>
   Duration get entranceDuration => const Duration(milliseconds: 800);
   @override
   Duration get entranceDelay => widget.delay;
+
+  @override
+  void initState() {
+    super.initState();
+    // Chime as each earned star lands.
+    entrance.addStatusListener((st) {
+      if (st == AnimationStatus.forward && widget.fill > 0) {
+        Sfx.star(widget.index);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -933,6 +1210,18 @@ class StarCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pulses when the value changes.
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(value),
+      tween: Tween(begin: value == 0 ? 1 : 1.25, end: 1),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.elasticOut,
+      builder: (context, k, child) => Transform.scale(scale: k, child: child),
+      child: _pill(),
+    );
+  }
+
+  Widget _pill() {
     return Container(
       height: 38,
       padding: const EdgeInsets.only(left: 6, right: 14),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import 'home_page.dart' show Progress;
 
 /// Practice tab: training modes outside the course path.
@@ -97,6 +98,9 @@ class _ModeCard extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       semanticLabel: title,
+      lift: 5,
+      burstColor: t.top,
+      onDisabledTap: () {},
       builder: (p, hover) => Transform.scale(
         scale: 1 - 0.02 * p,
         child: Container(
@@ -272,6 +276,10 @@ class ProfileTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
+          const GameText('Settings', size: 16, align: TextAlign.left),
+          const SizedBox(height: 10),
+          const _SoundToggle(),
+          const SizedBox(height: 26),
           const GameText('Developer tools', size: 16, align: TextAlign.left),
           const SizedBox(height: 10),
           _ListButton('MIDI latency spike', Icons.usb_rounded, onMidiSpike),
@@ -370,6 +378,73 @@ class _TabScroll extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Sound effects on/off (in memory until the settings store lands).
+class _SoundToggle extends StatelessWidget {
+  const _SoundToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: Sfx.muted,
+      builder: (context, muted, _) => Pressable(
+        onTap: () => Sfx.muted.value = !muted,
+        semanticLabel: 'Sound effects',
+        burstColor: GameColors.cyan,
+        builder: (p, hover) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: ShapeDecoration(
+            shape: chamfer(
+              10,
+              side: const BorderSide(color: GameColors.panelEdge),
+            ),
+            color: GameColors.panel.withValues(alpha: hover ? 1 : 0.85),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                color: GameColors.cyan,
+                size: 22,
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Sound effects',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              // Chamfered switch.
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 52,
+                height: 28,
+                padding: const EdgeInsets.all(3),
+                alignment: muted ? Alignment.centerLeft : Alignment.centerRight,
+                decoration: ShapeDecoration(
+                  shape: chamfer(7),
+                  color: muted ? const Color(0xFF2A2850) : GameColors.success,
+                ),
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: ShapeDecoration(
+                    shape: chamfer(5),
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

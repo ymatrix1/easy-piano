@@ -58,6 +58,10 @@ ShapeBorder chamfer(double cut, {BorderSide side = BorderSide.none}) =>
       ),
     );
 
+/// Display font (Audiowide, SIL OFL 1.1, bundled in assets/fonts/audiowide
+/// with its license).
+const displayFont = 'Audiowide';
+
 /// True when the platform asks for reduced motion.
 bool reduceMotion(BuildContext context) =>
     MediaQuery.maybeDisableAnimationsOf(context) ?? false;

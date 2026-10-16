@@ -7,6 +7,7 @@ import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import 'practice_stage.dart';
 
 /// Runs a level's stages in order: scenes (captions until the Phase 2 player),
@@ -116,6 +117,7 @@ class _LevelPageState extends State<LevelPage> {
       _repeat = _stage.repeats;
     }
     _result = r;
+    Sfx.play(r.passed ? SfxKind.win : SfxKind.lose);
   });
 
   String _songTitle(String? id) {
