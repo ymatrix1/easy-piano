@@ -86,7 +86,7 @@ Findings:
 
 - **Results are not good enough yet.** Arrangements are recognizable in places but not musical or reliably playable.
 - **Bug found and fixed:** intermediate/advanced right hand took bass notes in melody gaps (down to MIDI 27) and kept overtones up to MIDI 101. Melody now comes only from notes ≥ middle C; RH folds to ≤ C6 (intermediate) / ≤ C7 (advanced). Regression tests added.
-- **MuScriptor sounded most promising** by ear (cleanest multi-instrument note output), but its weights are CC BY-NC, so it stays a reference unless the license changes or a similar open model appears.
+- **Best by ear: `mix-muscriptor`** (MuScriptor small on the full mix, not on a stem), judged by the user across all 8 sources × 3 levels. Cleanest multi-instrument note output, but its weights are CC BY-NC, so it stays a reference unless the license changes or a similar open model appears.
 - The deterministic arranger is too blunt for real songs. Level variants probably need an **LLM pass** that reads the transcribed notes (melody, bass, chords, structure) and writes beginner / intermediate / advanced arrangements in our notation, with the core validating range, playability and timing. Rules stay as guardrails; the LLM does musical choices (simplify rhythm, pick chord voicings, keep the hook).
 - The piano stem was nearly empty (32 notes): for songs without piano, melody must come from the vocal stem.
 
