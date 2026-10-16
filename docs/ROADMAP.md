@@ -18,7 +18,8 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [ ] Monorepo scaffold, CI (Flutter, Rust, content lint)
 - [x] Notation parser + JSON schemas + `content lint`
 - [x] Core session: wait + play_along, critical sections, stars
-- [ ] Practice studio: staff + keyboard, falling notes view
+- [x] Practice studio: staff + keyboard with hit/miss colors, fingering, key hints, results (`app/lib/practice/`)
+- [ ] Falling notes view
 - [ ] Web only: Web MIDI + touch input; soundfont synth (AudioWorklet)
 - [ ] Deploy web build (static host with COOP/COEP headers)
 - [x] 5 Piano Basics levels authored and lint-clean (`content/`)

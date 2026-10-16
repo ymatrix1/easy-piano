@@ -12,6 +12,7 @@ class _WebMidiInput implements MidiInput {
   final _controller = StreamController<NoteEvent>.broadcast();
   final _names = <String>[];
   web.MIDIAccess? _access;
+  final _lastEvent = <int, (bool, double)>{};
 
   @override
   Stream<NoteEvent> get events => _controller.stream;
@@ -26,6 +27,12 @@ class _WebMidiInput implements MidiInput {
   Future<bool> start() async {
     final nav = web.window.navigator;
     if (!nav.has('requestMIDIAccess')) return false;
+    // Reuse one access: every new MIDIAccess binds its own handlers, and the
+    // old ones keep firing, so each key would arrive twice.
+    if (_access != null) {
+      _bindInputs();
+      return true;
+    }
     try {
       _access = await nav.requestMIDIAccess().toDart;
     } catch (_) {
@@ -58,11 +65,18 @@ class _WebMidiInput implements MidiInput {
     final pitch = data[1];
     final velocity = data[2];
     if (status != 0x90 && status != 0x80) return;
+    final on = status == 0x90 && velocity > 0;
+    // Drop an identical event for the same key within 25 ms (duplicate delivery).
+    final last = _lastEvent[pitch];
+    if (last != null && last.$1 == on && (e.timeStamp - last.$2).abs() < 25) {
+      return;
+    }
+    _lastEvent[pitch] = (on, e.timeStamp);
     _controller.add(
       NoteEvent(
         pitch: pitch,
         velocity: velocity,
-        on: status == 0x90 && velocity > 0,
+        on: on,
         timestampMs: e.timeStamp,
       ),
     );

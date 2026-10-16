@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/notation.dart';
+import 'api/practice.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -69,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -604840072;
+  int get rustContentHash => 92033953;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -81,11 +82,56 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  PracticeSession crateApiPracticePracticeSessionCreate({
+    required String songJson,
+    required String mode,
+    required String input,
+    required String hand,
+    required double tempo,
+    required double passRatio,
+    required int failedAttempts,
+  });
+
+  PlatformInt64 crateApiPracticePracticeSessionEndUs({
+    required PracticeSession that,
+  });
+
+  void crateApiPracticePracticeSessionOnNote({
+    required PracticeSession that,
+    required int pitch,
+    required bool on_,
+    required PlatformInt64 tUs,
+  });
+
+  ResultView crateApiPracticePracticeSessionResult({
+    required PracticeSession that,
+  });
+
+  List<TargetView> crateApiPracticePracticeSessionTargets({
+    required PracticeSession that,
+  });
+
+  FrameView crateApiPracticePracticeSessionTick({
+    required PracticeSession that,
+    required PlatformInt64 tUs,
+  });
+
   Future<void> crateApiNotationInitApp();
+
+  SongInfo crateApiPracticeInspectSong({required String json});
 
   int crateApiNotationParsePitch({required String token});
 
   String crateApiNotationPitchName({required int midi});
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PracticeSession;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PracticeSession;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PracticeSessionPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -97,6 +143,226 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  PracticeSession crateApiPracticePracticeSessionCreate({
+    required String songJson,
+    required String mode,
+    required String input,
+    required String hand,
+    required double tempo,
+    required double passRatio,
+    required int failedAttempts,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(songJson, serializer);
+          sse_encode_String(mode, serializer);
+          sse_encode_String(input, serializer);
+          sse_encode_String(hand, serializer);
+          sse_encode_f_64(tempo, serializer);
+          sse_encode_f_64(passRatio, serializer);
+          sse_encode_u_32(failedAttempts, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionCreateConstMeta,
+        argValues: [
+          songJson,
+          mode,
+          input,
+          hand,
+          tempo,
+          passRatio,
+          failedAttempts,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionCreateConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_create",
+        argNames: [
+          "songJson",
+          "mode",
+          "input",
+          "hand",
+          "tempo",
+          "passRatio",
+          "failedAttempts",
+        ],
+      );
+
+  @override
+  PlatformInt64 crateApiPracticePracticeSessionEndUs({
+    required PracticeSession that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_i_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionEndUsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionEndUsConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_end_us",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiPracticePracticeSessionOnNote({
+    required PracticeSession that,
+    required int pitch,
+    required bool on_,
+    required PlatformInt64 tUs,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          sse_encode_u_8(pitch, serializer);
+          sse_encode_bool(on_, serializer);
+          sse_encode_i_64(tUs, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionOnNoteConstMeta,
+        argValues: [that, pitch, on_, tUs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionOnNoteConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_on_note",
+        argNames: ["that", "pitch", "on_", "tUs"],
+      );
+
+  @override
+  ResultView crateApiPracticePracticeSessionResult({
+    required PracticeSession that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_result_view,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionResultConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionResultConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_result",
+        argNames: ["that"],
+      );
+
+  @override
+  List<TargetView> crateApiPracticePracticeSessionTargets({
+    required PracticeSession that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_target_view,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionTargetsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionTargetsConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_targets",
+        argNames: ["that"],
+      );
+
+  @override
+  FrameView crateApiPracticePracticeSessionTick({
+    required PracticeSession that,
+    required PlatformInt64 tUs,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          sse_encode_i_64(tUs, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frame_view,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionTickConstMeta,
+        argValues: [that, tUs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionTickConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_tick",
+        argNames: ["that", "tUs"],
+      );
+
+  @override
   Future<void> crateApiNotationInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -105,7 +371,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 7,
             port: port_,
           );
         },
@@ -124,13 +390,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
+  SongInfo crateApiPracticeInspectSong({required String json}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_song_info,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiPracticeInspectSongConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticeInspectSongConstMeta =>
+      const TaskConstMeta(debugName: "inspect_song", argNames: ["json"]);
+
+  @override
   int crateApiNotationParsePitch({required String token}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(token, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_8,
@@ -153,7 +442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_u_8(midi, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -169,6 +458,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiNotationPitchNameConstMeta =>
       const TaskConstMeta(debugName: "pitch_name", argNames: ["midi"]);
 
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PracticeSession => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PracticeSession => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession;
+
+  @protected
+  PracticeSession
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PracticeSession
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PracticeSession
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PracticeSession
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
   @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -176,9 +509,130 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  FrameView dco_decode_frame_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return FrameView(
+      playheadBeat: dco_decode_f_64(arr[0]),
+      cursor: dco_decode_u_32(arr[1]),
+      hits: dco_decode_u_32(arr[2]),
+      misses: dco_decode_u_32(arr[3]),
+      wrong: dco_decode_u_32(arr[4]),
+      done: dco_decode_bool(arr[5]),
+      hintActive: dco_decode_bool(arr[6]),
+    );
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  Float64List dco_decode_list_prim_f_64_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Float64List;
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<TargetView> dco_decode_list_target_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_target_view).toList();
+  }
+
+  @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_f_64(raw);
+  }
+
+  @protected
+  ResultView dco_decode_result_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 14)
+      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    return ResultView(
+      passed: dco_decode_bool(arr[0]),
+      stars: dco_decode_u_8(arr[1]),
+      hitRatio: dco_decode_f_64(arr[2]),
+      wrong: dco_decode_u_32(arr[3]),
+      meanAbsTimingMs: dco_decode_opt_box_autoadd_f_64(arr[4]),
+      sections: dco_decode_list_prim_f_64_strict(arr[5]),
+      threshold: dco_decode_f_64(arr[6]),
+      suggestPractice: dco_decode_bool(arr[7]),
+      notesHit: dco_decode_u_32(arr[8]),
+      notesTotal: dco_decode_u_32(arr[9]),
+      timing: dco_decode_f_64(arr[10]),
+      assists: dco_decode_f_64(arr[11]),
+      score: dco_decode_f_64(arr[12]),
+      starsExact: dco_decode_f_64(arr[13]),
+    );
+  }
+
+  @protected
+  SongInfo dco_decode_song_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return SongInfo(
+      id: dco_decode_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+      composer: dco_decode_String(arr[2]),
+      bpm: dco_decode_f_64(arr[3]),
+      beatsPerBar: dco_decode_u_32(arr[4]),
+      bars: dco_decode_u_32(arr[5]),
+    );
+  }
+
+  @protected
+  TargetView dco_decode_target_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return TargetView(
+      beat: dco_decode_f_64(arr[0]),
+      beats: dco_decode_f_64(arr[1]),
+      bar: dco_decode_u_32(arr[2]),
+      pitches: dco_decode_list_prim_u_8_strict(arr[3]),
+      fingers: dco_decode_list_prim_u_8_strict(arr[4]),
+      state: dco_decode_u_8(arr[5]),
+    );
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -194,6 +648,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
+  PracticeSession
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PracticeSession
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PracticeSession
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PracticeSession
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PracticeSessionImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -201,10 +709,164 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_f_64(deserializer));
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FrameView sse_decode_frame_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_playheadBeat = sse_decode_f_64(deserializer);
+    var var_cursor = sse_decode_u_32(deserializer);
+    var var_hits = sse_decode_u_32(deserializer);
+    var var_misses = sse_decode_u_32(deserializer);
+    var var_wrong = sse_decode_u_32(deserializer);
+    var var_done = sse_decode_bool(deserializer);
+    var var_hintActive = sse_decode_bool(deserializer);
+    return FrameView(
+      playheadBeat: var_playheadBeat,
+      cursor: var_cursor,
+      hits: var_hits,
+      misses: var_misses,
+      wrong: var_wrong,
+      done: var_done,
+      hintActive: var_hintActive,
+    );
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getFloat64List(len_);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<TargetView> sse_decode_list_target_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TargetView>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_target_view(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_f_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  ResultView sse_decode_result_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_passed = sse_decode_bool(deserializer);
+    var var_stars = sse_decode_u_8(deserializer);
+    var var_hitRatio = sse_decode_f_64(deserializer);
+    var var_wrong = sse_decode_u_32(deserializer);
+    var var_meanAbsTimingMs = sse_decode_opt_box_autoadd_f_64(deserializer);
+    var var_sections = sse_decode_list_prim_f_64_strict(deserializer);
+    var var_threshold = sse_decode_f_64(deserializer);
+    var var_suggestPractice = sse_decode_bool(deserializer);
+    var var_notesHit = sse_decode_u_32(deserializer);
+    var var_notesTotal = sse_decode_u_32(deserializer);
+    var var_timing = sse_decode_f_64(deserializer);
+    var var_assists = sse_decode_f_64(deserializer);
+    var var_score = sse_decode_f_64(deserializer);
+    var var_starsExact = sse_decode_f_64(deserializer);
+    return ResultView(
+      passed: var_passed,
+      stars: var_stars,
+      hitRatio: var_hitRatio,
+      wrong: var_wrong,
+      meanAbsTimingMs: var_meanAbsTimingMs,
+      sections: var_sections,
+      threshold: var_threshold,
+      suggestPractice: var_suggestPractice,
+      notesHit: var_notesHit,
+      notesTotal: var_notesTotal,
+      timing: var_timing,
+      assists: var_assists,
+      score: var_score,
+      starsExact: var_starsExact,
+    );
+  }
+
+  @protected
+  SongInfo sse_decode_song_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_composer = sse_decode_String(deserializer);
+    var var_bpm = sse_decode_f_64(deserializer);
+    var var_beatsPerBar = sse_decode_u_32(deserializer);
+    var var_bars = sse_decode_u_32(deserializer);
+    return SongInfo(
+      id: var_id,
+      title: var_title,
+      composer: var_composer,
+      bpm: var_bpm,
+      beatsPerBar: var_beatsPerBar,
+      bars: var_bars,
+    );
+  }
+
+  @protected
+  TargetView sse_decode_target_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_beat = sse_decode_f_64(deserializer);
+    var var_beats = sse_decode_f_64(deserializer);
+    var var_bar = sse_decode_u_32(deserializer);
+    var var_pitches = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_fingers = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_state = sse_decode_u_8(deserializer);
+    return TargetView(
+      beat: var_beat,
+      beats: var_beats,
+      bar: var_bar,
+      pitches: var_pitches,
+      fingers: var_fingers,
+      state: var_state,
+    );
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
   }
 
   @protected
@@ -219,21 +881,119 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_usize(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    PracticeSession self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
+    sse_encode_usize(
+      (self as PracticeSessionImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    PracticeSession self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PracticeSessionImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    PracticeSession self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PracticeSessionImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+    PracticeSession self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PracticeSessionImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
   }
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_frame_view(FrameView self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self.playheadBeat, serializer);
+    sse_encode_u_32(self.cursor, serializer);
+    sse_encode_u_32(self.hits, serializer);
+    sse_encode_u_32(self.misses, serializer);
+    sse_encode_u_32(self.wrong, serializer);
+    sse_encode_bool(self.done, serializer);
+    sse_encode_bool(self.hintActive, serializer);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_f_64_strict(
+    Float64List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putFloat64List(self);
   }
 
   @protected
@@ -244,6 +1004,75 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_target_view(
+    List<TargetView> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_target_view(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_f_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_result_view(ResultView self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.passed, serializer);
+    sse_encode_u_8(self.stars, serializer);
+    sse_encode_f_64(self.hitRatio, serializer);
+    sse_encode_u_32(self.wrong, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.meanAbsTimingMs, serializer);
+    sse_encode_list_prim_f_64_strict(self.sections, serializer);
+    sse_encode_f_64(self.threshold, serializer);
+    sse_encode_bool(self.suggestPractice, serializer);
+    sse_encode_u_32(self.notesHit, serializer);
+    sse_encode_u_32(self.notesTotal, serializer);
+    sse_encode_f_64(self.timing, serializer);
+    sse_encode_f_64(self.assists, serializer);
+    sse_encode_f_64(self.score, serializer);
+    sse_encode_f_64(self.starsExact, serializer);
+  }
+
+  @protected
+  void sse_encode_song_info(SongInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.composer, serializer);
+    sse_encode_f_64(self.bpm, serializer);
+    sse_encode_u_32(self.beatsPerBar, serializer);
+    sse_encode_u_32(self.bars, serializer);
+  }
+
+  @protected
+  void sse_encode_target_view(TargetView self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self.beat, serializer);
+    sse_encode_f_64(self.beats, serializer);
+    sse_encode_u_32(self.bar, serializer);
+    sse_encode_list_prim_u_8_strict(self.pitches, serializer);
+    sse_encode_list_prim_u_8_strict(self.fingers, serializer);
+    sse_encode_u_8(self.state, serializer);
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
   }
 
   @protected
@@ -258,14 +1087,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_usize(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
   }
+}
 
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
-  }
+@sealed
+class PracticeSessionImpl extends RustOpaque implements PracticeSession {
+  // Not to be used by end users
+  PracticeSessionImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PracticeSessionImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_PracticeSession,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PracticeSession,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PracticeSessionPtr,
+  );
+
+  PlatformInt64 endUs() =>
+      RustLib.instance.api.crateApiPracticePracticeSessionEndUs(that: this);
+
+  void onNote({
+    required int pitch,
+    required bool on_,
+    required PlatformInt64 tUs,
+  }) => RustLib.instance.api.crateApiPracticePracticeSessionOnNote(
+    that: this,
+    pitch: pitch,
+    on_: on_,
+    tUs: tUs,
+  );
+
+  ResultView result() =>
+      RustLib.instance.api.crateApiPracticePracticeSessionResult(that: this);
+
+  List<TargetView> targets() =>
+      RustLib.instance.api.crateApiPracticePracticeSessionTargets(that: this);
+
+  FrameView tick({required PlatformInt64 tUs}) => RustLib.instance.api
+      .crateApiPracticePracticeSessionTick(that: this, tUs: tUs);
 }

@@ -48,13 +48,32 @@ pub struct Settings {
     /// Failed attempts so far on this stage; lowers the threshold.
     pub failed_attempts: u32,
     pub hand: HandFilter,
+    /// Wait mode: how long a note waits before the hint (beam, key colours)
+    /// shows. Reference: 4 s for note sequences, 1 s for one-note drills.
+    pub hint_after_us: i64,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { mode: Mode::PlayAlong, input: Input::Midi, tempo: 1.0, pass_ratio: 0.7, failed_attempts: 0, hand: HandFilter::Right }
+        Settings {
+            mode: Mode::PlayAlong,
+            input: Input::Midi,
+            tempo: 1.0,
+            pass_ratio: 0.7,
+            failed_attempts: 0,
+            hand: HandFilter::Right,
+            hint_after_us: WAIT_HINT_AFTER_US,
+        }
     }
 }
+
+/// Wait mode: time before the hint shows (reference default).
+pub const WAIT_HINT_AFTER_US: i64 = 4_000_000;
+/// Wait mode: chord notes must start within this spread before the hint.
+pub const CHORD_SPREAD_US: i64 = 400_000;
+/// Wait mode: a stage passes when more than this share of chords was played
+/// before its hint appeared (wrong keys do not count against it).
+pub const WAIT_PASS_RATIO: f64 = 0.8;
 
 /// Threshold drops 0.1 for every 2 failed attempts, floor 0.4 (spec).
 pub fn effective_threshold(pass_ratio: f64, failed_attempts: u32) -> f64 {
@@ -86,6 +105,12 @@ pub struct Target {
     pub fingers: Vec<Option<u8>>,
     played: BTreeSet<u8>,
     first_us: Option<i64>,
+    /// Play-along: timing error (played − expected) of each matched note, µs.
+    deltas_us: Vec<i64>,
+    /// Wait mode: onset time of each chord pitch pressed so far.
+    played_us: std::collections::BTreeMap<u8, i64>,
+    /// Wait mode: the hint was shown before this target was completed.
+    pub hinted: bool,
     pub state: ChordState,
 }
 
@@ -99,6 +124,8 @@ pub struct Frame {
     pub misses: usize,
     pub wrong: usize,
     pub done: bool,
+    /// Wait mode: the current target has waited long enough to show the hint.
+    pub hint_active: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -114,6 +141,49 @@ pub struct StageResult {
     pub threshold: f64,
     /// Offer slow practice mode (3+ failed attempts and still failing).
     pub suggest_practice: bool,
+    /// Notes matched / notes expected; every chord note counts on its own.
+    pub notes_hit: usize,
+    pub notes_total: usize,
+    /// Song score parts (reference results screen), each 0–1.
+    pub timing: f64,
+    pub assists: f64,
+    /// assists × notes × (0.75 + 0.25 × timing).
+    pub score: f64,
+    /// Continuous 0–3 stars from `score` (play-along); equals `stars` in wait mode.
+    pub stars_exact: f64,
+}
+
+/// Reference timing score: 0.8 × spread score + 0.2 × mean score, where an
+/// error of 40 ms or less scores 1 and 300 ms or more scores 0. Microphone
+/// input gets +0.1. No hits → 0.
+pub fn timing_score(deltas_s: &[f64], midi: bool) -> f64 {
+    if deltas_s.is_empty() {
+        return 0.0;
+    }
+    let n = deltas_s.len() as f64;
+    let mean = deltas_s.iter().sum::<f64>() / n;
+    let var = deltas_s.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / n;
+    let part = |err: f64| ((0.3 - err) / 0.26).clamp(0.0, 1.0);
+    let t = 0.8 * part(var.sqrt()) + 0.2 * part(mean.abs());
+    if midi { t } else { (t + 0.1).min(1.0) }
+}
+
+/// Reference song score: assists × notes ratio × (0.75 + 0.25 × timing).
+pub fn song_score(notes_ratio: f64, timing: f64, assists: f64) -> f64 {
+    assists * notes_ratio * (0.75 + 0.25 * timing)
+}
+
+/// Reference star mapping: linear between 0→0, 0.5→1, 0.7→2, 0.9→3.
+pub fn stars_from_score(score: f64) -> f64 {
+    if score <= 0.5 {
+        (score / 0.5).max(0.0)
+    } else if score <= 0.7 {
+        1.0 + (score - 0.5) / 0.2
+    } else if score <= 0.9 {
+        2.0 + (score - 0.7) / 0.2
+    } else {
+        3.0
+    }
 }
 
 pub struct Session {
@@ -126,6 +196,8 @@ pub struct Session {
     now_us: i64,
     /// Wait mode: song time is frozen at the current target.
     wait_beat: f64,
+    /// Wait mode: when the current target became current.
+    current_since_us: i64,
 }
 
 fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
@@ -149,6 +221,9 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
                 fingers: vec![n.finger],
                 played: BTreeSet::new(),
                 first_us: None,
+                played_us: Default::default(),
+                deltas_us: Vec::new(),
+                hinted: false,
                 state: ChordState::Pending,
             }),
         }
@@ -170,6 +245,7 @@ impl Session {
             wrong: 0,
             now_us: 0,
             wait_beat,
+            current_since_us: 0,
         }
     }
 
@@ -193,22 +269,34 @@ impl Session {
         }
     }
 
+    /// Reference behaviour: the cursor moves on as soon as the chord is
+    /// complete. Before the hint, all chord notes must start within
+    /// `CHORD_SPREAD_US` (re-striking a note refreshes its time); after the
+    /// hint any order and timing completes it. Wrong keys never block.
     fn on_note_wait(&mut self, e: NoteEvent) {
         let Some(t) = self.targets.get_mut(self.cursor) else { return };
-        if t.pitches.contains(&e.pitch) {
-            t.played.insert(e.pitch);
-            if t.played.len() == t.pitches.len() {
-                t.state = ChordState::Hit { delta_us: 0 };
-                self.cursor += 1;
-                if let Some(next) = self.targets.get(self.cursor) {
-                    self.wait_beat = next.beat;
-                } else {
-                    self.wait_beat = t_end(&self.targets);
-                }
-            }
-        } else {
+        if !t.pitches.contains(&e.pitch) {
             self.wrong += 1;
+            return;
         }
+        t.played_us.insert(e.pitch, e.t_us);
+        if t.played_us.len() < t.pitches.len() {
+            return;
+        }
+        if !t.hinted {
+            let lo = t.played_us.values().min().copied().unwrap_or(e.t_us);
+            let hi = t.played_us.values().max().copied().unwrap_or(e.t_us);
+            if hi - lo >= CHORD_SPREAD_US {
+                return;
+            }
+        }
+        t.state = ChordState::Hit { delta_us: 0 };
+        self.cursor += 1;
+        self.current_since_us = e.t_us;
+        self.wait_beat = match self.targets.get(self.cursor) {
+            Some(next) => next.beat,
+            None => t_end(&self.targets),
+        };
     }
 
     fn on_note_play_along(&mut self, e: NoteEvent) {
@@ -230,6 +318,7 @@ impl Session {
         let target_us = self.target_us(&self.targets[i]);
         let t = &mut self.targets[i];
         t.played.insert(e.pitch);
+        t.deltas_us.push(e.t_us - target_us);
         t.first_us.get_or_insert(e.t_us);
         if t.played.len() == t.pitches.len() {
             t.state = ChordState::Hit { delta_us: t.first_us.unwrap_or(e.t_us) - target_us };
@@ -261,6 +350,18 @@ impl Session {
     /// Advances the audio clock and returns what the UI should draw.
     pub fn tick(&mut self, t_us: i64) -> Frame {
         self.now_us = self.now_us.max(t_us);
+        // Wait mode: after waiting long enough the hint shows; from then on the
+        // earlier presses of the chord are forgotten and any order completes it.
+        if self.settings.mode == Mode::Wait {
+            let since = self.current_since_us;
+            let after = self.settings.hint_after_us;
+            if let Some(t) = self.targets.get_mut(self.cursor) {
+                if !t.hinted && self.now_us - since >= after {
+                    t.hinted = true;
+                    t.played_us.clear();
+                }
+            }
+        }
         let playhead_beat = match self.settings.mode {
             Mode::Wait => self.wait_beat,
             Mode::PlayAlong => {
@@ -270,7 +371,16 @@ impl Session {
         };
         let hits = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count();
         let misses = self.targets.iter().filter(|t| t.state == ChordState::Missed).count();
-        Frame { playhead_beat, cursor: self.cursor, hits, misses, wrong: self.wrong, done: self.cursor >= self.targets.len() }
+        let hint_active = self.settings.mode == Mode::Wait && self.targets.get(self.cursor).is_some_and(|t| t.hinted);
+        Frame {
+            playhead_beat,
+            cursor: self.cursor,
+            hits,
+            misses,
+            wrong: self.wrong,
+            done: self.cursor >= self.targets.len(),
+            hint_active,
+        }
     }
 
     /// Final grade. Call when `Frame::done` (PlayAlong: after the last window closes).
@@ -285,7 +395,13 @@ impl Session {
                 _ => None,
             })
             .collect();
-        let hit_ratio = hits.len() as f64 / total as f64;
+        let hit_ratio = match self.settings.mode {
+            Mode::Wait => {
+                self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count() as f64
+                    / total as f64
+            }
+            Mode::PlayAlong => hits.len() as f64 / total as f64,
+        };
         let sections: Vec<f64> = self
             .critical
             .iter()
@@ -300,8 +416,20 @@ impl Session {
             .collect();
         let (passed, mean_abs_timing_ms, stars) = match self.settings.mode {
             Mode::Wait => {
-                let passed = self.cursor >= self.targets.len();
-                let stars = if !passed { 0 } else if self.wrong <= 1 { 3 } else if self.wrong <= 3 { 2 } else { 1 };
+                // Reference: share of chords completed before their hint.
+                let clean = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count();
+                let ratio = clean as f64 / total as f64;
+                let done = self.cursor >= self.targets.len();
+                let passed = done && ratio > WAIT_PASS_RATIO;
+                let stars = if !passed {
+                    0
+                } else if clean == self.targets.len() {
+                    3
+                } else if ratio >= 0.9 {
+                    2
+                } else {
+                    1
+                };
                 (passed, None, stars)
             }
             Mode::PlayAlong => {
@@ -320,6 +448,24 @@ impl Session {
                 (passed, mean, stars)
             }
         };
+        let notes_total: usize = self.targets.iter().map(|t| t.pitches.len()).sum();
+        let (notes_hit, timing, assists, score, stars_exact) = match self.settings.mode {
+            Mode::Wait => {
+                let hit: usize =
+                    self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).map(|t| t.pitches.len()).sum();
+                (hit, 1.0, 1.0, hit_ratio, stars as f64)
+            }
+            Mode::PlayAlong => {
+                let deltas: Vec<f64> = self.targets.iter().flat_map(|t| t.deltas_us.iter().map(|d| *d as f64 / 1e6)).collect();
+                let hit = deltas.len().min(notes_total);
+                let ratio = if notes_total == 0 { 0.0 } else { hit as f64 / notes_total as f64 };
+                let timing = timing_score(&deltas, self.settings.input == Input::Midi);
+                // Assists: playing slower than full tempo counts as help.
+                let assists = self.settings.tempo.clamp(0.0, 1.0);
+                let score = song_score(ratio, timing, assists);
+                (hit, timing, assists, score, stars_from_score(score))
+            }
+        };
         StageResult {
             passed,
             stars,
@@ -329,6 +475,12 @@ impl Session {
             sections,
             threshold,
             suggest_practice: !passed && self.settings.failed_attempts >= 2,
+            notes_hit,
+            notes_total,
+            timing,
+            assists,
+            score,
+            stars_exact,
         }
     }
 
@@ -462,16 +614,118 @@ mod tests {
     #[test]
     fn wait_mode_holds_playhead_until_correct_note() {
         let mut s = Session::new(&song(), Settings { mode: Mode::Wait, ..Settings::default() });
-        assert_eq!(s.tick(5_000_000).playhead_beat, 0.0);
-        press(&mut s, 61, 5_000_000); // wrong
-        press(&mut s, 60, 6_000_000);
-        let f = s.tick(9_000_000);
+        // Song time does not move while waiting (well before the 4 s hint).
+        assert_eq!(s.tick(2_000_000).playhead_beat, 0.0);
+        press(&mut s, 61, 2_000_000); // wrong
+        press(&mut s, 60, 3_000_000);
+        let f = s.tick(3_500_000);
         assert_eq!((f.playhead_beat, f.wrong, f.cursor), (1.0, 1, 1));
         for p in [62, 64, 65, 60, 64, 67] {
-            press(&mut s, p, 10_000_000);
+            press(&mut s, p, 4_000_000);
         }
         let r = s.result();
         assert!(r.passed && r.stars == 3 && r.mean_abs_timing_ms.is_none(), "{r:?}");
+    }
+
+    fn wait() -> Session {
+        Session::new(&song(), Settings { mode: Mode::Wait, ..Settings::default() })
+    }
+
+    #[test]
+    fn wait_hint_appears_after_four_seconds_and_resets_partial_chord() {
+        let mut s = wait();
+        assert!(!s.tick(3_900_000).hint_active);
+        assert!(s.tick(4_000_000).hint_active);
+        // A correct press moves on at once and restarts the hint timer.
+        press(&mut s, 60, 4_100_000);
+        let f = s.tick(4_200_000);
+        assert_eq!((f.cursor, f.hint_active), (1, false));
+        assert!(s.tick(8_100_000).hint_active);
+    }
+
+    #[test]
+    fn wait_chord_needs_onsets_within_400ms_before_hint() {
+        let mut s = wait();
+        for (i, p) in [60, 62, 64, 65].into_iter().enumerate() {
+            press(&mut s, p, i as i64 * 1_000_000);
+        }
+        // Chord C E G: G pressed 500 ms after the others does not complete it.
+        press(&mut s, 60, 4_000_000);
+        press(&mut s, 64, 4_000_000);
+        press(&mut s, 67, 4_500_000);
+        assert_eq!(s.tick(4_600_000).cursor, 4);
+        // Re-striking C and E close to G closes the window.
+        press(&mut s, 60, 4_700_000);
+        press(&mut s, 64, 4_750_000);
+        assert!(s.tick(4_800_000).done);
+    }
+
+    #[test]
+    fn wait_hinted_target_completes_but_is_not_clean() {
+        let mut s = wait();
+        s.tick(5_000_000); // hint on the first note
+        press(&mut s, 60, 5_100_000);
+        for (i, p) in [62, 64, 65].into_iter().enumerate() {
+            press(&mut s, p, 5_200_000 + i as i64 * 100_000);
+        }
+        for p in [60, 64, 67] {
+            press(&mut s, p, 6_000_000);
+        }
+        let r = s.result();
+        // 4 of 5 targets clean = 0.8, not > 0.8: fails like the reference.
+        assert!((r.hit_ratio - 0.8).abs() < 1e-9 && !r.passed, "{r:?}");
+    }
+
+    #[test]
+    fn wait_wrong_keys_do_not_lower_the_grade() {
+        let mut s = wait();
+        for p in [61, 63, 66, 68, 70, 72] {
+            press(&mut s, p, 100_000);
+        }
+        for (i, p) in [60, 62, 64, 65].into_iter().enumerate() {
+            press(&mut s, p, 200_000 + i as i64 * 300_000);
+        }
+        for p in [60, 64, 67] {
+            press(&mut s, p, 2_000_000);
+        }
+        let r = s.result();
+        assert!(r.passed && r.stars == 3 && r.wrong == 6, "{r:?}");
+    }
+
+    #[test]
+    fn timing_score_follows_reference_bounds() {
+        assert_eq!(timing_score(&[], true), 0.0);
+        assert!((timing_score(&[0.02, 0.02, 0.02], true) - 1.0).abs() < 1e-9);
+        // spread 0.3 s → 0, mean 0 → 1
+        assert!((timing_score(&[0.3, -0.3], true) - 0.2).abs() < 1e-9);
+        // mean 0.17 s → 0.5, no spread → 1; microphone bonus +0.1, capped at 1
+        assert!((timing_score(&[0.17], true) - 0.9).abs() < 1e-9);
+        assert!((timing_score(&[0.17], false) - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn stars_interpolate_between_reference_thresholds() {
+        assert_eq!(stars_from_score(0.25), 0.5);
+        assert!((stars_from_score(0.6) - 1.5).abs() < 1e-9);
+        assert!((stars_from_score(0.8) - 2.5).abs() < 1e-9);
+        assert_eq!(stars_from_score(0.95), 3.0);
+        assert!((song_score(1.0, 1.0, 1.0) - 1.0).abs() < 1e-9);
+        assert!((song_score(0.5, 0.0, 1.0) - 0.375).abs() < 1e-9);
+    }
+
+    #[test]
+    fn play_along_result_counts_chord_notes_and_tempo_assist() {
+        let mut s = play_along(Settings { tempo: 0.5, ..Settings::default() });
+        // 1 beat = 2 s at half tempo; hit C and the chord, skip D E F.
+        press(&mut s, 60, 10_000);
+        for p in [60, 64, 67] {
+            press(&mut s, p, 8_010_000);
+        }
+        s.tick(s.end_us());
+        let r = s.result();
+        assert_eq!((r.notes_hit, r.notes_total), (4, 7));
+        assert!((r.assists - 0.5).abs() < 1e-9 && (r.timing - 1.0).abs() < 1e-9, "{r:?}");
+        assert!((r.score - song_score(4.0 / 7.0, 1.0, 0.5)).abs() < 1e-9);
     }
 
     #[test]

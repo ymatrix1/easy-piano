@@ -40,6 +40,14 @@ Reference: Simply Piano uses ~0.34 s MIDI / ~0.15 s mic total tolerance.
 | 2 | ≥ 85% hit, ≤ 3 wrong |
 | 3 | ≥ 95% hit, timing mean error ≤ 60 ms |
 
+## Practice screen behaviour
+
+Matches the reference app (studied from its stage logic, not copied):
+
+- **Wait:** notes sit on a still page; the highlight jumps to the next note as soon as the right key is pressed; when the next note passes 72% of the width the page slides left (1 s ease-in-out) so it lands near the left edge. No play line.
+- **Play-along:** notes scroll right to left toward a glowing play line at 30% of the width; one-bar count-in.
+- **Feedback:** current note amber with glow, hit teal with expanding blue rings (~0.45 s), miss red; next keys highlighted on the keyboard; progress bar of judged notes.
+
 ## Interfaces
 
 ```
@@ -53,6 +61,7 @@ session.end_us()   // audio time when the last window has closed
 Rules as implemented:
 
 - Targets: notes grouped by onset (chord = all pitches at one beat), filtered by hand.
-- Wait: playhead frozen at the current target; wrong pitches counted; stars 3 / 2 / 1 for ≤ 1 / ≤ 3 / more wrong notes.
+- Wait (reference behaviour): the cursor moves on as soon as the chord is complete. A note that waits `hint_after_us` (4 s; 1 s for one-note drills) gets a hint (`Frame::hint_active`): the screen shows the beam and key colours, earlier chord presses are forgotten and any order completes it. Before the hint, chord notes must start within 0.4 s. Pass when more than 80% of chords were completed before their hint; wrong keys are counted but never lower the grade. Stars: 3 all clean, 2 ≥ 90%, 1 otherwise.
 - Play-along: a press matches the nearest pending target with that pitch inside the input window; a chord is hit when all its pitches are pressed (timing from the first); targets past due + window are missed; other presses are wrong.
+- Play-along score (reference song results): notes hit / total (each chord note counts), timing = 0.8 × spread + 0.2 × mean, each `(0.3 s − error) / 0.26 s` clamped 0–1 (+0.1 for microphone), assists = tempo factor, score = assists × notes × (0.75 + 0.25 × timing), `stars_exact` linear through 0.5 → 1, 0.7 → 2, 0.9 → 3.
 - Pass: every critical section's hit ratio ≥ `max(pass_ratio − 0.1 × ⌊failed_attempts / 2⌋, 0.4)`; `suggest_practice` after 2+ failed attempts when still failing.

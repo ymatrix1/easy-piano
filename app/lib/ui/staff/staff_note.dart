@@ -1,6 +1,12 @@
 /// One note on the grand staff, positioned in beats.
 class StaffNote {
-  const StaffNote(this.pitch, this.beat, this.beats, {this.leftHand = false});
+  const StaffNote(
+    this.pitch,
+    this.beat,
+    this.beats, {
+    this.leftHand = false,
+    this.finger,
+  });
 
   /// MIDI pitch (60 = middle C).
   final int pitch;
@@ -11,6 +17,9 @@ class StaffNote {
   /// Duration in beats (1 = quarter in 4/4).
   final double beats;
   final bool leftHand;
+
+  /// Finger number 1-5 to print above the note, if any.
+  final int? finger;
 }
 
 /// Ode to Joy (Beethoven, public domain), simplified, own arrangement.
