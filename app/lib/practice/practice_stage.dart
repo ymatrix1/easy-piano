@@ -103,8 +103,8 @@ class PracticeStage extends StatefulWidget {
 
 class _PracticeStageState extends State<PracticeStage>
     with TickerProviderStateMixin {
-  static const _low = 48; // C3
-  static const _high = 96; // C7
+  static const _low = 36; // C2: middle C sits in the centre (2 octaves each side)
+  static const _high = 84; // C6
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
   static const _waitAnchor = 0.10; // page start, as a fraction of the width

@@ -9,7 +9,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 | Top bar | Round pause button (left), instruction text ("Play the following notes"), progress pill (right): repeats done / total in wait mode, thin song progress line in play-along |
 | Staff area | Vivid violet background; a white band behind the staff; black notation. Staff layout comes from the level's `ui` field: `treble` or `bass` draws a **single staff** (beginner levels), `both` draws the grand staff. It does not depend on which hand plays |
 | Finger badges | Plain finger numbers above notes; only the **current** note gets a badge (hand pictogram with the finger highlighted in the reference; ours: rounded badge with the number) |
-| Keyboard | Optional. Soft look: small gaps between white keys, rounded fronts, shadows instead of outlines, felt strip on top. Wide realistic keyboard across the bottom (about 4 octaves), "C" label on middle C, the next key highlighted. Shown by default when the level's `keyboard` is true and the screen is at least 560 px tall; a top-bar button toggles it |
+| Keyboard | Optional. Soft look: small gaps between white keys, rounded fronts, shadows instead of outlines, felt strip on top. Wide realistic keyboard across the bottom (C2–C6, middle C centred), "C" label on middle C, the next key highlighted. Shown by default when the level's `keyboard` is true and the screen is at least 560 px tall; a top-bar button toggles it |
 
 ## Wait stages
 
