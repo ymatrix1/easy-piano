@@ -11,4 +11,4 @@
 
 Specs: [curriculum](specs/curriculum.md) · [content format](specs/content-format.md) · [exercise engine](specs/exercise-engine.md) · [animations](specs/animations.md) · [input](specs/input.md) · [gamification](specs/gamification.md)
 
-Research: [Simply Piano teardown](research/simply-piano-teardown.md) · [score formats and sources](research/score-formats-and-sources.md)
+Research: [Simply Piano teardown](research/simply-piano-teardown.md) · [score formats and sources](research/score-formats-and-sources.md) · [web MIDI spike](research/web-midi-spike.md) · [staff render spike](research/staff-render-spike.md)

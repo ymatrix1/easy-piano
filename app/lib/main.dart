@@ -9,6 +9,7 @@ import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
 import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
+import 'ui/staff/staff_spike_page.dart';
 
 Future<void> main() async {
   await RustLib.init();
@@ -126,7 +127,18 @@ class _MidiSpikePageState extends State<MidiSpikePage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Easy Piano · MIDI spike')),
+      appBar: AppBar(
+        title: const Text('Easy Piano · MIDI spike'),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const StaffSpikePage())),
+            icon: const Icon(Icons.music_note),
+            label: const Text('Staff spike'),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

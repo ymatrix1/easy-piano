@@ -24,7 +24,7 @@ Does Flutter web meet D9's gates: first load ≤ 5 MB and MIDI → frame ≤ 30 
 | Path | n | p50 | p95 | Notes |
 |---|---|---|---|---|
 | Touch (mouse click) → frame start | 3 | 2.5 ms | 2.9 ms | Timestamp taken in Dart handler; excludes browser input dispatch. Lower bound only |
-| Web MIDI → frame start | 0 | n/a | n/a | **Not measured: no MIDI keyboard attached** |
+| Web MIDI → frame start (M-Audio Keystation Mini 32, USB, Chrome, 2026-10-16) | 11 | 5.8 ms | 7.4 ms | max 7.4 ms. Passes 30 ms gate. Small sample; rerun with ≥ 50 notes when convenient |
 
 Functional check: keys render C3–C6, touch press/release correct per pointer (stuck-key bug found and fixed), `flutter analyze` clean, 4 unit tests pass (`app/test/widget_test.dart`).
 
@@ -44,7 +44,6 @@ Gotchas: `integrate` comments out the existing `main.dart` and adds a demo; rest
 
 ## Not done
 
-- Web MIDI latency with a real keyboard (needs user's device). The app shows p50/p95 live after "Connect MIDI".
 - Android/iOS build smoke test (needs Android SDK / macOS).
 
 ## Implications
@@ -57,3 +56,7 @@ Gotchas: `integrate` comments out the existing `main.dart` and adds a demo; rest
 ## Follow-ups
 
 - Measure Web MIDI p95 with a USB keyboard on Chrome (user run).
+
+## Yamaha "Digital Piano" sends nothing (2026-10-16)
+
+USB device `VID_0499&PID_160F` enumerates as "Digital Piano" and Chrome/rtmidi can open it, but it delivered **0 messages** in 20 s windows, both in Chrome and via native `python-rtmidi`, after replug and power cycle. Keystation on the same machine works, so the cause is that piano, its cable/port, or Windows MIDI Services (`MidiSrv`), not the app. Unresolved.
