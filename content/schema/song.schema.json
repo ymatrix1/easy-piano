@@ -93,6 +93,9 @@
           },
           "BASS": {
             "type": "string"
+          },
+          "PAD": {
+            "type": "string"
           }
         }
       }

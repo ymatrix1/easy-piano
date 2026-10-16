@@ -32,6 +32,7 @@ abstract class PianoSynth {
     double durSec, {
     int velocity = 80,
     bool force = false,
+    String part = 'piano',
   });
 
   /// Schedules a metronome click [startSec] seconds from now (accent = beat 1).
@@ -44,6 +45,14 @@ abstract class PianoSynth {
 
   /// Schedules a synthesized bass note [startSec] seconds from now.
   void bass(int pitch, double startSec, double durSec, {int velocity = 80});
+
+  /// Schedules a synthesized strings-pad note [startSec] seconds from now.
+  void pad(int pitch, double startSec, double durSec, {int velocity = 80});
+
+  /// Sets a part's volume (1 = default mix level ... 0 = muted). [part] is a
+  /// score part key (`ACC`, `DRUMS`, `BASS`, `PAD`) or `piano` for everything
+  /// else on the piano voice.
+  void setPartLevel(String part, double level);
 
   /// Stops everything scheduled or sounding.
   void stopAll();

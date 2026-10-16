@@ -25,6 +25,7 @@ class _SilentSynth implements PianoSynth {
     double durSec, {
     int velocity = 80,
     bool force = false,
+    String part = 'piano',
   }) {}
 
   @override
@@ -35,6 +36,12 @@ class _SilentSynth implements PianoSynth {
 
   @override
   void bass(int pitch, double startSec, double durSec, {int velocity = 80}) {}
+
+  @override
+  void pad(int pitch, double startSec, double durSec, {int velocity = 80}) {}
+
+  @override
+  void setPartLevel(String part, double level) {}
 
   @override
   void stopAll() {}

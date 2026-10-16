@@ -113,7 +113,7 @@ class _WebPianoSynth implements PianoSynth {
     return best;
   }
 
-  _Voice? _start(int pitch, double when, int velocity) {
+  _Voice? _start(int pitch, double when, int velocity, [web.AudioNode? dest]) {
     final ctx = _context();
     final sample = _nearest(pitch);
     if (sample == null) return null;
@@ -124,7 +124,7 @@ class _WebPianoSynth implements PianoSynth {
     final level = (velocity.clamp(1, 127) / 127) * 0.9;
     gain.gain.setValueAtTime(level, when);
     src.connect(gain);
-    gain.connect(_master!);
+    gain.connect(dest ?? _master!);
     src.start(when);
     return _Voice(src, gain);
   }
@@ -158,11 +158,12 @@ class _WebPianoSynth implements PianoSynth {
     double durSec, {
     int velocity = 80,
     bool force = false,
+    String part = 'piano',
   }) {
     if (!enabled && !force) return;
     final ctx = _context();
     final at = ctx.currentTime + math.max(0.0, startSec);
-    final v = _start(pitch, at, velocity);
+    final v = _start(pitch, at, velocity, _bus(part));
     if (v == null) return;
     _release(v, at + durSec);
     _scheduled.add(v);
@@ -186,6 +187,62 @@ class _WebPianoSynth implements PianoSynth {
     osc.start(at);
     osc.stop(at + 0.06);
     _clicks.add(osc);
+  }
+
+  /// One gain node per part, between the voices and the master.
+  final _buses = <String, web.GainNode>{};
+
+  /// Default mix: the band sits under the piano the student plays.
+  static const _defaultLevels = {
+    'piano': 1.0,
+    'ACC': 0.8,
+    'DRUMS': 0.7,
+    'BASS': 0.8,
+    'PAD': 0.5,
+  };
+
+  web.GainNode _bus(String part) {
+    final ctx = _context();
+    return _buses[part] ??= ctx.createGain()
+      ..gain.value = _defaultLevels[part] ?? 1.0
+      ..connect(_master!);
+  }
+
+  @override
+  void setPartLevel(String part, double level) {
+    _bus(part).gain.value = level.clamp(0.0, 2.0);
+  }
+
+  @override
+  void pad(int pitch, double startSec, double durSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final freq = 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+    final level = velocity.clamp(1, 127) / 127 * 0.12;
+    // Three slightly detuned saws through a soft low-pass: an ensemble
+    // strings pad. Slow attack and release keep it behind the piano.
+    final filter = ctx.createBiquadFilter()
+      ..type = 'lowpass'
+      ..frequency.value = 1800
+      ..Q.value = 0.5;
+    final gain = ctx.createGain();
+    final end = at + math.max(0.3, durSec);
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.25);
+    gain.gain.setValueAtTime(level, end);
+    gain.gain.setTargetAtTime(0, end, 0.15);
+    filter.connect(gain);
+    gain.connect(_bus('PAD'));
+    for (final cents in [-7.0, 0.0, 7.0]) {
+      final o = ctx.createOscillator()
+        ..type = 'sawtooth'
+        ..frequency.value = freq
+        ..detune.value = cents;
+      o.connect(filter);
+      o.start(at);
+      o.stop(end + 0.8);
+      _band.add(o);
+    }
   }
 
   /// Drum and bass nodes, kept so [stopAll] can silence them.
@@ -224,7 +281,7 @@ class _WebPianoSynth implements PianoSynth {
     gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
     src.connect(filter);
     filter.connect(gain);
-    gain.connect(_master!);
+    gain.connect(_bus('DRUMS'));
     src.start(at);
     src.stop(at + decay + 0.02);
     _band.add(src);
@@ -247,7 +304,7 @@ class _WebPianoSynth implements PianoSynth {
     gain.gain.setValueAtTime(level, at);
     gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
     osc.connect(gain);
-    gain.connect(_master!);
+    gain.connect(_bus('DRUMS'));
     osc.start(at);
     osc.stop(at + decay + 0.02);
     _band.add(osc);
@@ -299,7 +356,7 @@ class _WebPianoSynth implements PianoSynth {
     saw.connect(filter);
     sine.connect(filter);
     filter.connect(gain);
-    gain.connect(_master!);
+    gain.connect(_bus('BASS'));
     for (final o in [saw, sine]) {
       o.start(at);
       o.stop(end + 0.3);

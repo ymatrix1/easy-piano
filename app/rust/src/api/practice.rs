@@ -63,7 +63,7 @@ pub struct NoteView {
     pub beat: f64,
     pub beats: f64,
     /// Score part: "RH", "LH", "ACC", "DRUMS" (pitch is a General MIDI drum
-    /// number) or "BASS".
+    /// number), "BASS" or "PAD".
     pub part_name: String,
 }
 
@@ -76,7 +76,7 @@ fn hand_filter(hand: &str) -> HandFilter {
 }
 
 /// Notes the app plays along in play-along: the hand not being practised plus
-/// the song's backing parts (`ACC`, `DRUMS`, `BASS`).
+/// the song's backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`).
 #[frb(sync)]
 pub fn companion(song_json: String, hand: String) -> Result<Vec<NoteView>, String> {
     let song = Song::from_json(&song_json)?;

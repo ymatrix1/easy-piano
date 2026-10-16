@@ -224,7 +224,7 @@ fn plays(hand: HandFilter, n: &TimedNote) -> bool {
 }
 
 /// Notes the app plays along with the student in play-along: the hand that is
-/// not being practised plus the backing parts (`ACC`, `DRUMS`, `BASS`).
+/// not being practised plus the backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`).
 pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
     song.timeline().into_iter().filter(|n| n.accomp || !plays(hand, n)).collect()
 }
@@ -810,11 +810,11 @@ mod tests {
     fn drums_and_bass_join_the_companion_never_the_targets() {
         let song = Song::from_json(r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
             "license":"CC0-1.0","composition_license":"public-domain","bpm":60,"time":"4/4","key":"C",
-            "bars":[{"RH":"C4:1","DRUMS":"C2:2 D2:2","BASS":"C2:1"}]}"#).unwrap();
+            "bars":[{"RH":"C4:1","DRUMS":"C2:2 D2:2","BASS":"C2:1","PAD":"G3:1"}]}"#).unwrap();
         let s = Session::new(&song, Settings { hand: HandFilter::Both, ..Settings::default() });
         assert_eq!(s.targets().len(), 1);
         let comp: Vec<(u8, Part)> = companion_notes(&song, HandFilter::Both).iter().map(|n| (n.pitch, n.part)).collect();
-        assert_eq!(comp, vec![(36, Part::Bass), (36, Part::Drums), (38, Part::Drums)]);
+        assert_eq!(comp, vec![(36, Part::Bass), (36, Part::Drums), (55, Part::Pad), (38, Part::Drums)]);
     }
 
     #[test]

@@ -27,8 +27,8 @@ pub struct Song {
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
-/// `ACC`, `DRUMS` and `BASS` are backing parts: played by the app, never graded.
-const HANDS: [&str; 5] = ["RH", "LH", "ACC", "DRUMS", "BASS"];
+/// `ACC`, `DRUMS`, `BASS` and `PAD` are backing parts: played by the app, never graded.
+const HANDS: [&str; 6] = ["RH", "LH", "ACC", "DRUMS", "BASS", "PAD"];
 /// Drum kit pieces a `DRUMS` part may use, as General MIDI percussion numbers:
 /// kick 36 (C2), snare 38 (D2), closed hi-hat 42 (F#2), open hi-hat 46 (A#2),
 /// crash 49 (C#3).
@@ -45,6 +45,8 @@ pub enum Part {
     Drums,
     /// Bass instrument.
     Bass,
+    /// Sustained strings pad.
+    Pad,
 }
 
 impl Part {
@@ -54,6 +56,7 @@ impl Part {
             "ACC" => Part::Acc,
             "DRUMS" => Part::Drums,
             "BASS" => Part::Bass,
+            "PAD" => Part::Pad,
             _ => Part::Right,
         }
     }
@@ -66,6 +69,7 @@ impl Part {
             Part::Acc => "ACC",
             Part::Drums => "DRUMS",
             Part::Bass => "BASS",
+            Part::Pad => "PAD",
         }
     }
 }
@@ -76,7 +80,7 @@ pub struct TimedNote {
     pub start_beat: f64,
     pub beats: f64,
     pub left_hand: bool,
-    /// Backing part (`ACC`, `DRUMS`, `BASS`): played by the app, never a target.
+    /// Backing part (`ACC`, `DRUMS`, `BASS`, `PAD`): played by the app, never a target.
     pub accomp: bool,
     pub part: Part,
     pub finger: Option<u8>,
@@ -175,7 +179,7 @@ impl Song {
                                 start_beat: bar_start + t.beats(unit),
                                 beats: dur.beats(unit),
                                 left_hand: part == Part::Left,
-                                accomp: matches!(part, Part::Acc | Part::Drums | Part::Bass),
+                                accomp: matches!(part, Part::Acc | Part::Drums | Part::Bass | Part::Pad),
                                 part,
                                 finger: fingers.get(k).copied(),
                                 bar: i,
@@ -239,6 +243,15 @@ mod tests {
         let bass: Vec<u8> = t.iter().filter(|n| n.part == Part::Bass).map(|n| n.pitch).collect();
         assert_eq!(bass, vec![36, 31]);
         assert!(t.iter().any(|n| n.part == Part::Right && !n.accomp));
+    }
+
+    #[test]
+    fn pad_is_a_backing_part() {
+        let s = Song::from_json(&song(r#"[{"RH":"C4:1","PAD":"C3E3G3:1"}]"#, "")).unwrap();
+        assert_eq!(s.validate(), Vec::<String>::new());
+        let pad: Vec<TimedNote> = s.timeline().into_iter().filter(|n| n.part == Part::Pad).collect();
+        assert_eq!(pad.len(), 3);
+        assert!(pad.iter().all(|n| n.accomp && n.beats == 4.0));
     }
 
     #[test]

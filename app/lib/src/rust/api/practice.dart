@@ -10,7 +10,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These functions are ignored because they are not marked as `pub`: `hand_filter`
 
 /// Notes the app plays along in play-along: the hand not being practised plus
-/// the song's backing parts (`ACC`, `DRUMS`, `BASS`).
+/// the song's backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`).
 List<NoteView> companion({required String songJson, required String hand}) =>
     RustLib.instance.api.crateApiPracticeCompanion(
       songJson: songJson,
@@ -110,7 +110,7 @@ class NoteView {
   final double beats;
 
   /// Score part: "RH", "LH", "ACC", "DRUMS" (pitch is a General MIDI drum
-  /// number) or "BASS".
+  /// number), "BASS" or "PAD".
   final String partName;
 
   const NoteView({
