@@ -138,6 +138,7 @@ impl PracticeSession {
             failed_attempts,
             // Reference: hint after 1 s in one-note drills, 4 s in note sequences.
             hint_after_us: if mode == "one_note" { 1_000_000 } else { WAIT_HINT_AFTER_US },
+            drill: mode == "one_note",
         };
         Ok(PracticeSession { inner: Session::new(&song, settings) })
     }

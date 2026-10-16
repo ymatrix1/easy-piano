@@ -51,6 +51,9 @@ pub struct Settings {
     /// Wait mode: how long a note waits before the hint (beam, key colours)
     /// shows. Reference: 4 s for note sequences, 1 s for one-note drills.
     pub hint_after_us: i64,
+    /// `one_note` drill: passes on notes completed ("N correct of M"), hinted
+    /// or not; the hint only costs stars.
+    pub drill: bool,
 }
 
 impl Default for Settings {
@@ -63,8 +66,13 @@ impl Default for Settings {
             failed_attempts: 0,
             hand: HandFilter::Right,
             hint_after_us: WAIT_HINT_AFTER_US,
+            drill: false,
         }
     }
+}
+
+fn hit_count(targets: &[Target]) -> usize {
+    targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count()
 }
 
 /// Wait mode: time before the hint shows (reference default).
@@ -431,7 +439,11 @@ impl Session {
                 let clean = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count();
                 let ratio = clean as f64 / total as f64;
                 let done = self.cursor >= self.targets.len();
-                let passed = done && ratio > WAIT_PASS_RATIO;
+                let passed = if self.settings.drill {
+                    done && hit_count(&self.targets) as f64 / total as f64 > WAIT_PASS_RATIO
+                } else {
+                    done && ratio > WAIT_PASS_RATIO
+                };
                 let stars = if !passed {
                     0
                 } else if clean == self.targets.len() {
@@ -669,6 +681,27 @@ mod tests {
         press(&mut s, 60, 4_700_000);
         press(&mut s, 64, 4_750_000);
         assert!(s.tick(4_800_000).done);
+    }
+
+    #[test]
+    fn drill_passes_on_completed_notes_even_when_hinted() {
+        let mut s = wait();
+        s.settings.drill = true;
+        s.settings.hint_after_us = 1_000_000;
+        // Every note takes 2 s, so each one shows the hint first.
+        let mut t = 0;
+        for p in [60, 62, 64, 65] {
+            t += 2_000_000;
+            s.tick(t);
+            press(&mut s, p, t + 10_000);
+        }
+        t += 2_000_000;
+        s.tick(t);
+        for p in [60, 64, 67] {
+            press(&mut s, p, t + 10_000);
+        }
+        let r = s.result();
+        assert!(r.passed && r.stars == 1, "{r:?}");
     }
 
     #[test]

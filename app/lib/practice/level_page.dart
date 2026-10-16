@@ -309,6 +309,8 @@ class _LevelPageState extends State<LevelPage> {
               Text(
                 playAlong
                     ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
+                    : s.type == 'one_note'
+                    ? 'Play more than 80% of the notes.'
                     : 'Play more than 80% of the notes before the hint appears.'
                           '${r.suggestPractice ? ' Try a slower tempo.' : ''}',
                 style: const TextStyle(color: StagePalette.textDim),
