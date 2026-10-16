@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_locale.dart';
+import '../l10n/app_localizations.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
@@ -15,37 +17,37 @@ class PracticeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final modes = [
       (
-        'Free play',
-        'Play anything on your MIDI keyboard or the screen.',
+        AppLocalizations.of(context).freePlay,
+        AppLocalizations.of(context).freePlayDesc,
         Icons.piano_rounded,
         GameTone.blue,
         onFreePlay as VoidCallback?,
       ),
       (
-        'Sight reading',
-        'Read short random phrases at your level.',
+        AppLocalizations.of(context).sightReading,
+        AppLocalizations.of(context).sightReadingDesc,
         Icons.visibility_rounded,
         GameTone.purple,
         null,
       ),
       (
-        'Rhythm drills',
-        'Tap the beat: quarters, halves, eighths.',
+        AppLocalizations.of(context).rhythmDrills,
+        AppLocalizations.of(context).rhythmDrillsDesc,
         Icons.av_timer_rounded,
         GameTone.green,
         null,
       ),
       (
-        'Song library',
-        'Practice any song you unlocked, at any tempo.',
+        AppLocalizations.of(context).songLibrary,
+        AppLocalizations.of(context).songLibraryDesc,
         Icons.library_music_rounded,
         GameTone.red,
         null,
       ),
     ];
     return _TabScroll(
-      title: 'Practice',
-      subtitle: 'Train skills outside the course path.',
+      title: AppLocalizations.of(context).navPractice,
+      subtitle: AppLocalizations.of(context).practiceSubtitle,
       child: LayoutBuilder(
         builder: (context, c) {
           final cols = c.maxWidth >= 520 ? 2 : 1;
@@ -177,9 +179,9 @@ class _ModeCard extends StatelessWidget {
                         shape: chamfer(6),
                         color: Colors.black.withValues(alpha: 0.35),
                       ),
-                      child: const Text(
-                        'SOON',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context).soon.toUpperCase(),
+                        style: const TextStyle(
                           color: GameColors.textDim,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -221,18 +223,28 @@ class ProfileTab extends StatelessWidget {
         )
         .length;
     final stats = [
-      ('Stars', progress.totalStars, Icons.star_rounded, GameColors.gold),
       (
-        'Tasks',
+        AppLocalizations.of(context).statStars,
+        progress.totalStars,
+        Icons.star_rounded,
+        GameColors.gold,
+      ),
+      (
+        AppLocalizations.of(context).statTasks,
         progress.tasksDone,
         Icons.check_circle_rounded,
         GameColors.success,
       ),
-      ('Modules', modules, Icons.workspace_premium_rounded, GameColors.cyan),
+      (
+        AppLocalizations.of(context).statModules,
+        modules,
+        Icons.workspace_premium_rounded,
+        GameColors.cyan,
+      ),
     ];
     return _TabScroll(
-      title: 'Profile',
-      subtitle: 'Your progress on this device.',
+      title: AppLocalizations.of(context).navProfile,
+      subtitle: AppLocalizations.of(context).profileSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -276,11 +288,20 @@ class ProfileTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 26),
-          const GameText('Settings', size: 16, align: TextAlign.left),
+          GameText(
+            AppLocalizations.of(context).settings,
+            size: 16,
+            align: TextAlign.left,
+          ),
           const SizedBox(height: 10),
           const _SoundToggle(),
+          const _LanguagePicker(),
           const SizedBox(height: 26),
-          const GameText('Developer tools', size: 16, align: TextAlign.left),
+          GameText(
+            AppLocalizations.of(context).developerTools,
+            size: 16,
+            align: TextAlign.left,
+          ),
           const SizedBox(height: 10),
           _ListButton('MIDI latency spike', Icons.usb_rounded, onMidiSpike),
           const SizedBox(height: 8),
@@ -392,7 +413,7 @@ class _SoundToggle extends StatelessWidget {
       valueListenable: Sfx.muted,
       builder: (context, muted, _) => Pressable(
         onTap: () => Sfx.muted.value = !muted,
-        semanticLabel: 'Sound effects',
+        semanticLabel: AppLocalizations.of(context).soundEffects,
         burstColor: GameColors.cyan,
         builder: (p, hover) => Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -411,9 +432,9 @@ class _SoundToggle extends StatelessWidget {
                 size: 22,
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Sound effects',
+                  AppLocalizations.of(context).soundEffects,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -442,6 +463,119 @@ class _SoundToggle extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Language picker: device default or one of [AppLanguage.all], remembered
+/// per device. Hidden when no [AppLocaleScope] is above (tests, spikes).
+class _LanguagePicker extends StatelessWidget {
+  const _LanguagePicker();
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocale = AppLocaleScope.maybeOf(context);
+    if (appLocale == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final options = <(AppLanguage?, String)>[
+      (null, l.languageSystem),
+      for (final lang in AppLanguage.all) (lang, lang.name),
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        decoration: ShapeDecoration(
+          shape: chamfer(
+            10,
+            side: const BorderSide(color: GameColors.panelEdge),
+          ),
+          color: GameColors.panel.withValues(alpha: 0.85),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.translate_rounded,
+                  color: GameColors.cyan,
+                  size: 22,
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  l.language,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (lang, name) in options)
+                  _LanguageChip(
+                    label: name,
+                    selected: appLocale.choice == lang,
+                    onTap: () => appLocale.choose(lang),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      selected: selected,
+      child: Pressable(
+        onTap: onTap,
+        semanticLabel: label,
+        burstColor: GameColors.cyan,
+        builder: (p, hover) => AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: ShapeDecoration(
+            shape: chamfer(
+              7,
+              side: BorderSide(
+                color: selected ? GameColors.cyan : GameColors.panelEdge,
+              ),
+            ),
+            color: selected
+                ? GameColors.cyan.withValues(alpha: 0.22)
+                : Colors.white.withValues(alpha: hover ? 0.08 : 0.03),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : GameColors.textDim,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
       ),

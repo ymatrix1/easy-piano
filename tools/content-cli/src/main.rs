@@ -14,12 +14,20 @@ const UI_TYPES: [&str; 4] = ["treble", "bass", "both", "touch"];
 #[derive(Default)]
 struct Lint {
     errors: Vec<String>,
+    /// Non-fatal: printed, exit code stays 0 (e.g. untranslated strings).
+    warnings: Vec<String>,
     str_keys: BTreeSet<String>,
 }
 
 impl Lint {
     fn err(&mut self, file: &Path, msg: impl AsRef<str>) {
-        self.errors.push(format!("{}: {}", file.display(), msg.as_ref()));
+        self.errors
+            .push(format!("{}: {}", file.display(), msg.as_ref()));
+    }
+
+    fn warn(&mut self, file: &Path, msg: impl AsRef<str>) {
+        self.warnings
+            .push(format!("{}: {}", file.display(), msg.as_ref()));
     }
 
     /// Collects `str:` references anywhere in a JSON value.
@@ -52,16 +60,25 @@ fn json_files(dir: &Path) -> Vec<PathBuf> {
 }
 
 fn read_json(lint: &mut Lint, path: &Path) -> Option<Value> {
-    let text = fs::read_to_string(path).map_err(|e| lint.err(path, e.to_string())).ok()?;
-    serde_json::from_str(&text).map_err(|e| lint.err(path, format!("json: {e}"))).ok()
+    let text = fs::read_to_string(path)
+        .map_err(|e| lint.err(path, e.to_string()))
+        .ok()?;
+    serde_json::from_str(&text)
+        .map_err(|e| lint.err(path, format!("json: {e}")))
+        .ok()
 }
 
 fn id_matches_file(lint: &mut Lint, path: &Path, v: &Value) -> Option<String> {
     let id = v.get("id").and_then(Value::as_str).map(str::to_string);
-    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or_default();
     match &id {
         None => lint.err(path, "missing `id`"),
-        Some(id) if id != stem => lint.err(path, format!("id `{id}` must match file name `{stem}`")),
+        Some(id) if id != stem => {
+            lint.err(path, format!("id `{id}` must match file name `{stem}`"))
+        }
         _ => {}
     }
     id
@@ -73,13 +90,21 @@ fn lint_dir(root: &Path) -> Lint {
     // Songs.
     let mut songs = BTreeSet::new();
     for path in json_files(&root.join("songs")) {
-        let Ok(text) = fs::read_to_string(&path) else { continue };
+        let Ok(text) = fs::read_to_string(&path) else {
+            continue;
+        };
         match Song::from_json(&text) {
             Err(e) => lint.err(&path, e),
             Ok(song) => {
-                let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+                let stem = path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or_default();
                 if song.id != stem {
-                    lint.err(&path, format!("id `{}` must match file name `{stem}`", song.id));
+                    lint.err(
+                        &path,
+                        format!("id `{}` must match file name `{stem}`", song.id),
+                    );
                 }
                 for e in song.validate() {
                     lint.err(&path, e);
@@ -92,7 +117,9 @@ fn lint_dir(root: &Path) -> Lint {
     // Scenes (shape only; the scene player is Phase 2).
     let mut scenes = BTreeSet::new();
     for path in json_files(&root.join("scenes")) {
-        let Some(v) = read_json(&mut lint, &path) else { continue };
+        let Some(v) = read_json(&mut lint, &path) else {
+            continue;
+        };
         if let Some(id) = id_matches_file(&mut lint, &path, &v) {
             scenes.insert(id);
         }
@@ -107,7 +134,11 @@ fn lint_dir(root: &Path) -> Lint {
     let courses_path = root.join("courses.json");
     let courses = read_json(&mut lint, &courses_path).unwrap_or(Value::Null);
     lint.collect_strs(&courses);
-    let course_list = courses.get("courses").and_then(Value::as_array).cloned().unwrap_or_default();
+    let course_list = courses
+        .get("courses")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     if course_list.is_empty() {
         lint.err(&courses_path, "`courses` must be a non-empty array");
     }
@@ -119,44 +150,73 @@ fn lint_dir(root: &Path) -> Lint {
         .filter_map(|s| s.get("id").and_then(Value::as_str))
         .map(str::to_string)
         .collect();
-    let course_ids: BTreeSet<String> =
-        course_list.iter().filter_map(|c| c.get("id").and_then(Value::as_str)).map(str::to_string).collect();
+    let course_ids: BTreeSet<String> = course_list
+        .iter()
+        .filter_map(|c| c.get("id").and_then(Value::as_str))
+        .map(str::to_string)
+        .collect();
 
     for course in &course_list {
         let Some(cid) = course.get("id").and_then(Value::as_str) else {
             lint.err(&courses_path, "course without `id`");
             continue;
         };
-        for req in course.get("requires").and_then(Value::as_array).into_iter().flatten() {
+        for req in course
+            .get("requires")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
             if let Some(r) = req.as_str().filter(|r| !course_ids.contains(*r)) {
-                lint.err(&courses_path, format!("course `{cid}` requires unknown course `{r}`"));
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}` requires unknown course `{r}`"),
+                );
             }
         }
         if let Some(sec) = course.get("section").and_then(Value::as_str) {
             if !section_ids.is_empty() && !section_ids.contains(sec) {
-                lint.err(&courses_path, format!("course `{cid}`: unknown section `{sec}`"));
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}`: unknown section `{sec}`"),
+                );
             }
         }
         // Planned courses are listed (locked) in the app but have no journey yet.
         match course.get("status").and_then(Value::as_str) {
             Some("planned") => continue,
             Some(st) if st != "ready" => {
-                lint.err(&courses_path, format!("course `{cid}`: unknown status `{st}`"));
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}`: unknown status `{st}`"),
+                );
             }
             _ => {}
         }
         let cdir = root.join("courses").join(cid);
         for path in json_files(&cdir.join("levels")) {
-            let Some(v) = read_json(&mut lint, &path) else { continue };
+            let Some(v) = read_json(&mut lint, &path) else {
+                continue;
+            };
             lint.collect_strs(&v);
-            let Some(id) = id_matches_file(&mut lint, &path, &v) else { continue };
-            if let Some(ui) = v.get("ui").and_then(Value::as_str).filter(|u| !UI_TYPES.contains(u)) {
+            let Some(id) = id_matches_file(&mut lint, &path, &v) else {
+                continue;
+            };
+            if let Some(ui) = v
+                .get("ui")
+                .and_then(Value::as_str)
+                .filter(|u| !UI_TYPES.contains(u))
+            {
                 lint.err(&path, format!("unknown ui `{ui}`"));
             }
             if v.get("keyboard").is_some_and(|k| !k.is_boolean()) {
                 lint.err(&path, "`keyboard` must be true or false");
             }
-            let stages = v.get("stages").and_then(Value::as_array).cloned().unwrap_or_default();
+            let stages = v
+                .get("stages")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
             if stages.is_empty() {
                 lint.err(&path, "level needs at least one stage");
             }
@@ -168,19 +228,35 @@ fn lint_dir(root: &Path) -> Lint {
                 }
                 let needs_score = matches!(ty, "wait" | "play_along" | "one_note");
                 match st.get("score").and_then(Value::as_str) {
-                    Some(s) if !songs.contains(s) => lint.err(&path, format!("stage {n}: unknown score `{s}`")),
-                    None if needs_score => lint.err(&path, format!("stage {n}: `{ty}` needs `score`")),
+                    Some(s) if !songs.contains(s) => {
+                        lint.err(&path, format!("stage {n}: unknown score `{s}`"))
+                    }
+                    None if needs_score => {
+                        lint.err(&path, format!("stage {n}: `{ty}` needs `score`"))
+                    }
                     _ => {}
                 }
                 match st.get("scene").and_then(Value::as_str) {
-                    Some(s) if !scenes.contains(s) => lint.err(&path, format!("stage {n}: unknown scene `{s}`")),
-                    None if ty == "animation" => lint.err(&path, format!("stage {n}: animation needs `scene`")),
+                    Some(s) if !scenes.contains(s) => {
+                        lint.err(&path, format!("stage {n}: unknown scene `{s}`"))
+                    }
+                    None if ty == "animation" => {
+                        lint.err(&path, format!("stage {n}: animation needs `scene`"))
+                    }
                     _ => {}
                 }
-                if let Some(t) = st.get("tempo").and_then(Value::as_f64).filter(|t| !(0.3..=1.5).contains(t)) {
+                if let Some(t) = st
+                    .get("tempo")
+                    .and_then(Value::as_f64)
+                    .filter(|t| !(0.3..=1.5).contains(t))
+                {
                     lint.err(&path, format!("stage {n}: tempo {t} out of 0.3..1.5"));
                 }
-                if let Some(p) = st.get("pass").and_then(Value::as_f64).filter(|p| !(0.0..=1.0).contains(p)) {
+                if let Some(p) = st
+                    .get("pass")
+                    .and_then(Value::as_f64)
+                    .filter(|p| !(0.0..=1.0).contains(p))
+                {
                     lint.err(&path, format!("stage {n}: pass {p} out of 0..1"));
                 }
                 if let Some(r) = st.get("repeats") {
@@ -188,7 +264,11 @@ fn lint_dir(root: &Path) -> Lint {
                         lint.err(&path, format!("stage {n}: repeats must be 1..10"));
                     }
                 }
-                if let Some(h) = st.get("hand").and_then(Value::as_str).filter(|h| !["RH", "LH", "both"].contains(h)) {
+                if let Some(h) = st
+                    .get("hand")
+                    .and_then(Value::as_str)
+                    .filter(|h| !["RH", "LH", "both"].contains(h))
+                {
                     lint.err(&path, format!("stage {n}: unknown hand `{h}`"));
                 }
             }
@@ -196,11 +276,20 @@ fn lint_dir(root: &Path) -> Lint {
         }
 
         let jpath = cdir.join("journey.json");
-        let Some(j) = read_json(&mut lint, &jpath) else { continue };
+        let Some(j) = read_json(&mut lint, &jpath) else {
+            continue;
+        };
         lint.collect_strs(&j);
-        let nodes = j.get("nodes").and_then(Value::as_array).cloned().unwrap_or_default();
-        let node_ids: BTreeSet<String> =
-            nodes.iter().filter_map(|n| n.get("id").and_then(Value::as_str)).map(str::to_string).collect();
+        let nodes = j
+            .get("nodes")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let node_ids: BTreeSet<String> = nodes
+            .iter()
+            .filter_map(|n| n.get("id").and_then(Value::as_str))
+            .map(str::to_string)
+            .collect();
         if node_ids.len() != nodes.len() {
             lint.err(&jpath, "every node needs a unique `id`");
         }
@@ -210,17 +299,32 @@ fn lint_dir(root: &Path) -> Lint {
             if !NODE_KINDS.contains(&kind) {
                 lint.err(&jpath, format!("node `{nid}`: unknown kind `{kind}`"));
             }
-            for l in node.get("levels").and_then(Value::as_array).into_iter().flatten() {
+            for l in node
+                .get("levels")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
                 if let Some(l) = l.as_str().filter(|l| !levels.contains_key(*l)) {
                     lint.err(&jpath, format!("node `{nid}`: unknown level `{l}`"));
                 }
             }
-            for nx in node.get("next").and_then(Value::as_array).into_iter().flatten() {
+            for nx in node
+                .get("next")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
                 if let Some(nx) = nx.as_str().filter(|nx| !node_ids.contains(*nx)) {
                     lint.err(&jpath, format!("node `{nid}`: unknown next node `{nx}`"));
                 }
             }
-            for s in node.get("songs").and_then(Value::as_object).into_iter().flat_map(|o| o.values()) {
+            for s in node
+                .get("songs")
+                .and_then(Value::as_object)
+                .into_iter()
+                .flat_map(|o| o.values())
+            {
                 if let Some(s) = s.as_str().filter(|s| !songs.contains(*s)) {
                     lint.err(&jpath, format!("node `{nid}`: unknown song slot `{s}`"));
                 }
@@ -237,13 +341,52 @@ fn lint_dir(root: &Path) -> Lint {
             lint.err(&en_path, format!("missing string `{k}`"));
         }
     }
+    // Other locales: English is the fallback, so gaps only warn (docs/specs/i18n.md).
+    let en_keys: BTreeSet<String> = en
+        .as_object()
+        .map(|o| o.keys().cloned().collect())
+        .unwrap_or_default();
+    let mut locales = 0;
+    for path in json_files(&root.join("strings")) {
+        if path == en_path {
+            continue;
+        }
+        let Some(v) = read_json(&mut lint, &path) else {
+            continue;
+        };
+        let Some(o) = v.as_object() else {
+            lint.err(&path, "strings file must be an object");
+            continue;
+        };
+        locales += 1;
+        for (k, val) in o {
+            if !val.is_string() {
+                lint.err(&path, format!("string `{k}` must be text"));
+            } else if !en_keys.contains(k) {
+                lint.warn(&path, format!("`{k}` is not in en.json (stale?)"));
+            }
+        }
+        let missing: Vec<&String> = en_keys.iter().filter(|k| !o.contains_key(*k)).collect();
+        if !missing.is_empty() {
+            let list: Vec<&str> = missing.iter().map(|k| k.as_str()).collect();
+            lint.warn(
+                &path,
+                format!(
+                    "{} untranslated string(s), English fallback: {}",
+                    missing.len(),
+                    list.join(", ")
+                ),
+            );
+        }
+    }
     println!(
-        "checked {} songs, {} scenes, {} levels, {} courses, {} string keys",
+        "checked {} songs, {} scenes, {} levels, {} courses, {} string keys, {} other locales",
         songs.len(),
         scenes.len(),
         levels.len(),
         course_ids.len(),
-        lint.str_keys.len()
+        lint.str_keys.len(),
+        locales
     );
     lint
 }
@@ -255,6 +398,9 @@ fn main() {
         std::process::exit(2);
     };
     let lint = lint_dir(Path::new(dir));
+    for w in &lint.warnings {
+        eprintln!("warning: {w}");
+    }
     for e in &lint.errors {
         eprintln!("error: {e}");
     }
@@ -263,4 +409,37 @@ fn main() {
         std::process::exit(1);
     }
     println!("ok");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_locale_strings_warn_but_do_not_fail() {
+        let dir = std::env::temp_dir().join(format!("content-lint-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(dir.join("strings")).unwrap();
+        fs::write(
+            dir.join("courses.json"),
+            r#"{"courses":[{"id":"c","title":"str:a","status":"planned"}]}"#,
+        )
+        .unwrap();
+        fs::write(dir.join("strings/en.json"), r#"{"a":"A","b":"B"}"#).unwrap();
+        fs::write(dir.join("strings/es.json"), r#"{"a":"A es","z":"stale"}"#).unwrap();
+        fs::write(dir.join("strings/fr.json"), r#"{"a":1}"#).unwrap();
+        let lint = lint_dir(&dir);
+        fs::remove_dir_all(&dir).unwrap();
+        let w = lint.warnings.join(
+            "
+",
+        );
+        assert!(
+            w.contains("1 untranslated string(s), English fallback: b"),
+            "{w}"
+        );
+        assert!(w.contains("`z` is not in en.json"), "{w}");
+        assert_eq!(lint.errors.len(), 1, "{:?}", lint.errors);
+        assert!(lint.errors[0].contains("string `a` must be text"));
+    }
 }
