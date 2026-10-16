@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../content/content_repo.dart';
@@ -152,28 +154,46 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: ShapeDecoration(
-              shape: chamfer(9),
-              gradient: GameTone.gold.gradient,
+    // Glass bar: blurred, translucent violet over the arena backdrop, with a
+    // light top rim and a cyan hairline underneath.
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: 0.10),
+                GameColors.panel.withValues(alpha: 0.35),
+              ],
             ),
-            child: const Icon(
-              Icons.piano_rounded,
-              color: GameColors.ink,
-              size: 24,
+            border: Border(
+              bottom: BorderSide(
+                color: GameColors.cyan.withValues(alpha: 0.35),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
-          const GameText('Easy Piano', size: 20),
-          const Spacer(),
-          StarCounter(value: stars),
-        ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/brand/logo.png',
+                  width: 40,
+                  height: 40,
+                  filterQuality: FilterQuality.medium,
+                  semanticLabel: 'Easy Piano logo',
+                ),
+                const SizedBox(width: 10),
+                const GameText('Easy Piano', size: 20),
+                const Spacer(),
+                StarCounter(value: stars),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
