@@ -21,12 +21,18 @@ pub enum Input {
 }
 
 impl Input {
-    /// Half-width of the hit window in microseconds.
-    pub fn window_us(self) -> i64 {
+    /// How early a press may come before its note (µs). Reference: the note
+    /// opens 0.3 s ahead (0.15 s for the microphone, which lags).
+    pub fn early_us(self) -> i64 {
         match self {
-            Input::Midi => 150_000,
-            Input::Mic | Input::Touch => 200_000,
+            Input::Midi | Input::Touch => 300_000,
+            Input::Mic => 150_000,
         }
+    }
+
+    /// How late a press may come after its note (µs). Reference: 0.43 s.
+    pub fn window_us(self) -> i64 {
+        430_000
     }
 }
 
@@ -51,6 +57,9 @@ pub struct Settings {
     /// Wait mode: how long a note waits before the hint (beam, key colours)
     /// shows. Reference: 4 s for note sequences, 1 s for one-note drills.
     pub hint_after_us: i64,
+    /// `one_note` drill: passes on notes completed ("N correct of M"), hinted
+    /// or not; the hint only costs stars.
+    pub drill: bool,
 }
 
 impl Default for Settings {
@@ -63,8 +72,13 @@ impl Default for Settings {
             failed_attempts: 0,
             hand: HandFilter::Right,
             hint_after_us: WAIT_HINT_AFTER_US,
+            drill: false,
         }
     }
+}
+
+fn hit_count(targets: &[Target]) -> usize {
+    targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count()
 }
 
 /// Wait mode: time before the hint shows (reference default).
@@ -200,13 +214,24 @@ pub struct Session {
     current_since_us: i64,
 }
 
-fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
-    let mut out: Vec<Target> = Vec::new();
-    for n in notes.iter().filter(|n| match hand {
+/// Whether the student plays this (non-accompaniment) note under [hand].
+fn plays(hand: HandFilter, n: &TimedNote) -> bool {
+    match hand {
         HandFilter::Right => !n.left_hand,
         HandFilter::Left => n.left_hand,
         HandFilter::Both => true,
-    }) {
+    }
+}
+
+/// Notes the app plays along with the student in play-along: the hand that is
+/// not being practised plus the `ACC` accompaniment part.
+pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
+    song.timeline().into_iter().filter(|n| n.accomp || !plays(hand, n)).collect()
+}
+
+fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
+    let mut out: Vec<Target> = Vec::new();
+    for n in notes.iter().filter(|n| !n.accomp && plays(hand, n)) {
         match out.last_mut() {
             Some(t) if (t.beat - n.start_beat).abs() < 1e-9 => {
                 t.pitches.insert(n.pitch);
@@ -301,15 +326,16 @@ impl Session {
 
     fn on_note_play_along(&mut self, e: NoteEvent) {
         self.expire(e.t_us);
-        let window = self.settings.input.window_us();
+        let (early, late) = (self.settings.input.early_us(), self.settings.input.window_us());
         // Nearest pending target containing this pitch, within the window.
         let best = (self.cursor..self.targets.len())
             .filter(|&i| {
                 let t = &self.targets[i];
                 t.state == ChordState::Pending && t.pitches.contains(&e.pitch) && !t.played.contains(&e.pitch)
             })
-            .map(|i| (i, (e.t_us - self.target_us(&self.targets[i])).abs()))
-            .filter(|&(_, d)| d <= window)
+            .map(|i| (i, e.t_us - self.target_us(&self.targets[i])))
+            .filter(|&(_, d)| -early <= d && d <= late)
+            .map(|(i, d)| (i, d.abs()))
             .min_by_key(|&(_, d)| d);
         let Some((i, _)) = best else {
             self.wrong += 1;
@@ -420,7 +446,11 @@ impl Session {
                 let clean = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count();
                 let ratio = clean as f64 / total as f64;
                 let done = self.cursor >= self.targets.len();
-                let passed = done && ratio > WAIT_PASS_RATIO;
+                let passed = if self.settings.drill {
+                    done && hit_count(&self.targets) as f64 / total as f64 > WAIT_PASS_RATIO
+                } else {
+                    done && ratio > WAIT_PASS_RATIO
+                };
                 let stars = if !passed {
                     0
                 } else if clean == self.targets.len() {
@@ -548,9 +578,19 @@ mod tests {
     }
 
     #[test]
+    fn early_press_up_to_300ms_counts_for_midi() {
+        let mut s = play_along(Settings::default());
+        press(&mut s, 62, 750_000); // D at 1 s, 250 ms early
+        press(&mut s, 64, 1_650_000); // E at 2 s, 350 ms early: too early
+        let t = s.targets();
+        assert!(matches!(t[1].state, ChordState::Hit { .. }));
+        assert_eq!(t[2].state, ChordState::Pending);
+    }
+
+    #[test]
     fn outside_window_is_wrong_and_target_is_missed() {
         let mut s = play_along(Settings::default());
-        press(&mut s, 60, 400_000); // 400 ms late for C at 0 s
+        press(&mut s, 60, 500_000); // 500 ms late for C at 0 s
         s.tick(1_000_000);
         assert_eq!(s.targets()[0].state, ChordState::Missed);
         assert_eq!(s.tick(1_000_000).wrong, 1);
@@ -661,6 +701,27 @@ mod tests {
     }
 
     #[test]
+    fn drill_passes_on_completed_notes_even_when_hinted() {
+        let mut s = wait();
+        s.settings.drill = true;
+        s.settings.hint_after_us = 1_000_000;
+        // Every note takes 2 s, so each one shows the hint first.
+        let mut t = 0;
+        for p in [60, 62, 64, 65] {
+            t += 2_000_000;
+            s.tick(t);
+            press(&mut s, p, t + 10_000);
+        }
+        t += 2_000_000;
+        s.tick(t);
+        for p in [60, 64, 67] {
+            press(&mut s, p, t + 10_000);
+        }
+        let r = s.result();
+        assert!(r.passed && r.stars == 1, "{r:?}");
+    }
+
+    #[test]
     fn wait_hinted_target_completes_but_is_not_clean() {
         let mut s = wait();
         s.tick(5_000_000); // hint on the first note
@@ -726,6 +787,22 @@ mod tests {
         assert_eq!((r.notes_hit, r.notes_total), (4, 7));
         assert!((r.assists - 0.5).abs() < 1e-9 && (r.timing - 1.0).abs() < 1e-9, "{r:?}");
         assert!((r.score - song_score(4.0 / 7.0, 1.0, 0.5)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn accompaniment_is_never_a_target_and_companion_has_other_hand() {
+        let json = r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:1","LH":"C3:1","ACC":"E3G3:2 E3G3:2"}]}"#;
+        let song = Song::from_json(json).unwrap();
+        assert!(song.validate().is_empty(), "{:?}", song.validate());
+        let s = Session::new(&song, Settings { hand: HandFilter::Both, ..Settings::default() });
+        let pitches: Vec<u8> = s.targets().iter().flat_map(|t| t.pitches.iter().copied()).collect();
+        assert_eq!(pitches, vec![48, 60]);
+        let comp: Vec<u8> = companion_notes(&song, HandFilter::Right).iter().map(|n| n.pitch).collect();
+        assert_eq!(comp, vec![48, 52, 55, 52, 55]); // beat 0: LH C3 + ACC E3 G3; beat 2: ACC again
+        assert_eq!(companion_notes(&song, HandFilter::Both).len(), 4);
     }
 
     #[test]

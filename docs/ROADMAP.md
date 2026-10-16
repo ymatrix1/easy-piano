@@ -20,7 +20,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] Core session: wait + play_along, critical sections, stars
 - [x] Practice studio: staff + keyboard with hit/miss colors, fingering, key hints, results (`app/lib/practice/`)
 - [ ] Falling notes view
-- [ ] Web only: Web MIDI + touch input; soundfont synth (AudioWorklet)
+- [x] Web only: Web MIDI + touch input; sampled piano synth (Web Audio), sound toggle, pre-listen, play-along companion + metronome
 - [ ] Deploy web build (static host with COOP/COEP headers)
 - [x] 5 Piano Basics levels authored and lint-clean (`content/`)
 - [ ] 5 Piano Basics 1 levels playable end to end

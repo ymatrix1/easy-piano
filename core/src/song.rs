@@ -27,7 +27,8 @@ pub struct Song {
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
-const HANDS: [&str; 2] = ["RH", "LH"];
+/// `ACC` is an accompaniment voice: played by the app, never graded.
+const HANDS: [&str; 3] = ["RH", "LH", "ACC"];
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TimedNote {
@@ -35,6 +36,8 @@ pub struct TimedNote {
     pub start_beat: f64,
     pub beats: f64,
     pub left_hand: bool,
+    /// Accompaniment (`ACC` part): played by the app, never a target.
+    pub accomp: bool,
     pub finger: Option<u8>,
     pub bar: usize,
 }
@@ -126,6 +129,7 @@ impl Song {
                                 start_beat: bar_start + t.beats(unit),
                                 beats: dur.beats(unit),
                                 left_hand: hand == "LH",
+                                accomp: hand == "ACC",
                                 finger: fingers.get(k).copied(),
                                 bar: i,
                             });
