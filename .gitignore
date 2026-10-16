@@ -1,0 +1,6 @@
+references/
+/build/
+.dart_tool/
+target/
+*.mp4
+*.mov

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-spike",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/serve_web.py", "app/build/web", "8765"],
+      "port": 8765
+    }
+  ]
+}
