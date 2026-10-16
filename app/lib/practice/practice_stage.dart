@@ -12,6 +12,7 @@ import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
+import '../ui/metronome_icon.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
 
@@ -141,6 +142,7 @@ class _PracticeStageState extends State<PracticeStage>
   double _cursorSinceSec = 0; // when the current wait note became current
   double? _hintSinceSec; // when the hint for the current note appeared
   bool _finished = false;
+  bool _wasCountIn = false;
 
   /// Notes the app plays with the student in play-along (other hand + ACC).
   List<NoteView> _companion = const [];
@@ -400,7 +402,12 @@ class _PracticeStageState extends State<PracticeStage>
     final f = _session.tick(
       tUs: PlatformInt64Util.from(_usAt(widget.midi.now())),
     );
-    if (_playAlong) _scroll.value = f.playheadBeat;
+    if (_playAlong) {
+      // The engine clock starts at 0; during the count-in scroll on wall time
+      // so the first note glides in toward the bar.
+      final us = _usAt(widget.midi.now());
+      _scroll.value = us < 0 ? us / _usPerBeat : f.playheadBeat;
+    }
     final targets = _session.targets();
     final states = [for (final t in targets) t.state];
     final now = _nowSec;
@@ -444,8 +451,9 @@ class _PracticeStageState extends State<PracticeStage>
     _hint.value = showKeys && f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
         : {};
-    final countInChanged =
-        _frame != null && (f.playheadBeat < 0) != (_frame!.playheadBeat < 0);
+    final inCountIn = _scroll.value < 0;
+    final countInChanged = inCountIn != _wasCountIn;
+    _wasCountIn = inCountIn;
     if (_frame == null ||
         f.hits != _frame!.hits ||
         f.misses != _frame!.misses ||
@@ -634,8 +642,7 @@ class _PracticeStageState extends State<PracticeStage>
                   ? 'Turn metronome off'
                   : 'Turn metronome on',
               onPressed: _toggleMetronome,
-              icon: Icon(
-                Icons.av_timer_rounded,
+              icon: MetronomeIcon(
                 color: pianoSynth.metronome
                     ? StagePalette.text
                     : StagePalette.text.withValues(alpha: 0.4),
@@ -737,7 +744,7 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   Widget build(BuildContext context) {
     final f = _frame;
-    final countIn = _playAlong && (f?.playheadBeat ?? -1) < 0 && !_paused;
+    final countIn = _playAlong && _scroll.value < 0 && !_paused;
     final waitDone = !_playAlong && (f?.done ?? false);
     return DecoratedBox(
       decoration: const BoxDecoration(
