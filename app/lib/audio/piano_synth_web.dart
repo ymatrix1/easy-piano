@@ -124,7 +124,7 @@ class _WebPianoSynth implements PianoSynth {
     final level = (velocity.clamp(1, 127) / 127) * 0.9;
     gain.gain.setValueAtTime(level, when);
     src.connect(gain);
-    gain.connect(dest ?? _master!);
+    gain.connect(dest ?? _bus('piano'));
     src.start(when);
     return _Voice(src, gain);
   }
@@ -192,15 +192,17 @@ class _WebPianoSynth implements PianoSynth {
   /// One gain node per part, between the voices and the master.
   final _buses = <String, web.GainNode>{};
 
-  /// Default mix: the band sits well under the piano the student plays
-  /// (synth saws sound much louder than piano samples at equal gain).
+  /// Default mix, from offline RMS measurements (docs/specs/content-format.md):
+  /// the piano samples peak near -21 dBFS, so piano parts get +12 dB; band
+  /// parts sit below the companion piano (bass, drums about -3 dB; choir -6;
+  /// pad -9) because synth saws are far louder than the samples at equal gain.
   static const _defaultLevels = {
-    'piano': 1.0,
-    'ACC': 0.7,
-    'DRUMS': 0.25,
-    'BASS': 0.3,
-    'PAD': 0.15,
-    'CHOIR': 0.18,
+    'piano': 4.0,
+    'ACC': 3.0,
+    'DRUMS': 0.17,
+    'BASS': 0.07,
+    'PAD': 0.06,
+    'CHOIR': 0.32,
   };
 
   web.GainNode _bus(String part) {
