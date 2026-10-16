@@ -4,7 +4,7 @@
     {
       "name": "web-spike",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "app/build/web"],
+      "runtimeArgs": ["tools/serve_web.py", "app/build/web", "8765"],
       "port": 8765
     }
   ]

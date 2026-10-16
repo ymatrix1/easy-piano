@@ -4,7 +4,11 @@ import 'package:easy_piano/ui/key_geometry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final g = KeyGeometry(lowPitch: 48, highPitch: 84, size: const Size(220, 100));
+  final g = KeyGeometry(
+    lowPitch: 48,
+    highPitch: 84,
+    size: const Size(220, 100),
+  );
 
   test('C3..C6 has 22 white keys', () {
     expect(g.whiteWidth, closeTo(10, 1e-9));

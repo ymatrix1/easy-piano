@@ -1,0 +1,8 @@
+[package]
+name = "easy_piano_core"
+version = "0.1.0"
+edition = "2021"
+description = "Pure music logic for Easy Piano: notation, grading, session state. No I/O."
+license = "MPL-2.0"
+
+[dependencies]

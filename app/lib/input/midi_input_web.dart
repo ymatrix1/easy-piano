@@ -56,12 +56,14 @@ class _WebMidiInput implements MidiInput {
     final pitch = data[1];
     final velocity = data[2];
     if (status != 0x90 && status != 0x80) return;
-    _controller.add(NoteEvent(
-      pitch: pitch,
-      velocity: velocity,
-      on: status == 0x90 && velocity > 0,
-      timestampMs: e.timeStamp,
-    ));
+    _controller.add(
+      NoteEvent(
+        pitch: pitch,
+        velocity: velocity,
+        on: status == 0x90 && velocity > 0,
+        timestampMs: e.timeStamp,
+      ),
+    );
   }
 }
 

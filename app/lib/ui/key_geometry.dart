@@ -2,8 +2,11 @@ import 'dart:ui';
 
 /// Shared key layout so keyboard and note lanes always align.
 class KeyGeometry {
-  KeyGeometry({required this.lowPitch, required this.highPitch, required this.size})
-      : _whiteCount = _countWhite(lowPitch, highPitch);
+  KeyGeometry({
+    required this.lowPitch,
+    required this.highPitch,
+    required this.size,
+  }) : _whiteCount = _countWhite(lowPitch, highPitch);
 
   final int lowPitch;
   final int highPitch;

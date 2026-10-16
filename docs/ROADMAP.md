@@ -7,7 +7,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] User confirms D1–D9 (OQ1 name, OQ2 license still open)
 - [x] Spike: Flutter web, Web MIDI/touch → colored key, first-load size ~2.5 MB gz ([results](research/web-midi-spike.md))
 - [ ] Measure Web MIDI p95 latency with a real keyboard
-- [ ] Spike: flutter_rust_bridge wasm on web (D2)
+- [x] Spike: flutter_rust_bridge wasm on web (D2), Rust core in browser ([results](research/web-midi-spike.md))
 - [ ] Android/iOS build smoke test
 - [ ] Spike: staff rendering with Bravura, 60 fps scroll
 - [ ] Research: Simply Piano numeric stats (stage mix, note ranges, bpm per course)

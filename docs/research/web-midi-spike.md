@@ -28,19 +28,32 @@ Does Flutter web meet D9's gates: first load ≤ 5 MB and MIDI → frame ≤ 30 
 
 Functional check: keys render C3–C6, touch press/release correct per pointer (stuck-key bug found and fixed), `flutter analyze` clean, 4 unit tests pass (`app/test/widget_test.dart`).
 
+## flutter_rust_bridge on web (bean piano-hyle, 2026-10-16)
+
+Setup: flutter_rust_bridge 2.13.0, wasm-pack 0.15.0, Rust nightly + rust-src (atomics build). Bridge crate `app/rust` (`easy_piano_bridge`) wraps pure crate `core/` (`easy_piano_core`); API in `app/rust/src/api/notation.rs`.
+
+| Check | Result |
+|---|---|
+| `cargo test` in `core/` | 5 passed |
+| `flutter_rust_bridge_codegen build-web --release` | ok, 40 s |
+| Rust wasm size | `easy_piano_bridge_bg.wasm` 92 KB raw + 29 KB JS glue |
+| Browser (Chromium, `tools/serve_web.py` with COOP/COEP) | `crossOriginIsolated: true`; page shows `C4 = 60` from Rust; tapped keys named by Rust (`D#3`); no console errors |
+| Sync FRB call per key press | input→frame sample 4.1 ms (n=1, lower bound as above) |
+
+Gotchas: `integrate` comments out the existing `main.dart` and adds a demo; restore it. Web needs COOP/COEP headers (dev: `tools/serve_web.py`; prod host must set them). Build order for web: `flutter_rust_bridge_codegen build-web --release` then `flutter build web --release`.
+
 ## Not done
 
 - Web MIDI latency with a real keyboard (needs user's device). The app shows p50/p95 live after "Connect MIDI".
-- flutter_rust_bridge wasm path (D2). Spike used pure Dart.
 - Android/iOS build smoke test (needs Android SDK / macOS).
 
 ## Implications
 
 - Flutter web passes the load-size gate; D1 + D9 stand.
+- Rust core runs on web through FRB at small cost (~0.1 MB); D2 stands.
 - `MIDIMessageEvent.timeStamp` shares the `performance.now()` clock, so input→frame latency is directly measurable in-app.
 - Host must serve `.wasm` with gzip/brotli; Content plan should budget ~2.5 MB engine + content packs.
 
 ## Follow-ups
 
 - Measure Web MIDI p95 with a USB keyboard on Chrome (user run).
-- Bean: flutter_rust_bridge wasm spike.

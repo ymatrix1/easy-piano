@@ -5,10 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'input/midi_input.dart';
+import 'src/rust/api/notation.dart' as core;
+import 'src/rust/frb_generated.dart';
 import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
 
-void main() => runApp(const EasyPianoApp());
+Future<void> main() async {
+  await RustLib.init();
+  runApp(const EasyPianoApp());
+}
 
 class EasyPianoApp extends StatelessWidget {
   const EasyPianoApp({super.key});
@@ -18,7 +23,10 @@ class EasyPianoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Easy Piano',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: const Color(0xFF6C4CF1), useMaterial3: true),
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xFF6C4CF1),
+        useMaterial3: true,
+      ),
       home: const MidiSpikePage(),
     );
   }
@@ -76,13 +84,27 @@ class _MidiSpikePageState extends State<MidiSpikePage> {
     final pitch = g.pitchAt(p);
     if (pitch == null) return;
     _pointerPitch[pointer] = pitch;
-    _onNote(NoteEvent(pitch: pitch, velocity: 90, on: true, timestampMs: _input.now()));
+    _onNote(
+      NoteEvent(
+        pitch: pitch,
+        velocity: 90,
+        on: true,
+        timestampMs: _input.now(),
+      ),
+    );
   }
 
   void _touchUp(int pointer) {
     final pitch = _pointerPitch.remove(pointer);
     if (pitch == null) return;
-    _onNote(NoteEvent(pitch: pitch, velocity: 0, on: false, timestampMs: _input.now()));
+    _onNote(
+      NoteEvent(
+        pitch: pitch,
+        velocity: 0,
+        on: false,
+        timestampMs: _input.now(),
+      ),
+    );
   }
 
   String _stats() {
@@ -110,37 +132,56 @@ class _MidiSpikePageState extends State<MidiSpikePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(spacing: 12, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              FilledButton.icon(
-                onPressed: _connect,
-                icon: const Icon(Icons.piano),
-                label: const Text('Connect MIDI'),
-              ),
-              Text(_status),
-            ]),
+            Wrap(
+              spacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FilledButton.icon(
+                  onPressed: _connect,
+                  icon: const Icon(Icons.piano),
+                  label: const Text('Connect MIDI'),
+                ),
+                Text(_status),
+              ],
+            ),
             const SizedBox(height: 12),
-            Text('Input → frame latency: ${_stats()}',
-                style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()])),
+            ValueListenableBuilder(
+              valueListenable: _pressed,
+              builder: (context, keys, _) => Text(
+                'Rust core: C4 = ${core.parsePitch(token: "C4")} · '
+                'pressed: ${(keys.toList()..sort()).map((k) => core.pitchName(midi: k)).join(" ")}',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Input → frame latency: ${_stats()}',
+              style: const TextStyle(
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
             const Spacer(),
             SizedBox(
               height: 180,
-              child: LayoutBuilder(builder: (context, c) {
-                final size = Size(c.maxWidth, c.maxHeight);
-                return Listener(
-                  onPointerDown: (e) => _touchDown(e.pointer, e.localPosition, size),
-                  onPointerUp: (e) => _touchUp(e.pointer),
-                  onPointerCancel: (e) => _touchUp(e.pointer),
-                  child: CustomPaint(
-                    size: size,
-                    painter: KeyboardPainter(
-                      lowPitch: _low,
-                      highPitch: _high,
-                      pressed: _pressed,
-                      pressedColor: scheme.primary,
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  final size = Size(c.maxWidth, c.maxHeight);
+                  return Listener(
+                    onPointerDown: (e) =>
+                        _touchDown(e.pointer, e.localPosition, size),
+                    onPointerUp: (e) => _touchUp(e.pointer),
+                    onPointerCancel: (e) => _touchUp(e.pointer),
+                    child: CustomPaint(
+                      size: size,
+                      painter: KeyboardPainter(
+                        lowPitch: _low,
+                        highPitch: _high,
+                        pressed: _pressed,
+                        pressedColor: scheme.primary,
+                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ),
           ],
         ),
