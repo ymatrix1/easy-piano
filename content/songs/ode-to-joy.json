@@ -1,0 +1,49 @@
+{
+  "id": "ode-to-joy",
+  "title": "Ode to Joy",
+  "composer": "Ludwig van Beethoven",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 96,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@3 E4:4@3 F4:4@4 G4:4@5"
+    },
+    {
+      "RH": "G4:4@5 F4:4@4 E4:4@3 D4:4@2"
+    },
+    {
+      "RH": "C4:4@1 C4:4@1 D4:4@2 E4:4@3"
+    },
+    {
+      "RH": "E4:4.@3 D4:8@2 D4:2@2"
+    },
+    {
+      "RH": "E4:4@3 E4:4@3 F4:4@4 G4:4@5"
+    },
+    {
+      "RH": "G4:4@5 F4:4@4 E4:4@3 D4:4@2"
+    },
+    {
+      "RH": "C4:4@1 C4:4@1 D4:4@2 E4:4@3"
+    },
+    {
+      "RH": "D4:4.@2 C4:8@1 C4:2@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ],
+    [
+      4,
+      8
+    ]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "pb-01-find-c",
+  "title": "str:level.pb01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pb-sit-and-hand-shape"
+    },
+    {
+      "type": "animation",
+      "scene": "pb-find-c"
+    },
+    {
+      "type": "one_note",
+      "score": "c-finder",
+      "hand": "RH"
+    }
+  ]
+}

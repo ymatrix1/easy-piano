@@ -1,0 +1,19 @@
+{
+  "course.pb.title": "Piano Basics",
+  "course.pb.desc": "Your first notes: find middle C, meet your fingers, play real songs with your right hand.",
+  "node.findc": "Find middle C",
+  "node.cde": "C, D and E",
+  "node.firstsong": "First song",
+  "node.fg": "F and G",
+  "node.ode": "Ode to Joy",
+  "level.pb01.title": "Sit, shape your hand, find C",
+  "level.pb02.title": "Three fingers, three notes",
+  "level.pb03.title": "Hot Cross Buns",
+  "level.pb04.title": "All five fingers",
+  "level.pb05.title": "Ode to Joy",
+  "scene.sit.1": "Sit tall at the middle of the keyboard, feet flat.",
+  "scene.sit.2": "Curve your fingers as if holding a small ball.",
+  "scene.findc.1": "Black keys come in groups of two and three.",
+  "scene.findc.2": "C is the white key just left of the group of two black keys.",
+  "scene.fingers.1": "Your fingers have numbers: the thumb is 1, the little finger is 5."
+}

@@ -1,0 +1,30 @@
+{
+  "id": "pb-sit-and-hand-shape",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sit.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "pose": "curved",
+      "on": "C4"
+    },
+    {
+      "at": 8,
+      "caption": "str:scene.sit.2"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}

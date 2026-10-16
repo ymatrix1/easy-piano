@@ -1,0 +1,33 @@
+{
+  "id": "cde-drill",
+  "title": "C, D and E",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 D4:4@2 E4:4@3 D4:4@2"
+    },
+    {
+      "RH": "C4:4@1 D4:4@2 E4:2@3"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1"
+    },
+    {
+      "RH": "C4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

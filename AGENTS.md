@@ -6,7 +6,7 @@ Canonical instructions for every AI agent (Claude Code, Antigravity/agy, Codex, 
 
 Easy Piano (working name) is an open-source, gamified piano course for Android, iOS, web and desktop from one codebase, modeled on the Simply Piano learning path with original content and **no videos** (animation scenes instead).
 
-**Status:** planning. No code yet. Don't start a roadmap phase until the user approves it.
+**Status:** Phase 1 in progress (notation parser, content lint and first Piano Basics lessons exist; engine and practice UI next). Don't start a roadmap phase until the user approves it.
 
 ## Sources of truth
 
@@ -56,6 +56,12 @@ Skills live in `.agents/skills/`; `.claude/skills` points there.
 ## Layout (planned)
 
 `app/` Flutter · `core/` Rust logic · `audio/` Rust audio · `content/` lessons/songs/scenes · `tools/content-cli/` · `docs/` · `.agents/` · `.beans/`
+
+## Checks before pushing
+
+- `cargo test` in `core/`
+- `cargo run -- lint ../../content` in `tools/content-cli/`
+- `flutter analyze` and `flutter test` in `app/` when app code changes
 
 ## Tools
 

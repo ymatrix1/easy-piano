@@ -1,0 +1,45 @@
+{
+  "id": "au-clair-de-la-lune",
+  "title": "Au Clair de la Lune",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 C4:4@1 C4:4@1 D4:4@2"
+    },
+    {
+      "RH": "E4:2@3 D4:2@2"
+    },
+    {
+      "RH": "C4:4@1 E4:4@3 D4:4@2 D4:4@2"
+    },
+    {
+      "RH": "C4:1@1"
+    },
+    {
+      "RH": "C4:4@1 C4:4@1 C4:4@1 D4:4@2"
+    },
+    {
+      "RH": "E4:2@3 D4:2@2"
+    },
+    {
+      "RH": "C4:4@1 E4:4@3 D4:4@2 D4:4@2"
+    },
+    {
+      "RH": "C4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      8
+    ]
+  ]
+}

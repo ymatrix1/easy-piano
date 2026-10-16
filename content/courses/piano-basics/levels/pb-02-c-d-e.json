@@ -1,0 +1,24 @@
+{
+  "id": "pb-02-c-d-e",
+  "title": "str:level.pb02.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pb-finger-numbers"
+    },
+    {
+      "type": "wait",
+      "score": "cde-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "cde-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

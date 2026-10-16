@@ -1,0 +1,33 @@
+{
+  "id": "hot-cross-buns",
+  "title": "Hot Cross Buns",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1"
+    },
+    {
+      "RH": "C4:4@1 C4:4@1 D4:4@2 D4:4@2"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

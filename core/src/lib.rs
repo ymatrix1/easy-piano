@@ -2,4 +2,6 @@
 //! See docs/specs/content-format.md and docs/specs/exercise-engine.md.
 
 pub mod arrange;
+pub mod notation;
 pub mod pitch;
+pub mod song;
