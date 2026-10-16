@@ -1,6 +1,6 @@
 # Exercise engine
 
-Status: implemented in `core/src/session.rs` ([D2](../DECISIONS.md)); pure, deterministic, driven by note events and audio-clock ticks in µs. Tests: unit tests in the module and `core/tests/lessons_playable.rs` (every lesson song). `one_note` stages run in Wait mode until a dedicated drill flow exists; `animation` and `quiz` are handled by the UI.
+Status: implemented in `core/src/session.rs` ([D2](../DECISIONS.md)); pure, deterministic, driven by note events and audio-clock ticks in µs. Tests: unit tests in the module and `core/tests/lessons_playable.rs` (every lesson song). `one_note` stages run in Wait mode (hint after 1 s) until a dedicated drill flow exists, but pass on notes completed (> 80%, hinted or not); the hint only costs stars; `animation` and `quiz` are handled by the UI.
 
 ## Stage types
 
@@ -19,9 +19,9 @@ Status: implemented in `core/src/session.rs` ([D2](../DECISIONS.md)); pure, dete
 
 | Input | Window |
 |---|---|
-| MIDI | ±150 ms (perfect ±50) |
-| Mic | ±200 ms |
-| Touch | ±200 ms |
+| MIDI | −300 / +430 ms (perfect ±50); reference opens notes 0.3 s early, closes 0.43 s late |
+| Mic | −150 / +430 ms |
+| Touch | −300 / +430 ms |
 
 Reference: Simply Piano uses ~0.34 s MIDI / ~0.15 s mic total tolerance.
 

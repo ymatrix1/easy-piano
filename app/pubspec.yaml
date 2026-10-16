@@ -72,6 +72,7 @@ flutter:
         - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
 
   assets:
+    - assets/piano/
     - assets/content/
     - assets/content/courses/piano-basics/
     - assets/content/courses/piano-basics/levels/

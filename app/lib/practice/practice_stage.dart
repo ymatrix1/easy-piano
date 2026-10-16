@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show PlatformInt64Util;
 
+import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
@@ -12,6 +14,7 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
+import '../ui/metronome_icon.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
 
@@ -141,6 +144,15 @@ class _PracticeStageState extends State<PracticeStage>
   double _cursorSinceSec = 0; // when the current wait note became current
   double? _hintSinceSec; // when the hint for the current note appeared
   bool _finished = false;
+  bool _wasCountIn = false;
+
+  /// Notes the app plays with the student in play-along (other hand + ACC).
+  List<NoteView> _companion = const [];
+
+  /// Pre-listen: the app plays the passage first; input is ignored meanwhile.
+  bool _demo = false;
+  double _demoStartMs = 0;
+  int _demoIndex = 0;
 
   bool get _playAlong => widget.stage.type == 'play_along';
   bool get _paused => _pausedAtMs != null;
@@ -177,16 +189,25 @@ class _PracticeStageState extends State<PracticeStage>
       }
     }
     _targetStates = [for (final t in _initialTargets) t.state];
-    _scroll.value = _playAlong ? -_beatsPerBar : 0;
+    _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
           ..addListener(() {
             final tw = _pageTween;
             if (tw != null) _scroll.value = tw.value;
           });
-    // Play-along gets a one-bar count-in; wait mode starts right away.
-    _startMs =
-        widget.midi.now() + (_playAlong ? _beatsPerBar * _usPerBeat / 1000 : 0);
+    if (_playAlong) {
+      _companion = companion(
+        songJson: widget.songJson,
+        hand: widget.stage.hand,
+      );
+    }
+    pianoSynth.load();
+    if (widget.stage.preListen && widget.failedAttempts == 0) {
+      _startDemo();
+    } else {
+      _begin();
+    }
     _sub = widget.midi.events.listen(
       (e) => _onNote(e.pitch, e.on, e.timestampMs),
     );
@@ -206,13 +227,115 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   int _usAt(double ms) => ((ms - _startMs) * 1000).round();
+
+  double get _msPerBeat => _usPerBeat / 1000;
+
+  /// Count-in: whole bars, at least 2.5 s (the reference's look-ahead), so
+  /// the first note glides in from the right instead of starting at once.
+  double get _countInBeats {
+    var beats = _beatsPerBar.toDouble();
+    while (beats * _msPerBeat < 2500) {
+      beats += _beatsPerBar;
+    }
+    return beats;
+  }
+
+  /// Starts the graded part. Play-along gets a one-bar count-in.
+  void _begin() {
+    _startMs =
+        widget.midi.now() + (_playAlong ? _countInBeats * _msPerBeat : 0);
+    if (_playAlong) _scheduleBacking(-_countInBeats);
+  }
+
+  /// Schedules count-in clicks, the companion notes and, when the metronome
+  /// is on, a click on every beat. [fromBeat] is song time in beats.
+  void _scheduleBacking(double fromBeat) {
+    final now = widget.midi.now();
+    double inSec(double beat) => (_startMs + beat * _msPerBeat - now) / 1000;
+    for (var b = fromBeat.ceilToDouble(); b < 0; b++) {
+      pianoSynth.click(
+        inSec(b),
+        accent: (b + _beatsPerBar) % _beatsPerBar == 0,
+      );
+    }
+    if (pianoSynth.metronome) {
+      for (
+        var b = math.max(0.0, fromBeat.ceilToDouble());
+        b < _totalBeats;
+        b++
+      ) {
+        pianoSynth.click(inSec(b), accent: b % _beatsPerBar == 0);
+      }
+    }
+    for (final n in _companion) {
+      if (n.beat < fromBeat) continue;
+      pianoSynth.schedule(
+        n.pitch,
+        inSec(n.beat),
+        n.beats * _msPerBeat / 1000 * 0.95,
+        velocity: 62,
+        force: true,
+      );
+    }
+  }
+
+  /// Flips the metronome; reschedules backing from the current beat so the
+  /// change is heard at once.
+  void _toggleMetronome() {
+    setState(() => pianoSynth.metronome = !pianoSynth.metronome);
+    if (_demo || _paused || _finished) return;
+    pianoSynth.stopAll();
+    _scheduleBacking(_scroll.value);
+  }
+
+  /// Pre-listen: plays the passage while a beam walks over the notes.
+  ///
+  /// Samples must be decoded before scheduling, or the notes are silent; the
+  /// beam waits for them too so sound and beam stay together.
+  Future<void> _startDemo() async {
+    _demo = true;
+    _demoIndex = 0;
+    _demoStartMs = double.infinity;
+    await pianoSynth.load();
+    if (!mounted || !_demo) return;
+    _demoStartMs = widget.midi.now() + 400;
+    final lead = 0.4;
+    for (final t in _initialTargets) {
+      for (final p in t.pitches) {
+        pianoSynth.schedule(
+          p,
+          lead + t.beat * _msPerBeat / 1000,
+          t.beats * _msPerBeat / 1000 * 0.95,
+          force: true,
+        );
+      }
+    }
+    _startMs = widget.midi.now();
+  }
+
+  void _endDemo() {
+    pianoSynth.stopAll();
+    _demo = false;
+    _demoIndex = 0;
+    if (!_playAlong) {
+      _pageTween = Tween(begin: _scroll.value, end: 0.0).animate(
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
+      );
+      _pageAnim.forward(from: 0);
+    }
+    _cursorSinceSec = _nowSec;
+    _begin();
+    setState(() {});
+  }
+
   double get _nowSec => widget.midi.now() / 1000;
 
   void _onNote(int pitch, bool on, double timestampMs) {
+    on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
     final next = {..._pressed.value};
     on ? next.add(pitch) : next.remove(pitch);
     _pressed.value = next;
-    if (_paused || _finished) return;
+    if (_paused || _finished || _demo) return;
     final cursor = _frame?.cursor ?? 0;
     if (on &&
         !_playAlong &&
@@ -236,12 +359,16 @@ class _PracticeStageState extends State<PracticeStage>
     );
   }
 
-  void _pause() => setState(() => _pausedAtMs = widget.midi.now());
+  void _pause() {
+    pianoSynth.stopAll();
+    setState(() => _pausedAtMs = widget.midi.now());
+  }
 
   void _resume() => setState(() {
     // Shift stage time so the song continues where it was paused.
     _startMs += widget.midi.now() - _pausedAtMs!;
     _pausedAtMs = null;
+    if (_playAlong && !_demo) _scheduleBacking(_scroll.value);
   });
 
   /// Wait mode: slide the page when the next note would run past the page edge.
@@ -259,10 +386,30 @@ class _PracticeStageState extends State<PracticeStage>
 
   void _tick() {
     if (_finished || _paused) return;
+    if (_demo) {
+      final beat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
+      var idx = 0;
+      while (idx + 1 < _initialTargets.length &&
+          _initialTargets[idx + 1].beat <= beat) {
+        idx++;
+      }
+      if (idx != _demoIndex) {
+        _demoIndex = idx;
+        _maybeTurnPage(idx);
+      }
+      _marks.value++;
+      if (beat > _totalBeats + 0.5) _endDemo();
+      return;
+    }
     final f = _session.tick(
       tUs: PlatformInt64Util.from(_usAt(widget.midi.now())),
     );
-    if (_playAlong) _scroll.value = f.playheadBeat;
+    if (_playAlong) {
+      // The engine clock starts at 0; during the count-in scroll on wall time
+      // so the first note glides in toward the bar.
+      final us = _usAt(widget.midi.now());
+      _scroll.value = us < 0 ? us / _usPerBeat : f.playheadBeat;
+    }
     final targets = _session.targets();
     final states = [for (final t in targets) t.state];
     final now = _nowSec;
@@ -306,8 +453,9 @@ class _PracticeStageState extends State<PracticeStage>
     _hint.value = showKeys && f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
         : {};
-    final countInChanged =
-        _frame != null && (f.playheadBeat < 0) != (_frame!.playheadBeat < 0);
+    final inCountIn = _scroll.value < 0;
+    final countInChanged = inCountIn != _wasCountIn;
+    _wasCountIn = inCountIn;
     if (_frame == null ||
         f.hits != _frame!.hits ||
         f.misses != _frame!.misses ||
@@ -340,7 +488,7 @@ class _PracticeStageState extends State<PracticeStage>
       case 2:
         return StagePalette.miss;
       default:
-        return !_playAlong && ti == (_frame?.cursor ?? 0)
+        return !_playAlong && ti == _activeIndex
             ? StagePalette.current
             : StagePalette.ink;
     }
@@ -349,12 +497,18 @@ class _PracticeStageState extends State<PracticeStage>
   /// Only the note to play next gets a badge; the others show a plain number.
   Color? _badgeColor(int i) {
     if (_playAlong) return null;
-    return _noteTarget[i] == (_frame?.cursor ?? 0)
-        ? StagePalette.badgeCurrent
-        : null;
+    return _noteTarget[i] == _activeIndex ? StagePalette.badgeCurrent : null;
   }
 
+  /// Target highlighted now: the demo position during pre-listen, else the cursor.
+  int get _activeIndex => _demo ? _demoIndex : (_frame?.cursor ?? 0);
+
   int? _currentNoteIndex() {
+    if (_demo) {
+      return _demoIndex < _targetFirstNote.length
+          ? _targetFirstNote[_demoIndex]
+          : null;
+    }
     if (_playAlong) return null;
     final c = _frame?.cursor ?? 0;
     return c < _targetFirstNote.length ? _targetFirstNote[c] : null;
@@ -378,6 +532,7 @@ class _PracticeStageState extends State<PracticeStage>
 
   @override
   void dispose() {
+    pianoSynth.stopAll();
     _ticker.dispose();
     _pageAnim.dispose();
     _sub?.cancel();
@@ -449,7 +604,9 @@ class _PracticeStageState extends State<PracticeStage>
             ),
             const SizedBox(width: 14),
             Text(
-              _playAlong
+              _demo
+                  ? 'Listen first…'
+                  : _playAlong
                   ? 'Play along · ${(widget.tempo * 100).round()}%'
                   : widget.instruction,
               style: const TextStyle(
@@ -458,6 +615,14 @@ class _PracticeStageState extends State<PracticeStage>
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (_demo) ...[
+              const SizedBox(width: 12),
+              TextButton(
+                onPressed: _endDemo,
+                style: TextButton.styleFrom(foregroundColor: StagePalette.text),
+                child: const Text('Skip'),
+              ),
+            ],
           ],
           const Spacer(),
           if (widget.onConnectMidi != null) ...[
@@ -476,6 +641,31 @@ class _PracticeStageState extends State<PracticeStage>
             ),
             const SizedBox(width: 4),
           ],
+          IconButton(
+            tooltip: pianoSynth.enabled
+                ? 'Mute piano sound'
+                : 'Play piano sound',
+            onPressed: () =>
+                setState(() => pianoSynth.enabled = !pianoSynth.enabled),
+            icon: Icon(
+              pianoSynth.enabled
+                  ? Icons.volume_up_rounded
+                  : Icons.volume_off_rounded,
+              color: StagePalette.text,
+            ),
+          ),
+          if (_playAlong)
+            IconButton(
+              tooltip: pianoSynth.metronome
+                  ? 'Turn metronome off'
+                  : 'Turn metronome on',
+              onPressed: _toggleMetronome,
+              icon: MetronomeIcon(
+                color: pianoSynth.metronome
+                    ? StagePalette.text
+                    : StagePalette.text.withValues(alpha: 0.4),
+              ),
+            ),
           if (widget.onToggleKeyboard != null) ...[
             IconButton(
               tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',
@@ -554,7 +744,7 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   Widget build(BuildContext context) {
     final f = _frame;
-    final countIn = _playAlong && (f?.playheadBeat ?? -1) < 0 && !_paused;
+    final countIn = _playAlong && _scroll.value < 0 && !_paused;
     final waitDone = !_playAlong && (f?.done ?? false);
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -588,10 +778,11 @@ class _PracticeStageState extends State<PracticeStage>
                           staves: widget.staves,
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
-                          dimmed: _paused,
+                          dimmed: _paused || _demo,
                           waitBeamOpacity: _playAlong || waitDone
                               ? null
                               : () {
+                                  if (_demo) return 1.0;
                                   final since = _hintSinceSec;
                                   if (since == null) return 0.0;
                                   return ((_nowSec - since) / 0.2).clamp(

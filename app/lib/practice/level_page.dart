@@ -269,6 +269,8 @@ class _LevelPageState extends State<LevelPage> {
     String pct(double v) => '${v.round()}%';
     final hint = playAlong
         ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
+        : s.type == 'one_note'
+        ? 'Play more than 80% of the notes.'
         : 'Play more than 80% of the notes before the hint appears.'
               '${r.suggestPractice ? ' Try a slower tempo.' : ''}';
     return ResultBackground(

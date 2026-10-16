@@ -63,6 +63,10 @@ Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter r
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
 
+## Accompaniment part
+
+A bar may hold an `ACC` part next to `RH` / `LH`: our own accompaniment (chords, bass) in the same notation. It is played by the app in play-along and never graded; bar lengths are linted like any hand.
+
 ## Journey and levels (implemented)
 
 - `courses.json`: `sections[]` (`id`, `title`) and `courses[]` (`id`, `title`, `description`, `section`, `requires`, `journey`, optional `status`: `ready` (default) or `planned`). Planned courses have no journey and show locked in the app. Hierarchy: section → module (course) → submodule (journey node) → task (level); see [visual-style.md](visual-style.md).
