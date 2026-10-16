@@ -67,6 +67,9 @@ flutter:
     - family: Bravura
       fonts:
         - asset: assets/fonts/Bravura.otf
+    - family: Audiowide
+      fonts:
+        - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
 
   assets:
     - assets/piano/

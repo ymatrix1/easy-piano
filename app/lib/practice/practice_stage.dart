@@ -10,6 +10,8 @@ import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
+import '../ui/game/game_theme.dart';
+import '../ui/game/game_widgets.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
@@ -112,7 +114,8 @@ class _PracticeStageState extends State<PracticeStage>
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
   static const _waitAnchor = 0.10; // page start, as a fraction of the width
-  static const _pageTurnAt = 0.80; // next note past this fraction → slide
+  static const _pageTurnAt =
+      0.60; // next note past this fraction → slide (reference)
   static const _playLine = 0.12; // play bar right after the clef
 
   late final PracticeSession _session;
@@ -374,9 +377,16 @@ class _PracticeStageState extends State<PracticeStage>
     if (_playAlong || cursor >= _initialTargets.length) return;
     final nextBeat = _initialTargets[cursor].beat;
     final x = (nextBeat - _scroll.value) * _ppb;
+    if (_pageAnim.isAnimating) return;
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
-      _pageTween = Tween(begin: _scroll.value, end: nextBeat).animate(
-        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
+      // Reference: slide so the next note returns to the left margin, but
+      // never past the point where the end of the piece is already in view.
+      final lastVisible =
+          _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
+      final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
+      if (end <= _scroll.value + 0.01) return;
+      _pageTween = Tween(begin: _scroll.value, end: end).animate(
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutSine),
       );
       _pageAnim.forward(from: 0);
     }
@@ -541,21 +551,6 @@ class _PracticeStageState extends State<PracticeStage>
     super.dispose();
   }
 
-  Widget _roundButton(IconData icon, VoidCallback onTap, {double size = 52}) =>
-      InkResponse(
-        onTap: onTap,
-        radius: size / 2 + 6,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white70, width: 2.5),
-          ),
-          child: Icon(icon, color: Colors.white, size: size * 0.55),
-        ),
-      );
-
   Widget _topBar() {
     final f = _frame;
     final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
@@ -573,17 +568,48 @@ class _PracticeStageState extends State<PracticeStage>
           // Paused: resume / restart / exit take the pause button's place in
           // the same bar, so nothing covers the staff or the bar itself.
           if (_paused) ...[
-            _roundButton(Icons.play_arrow_rounded, _resume, size: 44),
+            SlideIn(
+              offset: const Offset(-30, 0),
+              child: GameRoundButton(
+                icon: Icons.play_arrow_rounded,
+                onTap: _resume,
+                tone: GameTone.green,
+                size: 46,
+                tooltip: 'Resume',
+              ),
+            ),
             const SizedBox(width: 10),
-            _roundButton(Icons.replay_rounded, widget.onRestart, size: 44),
+            SlideIn(
+              delay: const Duration(milliseconds: 60),
+              offset: const Offset(-30, 0),
+              child: GameRoundButton(
+                icon: Icons.replay_rounded,
+                onTap: widget.onRestart,
+                tone: GameTone.blue,
+                size: 46,
+                tooltip: 'Restart',
+              ),
+            ),
             const SizedBox(width: 10),
-            _roundButton(
-              Icons.format_list_bulleted_rounded,
-              widget.onExit,
-              size: 44,
+            SlideIn(
+              delay: const Duration(milliseconds: 120),
+              offset: const Offset(-30, 0),
+              child: GameRoundButton(
+                icon: Icons.format_list_bulleted_rounded,
+                onTap: widget.onExit,
+                tone: GameTone.red,
+                size: 46,
+                tooltip: 'Exit to map',
+              ),
             ),
           ] else ...[
-            _roundButton(Icons.pause_rounded, _pause, size: 44),
+            GameRoundButton(
+              icon: Icons.pause_rounded,
+              onTap: _pause,
+              tone: GameTone.gold,
+              size: 46,
+              tooltip: 'Pause',
+            ),
             const SizedBox(width: 14),
             Text(
               _demo
@@ -699,45 +725,27 @@ class _PracticeStageState extends State<PracticeStage>
   Widget _tempoSelector() {
     final options = <double>{0.6, 0.8, 1.0, widget.stage.tempo}.toList()
       ..sort();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.timer_outlined, color: Colors.white, size: 22),
-        const SizedBox(width: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white70, width: 1.5),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              for (final t in options)
-                InkWell(
-                  onTap: () => widget.onTempo(t),
-                  child: Container(
-                    width: 64,
-                    height: 36,
-                    alignment: Alignment.center,
-                    color: (t - widget.tempo).abs() < 1e-6
-                        ? Colors.white
-                        : Colors.transparent,
-                    child: Text(
-                      '${(t * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: (t - widget.tempo).abs() < 1e-6
-                            ? StagePalette.ink
-                            : Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
+    return SlideIn(
+      offset: const Offset(30, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.timer_rounded, color: Colors.white, size: 24),
+          const SizedBox(width: 8),
+          for (final t in options) ...[
+            GameButton(
+              label: '${(t * 100).round()}%',
+              onTap: () => widget.onTempo(t),
+              tone: (t - widget.tempo).abs() < 1e-6
+                  ? GameTone.gold
+                  : GameTone.wood,
+              fontSize: 15,
+              minWidth: 0,
+            ),
+            const SizedBox(width: 6),
+          ],
+        ],
+      ),
     );
   }
 
@@ -814,7 +822,11 @@ class _PracticeStageState extends State<PracticeStage>
               ),
               if (widget.showKeyboard)
                 SizedBox(
-                  height: 150,
+                  // Taller on big screens: about a quarter of the height.
+                  height: (MediaQuery.sizeOf(context).height * 0.24).clamp(
+                    150.0,
+                    260.0,
+                  ),
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final size = Size(c.maxWidth, c.maxHeight);
