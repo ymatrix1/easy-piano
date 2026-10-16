@@ -111,6 +111,14 @@ fn lint_dir(root: &Path) -> Lint {
     if course_list.is_empty() {
         lint.err(&courses_path, "`courses` must be a non-empty array");
     }
+    let section_ids: BTreeSet<String> = courses
+        .get("sections")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|s| s.get("id").and_then(Value::as_str))
+        .map(str::to_string)
+        .collect();
     let course_ids: BTreeSet<String> =
         course_list.iter().filter_map(|c| c.get("id").and_then(Value::as_str)).map(str::to_string).collect();
 
@@ -123,6 +131,19 @@ fn lint_dir(root: &Path) -> Lint {
             if let Some(r) = req.as_str().filter(|r| !course_ids.contains(*r)) {
                 lint.err(&courses_path, format!("course `{cid}` requires unknown course `{r}`"));
             }
+        }
+        if let Some(sec) = course.get("section").and_then(Value::as_str) {
+            if !section_ids.is_empty() && !section_ids.contains(sec) {
+                lint.err(&courses_path, format!("course `{cid}`: unknown section `{sec}`"));
+            }
+        }
+        // Planned courses are listed (locked) in the app but have no journey yet.
+        match course.get("status").and_then(Value::as_str) {
+            Some("planned") => continue,
+            Some(st) if st != "ready" => {
+                lint.err(&courses_path, format!("course `{cid}`: unknown status `{st}`"));
+            }
+            _ => {}
         }
         let cdir = root.join("courses").join(cid);
         for path in json_files(&cdir.join("levels")) {

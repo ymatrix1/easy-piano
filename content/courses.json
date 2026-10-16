@@ -1,4 +1,8 @@
 {
+  "sections": [
+    { "id": "basic", "title": "str:section.basic" },
+    { "id": "main", "title": "str:section.main" }
+  ],
   "courses": [
     {
       "id": "piano-basics",
@@ -7,6 +11,30 @@
       "section": "basic",
       "requires": [],
       "journey": "courses/piano-basics/journey.json"
+    },
+    {
+      "id": "essentials-1",
+      "title": "str:course.e1.title",
+      "description": "str:course.e1.desc",
+      "section": "basic",
+      "requires": ["piano-basics"],
+      "status": "planned"
+    },
+    {
+      "id": "essentials-2",
+      "title": "str:course.e2.title",
+      "description": "str:course.e2.desc",
+      "section": "basic",
+      "requires": ["essentials-1"],
+      "status": "planned"
+    },
+    {
+      "id": "essentials-3",
+      "title": "str:course.e3.title",
+      "description": "str:course.e3.desc",
+      "section": "basic",
+      "requires": ["essentials-2"],
+      "status": "planned"
     }
   ]
 }

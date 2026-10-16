@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/level_page.dart';
+import '../ui/game/game_theme.dart';
+import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import '../ui/staff/staff_spike_page.dart';
+import 'learn_tab.dart';
+import 'other_tabs.dart';
 
-/// Course map v0: the journey of each course as a list of nodes.
+/// Main menu: top bar, one of the tabs (Learn, Practice, Profile) and the
+/// bottom navigation bar. See docs/specs/visual-style.md.
 /// Progress lives in memory until the progress store lands (Phase 2).
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -18,7 +24,7 @@ class HomePage extends StatefulWidget {
   final ContentRepo repo;
   final MidiInput midi;
 
-  /// Opens the Phase 0 MIDI spike page.
+  /// Opens the Phase 0 MIDI spike page (also the interim free-play screen).
   final WidgetBuilder spikes;
 
   @override
@@ -26,81 +32,285 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _stars = <String, int>{}; // node id → stars
+  final _stars = <String, int>{}; // level id → best stars
+  int _tab = 0;
 
-  IconData _icon(String kind) => switch (kind) {
-    'song' => Icons.music_note,
-    'boss' || 'mini_boss' => Icons.emoji_events_outlined,
-    'star_gate' => Icons.star_border,
-    _ => Icons.school_outlined,
-  };
-
-  Future<void> _open(JourneyNode node) async {
-    final level = widget.repo.levels[node.levels.first];
+  Future<void> _playLevel(String levelId) async {
+    final level = widget.repo.levels[levelId];
     if (level == null) return;
     final stars = await Navigator.of(context).push<int>(
-      MaterialPageRoute(
-        builder: (_) =>
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 380),
+        pageBuilder: (_, _, _) =>
             LevelPage(repo: widget.repo, level: level, midi: widget.midi),
+        transitionsBuilder: (_, a, _, child) => FadeTransition(
+          opacity: a,
+          child: ScaleTransition(
+            scale: Tween(
+              begin: 1.06,
+              end: 1.0,
+            ).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+        ),
       ),
     );
-    if (stars != null && stars > (_stars[node.id] ?? 0)) {
-      setState(() => _stars[node.id] = stars);
+    if (stars != null && stars > (_stars[levelId] ?? 0)) {
+      setState(() => _stars[levelId] = stars);
     }
   }
 
+  void _push(WidgetBuilder b) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: b));
+
   @override
   Widget build(BuildContext context) {
-    final repo = widget.repo;
+    final progress = Progress(widget.repo, _stars);
+    final tabs = [
+      LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
+      PracticeTab(onFreePlay: () => _push(widget.spikes)),
+      ProfileTab(
+        progress: progress,
+        onMidiSpike: () => _push(widget.spikes),
+        onStaffSpike: () => _push((_) => const StaffSpikePage()),
+      ),
+    ];
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Easy Piano'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (v) => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: v == 'midi'
-                    ? widget.spikes
-                    : (_) => const StaffSpikePage(),
+      backgroundColor: GameColors.bgDeep,
+      body: MenuBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _TopBar(stars: progress.totalStars),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.02),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(key: ValueKey(_tab), child: tabs[_tab]),
+                ),
               ),
-            ),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'midi', child: Text('MIDI spike')),
-              PopupMenuItem(value: 'staff', child: Text('Staff spike')),
+              _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Stars per level, rolled up to submodules (journey nodes) and modules.
+class Progress {
+  Progress(this.repo, this.levelStars);
+
+  final ContentRepo repo;
+  final Map<String, int> levelStars;
+
+  /// A submodule's stars: the lowest of its tasks (0 until all are played).
+  int nodeStars(JourneyNode n) => n.levels.isEmpty
+      ? 0
+      : n.levels.map((l) => levelStars[l] ?? 0).reduce((a, b) => a < b ? a : b);
+
+  int courseStars(CourseDef c) => c.nodes.fold(0, (a, n) => a + nodeStars(n));
+
+  int get totalStars => levelStars.values.fold(0, (a, b) => a + b);
+
+  int get tasksDone => levelStars.values.where((s) => s > 0).length;
+
+  /// First unfinished submodule in the first unfinished module.
+  (CourseDef, JourneyNode)? get next {
+    for (final c in repo.courses) {
+      if (c.planned) continue;
+      for (final n in c.nodes) {
+        if (nodeStars(n) == 0) return (c, n);
+      }
+    }
+    return null;
+  }
+
+  /// First task of [n] not yet played (or its first task).
+  String firstOpenLevel(JourneyNode n) => n.levels.firstWhere(
+    (l) => (levelStars[l] ?? 0) == 0,
+    orElse: () => n.levels.first,
+  );
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.stars});
+
+  final int stars;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ShapeDecoration(
+              shape: chamfer(9),
+              gradient: GameTone.gold.gradient,
+            ),
+            child: const Icon(
+              Icons.piano_rounded,
+              color: GameColors.ink,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const GameText('Easy Piano', size: 20),
+          const Spacer(),
+          StarCounter(value: stars),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavBar extends StatelessWidget {
+  const _NavBar({required this.index, required this.onSelect});
+
+  final int index;
+  final ValueChanged<int> onSelect;
+
+  static const _items = [
+    (Icons.route_rounded, 'Learn'),
+    (Icons.fitness_center_rounded, 'Practice'),
+    (Icons.person_rounded, 'Profile'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(12, 8, 12, 8 + bottom),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            GameColors.panel.withValues(alpha: 0.92),
+            GameColors.bgDeep.withValues(alpha: 0.98),
+          ],
+        ),
+        border: Border(
+          top: BorderSide(color: GameColors.panelEdge.withValues(alpha: 0.8)),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black54,
+            blurRadius: 20,
+            offset: Offset(0, -4),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          for (final course in repo.courses) ...[
-            Text(
-              repo.t(course.title),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 12),
-              child: Text(repo.t(course.description)),
-            ),
-            for (final (i, node) in course.nodes.indexed)
-              Card(
-                child: ListTile(
-                  leading: CircleAvatar(child: Icon(_icon(node.kind))),
-                  title: Text('${i + 1}. ${repo.t(node.title)}'),
-                  subtitle: Text(node.kind.replaceAll('_', ' ')),
-                  trailing: Text(
-                    '★' * (_stars[node.id] ?? 0),
-                    style: TextStyle(
-                      color: Colors.amber.shade700,
-                      fontSize: 18,
-                    ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Row(
+            children: [
+              for (final (i, (icon, label)) in _items.indexed)
+                Expanded(
+                  child: _NavItem(
+                    icon: icon,
+                    label: label,
+                    active: i == index,
+                    onTap: () => onSelect(i),
                   ),
-                  onTap: () => _open(node),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: active ? null : onTap,
+      semanticLabel: label,
+      sound: SfxKind.tab,
+      lift: 2,
+      builder: (p, hover) => Transform.scale(
+        scale: 1 - 0.05 * p,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          height: 54,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: ShapeDecoration(
+            shape: chamfer(10),
+            gradient: active
+                ? GameTone.gold.gradient
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: hover ? 0.08 : 0),
+                      Colors.white.withValues(alpha: hover ? 0.04 : 0),
+                    ],
+                  ),
+            shadows: active
+                ? [
+                    BoxShadow(
+                      color: GameColors.yellow.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon pops when its tab becomes active.
+              TweenAnimationBuilder<double>(
+                key: ValueKey(active),
+                tween: Tween(begin: active ? 0.6 : 1, end: 1),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.elasticOut,
+                builder: (context, k, child) =>
+                    Transform.scale(scale: k, child: child),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: active ? GameColors.ink : GameColors.textDim,
                 ),
               ),
-          ],
-        ],
+              const SizedBox(height: 2),
+              GameText(
+                label,
+                size: 11,
+                shadow: false,
+                color: active ? GameColors.ink : GameColors.textDim,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
