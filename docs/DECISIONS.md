@@ -18,6 +18,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D10](#d10-ui-stack-material-3-themed-riverpod-go_router) | 2026-10-15 | UI stack: Material 3 themed, Riverpod, go_router | accepted |
 | [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | accepted |
 | [D12](#d12-skill-backbone-with-profile-variants) | 2026-10-16 | Skill backbone with profile variants (audience, taste, locale) | accepted |
+| [D13](#d13-chunky-game-style-menus-with-an-in-code-widget-kit) | 2026-10-16 | Chunky game-style menus with an in-code widget kit | proposed |
 
 ## Accepted
 
@@ -140,3 +141,14 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** One pedagogy, many flavours; adding a taste means filling song slots, not forking courses; switching profile keeps progress.
 - **Alternatives:** Fork whole courses per audience (reference app's way: authoring and QA cost grows per variant); single course for everyone (weaker motivation, poor fit for kids).
 - **Impact:** Content format gains `audience` overrides and `songs` slots per node (content-format spec update when accepted); onboarding asks age band and styles; each node needs PD songs per taste, which grows the song-curation work (bean piano-ts7r).
+
+## Proposed
+
+### D13. Chunky game-style menus with an in-code widget kit
+
+- **Status:** proposed
+- **Context:** Menus used stock Material widgets; the user wants them to look and feel like a polished mobile game with animations, in the spirit of casual strategy games (beveled gold buttons, outlined display type, sky palette, bouncy motion). D10 already calls for a playful custom theme.
+- **Decision:** Add a game widget kit in `app/lib/ui/game/` (tokens, `GameButton`, `GamePanel`, `GameText`, `StarRow`, `CountUp`, entrance/bob wrappers, sky background) drawn entirely in code with gradients and `CustomPainter`, using Flutter's built-in animation classes. Menus (home, info stage, result, pause) use it; see [visual-style.md](specs/visual-style.md). Original style only: no third-party game assets, fonts, logos or characters.
+- **Why:** Code-drawn art is license-clean, scales to any DPI, themes easily and adds no download weight; built-in animations avoid a new dependency for now.
+- **Alternatives:** Raster art packs (license checks, size, blur on scaling); AI-generated images (provenance and license unclear, hard to restyle); `flutter_animate` now (nicer API, but one more dependency for what a few controllers do; still allowed by D10 later); keep Material look (doesn't meet the goal).
+- **Impact:** Menus stop using Material buttons/cards. Display font stays the platform sans in heavy weight until an OFL font is picked. Practice staff/keyboard colours unchanged.

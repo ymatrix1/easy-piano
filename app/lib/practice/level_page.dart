@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
+import '../ui/game/game_theme.dart';
+import '../ui/game/game_widgets.dart';
 import 'practice_stage.dart';
 
 /// Runs a level's stages in order: scenes (captions until the Phase 2 player),
@@ -186,46 +188,72 @@ class _LevelPageState extends State<LevelPage> {
     );
   }
 
-  Widget _stat(IconData icon, String label, String value, double fraction) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 76,
-          height: 76,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox.expand(
-                child: CircularProgressIndicator(
-                  value: fraction.clamp(0.0, 1.0),
-                  strokeWidth: 5,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation(
-                    StagePalette.current,
+  /// Round medallion with a count-up value and a progress ring.
+  Widget _stat(
+    IconData icon,
+    String label,
+    double value,
+    String Function(double) format,
+    double fraction,
+    int order,
+  ) {
+    final delay = Duration(milliseconds: 900 + 150 * order);
+    return PopIn(
+      delay: delay,
+      child: Column(
+        children: [
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: GameColors.nightDeep,
+              border: Border.all(color: GameColors.outline, width: 3),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black38,
+                  blurRadius: 8,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox.expand(
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, v, _) => CircularProgressIndicator(
+                      value: v,
+                      strokeWidth: 7,
+                      strokeCap: StrokeCap.round,
+                      backgroundColor: Colors.white12,
+                      valueColor: const AlwaysStoppedAnimation(GameColors.gold),
+                    ),
                   ),
                 ),
-              ),
-              Icon(icon, color: StagePalette.current, size: 34),
-            ],
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: GameColors.goldLight, size: 24),
+                    CountUp(
+                      value: value,
+                      format: format,
+                      size: 18,
+                      delay: delay,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          GameText(label, size: 15, stroke: 2),
+        ],
+      ),
     );
   }
 
@@ -236,147 +264,117 @@ class _LevelPageState extends State<LevelPage> {
     final playAlong = s.type == 'play_along';
     final notesFrac = r.notesTotal == 0 ? 0.0 : r.notesHit / r.notesTotal;
     final title = _songTitle(s.score);
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [StagePalette.bgTop, StagePalette.bgBottom],
-        ),
-      ),
+    String pct(double v) => '${v.round()}%';
+    final hint = playAlong
+        ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
+        : 'Play more than 80% of the notes before the hint appears.'
+              '${r.suggestPractice ? ' Try a slower tempo.' : ''}';
+    return RaysBackground(
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              r.passed ? 'Completed!' : 'Almost there!',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            if (title.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: StagePalette.current,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PopIn(
+                child: GameRibbon(
+                  r.passed ? 'Completed!' : 'Almost there!',
+                  tone: r.passed ? GameTone.green : GameTone.red,
+                  fontSize: 36,
                 ),
               ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _stat(
-                  Icons.music_note_rounded,
-                  'NOTES',
-                  '${r.notesHit}/${r.notesTotal}',
-                  notesFrac,
+              if (title.isNotEmpty)
+                SlideIn(
+                  delay: const Duration(milliseconds: 150),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: GameText(
+                      title,
+                      size: 20,
+                      color: GameColors.goldLight,
+                    ),
+                  ),
                 ),
-                if (playAlong) ...[
-                  const SizedBox(width: 40),
+              const SizedBox(height: 12),
+              // Stars fill continuously (e.g. half a star), as in the reference.
+              StarRow(
+                stars: r.starsExact,
+                delay: const Duration(milliseconds: 300),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 28,
+                runSpacing: 12,
+                children: [
                   _stat(
-                    Icons.timer_outlined,
-                    'TIMING',
-                    '${(r.timing * 100).round()}%',
-                    r.timing,
+                    Icons.music_note_rounded,
+                    'NOTES',
+                    r.notesHit.toDouble(),
+                    (v) => '${v.round()}/${r.notesTotal}',
+                    notesFrac,
+                    0,
                   ),
-                  const SizedBox(width: 40),
-                  _stat(
-                    Icons.support_outlined,
-                    'ASSISTS',
-                    '${(r.assists * 100).round()}%',
-                    r.assists,
-                  ),
+                  if (playAlong) ...[
+                    _stat(
+                      Icons.timer_rounded,
+                      'TIMING',
+                      r.timing * 100,
+                      pct,
+                      r.timing,
+                      1,
+                    ),
+                    _stat(
+                      Icons.support_rounded,
+                      'ASSISTS',
+                      r.assists * 100,
+                      pct,
+                      r.assists,
+                      2,
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Stars fill continuously (e.g. half a star), as in the reference.
-                for (var i = 0; i < 3; i++)
-                  _star((r.starsExact - i).clamp(0.0, 1.0)),
-              ],
-            ),
-            if (!r.passed)
-              Text(
-                playAlong
-                    ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
-                    : 'Play more than 80% of the notes before the hint appears.'
-                          '${r.suggestPractice ? ' Try a slower tempo.' : ''}',
-                style: const TextStyle(color: StagePalette.textDim),
               ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _circleButton(Icons.replay_rounded, _retry, filled: true),
-                const SizedBox(width: 16),
-                _circleButton(
-                  Icons.chevron_right_rounded,
-                  r.passed ? _next : null,
+              if (!r.passed)
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: Text(
+                    hint,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// A star filled from the left by [fill] (0–1).
-  Widget _star(double fill) {
-    const size = 64.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          const Icon(Icons.star_rounded, size: size, color: Colors.white24),
-          ClipRect(
-            clipper: _FractionClipper(fill),
-            child: const Icon(
-              Icons.star_rounded,
-              size: size,
-              color: StagePalette.current,
-            ),
+              const SizedBox(height: 22),
+              SlideIn(
+                delay: const Duration(milliseconds: 1300),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GameRoundButton(
+                      icon: Icons.replay_rounded,
+                      onTap: _retry,
+                      tone: GameTone.blue,
+                      size: 64,
+                      tooltip: 'Retry',
+                    ),
+                    const SizedBox(width: 18),
+                    GameButton(
+                      label: r.passed ? 'NEXT' : 'LOCKED',
+                      icon: r.passed
+                          ? Icons.chevron_right_rounded
+                          : Icons.lock_rounded,
+                      onTap: r.passed ? _next : null,
+                      tone: GameTone.green,
+                      fontSize: 26,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleButton(
-    IconData icon,
-    VoidCallback? onTap, {
-    bool filled = false,
-  }) {
-    final enabled = onTap != null;
-    return InkResponse(
-      onTap: onTap,
-      radius: 40,
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: filled ? const Color(0xFF14102A) : Colors.transparent,
-          border: Border.all(
-            color: enabled ? Colors.white70 : Colors.white24,
-            width: 2.5,
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: enabled ? Colors.white : Colors.white38,
-          size: 36,
         ),
       ),
     );
@@ -398,100 +396,57 @@ class _InfoStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [StagePalette.bgTop, StagePalette.bgBottom],
-        ),
-      ),
+    return SkyBackground(
       child: Stack(
         children: [
-          Positioned(
-            left: 16,
-            top: 10,
-            child: IconButton(
-              onPressed: onExit,
-              icon: const Icon(
-                Icons.close_rounded,
-                color: Colors.white,
-                size: 30,
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 72, 16, 16),
+              child: PopIn(
+                from: 0.6,
+                child: GamePanel(
+                  title: title,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final l in lines)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            l,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: GameColors.outline,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 14),
+                      GameButton(
+                        label: 'CONTINUE',
+                        onTap: onContinue,
+                        tone: GameTone.green,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.movie_filter_outlined,
-                    size: 52,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  for (final l in lines)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        l,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: StagePalette.done,
-                      foregroundColor: StagePalette.ink,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 36,
-                        vertical: 16,
-                      ),
-                      shape: const StadiumBorder(),
-                    ),
-                    onPressed: onContinue,
-                    child: const Text(
-                      'CONTINUE',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          Positioned(
+            left: 16,
+            top: 12,
+            child: GameRoundButton(
+              icon: Icons.close_rounded,
+              onTap: onExit,
+              tone: GameTone.red,
+              size: 48,
+              tooltip: 'Exit',
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class _FractionClipper extends CustomClipper<Rect> {
-  _FractionClipper(this.fill);
-
-  final double fill;
-
-  @override
-  Rect getClip(Size size) =>
-      Rect.fromLTWH(0, 0, size.width * fill, size.height);
-
-  @override
-  bool shouldReclip(_FractionClipper old) => old.fill != fill;
 }
