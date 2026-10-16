@@ -132,6 +132,9 @@ fn lint_dir(root: &Path) -> Lint {
             if let Some(ui) = v.get("ui").and_then(Value::as_str).filter(|u| !UI_TYPES.contains(u)) {
                 lint.err(&path, format!("unknown ui `{ui}`"));
             }
+            if v.get("keyboard").is_some_and(|k| !k.is_boolean()) {
+                lint.err(&path, "`keyboard` must be true or false");
+            }
             let stages = v.get("stages").and_then(Value::as_array).cloned().unwrap_or_default();
             if stages.is_empty() {
                 lint.err(&path, "level needs at least one stage");
@@ -158,6 +161,11 @@ fn lint_dir(root: &Path) -> Lint {
                 }
                 if let Some(p) = st.get("pass").and_then(Value::as_f64).filter(|p| !(0.0..=1.0).contains(p)) {
                     lint.err(&path, format!("stage {n}: pass {p} out of 0..1"));
+                }
+                if let Some(r) = st.get("repeats") {
+                    if !r.as_u64().is_some_and(|r| (1..=10).contains(&r)) {
+                        lint.err(&path, format!("stage {n}: repeats must be 1..10"));
+                    }
                 }
                 if let Some(h) = st.get("hand").and_then(Value::as_str).filter(|h| !["RH", "LH", "both"].contains(h)) {
                     lint.err(&path, format!("stage {n}: unknown hand `{h}`"));

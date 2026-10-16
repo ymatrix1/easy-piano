@@ -41,6 +41,15 @@ void main() {
     expect(missing.t('str:no.such.key'), 'no.such.key');
   });
 
+  test('level ui, keyboard and stage repeats are parsed', () {
+    final repo = ContentRepo.fromFiles(files);
+    final pb1 = repo.levels['pb-01-find-c']!;
+    expect(pb1.ui, 'treble');
+    expect(pb1.keyboard, isTrue);
+    final drill = repo.levels['pb-02-c-d-e']!.stages.firstWhere((s) => s.type == 'wait');
+    expect(drill.repeats, 3);
+  });
+
   test('scene captions come out in order', () {
     final repo = ContentRepo.fromFiles(files);
     expect(sceneCaptions(repo.scenes['pb-find-c']!), [

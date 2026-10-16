@@ -16,28 +16,36 @@ import '../ui/staff/staff_painter.dart';
 /// FRB maps i64 to int on native and BigInt on web.
 int _int(Object v) => v is BigInt ? v.toInt() : v as int;
 
-/// Practice screen palette (our own; dark stage, cream notation, bright feedback).
+/// Practice screen palette (ours; see docs/specs/practice-screen.md).
 abstract final class StagePalette {
-  static const bgTop = Color(0xFF1B1830);
-  static const bgBottom = Color(0xFF2A2346);
-  static const ink = Color(0xFFF4EEDC);
-  static const staff = Color(0xCCEDE6D3);
-  static const current = Color(0xFFFFC83D);
-  static const hit = Color(0xFF2ED3C6);
-  static const miss = Color(0xFFFF6B6B);
-  static const playLine = Color(0xFF3EE6FF);
-  static const burst = Color(0xFF4FC3FF);
-  static const keyHint = Color(0xFF8FF0E6);
-  static const keyPressed = Color(0xFFFFC83D);
-  static const textDim = Color(0xB3F4EEDC);
+  static const bgTop = Color(0xFF6E2CF2);
+  static const bgBottom = Color(0xFF7B3BFF);
+  static const band = Color(0xFFFFFFFF);
+  static const ink = Color(0xFF16131F);
+  static const current = Color(0xFFFFB400);
+  static const badgeCurrent = Color(0xFFFF8A1F);
+  static const done = Color(0xFF19C6DE);
+  static const miss = Color(0xFFFF4D6A);
+  static const badge = Color(0xFF5B21B6);
+  static const playBar = Color(0xFF19E3F0);
+  static const burst = Color(0xFF7FE7FF);
+  static const text = Color(0xFFFFFFFF);
+  static const textDim = Color(0xCCFFFFFF);
 }
+
+/// Staff layout from a level's `ui` field.
+Staves stavesForUi(String ui) => switch (ui) {
+  'treble' => Staves.treble,
+  'bass' => Staves.bass,
+  _ => Staves.grand,
+};
 
 /// One playable stage (wait / play_along / one_note), graded by the Rust core.
 ///
-/// Wait mode follows the reference behaviour: the notes stay on a still page,
-/// the highlight jumps to the next note as soon as the right key is pressed,
-/// and the page slides left (1 s ease) only when the next note passes 72% of
-/// the width. Play-along scrolls notes toward a glowing play line.
+/// Wait: the exercise is laid out on a still page; the highlight jumps to the
+/// next note on a correct press and the page slides (1 s) only past 72% of
+/// the width. Play-along: notes scroll toward a cyan bar right after the clef.
+/// See docs/specs/practice-screen.md.
 ///
 /// Clock: until the audio engine lands (bean piano-k0ht), song time comes from
 /// the same monotonic clock as MIDI event timestamps, so grading is consistent.
@@ -49,6 +57,16 @@ class PracticeStage extends StatefulWidget {
     required this.midi,
     required this.failedAttempts,
     required this.onFinished,
+    required this.staves,
+    required this.tempo,
+    required this.onTempo,
+    required this.onRestart,
+    required this.onExit,
+    this.instruction = 'Play the following notes',
+    this.repeatDone = 0,
+    this.repeatTotal = 1,
+    this.showKeyboard = true,
+    this.onToggleKeyboard,
   });
 
   final StageDef stage;
@@ -56,6 +74,20 @@ class PracticeStage extends StatefulWidget {
   final MidiInput midi;
   final int failedAttempts;
   final void Function(ResultView result) onFinished;
+  final Staves staves;
+
+  /// Effective tempo factor (stage tempo or the one picked in the pause menu).
+  final double tempo;
+  final void Function(double tempo) onTempo;
+  final VoidCallback onRestart;
+  final VoidCallback onExit;
+  final String instruction;
+  final int repeatDone;
+  final int repeatTotal;
+
+  /// The on-screen keyboard is optional (MIDI players may hide it).
+  final bool showKeyboard;
+  final VoidCallback? onToggleKeyboard;
 
   @override
   State<PracticeStage> createState() => _PracticeStageState();
@@ -64,11 +96,12 @@ class PracticeStage extends StatefulWidget {
 class _PracticeStageState extends State<PracticeStage>
     with TickerProviderStateMixin {
   static const _low = 48; // C3
-  static const _high = 84; // C6
-  static const _ppb = 110.0; // pixels per beat
-  static const _waitAnchor = 0.14; // page start, as a fraction of the width
-  static const _pageTurnAt = 0.72; // next note past this fraction → slide
-  static const _playLine = 0.30;
+  static const _high = 96; // C7
+  static const _maxPpb = 120.0; // pixels per beat
+  static const _minPpb = 70.0;
+  static const _waitAnchor = 0.10; // page start, as a fraction of the width
+  static const _pageTurnAt = 0.80; // next note past this fraction → slide
+  static const _playLine = 0.12; // play bar right after the clef
 
   late final PracticeSession _session;
   late final List<StaffNote> _notes;
@@ -89,25 +122,28 @@ class _PracticeStageState extends State<PracticeStage>
   late final AnimationController _pageAnim;
   Animation<double>? _pageTween;
   StreamSubscription<NoteEvent>? _sub;
-  late final double _startMs; // stage time zero on the input clock
+  late double _startMs; // stage time zero on the input clock
+  double? _pausedAtMs;
   FrameView? _frame;
   double _staffWidth = 1200;
+  double _ppb = _maxPpb;
   bool _finished = false;
 
   bool get _playAlong => widget.stage.type == 'play_along';
+  bool get _paused => _pausedAtMs != null;
 
   @override
   void initState() {
     super.initState();
     final info = inspectSong(json: widget.songJson);
     _beatsPerBar = info.beatsPerBar.toDouble();
-    _usPerBeat = 60e6 / (info.bpm * widget.stage.tempo);
+    _usPerBeat = 60e6 / (info.bpm * widget.tempo);
     _session = PracticeSession.create(
       songJson: widget.songJson,
       mode: widget.stage.type,
       input: 'midi',
       hand: widget.stage.hand,
-      tempo: widget.stage.tempo,
+      tempo: widget.tempo,
       passRatio: widget.stage.pass,
       failedAttempts: widget.failedAttempts,
     );
@@ -128,7 +164,7 @@ class _PracticeStageState extends State<PracticeStage>
       }
     }
     _targetStates = [for (final t in _initialTargets) t.state];
-    _scroll.value = _initialTargets.isEmpty ? 0 : _initialTargets.first.beat;
+    _scroll.value = _playAlong ? -_beatsPerBar : 0;
     _pageAnim =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
           ..addListener(() {
@@ -144,6 +180,18 @@ class _PracticeStageState extends State<PracticeStage>
     _ticker = createTicker((_) => _tick())..start();
   }
 
+  double get _totalBeats => _initialTargets.isEmpty
+      ? 1
+      : _initialTargets.last.beat + _initialTargets.last.beats;
+
+  /// Wait mode fits the whole exercise on one page when it can.
+  void _fitPage(double width) {
+    _staffWidth = width;
+    if (_playAlong) return;
+    final usable = (0.92 - _waitAnchor) * width;
+    _ppb = (usable / _totalBeats).clamp(_minPpb, _maxPpb);
+  }
+
   int _usAt(double ms) => ((ms - _startMs) * 1000).round();
   double get _nowSec => widget.midi.now() / 1000;
 
@@ -151,6 +199,7 @@ class _PracticeStageState extends State<PracticeStage>
     final next = {..._pressed.value};
     on ? next.add(pitch) : next.remove(pitch);
     _pressed.value = next;
+    if (_paused || _finished) return;
     _session.onNote(
       pitch: pitch,
       on_: on,
@@ -158,7 +207,15 @@ class _PracticeStageState extends State<PracticeStage>
     );
   }
 
-  /// Wait mode: slide the page when the next note would run past 72% of the width.
+  void _pause() => setState(() => _pausedAtMs = widget.midi.now());
+
+  void _resume() => setState(() {
+    // Shift stage time so the song continues where it was paused.
+    _startMs += widget.midi.now() - _pausedAtMs!;
+    _pausedAtMs = null;
+  });
+
+  /// Wait mode: slide the page when the next note would run past the page edge.
   void _maybeTurnPage(int cursor) {
     if (_playAlong || cursor >= _initialTargets.length) return;
     final nextBeat = _initialTargets[cursor].beat;
@@ -172,7 +229,7 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _tick() {
-    if (_finished) return;
+    if (_finished || _paused) return;
     final f = _session.tick(
       tUs: PlatformInt64Util.from(_usAt(widget.midi.now())),
     );
@@ -202,7 +259,6 @@ class _PracticeStageState extends State<PracticeStage>
     if (changed) _targetStates = states;
     final cursorMoved = _frame == null || f.cursor != _frame!.cursor;
     if (cursorMoved) _maybeTurnPage(f.cursor);
-    // Repaint every frame while bursts animate, or when marks change.
     if (changed || _bursts.isNotEmpty || cursorMoved) _marks.value++;
     _hint.value = f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
@@ -213,7 +269,8 @@ class _PracticeStageState extends State<PracticeStage>
         f.hits != _frame!.hits ||
         f.misses != _frame!.misses ||
         f.wrong != _frame!.wrong ||
-        countInChanged) {
+        countInChanged ||
+        _playAlong) {
       setState(() => _frame = f);
     } else {
       _frame = f;
@@ -224,7 +281,11 @@ class _PracticeStageState extends State<PracticeStage>
     if (over) {
       _finished = true;
       _ticker.stop();
-      widget.onFinished(_session.result());
+      setState(() {});
+      // Let the check mark / last hit show briefly before the result.
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (mounted) widget.onFinished(_session.result());
+      });
     }
   }
 
@@ -232,17 +293,26 @@ class _PracticeStageState extends State<PracticeStage>
     final ti = _noteTarget[i];
     switch (_targetStates[ti]) {
       case 1:
-        return StagePalette.hit;
+        return StagePalette.done;
       case 2:
         return StagePalette.miss;
       default:
-        return ti == (_frame?.cursor ?? 0)
+        return !_playAlong && ti == (_frame?.cursor ?? 0)
             ? StagePalette.current
             : StagePalette.ink;
     }
   }
 
+  /// Only the note to play next gets a badge; the others show a plain number.
+  Color? _badgeColor(int i) {
+    if (_playAlong) return null;
+    return _noteTarget[i] == (_frame?.cursor ?? 0)
+        ? StagePalette.badgeCurrent
+        : null;
+  }
+
   int? _currentNoteIndex() {
+    if (_playAlong) return null;
     final c = _frame?.cursor ?? 0;
     return c < _targetFirstNote.length ? _targetFirstNote[c] : null;
   }
@@ -275,17 +345,173 @@ class _PracticeStageState extends State<PracticeStage>
     super.dispose();
   }
 
+  Widget _roundButton(IconData icon, VoidCallback onTap, {double size = 52}) =>
+      InkResponse(
+        onTap: onTap,
+        radius: size / 2 + 6,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white70, width: 2.5),
+          ),
+          child: Icon(icon, color: Colors.white, size: size * 0.55),
+        ),
+      );
+
+  Widget _topBar() {
+    final f = _frame;
+    final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
+    final judged = ((f?.hits ?? 0) + (f?.misses ?? 0)) / total;
+    final waitPill = widget.repeatTotal > 1;
+    final pillValue = _playAlong
+        ? judged
+        : waitPill
+        ? widget.repeatDone / widget.repeatTotal
+        : judged;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 20, 0),
+      child: Row(
+        children: [
+          _roundButton(Icons.pause_rounded, _pause, size: 44),
+          const SizedBox(width: 14),
+          Text(
+            _playAlong
+                ? 'Play along · ${(widget.tempo * 100).round()}%'
+                : widget.instruction,
+            style: const TextStyle(
+              color: StagePalette.text,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          if (widget.onToggleKeyboard != null) ...[
+            IconButton(
+              tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',
+              onPressed: widget.onToggleKeyboard,
+              icon: Icon(
+                widget.showKeyboard ? Icons.piano : Icons.piano_off,
+                color: StagePalette.text,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          SizedBox(
+            width: 220,
+            height: 22,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: LinearProgressIndicator(
+                      value: pillValue.clamp(0.0, 1.0),
+                      backgroundColor: Colors.white24,
+                      valueColor: const AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  ),
+                ),
+                if (waitPill)
+                  Text(
+                    '${widget.repeatDone}/${widget.repeatTotal}',
+                    style: const TextStyle(
+                      color: StagePalette.badge,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pauseMenu() {
+    final options = <double>{0.6, 0.8, 1.0, widget.stage.tempo}.toList()
+      ..sort();
+    return ColoredBox(
+      color: const Color(0x8C1B1530),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _roundButton(Icons.play_arrow_rounded, _resume, size: 72),
+                const SizedBox(width: 16),
+                _roundButton(Icons.replay_rounded, widget.onRestart, size: 72),
+                const SizedBox(width: 16),
+                _roundButton(
+                  Icons.format_list_bulleted_rounded,
+                  widget.onExit,
+                  size: 72,
+                ),
+                const Spacer(),
+                if (_playAlong) ...[
+                  const Column(
+                    children: [
+                      Icon(Icons.timer_outlined, color: Colors.white, size: 30),
+                      Text(
+                        'Tempo',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white70, width: 2),
+                    ),
+                    child: Row(
+                      children: [
+                        for (final t in options)
+                          InkWell(
+                            onTap: () => widget.onTempo(t),
+                            child: Container(
+                              width: 96,
+                              height: 56,
+                              alignment: Alignment.center,
+                              color: (t - widget.tempo).abs() < 1e-6
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              child: Text(
+                                '${(t * 100).round()}%',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: (t - widget.tempo).abs() < 1e-6
+                                      ? StagePalette.ink
+                                      : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final f = _frame;
-    final countIn = _playAlong && (f?.playheadBeat ?? -1) < 0;
-    final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
-    final progress = ((f?.hits ?? 0) + (f?.misses ?? 0)) / total;
-    const label = TextStyle(
-      color: StagePalette.textDim,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.4,
-    );
+    final countIn = _playAlong && (f?.playheadBeat ?? -1) < 0 && !_paused;
+    final waitDone = !_playAlong && (f?.done ?? false);
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -294,120 +520,88 @@ class _PracticeStageState extends State<PracticeStage>
           colors: [StagePalette.bgTop, StagePalette.bgBottom],
         ),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-            child: Row(
-              children: [
-                Text(
-                  _playAlong
-                      ? 'PLAY ALONG · ${(widget.stage.tempo * 100).round()}%'
-                      : 'PLAY AT YOUR PACE',
-                  style: label,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      minHeight: 8,
-                      backgroundColor: Colors.white12,
-                      valueColor: const AlwaysStoppedAnimation(
-                        StagePalette.hit,
+          Column(
+            children: [
+              _topBar(),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, c) {
+                    _fitPage(c.maxWidth);
+                    return RepaintBoundary(
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: StaffPainter(
+                          notes: _notes,
+                          playheadBeat: _scroll,
+                          pixelsPerBeat: _ppb,
+                          inkColor: StagePalette.ink,
+                          staffColor: StagePalette.ink,
+                          playheadColor: StagePalette.playBar,
+                          lineRatio: _playAlong ? _playLine : _waitAnchor,
+                          showPlayLine: _playAlong,
+                          staves: widget.staves,
+                          bandColor: StagePalette.band,
+                          beatsPerBar: _beatsPerBar,
+                          dimmed: _paused,
+                          colorOf: _noteColor,
+                          badgeColorOf: _badgeColor,
+                          showEndCheck: waitDone,
+                          currentIndex: _currentNoteIndex,
+                          currentGlow: StagePalette.current,
+                          bursts: _bursts,
+                          burstColor: StagePalette.burst,
+                          clockSec: () => _nowSec,
+                          repaintAlso: _marks,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  '${f?.hits ?? 0}',
-                  style: label.copyWith(color: StagePalette.hit),
-                ),
-                const Text('  ·  ', style: label),
-                Text(
-                  '${f?.misses ?? 0}',
-                  style: label.copyWith(color: StagePalette.miss),
-                ),
-                if ((f?.wrong ?? 0) > 0) ...[
-                  const Text('  ·  ', style: label),
-                  Text('wrong ${f!.wrong}', style: label),
-                ],
-              ],
-            ),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
+              ),
+              if (widget.showKeyboard)
+                SizedBox(
+                  height: 150,
                   child: LayoutBuilder(
                     builder: (context, c) {
-                      _staffWidth = c.maxWidth;
-                      return RepaintBoundary(
+                      final size = Size(c.maxWidth, c.maxHeight);
+                      return Listener(
+                        onPointerDown: (e) =>
+                            _touchDown(e.pointer, e.localPosition, size),
+                        onPointerUp: (e) => _touchUp(e.pointer),
+                        onPointerCancel: (e) => _touchUp(e.pointer),
                         child: CustomPaint(
-                          size: Size.infinite,
-                          painter: StaffPainter(
-                            notes: _notes,
-                            playheadBeat: _scroll,
-                            pixelsPerBeat: _ppb,
-                            inkColor: StagePalette.ink,
-                            staffColor: StagePalette.staff,
-                            playheadColor: StagePalette.playLine,
-                            lineRatio: _playAlong ? _playLine : _waitAnchor,
-                            showPlayLine: _playAlong,
-                            colorOf: _noteColor,
-                            currentIndex: _currentNoteIndex,
-                            currentGlow: StagePalette.current,
-                            bursts: _bursts,
-                            burstColor: StagePalette.burst,
-                            clockSec: () => _nowSec,
-                            repaintAlso: _marks,
+                          size: size,
+                          painter: KeyboardPainter(
+                            lowPitch: _low,
+                            highPitch: _high,
+                            pressed: _pressed,
+                            pressedColor: StagePalette.done,
+                            hint: _hint,
+                            hintColor: StagePalette.current,
+                            labelMiddleC: true,
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                if (countIn)
-                  const Center(
-                    child: Text(
-                      'Get ready…',
-                      style: TextStyle(
-                        color: StagePalette.current,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
-          SizedBox(
-            height: 170,
-            child: LayoutBuilder(
-              builder: (context, c) {
-                final size = Size(c.maxWidth, c.maxHeight);
-                return Listener(
-                  onPointerDown: (e) =>
-                      _touchDown(e.pointer, e.localPosition, size),
-                  onPointerUp: (e) => _touchUp(e.pointer),
-                  onPointerCancel: (e) => _touchUp(e.pointer),
-                  child: CustomPaint(
-                    size: size,
-                    painter: KeyboardPainter(
-                      lowPitch: _low,
-                      highPitch: _high,
-                      pressed: _pressed,
-                      pressedColor: StagePalette.keyPressed,
-                      hint: _hint,
-                      hintColor: StagePalette.keyHint,
-                    ),
-                  ),
-                );
-              },
+          if (countIn)
+            const Align(
+              alignment: Alignment(0, -0.55),
+              child: Text(
+                'Get ready…',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-          ),
+          if (_paused) Positioned.fill(child: _pauseMenu()),
         ],
       ),
     );

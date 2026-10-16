@@ -11,7 +11,8 @@
       "type": "wait",
       "score": "cde-drill",
       "pre_listen": true,
-      "hand": "RH"
+      "hand": "RH",
+      "repeats": 3
     },
     {
       "type": "play_along",

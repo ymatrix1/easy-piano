@@ -14,6 +14,9 @@ abstract final class Smufl {
   static const accidentalSharp = '';
 }
 
+/// Which staves to draw; comes from the level's `ui` field.
+enum Staves { treble, bass, grand }
+
 /// A short hit effect: rings that grow and fade at a note position.
 class HitBurst {
   HitBurst({
@@ -31,10 +34,10 @@ class HitBurst {
   static const durationSec = 0.45;
 }
 
-/// Grand staff. [scrollBeat] is the beat drawn at the anchor x
+/// Staff renderer. [scrollBeat] is the beat drawn at the anchor x
 /// (`lineRatio` × width): in play-along it is the song time and a glowing
-/// play line marks the anchor; in wait mode it is a page offset that slides
-/// only when the current note runs off the page, and no line is drawn.
+/// play bar marks the anchor; in wait mode it is a page offset that slides
+/// only when the current note runs off the page, and no bar is drawn.
 /// Only notes inside the visible beat window are laid out and painted.
 class StaffPainter extends CustomPainter {
   StaffPainter({
@@ -47,11 +50,19 @@ class StaffPainter extends CustomPainter {
     this.lineRatio = 0.22,
     this.showPlayLine = true,
     this.staffColor,
+    this.staves = Staves.grand,
+    this.bandColor,
+    this.badgeColorOf,
+    this.badgeTextColor = Colors.white,
+    this.showEndCheck = false,
+    this.checkColor = const Color(0xFF22C55E),
     this.currentIndex,
     this.currentGlow,
     this.bursts = const [],
     this.burstColor = const Color(0xFF4FC3FF),
     this.clockSec,
+    this.beatsPerBar,
+    this.dimmed = false,
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -75,6 +86,18 @@ class StaffPainter extends CustomPainter {
 
   /// Staff lines and clefs; defaults to [inkColor].
   final Color? staffColor;
+  final Staves staves;
+
+  /// Optional band painted behind the staff lines (e.g. white on a colored stage).
+  final Color? bandColor;
+
+  /// When set, finger numbers are drawn in rounded badges of this color.
+  final Color? Function(int index)? badgeColorOf;
+  final Color badgeTextColor;
+
+  /// Draws a check mark after the last note (wait stage completed).
+  final bool showEndCheck;
+  final Color checkColor;
 
   /// Index into [notes] of the note to play next, drawn with [currentGlow].
   final int? Function()? currentIndex;
@@ -85,6 +108,12 @@ class StaffPainter extends CustomPainter {
 
   /// Current time in seconds for animating [bursts].
   final double Function()? clockSec;
+
+  /// Draws bar lines every this many beats when set.
+  final double? beatsPerBar;
+
+  /// Paused look: band and notation fade.
+  final bool dimmed;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -144,25 +173,42 @@ class StaffPainter extends CustomPainter {
     return lo;
   }
 
+  bool get _hasTreble => staves != Staves.bass;
+  bool get _hasBass => staves != Staves.treble;
+
   /// Vertical layout shared by notes and bursts.
   ({double space, double trebleBottomY, double bassTopY}) _layout(Size size) {
-    final space = (size.height / 16).clamp(6.0, 14.0);
-    final trebleBottomY = size.height * 0.42;
-    return (
-      space: space,
-      trebleBottomY: trebleBottomY,
-      bassTopY: trebleBottomY + space * 4,
+    final single = staves != Staves.grand;
+    final space = (size.height / (single ? 11 : 16)).clamp(
+      6.0,
+      single ? 20.0 : 14.0,
     );
+    final trebleBottomY = switch (staves) {
+      Staves.treble => size.height * 0.5 + space * 2,
+      Staves.bass => -1000.0,
+      Staves.grand => size.height * 0.42,
+    };
+    final bassTopY = staves == Staves.bass
+        ? size.height * 0.5 - space * 2
+        : trebleBottomY + space * 4;
+    return (space: space, trebleBottomY: trebleBottomY, bassTopY: bassTopY);
   }
+
+  /// On a single staff every note sits on that staff, whatever the hand.
+  bool _onBass(StaffNote n) => switch (staves) {
+    Staves.treble => false,
+    Staves.bass => true,
+    Staves.grand => n.leftHand,
+  };
 
   double _noteY(
     int pitch,
-    bool leftHand,
+    bool onBass,
     ({double space, double trebleBottomY, double bassTopY}) l,
   ) {
     final step = diatonicStep(pitch);
     final half = l.space / 2;
-    return leftHand
+    return onBass
         ? l.bassTopY + (_bassTopStep - step) * half
         : l.trebleBottomY - (step - _trebleBottomStep) * half;
   }
@@ -177,36 +223,115 @@ class StaffPainter extends CustomPainter {
     final staff = staffColor ?? inkColor;
     final ink = Paint()
       ..color = staff
-      ..strokeWidth = 1.2;
+      ..strokeWidth = math.max(1.2, space * 0.09);
+    final staffTop = _hasTreble ? trebleBottomY - space * 4 : bassTopY;
+    final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
+
+    if (bandColor != null) {
+      canvas.drawRect(
+        Rect.fromLTRB(
+          0,
+          staffTop - space * 2.2,
+          size.width,
+          staffBottom + space * 2.2,
+        ),
+        Paint()
+          ..color = dimmed
+              ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
+              : bandColor!,
+      );
+    }
 
     // Staff lines.
     for (var i = 0; i < 5; i++) {
-      final ty = trebleBottomY - i * space;
-      final by = bassTopY + i * space;
-      canvas.drawLine(Offset(0, ty), Offset(size.width, ty), ink);
-      canvas.drawLine(Offset(0, by), Offset(size.width, by), ink);
+      if (_hasTreble) {
+        canvas.drawLine(
+          Offset(0, trebleBottomY - i * space),
+          Offset(size.width, trebleBottomY - i * space),
+          ink,
+        );
+      }
+      if (_hasBass) {
+        canvas.drawLine(
+          Offset(0, bassTopY + i * space),
+          Offset(size.width, bassTopY + i * space),
+          ink,
+        );
+      }
     }
     // Clefs: G clef origin on G4 line, F clef origin on F3 line.
-    _drawGlyph(
-      canvas,
-      Smufl.gClef,
-      glyphSize,
-      Offset(8, trebleBottomY - space),
-      staff,
-    );
-    _drawGlyph(
-      canvas,
-      Smufl.fClef,
-      glyphSize,
-      Offset(8, bassTopY + space),
-      staff,
-    );
+    if (_hasTreble) {
+      _drawGlyph(
+        canvas,
+        Smufl.gClef,
+        glyphSize,
+        Offset(space * 0.8, trebleBottomY - space),
+        staff,
+      );
+    }
+    if (_hasBass) {
+      _drawGlyph(
+        canvas,
+        Smufl.fClef,
+        glyphSize,
+        Offset(space * 0.8, bassTopY + space),
+        staff,
+      );
+    }
+    final clefRight = space * 4.2;
+    if (staves == Staves.grand) {
+      // Brace joining the staves.
+      final x0 = space * 0.25,
+          top = staffTop,
+          bot = staffBottom,
+          mid = (top + bot) / 2,
+          w = space * 0.9;
+      final brace = Path()
+        ..moveTo(x0 + w, top)
+        ..cubicTo(
+          x0,
+          top + (mid - top) * 0.15,
+          x0 + w,
+          mid - (mid - top) * 0.25,
+          x0,
+          mid,
+        )
+        ..cubicTo(
+          x0 + w,
+          mid + (bot - mid) * 0.25,
+          x0,
+          bot - (bot - mid) * 0.15,
+          x0 + w,
+          bot,
+        );
+      canvas.drawPath(
+        brace,
+        Paint()
+          ..color = staff
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = space * 0.35
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+    final bpb = beatsPerBar;
+    if (bpb != null && bpb > 0) {
+      final now0 = scrollBeat.value;
+      final firstBar = ((now0 - anchorX / pixelsPerBeat) / bpb).floor();
+      final lastBar = ((now0 + (size.width - anchorX) / pixelsPerBeat) / bpb)
+          .ceil();
+      for (var b = firstBar; b <= lastBar; b++) {
+        if (b <= 0) continue;
+        final bx = anchorX + (b * bpb - now0) * pixelsPerBeat - space * 0.8;
+        if (bx < clefRight) continue;
+        canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
+      }
+    }
 
-    // Play line with a soft glow (play-along only).
+    // Play bar with a soft glow trail behind it (play-along only).
     if (showPlayLine) {
-      final top = trebleBottomY - space * 6, bottom = bassTopY + space * 6;
+      final top = staffTop - space * 1.5, bottom = staffBottom + space * 1.5;
       final glowRect = Rect.fromLTRB(
-        anchorX - space * 2.2,
+        anchorX - space * 2.6,
         top,
         anchorX,
         bottom,
@@ -217,17 +342,18 @@ class StaffPainter extends CustomPainter {
           ..shader = LinearGradient(
             colors: [
               playheadColor.withValues(alpha: 0),
-              playheadColor.withValues(alpha: 0.35),
+              playheadColor.withValues(alpha: 0.55),
             ],
           ).createShader(glowRect),
       );
-      canvas.drawLine(
-        Offset(anchorX, top),
-        Offset(anchorX, bottom),
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(anchorX - 2.5, top, anchorX + 2.5, bottom),
+          const Radius.circular(3),
+        ),
         Paint()
           ..color = playheadColor
-          ..strokeWidth = 3
-          ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 3),
+          ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 4),
       );
     }
 
@@ -236,18 +362,21 @@ class StaffPainter extends CustomPainter {
     final firstBeat = now - anchorX / pixelsPerBeat - 4;
     final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final current = currentIndex?.call();
+    double? lastX;
     for (var i = _lowerBound(firstBeat); i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       final x = anchorX + (n.beat - now) * pixelsPerBeat;
-      if (x < 60) continue; // behind the clefs
+      lastX = x;
+      if (x < clefRight) continue; // behind the clef
+      final onBass = _onBass(n);
       final step = diatonicStep(n.pitch);
-      final y = _noteY(n.pitch, n.leftHand, l);
+      final y = _noteY(n.pitch, onBass, l);
       _drawLedgers(
         canvas,
         x,
         y,
-        n.leftHand,
+        onBass,
         step,
         half,
         space,
@@ -259,10 +388,10 @@ class StaffPainter extends CustomPainter {
       if (i == current && currentGlow != null) {
         canvas.drawCircle(
           Offset(x + space * 0.6, y),
-          space * 1.6,
+          space * 1.5,
           Paint()
-            ..color = currentGlow!.withValues(alpha: 0.45)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.9),
+            ..color = currentGlow!.withValues(alpha: 0.5)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.8),
         );
       }
       final head = n.beats >= 4
@@ -280,6 +409,15 @@ class StaffPainter extends CustomPainter {
           color,
         );
       }
+      if (_isDotted(n.beats)) {
+        // Dot sits in a space: nudge up when the note is on a line.
+        final dy = step.isEven ? -half : 0.0;
+        canvas.drawCircle(
+          Offset(x + space * 1.75, y + dy),
+          space * 0.2,
+          Paint()..color = color,
+        );
+      }
       if (n.beats < 4) {
         // Stem up from the right side of the notehead (1.18 spaces wide in Bravura).
         final sx = x + space * 1.18 - 0.6;
@@ -288,26 +426,40 @@ class StaffPainter extends CustomPainter {
           Offset(sx, y - space * 3.5),
           Paint()
             ..color = color
-            ..strokeWidth = 1.2,
+            ..strokeWidth = math.max(1.2, space * 0.1),
         );
       }
       if (n.finger != null) {
-        final tp = TextPainter(
-          text: TextSpan(
-            text: '${n.finger}',
-            style: TextStyle(
-              color: color,
-              fontSize: space * 1.3,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        final top = n.leftHand
-            ? bassTopY + space * 5
-            : trebleBottomY - space * 6.2;
-        tp.paint(canvas, Offset(x + space * 0.1, top));
+        _drawFinger(
+          canvas,
+          i,
+          n,
+          x,
+          space,
+          staffTop,
+          staffBottom,
+          onBass,
+          color,
+        );
       }
+    }
+
+    if (showEndCheck && lastX != null) {
+      final c = Offset(lastX + space * 4, (staffTop + staffBottom) / 2);
+      canvas.drawCircle(c, space * 1.6, Paint()..color = checkColor);
+      final path = Path()
+        ..moveTo(c.dx - space * 0.7, c.dy)
+        ..lineTo(c.dx - space * 0.15, c.dy + space * 0.6)
+        ..lineTo(c.dx + space * 0.8, c.dy - space * 0.6);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = space * 0.35
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
     }
 
     // Hit bursts: three rings that grow and fade.
@@ -316,9 +468,12 @@ class StaffPainter extends CustomPainter {
       for (final b in bursts) {
         final age = (t - b.startSec) / HitBurst.durationSec;
         if (age < 0 || age > 1) continue;
+        final onBass = staves == Staves.grand
+            ? b.leftHand
+            : staves == Staves.bass;
         final c = Offset(
           anchorX + (b.beat - now) * pixelsPerBeat + space * 0.6,
-          _noteY(b.pitch, b.leftHand, l),
+          _noteY(b.pitch, onBass, l),
         );
         for (var k = 0; k < 3; k++) {
           final a = (age - k * 0.12).clamp(0.0, 1.0);
@@ -335,6 +490,61 @@ class StaffPainter extends CustomPainter {
         }
       }
     }
+  }
+
+  static bool _isDotted(double beats) =>
+      const [0.75, 1.5, 3.0, 6.0].any((d) => (beats - d).abs() < 1e-6);
+
+  void _drawFinger(
+    Canvas canvas,
+    int i,
+    StaffNote n,
+    double x,
+    double space,
+    double staffTop,
+    double staffBottom,
+    bool onBass,
+    Color noteColor,
+  ) {
+    final badge = badgeColorOf?.call(i);
+    final tp = TextPainter(
+      text: TextSpan(
+        text: '${n.finger}',
+        style: TextStyle(
+          color: badge == null ? noteColor : badgeTextColor,
+          fontSize: space * (badge == null ? 1.3 : 1.15),
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final cx = x + space * 0.6;
+    // Badges sit above the treble band, or below the bass band.
+    final cy = onBass ? staffBottom + space * 3.6 : staffTop - space * 3.6;
+    if (badge != null) {
+      final r = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: space * 2.2,
+          height: space * 2.2,
+        ),
+        Radius.circular(space * 0.6),
+      );
+      canvas.drawRRect(
+        r.shift(Offset(0, space * 0.15)),
+        Paint()..color = Colors.black26,
+      );
+      canvas.drawRRect(r, Paint()..color = badge);
+      // Pointer toward the note.
+      final tip = onBass ? -1.0 : 1.0;
+      final path = Path()
+        ..moveTo(cx - space * 0.35, cy + tip * space * 1.1)
+        ..lineTo(cx + space * 0.35, cy + tip * space * 1.1)
+        ..lineTo(cx, cy + tip * space * 1.55)
+        ..close();
+      canvas.drawPath(path, Paint()..color = badge);
+    }
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 
   void _drawLedgers(
@@ -357,9 +567,21 @@ class StaffPainter extends CustomPainter {
         canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
       }
     }
+    if (!bass && step > _trebleBottomStep + 8) {
+      for (var s = _trebleBottomStep + 10; s <= step; s += 2) {
+        final ly = trebleBottomY - (s - _trebleBottomStep) * half;
+        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+      }
+    }
     if (bass && step > _bassTopStep) {
       for (var s = _bassTopStep + 2; s <= step; s += 2) {
         final ly = bassTopY - (s - _bassTopStep) * half;
+        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+      }
+    }
+    if (bass && step < _bassTopStep - 8) {
+      for (var s = _bassTopStep - 10; s >= step; s -= 2) {
+        final ly = bassTopY + (_bassTopStep - s) * half;
         canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
       }
     }
@@ -386,6 +608,10 @@ class StaffPainter extends CustomPainter {
       old.colorOf != colorOf ||
       old.inkColor != inkColor ||
       old.showPlayLine != showPlayLine ||
+      old.showEndCheck != showEndCheck ||
+      old.dimmed != dimmed ||
+      old.beatsPerBar != beatsPerBar ||
+      old.staves != staves ||
       old.lineRatio != lineRatio ||
       old.pixelsPerBeat != pixelsPerBeat;
 }

@@ -12,6 +12,7 @@ class StageDef {
     this.pass = 0.7,
     this.hand = 'RH',
     this.preListen = false,
+    this.repeats = 1,
   });
 
   factory StageDef.fromJson(Map<String, dynamic> j) => StageDef(
@@ -22,6 +23,7 @@ class StageDef {
     pass: (j['pass'] as num?)?.toDouble() ?? 0.7,
     hand: j['hand'] as String? ?? 'RH',
     preListen: j['pre_listen'] as bool? ?? false,
+    repeats: j['repeats'] as int? ?? 1,
   );
 
   final String type;
@@ -32,12 +34,21 @@ class StageDef {
   final String hand;
   final bool preListen;
 
+  /// Wait stages repeat this many times in a row (counter shown in the top bar).
+  final int repeats;
+
   bool get isPlayable =>
       type == 'wait' || type == 'play_along' || type == 'one_note';
 }
 
 class LevelDef {
-  const LevelDef({required this.id, required this.title, required this.stages});
+  const LevelDef({
+    required this.id,
+    required this.title,
+    required this.stages,
+    this.ui = 'both',
+    this.keyboard = true,
+  });
 
   factory LevelDef.fromJson(Map<String, dynamic> j) => LevelDef(
     id: j['id'] as String,
@@ -46,11 +57,19 @@ class LevelDef {
       for (final s in j['stages'] as List)
         StageDef.fromJson(s as Map<String, dynamic>),
     ],
+    ui: j['ui'] as String? ?? 'both',
+    keyboard: j['keyboard'] as bool? ?? true,
   );
 
   final String id;
   final String title;
   final List<StageDef> stages;
+
+  /// Staff layout: `treble` / `bass` single staff (beginner), `both` grand staff.
+  final String ui;
+
+  /// Whether the on-screen keyboard shows by default.
+  final bool keyboard;
 }
 
 class JourneyNode {
