@@ -1,0 +1,110 @@
+{
+  "course": "essentials-1",
+  "nodes": [
+    {
+      "id": "rests",
+      "kind": "lesson",
+      "title": "str:node.e1.rests",
+      "icon": "note",
+      "levels": [
+        "e1-01-rests"
+      ],
+      "next": [
+        "left-hand"
+      ]
+    },
+    {
+      "id": "left-hand",
+      "kind": "lesson",
+      "title": "str:node.e1.left-hand",
+      "icon": "note",
+      "levels": [
+        "e1-02-left-hand"
+      ],
+      "next": [
+        "saints"
+      ]
+    },
+    {
+      "id": "saints",
+      "kind": "song",
+      "title": "str:node.e1.saints",
+      "icon": "play",
+      "levels": [
+        "e1-03-saints"
+      ],
+      "next": [
+        "hands-together"
+      ],
+      "songs": {
+        "default": "when-the-saints",
+        "hymns_spirituals": "when-the-saints"
+      }
+    },
+    {
+      "id": "hands-together",
+      "kind": "lesson",
+      "title": "str:node.e1.hands-together",
+      "icon": "note",
+      "levels": [
+        "e1-04-hands-together"
+      ],
+      "next": [
+        "intervals"
+      ]
+    },
+    {
+      "id": "intervals",
+      "kind": "lesson",
+      "title": "str:node.e1.intervals",
+      "icon": "note",
+      "levels": [
+        "e1-05-intervals"
+      ],
+      "next": [
+        "eighths"
+      ]
+    },
+    {
+      "id": "eighths",
+      "kind": "lesson",
+      "title": "str:node.e1.eighths",
+      "icon": "note",
+      "levels": [
+        "e1-06-eighth-notes"
+      ],
+      "next": [
+        "jingle"
+      ]
+    },
+    {
+      "id": "jingle",
+      "kind": "song",
+      "title": "str:node.e1.jingle",
+      "icon": "play",
+      "levels": [
+        "e1-07-jingle-bells"
+      ],
+      "next": [
+        "boss"
+      ],
+      "songs": {
+        "default": "jingle-bells",
+        "folk_world": "jingle-bells"
+      }
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.e1.boss",
+      "icon": "play",
+      "levels": [
+        "e1-08-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "when-the-saints"
+      }
+    }
+  ]
+}

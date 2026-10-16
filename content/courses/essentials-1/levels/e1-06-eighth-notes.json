@@ -1,0 +1,31 @@
+{
+  "id": "e1-06-eighth-notes",
+  "title": "str:level.e1.06.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e1-eighth-notes"
+    },
+    {
+      "type": "wait",
+      "score": "e1-eighth-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-eighth-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-eighth-drill",
+      "tempo": 0.85,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

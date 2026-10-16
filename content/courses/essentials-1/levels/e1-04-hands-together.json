@@ -1,0 +1,30 @@
+{
+  "id": "e1-04-hands-together",
+  "title": "str:level.e1.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e1-hands-together"
+    },
+    {
+      "type": "wait",
+      "score": "e1-hands-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "wait",
+      "score": "e1-hands-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-hands-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "e1-05-intervals",
+  "title": "str:level.e1.05.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "e1-interval-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-interval-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-interval-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}
