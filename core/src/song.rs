@@ -27,8 +27,9 @@ pub struct Song {
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
-/// `ACC`, `DRUMS`, `BASS` and `PAD` are backing parts: played by the app, never graded.
-const HANDS: [&str; 6] = ["RH", "LH", "ACC", "DRUMS", "BASS", "PAD"];
+/// `ACC`, `DRUMS`, `BASS`, `PAD` and `CHOIR` are backing parts: played by the app,
+/// never graded.
+const HANDS: [&str; 7] = ["RH", "LH", "ACC", "DRUMS", "BASS", "PAD", "CHOIR"];
 /// Drum kit pieces a `DRUMS` part may use, as General MIDI percussion numbers:
 /// kick 36 (C2), snare 38 (D2), closed hi-hat 42 (F#2), open hi-hat 46 (A#2),
 /// crash 49 (C#3).
@@ -47,6 +48,8 @@ pub enum Part {
     Bass,
     /// Sustained strings pad.
     Pad,
+    /// Wordless "ooh" voices.
+    Choir,
 }
 
 impl Part {
@@ -57,6 +60,7 @@ impl Part {
             "DRUMS" => Part::Drums,
             "BASS" => Part::Bass,
             "PAD" => Part::Pad,
+            "CHOIR" => Part::Choir,
             _ => Part::Right,
         }
     }
@@ -70,6 +74,7 @@ impl Part {
             Part::Drums => "DRUMS",
             Part::Bass => "BASS",
             Part::Pad => "PAD",
+            Part::Choir => "CHOIR",
         }
     }
 }
@@ -80,7 +85,7 @@ pub struct TimedNote {
     pub start_beat: f64,
     pub beats: f64,
     pub left_hand: bool,
-    /// Backing part (`ACC`, `DRUMS`, `BASS`, `PAD`): played by the app, never a target.
+    /// Backing part (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`): played by the app, never a target.
     pub accomp: bool,
     pub part: Part,
     pub finger: Option<u8>,
@@ -179,7 +184,7 @@ impl Song {
                                 start_beat: bar_start + t.beats(unit),
                                 beats: dur.beats(unit),
                                 left_hand: part == Part::Left,
-                                accomp: matches!(part, Part::Acc | Part::Drums | Part::Bass | Part::Pad),
+                                accomp: matches!(part, Part::Acc | Part::Drums | Part::Bass | Part::Pad | Part::Choir),
                                 part,
                                 finger: fingers.get(k).copied(),
                                 bar: i,
@@ -247,11 +252,13 @@ mod tests {
 
     #[test]
     fn pad_is_a_backing_part() {
-        let s = Song::from_json(&song(r#"[{"RH":"C4:1","PAD":"C3E3G3:1"}]"#, "")).unwrap();
+        let s = Song::from_json(&song(r#"[{"RH":"C4:1","PAD":"C3E3G3:1","CHOIR":"G4:2 E4:2"}]"#, "")).unwrap();
         assert_eq!(s.validate(), Vec::<String>::new());
         let pad: Vec<TimedNote> = s.timeline().into_iter().filter(|n| n.part == Part::Pad).collect();
         assert_eq!(pad.len(), 3);
         assert!(pad.iter().all(|n| n.accomp && n.beats == 4.0));
+        let choir: Vec<u8> = s.timeline().into_iter().filter(|n| n.part == Part::Choir && n.accomp).map(|n| n.pitch).collect();
+        assert_eq!(choir, vec![67, 64]);
     }
 
     #[test]

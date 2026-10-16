@@ -199,6 +199,7 @@ class _WebPianoSynth implements PianoSynth {
     'DRUMS': 0.7,
     'BASS': 0.8,
     'PAD': 0.5,
+    'CHOIR': 0.6,
   };
 
   web.GainNode _bus(String part) {
@@ -239,6 +240,61 @@ class _WebPianoSynth implements PianoSynth {
         ..frequency.value = freq
         ..detune.value = cents;
       o.connect(filter);
+      o.start(at);
+      o.stop(end + 0.8);
+      _band.add(o);
+    }
+  }
+
+  /// "Ooh" vowel formants (Hz, Q, gain): a buzzy source through these band
+  /// passes reads as a voice singing /u/.
+  static const _oohFormants = [
+    (300.0, 5.0, 1.0),
+    (870.0, 8.0, 0.35),
+    (2240.0, 10.0, 0.12),
+  ];
+
+  @override
+  void choir(int pitch, double startSec, double durSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final freq = 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+    final level = velocity.clamp(1, 127) / 127 * 0.5;
+    final end = at + math.max(0.3, durSec);
+    final gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.3);
+    gain.gain.setValueAtTime(level, end);
+    gain.gain.setTargetAtTime(0, end, 0.15);
+    gain.connect(_bus('CHOIR'));
+    final source = ctx.createGain();
+    for (final (hz, q, g) in _oohFormants) {
+      final bp = ctx.createBiquadFilter()
+        ..type = 'bandpass'
+        ..frequency.value = hz
+        ..Q.value = q;
+      final fg = ctx.createGain()..gain.value = g;
+      source.connect(bp);
+      bp.connect(fg);
+      fg.connect(gain);
+    }
+    // Vibrato (5.5 Hz, about ±15 cents) fading in, like a held sung note.
+    final lfo = ctx.createOscillator()..frequency.value = 5.5;
+    final depth = ctx.createGain();
+    depth.gain.setValueAtTime(0, at);
+    depth.gain.linearRampToValueAtTime(15, at + 0.6);
+    lfo.connect(depth);
+    lfo.start(at);
+    lfo.stop(end + 0.8);
+    _band.add(lfo);
+    // Two singers, slightly apart, for an ensemble sound.
+    for (final cents in [-5.0, 5.0]) {
+      final o = ctx.createOscillator()
+        ..type = 'sawtooth'
+        ..frequency.value = freq
+        ..detune.value = cents;
+      depth.connect(o.detune);
+      o.connect(source);
       o.start(at);
       o.stop(end + 0.8);
       _band.add(o);

@@ -224,7 +224,7 @@ fn plays(hand: HandFilter, n: &TimedNote) -> bool {
 }
 
 /// Notes the app plays along with the student in play-along: the hand that is
-/// not being practised plus the backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`).
+/// not being practised plus the backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`).
 pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
     song.timeline().into_iter().filter(|n| n.accomp || !plays(hand, n)).collect()
 }

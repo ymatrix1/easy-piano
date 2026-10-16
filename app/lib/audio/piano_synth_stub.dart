@@ -41,6 +41,9 @@ class _SilentSynth implements PianoSynth {
   void pad(int pitch, double startSec, double durSec, {int velocity = 80}) {}
 
   @override
+  void choir(int pitch, double startSec, double durSec, {int velocity = 80}) {}
+
+  @override
   void setPartLevel(String part, double level) {}
 
   @override

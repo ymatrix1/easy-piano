@@ -283,6 +283,10 @@ class _PracticeStageState extends State<PracticeStage>
         );
         continue;
       }
+      if (n.partName == 'CHOIR') {
+        pianoSynth.choir(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
+        continue;
+      }
       if (n.partName == 'PAD') {
         pianoSynth.pad(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
         continue;

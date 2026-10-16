@@ -49,8 +49,11 @@ abstract class PianoSynth {
   /// Schedules a synthesized strings-pad note [startSec] seconds from now.
   void pad(int pitch, double startSec, double durSec, {int velocity = 80});
 
+  /// Schedules a synthesized wordless "ooh" voice [startSec] seconds from now.
+  void choir(int pitch, double startSec, double durSec, {int velocity = 80});
+
   /// Sets a part's volume (1 = default mix level ... 0 = muted). [part] is a
-  /// score part key (`ACC`, `DRUMS`, `BASS`, `PAD`) or `piano` for everything
+  /// score part key (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`) or `piano` for everything
   /// else on the piano voice.
   void setPartLevel(String part, double level);
 
