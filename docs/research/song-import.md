@@ -33,10 +33,29 @@ Stems play back in the page (vocals, drums, bass, other), so a play-along backin
 - 4-stem htdemucs has no piano stem; piano lands in "other" with guitars/synths. A 6-stem model (htdemucs_6s, has piano) is worth testing.
 - Synthetic audio is easier than real recordings in some ways (clean onsets) and harder in others (strong overtones). Real-recording numbers are still needed.
 
+## Arranger prototype (bean piano-qjyy, 2026-10-16)
+
+`core/src/arrange.rs`, measured by `core/tests/arrange_fixtures.rs` on the Basic Pitch output captured from the runs above (`core/tests/fixtures/`).
+
+Steps: `clean` drops notes < 60 ms and notes an octave, twelfth or double octave above a louder note that is sounding (amp < 0.8× fundamental); `melody` drops notes that start under a held higher note, then keeps the highest note per onset cluster (60 ms); `arrange` builds level variants.
+
+| Input | Raw F1 | After clean | Melody F1 (P / R) |
+|---|---|---|---|
+| piano | 0.67 | 1.00 | **1.00** (1.00 / 1.00) |
+| mix | 0.48 | 0.62 | **1.00** (1.00 / 1.00) |
+| other stem | 0.62 | 0.88 | **0.98** (0.97 / 1.00) |
+
+Level variants (all three inputs):
+
+- **Beginner:** RH melody transposed to C, folded into C4–G4, snapped to C major, one note per beat. Output starts E E F G G F E D as expected.
+- **Intermediate:** melody on a half-beat grid + one LH root per bar in C3–B3 (from the lowest sounding note, else the bar's lowest melody note). Mix gives C/G alternation matching the rendered bass.
+- **Advanced:** all cleaned notes on a quarter-beat grid, split at middle C.
+
+Caveat: thresholds were tuned on synthetic audio from one melody; numbers will drop on real recordings. Tempo is given (100 bpm), not detected.
+
 ## Not done
 
 - Real PD piano recordings (needs CC0/PD recordings, e.g. Musopen/IMSLP), with ground truth.
-- Arranger prototype (melody extraction, transpose to C, 5-finger range, LH roots).
 - Native timing (desktop/mobile) and WebGPU vs WASM comparison (backend selection is internal to demucs-web).
 
 ## Open points
@@ -46,5 +65,4 @@ Stems play back in the page (vocals, drums, bass, other), so a play-along backin
 
 ## Follow-ups
 
-- Bean: arranger prototype + overtone cleanup in Rust core, measured on this test set.
 - Bean: evaluate on 3 real PD piano recordings and htdemucs_6s.
