@@ -45,5 +45,22 @@
   "node.e1.jingle": "Jingle Bells",
   "level.e1.07.title": "Jingle Bells",
   "node.e1.boss": "Saints, both hands",
-  "level.e1.08.title": "The Saints, both hands"
+  "level.e1.08.title": "The Saints, both hands",
+  "scene.e2.a.1": "A is the white key just right of G. Stretch finger 5 up to reach it, then come back.",
+  "scene.e2.f.1": "Move your thumb to F. Now fingers 1, 2, 3 play F, G, A and finger 5 plays C.",
+  "scene.e2.shift.1": "Use the rest to move: lift your hand and land the thumb on the new key before the next beat.",
+  "node.e2.new-note-a": "New note: A",
+  "level.e2.01.title": "Reach for A",
+  "node.e2.twinkle": "Twinkle, Twinkle",
+  "level.e2.02.title": "Twinkle, Twinkle, Little Star",
+  "node.e2.left-hand-a": "Left hand reaches A",
+  "level.e2.03.title": "Thumb stretch",
+  "node.e2.f-position": "F position",
+  "level.e2.04.title": "F position march",
+  "node.e2.shifting": "Shifting positions",
+  "level.e2.05.title": "Move over",
+  "node.e2.susanna": "Oh! Susanna",
+  "level.e2.06.title": "Oh! Susanna",
+  "node.e2.boss": "Twinkle, both hands",
+  "level.e2.07.title": "Twinkle with both hands"
 }

@@ -1,0 +1,29 @@
+{
+  "id": "e2-01-reach-a",
+  "title": "str:level.e2.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e2-reach-a"
+    },
+    {
+      "type": "one_note",
+      "score": "e2-a-drill",
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "e2-a-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e2-a-drill",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

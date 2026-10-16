@@ -45,5 +45,22 @@
   "node.e1.jingle": "Jingle Bells",
   "level.e1.07.title": "Jingle Bells",
   "node.e1.boss": "Saints com as duas mãos",
-  "level.e1.08.title": "The Saints com as duas mãos"
+  "level.e1.08.title": "The Saints com as duas mãos",
+  "scene.e2.a.1": "Lá é a tecla branca logo à direita de Sol. Estique o dedo 5 para alcançá-la e depois volte.",
+  "scene.e2.f.1": "Leve o polegar para o Fá. Agora os dedos 1, 2 e 3 tocam Fá, Sol e Lá, e o dedo 5 toca Dó.",
+  "scene.e2.shift.1": "Use a pausa para mudar: levante a mão e pouse o polegar na nova tecla antes do próximo tempo.",
+  "node.e2.new-note-a": "Nota nova: Lá",
+  "level.e2.01.title": "Alcance o Lá",
+  "node.e2.twinkle": "Brilha, Brilha, Estrelinha",
+  "level.e2.02.title": "Brilha, Brilha, Estrelinha",
+  "node.e2.left-hand-a": "Mão esquerda alcança o Lá",
+  "level.e2.03.title": "Polegar esticado",
+  "node.e2.f-position": "Posição de Fá",
+  "level.e2.04.title": "Marcha na posição de Fá",
+  "node.e2.shifting": "Mudando de posição",
+  "level.e2.05.title": "Mude de lugar",
+  "node.e2.susanna": "Oh! Susanna",
+  "level.e2.06.title": "Oh! Susanna",
+  "node.e2.boss": "Brilha, Brilha com as duas mãos",
+  "level.e2.07.title": "Brilha, Brilha com as duas mãos"
 }

@@ -78,6 +78,8 @@ flutter:
     - assets/content/courses/piano-basics/levels/
     - assets/content/courses/essentials-1/
     - assets/content/courses/essentials-1/levels/
+    - assets/content/courses/essentials-2/
+    - assets/content/courses/essentials-2/levels/
     - assets/content/songs/
     - assets/content/scenes/
     - assets/content/strings/

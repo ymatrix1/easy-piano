@@ -1,0 +1,34 @@
+{
+  "id": "e2-reach-a",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.e2.a.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 9,
+      "prompt": "your_turn"
+    }
+  ]
+}
