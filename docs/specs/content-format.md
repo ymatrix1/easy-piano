@@ -63,9 +63,18 @@ Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter r
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
 
-## Accompaniment part
+## Backing parts (`ACC`, `DRUMS`, `BASS`)
 
 A bar may hold an `ACC` part next to `RH` / `LH`: our own accompaniment (chords, bass) in the same notation. It is played by the app in play-along and never graded; bar lengths are linted like any hand.
+
+A bar may also hold a backing band ([D14](../DECISIONS.md)), same notation, also app-played and never graded:
+
+| Part | Sound | Pitches |
+|---|---|---|
+| `DRUMS` | Synthesized kit (no sample files) | General MIDI percussion numbers written as note names: kick 36 `C2`, snare 38 `D2`, closed hi-hat 42 `F#2`, open hi-hat 46 `A#2`, crash 49 `C#3`. Lint rejects any other pitch. Length matters only for bar sums. |
+| `BASS` | Synthesized bass voice | Normal pitches (21–108), e.g. `C2:4 G2:4`. |
+
+Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument.
 
 ## Journey and levels (implemented)
 

@@ -31,5 +31,11 @@ class _SilentSynth implements PianoSynth {
   void click(double startSec, {bool accent = false}) {}
 
   @override
+  void drum(int gmPitch, double startSec, {int velocity = 80}) {}
+
+  @override
+  void bass(int pitch, double startSec, double durSec, {int velocity = 80}) {}
+
+  @override
   void stopAll() {}
 }

@@ -37,6 +37,14 @@ abstract class PianoSynth {
   /// Schedules a metronome click [startSec] seconds from now (accent = beat 1).
   void click(double startSec, {bool accent = false});
 
+  /// Schedules a synthesized drum hit [startSec] seconds from now. [gmPitch]
+  /// is a General MIDI percussion number: 36 kick, 38 snare, 42 closed hi-hat,
+  /// 46 open hi-hat, 49 crash.
+  void drum(int gmPitch, double startSec, {int velocity = 80});
+
+  /// Schedules a synthesized bass note [startSec] seconds from now.
+  void bass(int pitch, double startSec, double durSec, {int velocity = 80});
+
   /// Stops everything scheduled or sounding.
   void stopAll();
 }

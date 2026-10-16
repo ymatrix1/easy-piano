@@ -84,6 +84,15 @@
           },
           "LH": {
             "type": "string"
+          },
+          "ACC": {
+            "type": "string"
+          },
+          "DRUMS": {
+            "type": "string"
+          },
+          "BASS": {
+            "type": "string"
           }
         }
       }

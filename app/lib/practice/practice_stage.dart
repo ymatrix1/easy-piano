@@ -270,6 +270,19 @@ class _PracticeStageState extends State<PracticeStage>
     }
     for (final n in _companion) {
       if (n.beat < fromBeat) continue;
+      if (n.partName == 'DRUMS') {
+        pianoSynth.drum(n.pitch, inSec(n.beat));
+        continue;
+      }
+      if (n.partName == 'BASS') {
+        pianoSynth.bass(
+          n.pitch,
+          inSec(n.beat),
+          n.beats * _msPerBeat / 1000 * 0.9,
+          velocity: 90,
+        );
+        continue;
+      }
       pianoSynth.schedule(
         n.pitch,
         inSec(n.beat),
