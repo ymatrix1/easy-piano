@@ -78,7 +78,19 @@ async function runTranscription(label, url) {
   const mono = await toMono(await decode(url, 44100), 22050);
   const { notes, ms } = await transcribe(mono);
   log(`[${label}] Basic Pitch ${ms.toFixed(0)} ms for ${(mono.length / 22050).toFixed(1)} s audio · ${score(notes)}`);
+  exportNotes(label, notes);
   return notes;
+}
+
+/** Keeps raw transcriptions on window.__notes for use as test fixtures. */
+function exportNotes(label, notes) {
+  window.__notes ??= {};
+  window.__notes[label] = notes.map((n) => ({
+    pitch: n.pitchMidi,
+    start: +n.startTimeSeconds.toFixed(4),
+    dur: +n.durationSeconds.toFixed(4),
+    amp: +n.amplitude.toFixed(3),
+  }));
 }
 
 function stemPlayer(name, stem) {
@@ -130,6 +142,7 @@ async function runSeparation() {
   const otherBuf = stemPlayer('other (re-used)', stems.other);
   const { notes, ms } = await transcribe(await toMono(otherBuf, 22050));
   log(`[other stem] Basic Pitch ${ms.toFixed(0)} ms · ${score(notes)}`);
+  exportNotes('other', notes);
 }
 
 const guard = (fn) => async () => {

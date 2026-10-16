@@ -1,0 +1,42 @@
+[
+{
+"bar": 0,
+"chord": "C",
+"root": 48
+},
+{
+"bar": 1,
+"chord": "G",
+"root": 43
+},
+{
+"bar": 2,
+"chord": "C",
+"root": 48
+},
+{
+"bar": 3,
+"chord": "G",
+"root": 43
+},
+{
+"bar": 4,
+"chord": "C",
+"root": 48
+},
+{
+"bar": 5,
+"chord": "G",
+"root": 43
+},
+{
+"bar": 6,
+"chord": "C",
+"root": 48
+},
+{
+"bar": 7,
+"chord": "G",
+"root": 43
+}
+]

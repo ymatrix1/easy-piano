@@ -13,6 +13,7 @@ Follow-up from docs/research/song-import.md (D11). Blocked by: none.
 ## Higher Goal
 My songs at your level (Phase 5).
 ## Acceptance Criteria
+- [ ] Also run pop2piano and Transkun on Linux (WSL or CI), and MuScriptor medium/large
 - [ ] Measured result recorded in docs/research/song-import.md
 ## Out of Scope
 UI.
