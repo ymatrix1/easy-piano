@@ -339,6 +339,7 @@ class GameButton extends StatelessWidget {
     required this.onTap,
     this.tone = GameTone.gold,
     this.icon,
+    this.trailingIcon,
     this.fontSize = 18,
     this.minWidth = 150,
     this.height = 50,
@@ -348,6 +349,7 @@ class GameButton extends StatelessWidget {
   final VoidCallback? onTap;
   final GameTone tone;
   final IconData? icon;
+  final IconData? trailingIcon;
   final double fontSize;
   final double minWidth;
   final double height;
@@ -396,6 +398,7 @@ class GameButton extends StatelessWidget {
                 ),
               ),
               child: Stack(
+                alignment: Alignment.center,
                 children: [
                   if (cta)
                     Positioned.fill(
@@ -404,25 +407,7 @@ class GameButton extends StatelessWidget {
                         child: const SizedBox.expand(),
                       ),
                     ),
-                  // Gloss band across the top third.
-                  Positioned(
-                    left: cut,
-                    right: cut * 0.6,
-                    top: 3,
-                    height: height * 0.22,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.38),
-                            Colors.white.withValues(alpha: 0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  Positioned.fill(child: _Sheen(cut)),
                   Align(
                     widthFactor: 1,
                     child: Padding(
@@ -440,6 +425,14 @@ class GameButton extends StatelessWidget {
                             color: t.label,
                             shadow: t.label == Colors.white,
                           ),
+                          if (trailingIcon != null) ...[
+                            const SizedBox(width: 10),
+                            Icon(
+                              trailingIcon,
+                              color: t.label,
+                              size: fontSize * 1.2,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -452,6 +445,34 @@ class GameButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Soft sheen over the upper half of a chamfered face (shared by buttons).
+class _Sheen extends StatelessWidget {
+  const _Sheen(this.cut);
+
+  final double cut;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: ClipPath(
+      clipper: ShapeBorderClipper(shape: chamfer(cut)),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withValues(alpha: 0.24),
+              Colors.white.withValues(alpha: 0.06),
+              Colors.white.withValues(alpha: 0),
+            ],
+            stops: const [0, 0.45, 0.5],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Square chamfered icon button (pause, retry, close).
@@ -497,13 +518,10 @@ class GameRoundButton extends StatelessWidget {
                 ),
               ],
             ),
-            padding: EdgeInsets.only(bottom: 3.5 * (1 - p)),
+            padding: EdgeInsets.only(bottom: 4 * (1 - p)),
             child: DecoratedBox(
               decoration: ShapeDecoration(
-                shape: chamfer(
-                  cut,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
-                ),
+                shape: chamfer(cut),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -513,15 +531,19 @@ class GameRoundButton extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: size * 0.5,
-                  color: t.label,
-                  shadows: t.label == Colors.white
-                      ? const [Shadow(color: Colors.black45, blurRadius: 3)]
-                      : null,
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(child: _Sheen(cut)),
+                  Icon(
+                    icon,
+                    size: size * 0.5,
+                    color: t.label,
+                    shadows: t.label == Colors.white
+                        ? const [Shadow(color: Colors.black45, blurRadius: 3)]
+                        : null,
+                  ),
+                ],
               ),
             ),
           ),
@@ -978,6 +1000,15 @@ class GameStar extends StatelessWidget {
       child: Stack(
         children: [
           Icon(Icons.star_rounded, size: size, color: const Color(0x8C0A0830)),
+          // Glow drawn unclipped (a ClipRect would cut the blur into a
+          // square) and only for full stars.
+          if (glow != null && fill >= 1)
+            Icon(
+              Icons.star_rounded,
+              size: size,
+              color: Colors.transparent,
+              shadows: glow,
+            ),
           if (fill > 0)
             ClipRect(
               clipper: _FillClipper(fill.clamp(0.0, 1.0)),
@@ -985,7 +1016,6 @@ class GameStar extends StatelessWidget {
                 Icons.star_rounded,
                 size: size,
                 color: GameColors.gold,
-                shadows: glow,
               ),
             ),
         ],

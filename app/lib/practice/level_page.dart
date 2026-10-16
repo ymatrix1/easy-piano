@@ -9,6 +9,7 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
 import 'practice_stage.dart';
+import 'result_screen.dart';
 
 /// Runs a level's stages in order: scenes (captions until the Phase 2 player),
 /// then playable stages graded by the core. Wait stages repeat `repeats`
@@ -139,7 +140,15 @@ class _LevelPageState extends State<LevelPage> {
           children: [
             Positioned.fill(child: _stageBody(repo, showKeyboard)),
             if (_result != null)
-              Positioned.fill(child: _resultScreen(context, _result!)),
+              Positioned.fill(
+                child: ResultScreen(
+                  result: _result!,
+                  stageType: _stage.type,
+                  songTitle: _songTitle(_stage.score),
+                  onRetry: _retry,
+                  onNext: _next,
+                ),
+              ),
           ],
         ),
       ),
@@ -187,196 +196,6 @@ class _LevelPageState extends State<LevelPage> {
       onToggleKeyboard: () => setState(() => _keyboard = !showKeyboard),
       midiLabel: _midiLabel,
       onConnectMidi: _connectMidi,
-    );
-  }
-
-  /// Round medallion with a count-up value and a progress ring.
-  Widget _stat(
-    IconData icon,
-    String label,
-    double value,
-    String Function(double) format,
-    double fraction,
-    int order,
-  ) {
-    final delay = Duration(milliseconds: 900 + 150 * order);
-    return PopIn(
-      delay: delay,
-      child: Column(
-        children: [
-          Container(
-            width: 92,
-            height: 92,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: GameColors.panel,
-              border: Border.all(color: GameColors.panelEdge, width: 1.5),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black38,
-                  blurRadius: 8,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(6),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox.expand(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
-                    duration: const Duration(milliseconds: 900),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, v, _) => CircularProgressIndicator(
-                      value: v,
-                      strokeWidth: 7,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation(GameColors.yellow),
-                    ),
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, color: GameColors.yellow, size: 24),
-                    CountUp(
-                      value: value,
-                      format: format,
-                      size: 18,
-                      delay: delay,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 6),
-          GameText(label, size: 14, color: GameColors.textDim),
-        ],
-      ),
-    );
-  }
-
-  Widget _resultScreen(BuildContext context, ResultView r) {
-    final s = _stage;
-    // Reference formulas live in the core (session.rs): notes hit/total,
-    // timing from the mean and spread of errors, assists = tempo used.
-    final playAlong = s.type == 'play_along';
-    final notesFrac = r.notesTotal == 0 ? 0.0 : r.notesHit / r.notesTotal;
-    final title = _songTitle(s.score);
-    String pct(double v) => '${v.round()}%';
-    final hint = playAlong
-        ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
-        : s.type == 'one_note'
-        ? 'Play more than 80% of the notes.'
-        : 'Play more than 80% of the notes before the hint appears.'
-              '${r.suggestPractice ? ' Try a slower tempo.' : ''}';
-    return ResultBackground(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PopIn(
-                child: GameRibbon(
-                  r.passed ? 'Completed!' : 'Almost there!',
-                  tone: r.passed ? GameTone.green : GameTone.red,
-                  fontSize: 36,
-                ),
-              ),
-              if (title.isNotEmpty)
-                SlideIn(
-                  delay: const Duration(milliseconds: 150),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: GameText(title, size: 20, color: GameColors.cyan),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              // Stars fill continuously (e.g. half a star), as in the reference.
-              StarRow(
-                stars: r.starsExact,
-                delay: const Duration(milliseconds: 300),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 28,
-                runSpacing: 12,
-                children: [
-                  _stat(
-                    Icons.music_note_rounded,
-                    'NOTES',
-                    r.notesHit.toDouble(),
-                    (v) => '${v.round()}/${r.notesTotal}',
-                    notesFrac,
-                    0,
-                  ),
-                  if (playAlong) ...[
-                    _stat(
-                      Icons.timer_rounded,
-                      'TIMING',
-                      r.timing * 100,
-                      pct,
-                      r.timing,
-                      1,
-                    ),
-                    _stat(
-                      Icons.support_rounded,
-                      'ASSISTS',
-                      r.assists * 100,
-                      pct,
-                      r.assists,
-                      2,
-                    ),
-                  ],
-                ],
-              ),
-              if (!r.passed)
-                Padding(
-                  padding: const EdgeInsets.only(top: 14),
-                  child: Text(
-                    hint,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 22),
-              SlideIn(
-                delay: const Duration(milliseconds: 1300),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GameRoundButton(
-                      icon: Icons.replay_rounded,
-                      onTap: _retry,
-                      tone: GameTone.blue,
-                      size: 64,
-                      tooltip: 'Retry',
-                    ),
-                    const SizedBox(width: 18),
-                    GameButton(
-                      label: r.passed ? 'NEXT' : 'LOCKED',
-                      icon: r.passed
-                          ? Icons.chevron_right_rounded
-                          : Icons.lock_rounded,
-                      onTap: r.passed ? _next : null,
-                      tone: GameTone.green,
-                      fontSize: 26,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
