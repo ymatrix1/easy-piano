@@ -192,14 +192,15 @@ class _WebPianoSynth implements PianoSynth {
   /// One gain node per part, between the voices and the master.
   final _buses = <String, web.GainNode>{};
 
-  /// Default mix: the band sits under the piano the student plays.
+  /// Default mix: the band sits well under the piano the student plays
+  /// (synth saws sound much louder than piano samples at equal gain).
   static const _defaultLevels = {
     'piano': 1.0,
-    'ACC': 0.8,
-    'DRUMS': 0.7,
-    'BASS': 0.8,
-    'PAD': 0.5,
-    'CHOIR': 0.6,
+    'ACC': 0.7,
+    'DRUMS': 0.25,
+    'BASS': 0.3,
+    'PAD': 0.15,
+    'CHOIR': 0.18,
   };
 
   web.GainNode _bus(String part) {

@@ -76,7 +76,7 @@ A bar may also hold a backing band ([D14](../DECISIONS.md)), same notation, also
 | `PAD` | Synthesized strings pad (3 detuned saws, slow attack/release) | Normal pitches; long chords, e.g. `G3C4E4:1`. Keep it off the melody's notes. |
 | `CHOIR` | Synthesized wordless "ooh" voices (2 detuned saws, vibrato, /u/ formant filters) | Normal pitches; sustained lines above the melody, e.g. `C5E5:1`; use `r:1` where it rests. |
 
-Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument. Each part plays through its own gain bus (default mix: piano 1.0, `ACC` 0.8, `DRUMS` 0.7, `BASS` 0.8, `PAD` 0.5, `CHOIR` 0.6); `PianoSynth.setPartLevel(part, level)` changes it, ready for a per-part mute/volume UI.
+Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument. Each part plays through its own gain bus (default mix: piano 1.0, `ACC` 0.7, `DRUMS` 0.25, `BASS` 0.3, `PAD` 0.15, `CHOIR` 0.18); `PianoSynth.setPartLevel(part, level)` changes it, ready for a per-part mute/volume UI.
 
 ## Journey and levels (implemented)
 
