@@ -130,6 +130,12 @@ fn snap(x: f64, grid: f64) -> f64 {
     (x / grid).round() * grid
 }
 
+/// Lowest right-hand note (middle C); below it is left-hand territory.
+const RH_LOW: u8 = 60;
+/// Highest right-hand note per level (C6 and C7).
+const INTERMEDIATE_RH_HIGH: i32 = 84;
+const ADVANCED_RH_HIGH: i32 = 96;
+
 const C_MAJOR: [u8; 7] = [0, 2, 4, 5, 7, 9, 11];
 
 /// Semitone shift (−6..=5) that puts the most notes in C major, smallest shift on ties.
@@ -169,7 +175,10 @@ fn fold(pitch: i32, lo: i32, hi: i32) -> i32 {
 pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
     let beat = |s: f64| s * bpm / 60.0;
     let cleaned = clean(raw, &CleanConfig::default());
-    let tune = melody(&cleaned, 0.06);
+    // Melody comes only from the right-hand register; lower notes are accompaniment
+    // and feed the left hand, so a bass note can never become "melody" in a gap.
+    let upper: Vec<RawNote> = cleaned.iter().copied().filter(|n| n.pitch >= RH_LOW).collect();
+    let tune = melody(if upper.is_empty() { &cleaned } else { &upper }, 0.06);
     match level {
         Level::Beginner => {
             let shift = shift_to_c(&tune.iter().map(|n| n.pitch).collect::<Vec<_>>());
@@ -200,7 +209,8 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
                 if out.last().is_some_and(|l| l.beat == b) {
                     continue;
                 }
-                out.push(ArrangedNote { pitch: n.pitch, beat: b, beats: 0.5, left_hand: false });
+                let p = fold(n.pitch as i32, RH_LOW as i32, INTERMEDIATE_RH_HIGH) as u8;
+                out.push(ArrangedNote { pitch: p, beat: b, beats: 0.5, left_hand: false });
             }
             fill_durations(&mut out, &[0.5, 1.0, 1.5, 2.0, 3.0, 4.0]);
             let bars = out.last().map_or(0, |l| (l.beat / 4.0).floor() as usize + 1);
@@ -230,10 +240,15 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
             let mut out: Vec<ArrangedNote> = cleaned
                 .iter()
                 .map(|n| ArrangedNote {
-                    pitch: n.pitch,
+                    // Fold stray overtones down into a playable range.
+                    pitch: if n.pitch > ADVANCED_RH_HIGH as u8 {
+                        fold(n.pitch as i32, RH_LOW as i32, ADVANCED_RH_HIGH) as u8
+                    } else {
+                        n.pitch
+                    },
                     beat: snap(beat(n.start), 0.25),
                     beats: snap(beat(n.dur), 0.25).max(0.25),
-                    left_hand: n.pitch < 60,
+                    left_hand: n.pitch < RH_LOW,
                 })
                 .collect();
             out.sort_by(|a, b| a.beat.total_cmp(&b.beat).then(a.pitch.cmp(&b.pitch)));
@@ -297,6 +312,29 @@ mod tests {
         let raw = [n(64, 0.0, 1.0, 0.7), n(36, 0.3, 0.2, 0.5), n(65, 1.0, 0.5, 0.7)];
         let m = melody(&raw, 0.06);
         assert_eq!(m.iter().map(|n| n.pitch).collect::<Vec<_>>(), vec![64, 65]);
+    }
+
+    #[test]
+    fn intermediate_rh_never_takes_bass_and_stays_below_c6() {
+        // Melody with a gap where only bass sounds, plus a stray overtone at F7.
+        let raw = [
+            n(64, 0.0, 0.5, 0.7),
+            n(36, 0.6, 1.0, 0.6),
+            n(101, 1.8, 0.3, 0.6),
+            n(65, 2.4, 0.5, 0.7),
+        ];
+        let a = arrange(&raw, 120.0, Level::Intermediate);
+        let rh: Vec<u8> = a.iter().filter(|n| !n.left_hand).map(|n| n.pitch).collect();
+        assert!(rh.iter().all(|&p| (60..=84).contains(&p)), "{rh:?}");
+        assert!(a.iter().any(|n| n.left_hand && n.pitch == 48), "bass C2 becomes LH root C3");
+    }
+
+    #[test]
+    fn advanced_folds_extreme_highs() {
+        let raw = [n(101, 0.0, 0.5, 0.7), n(40, 0.0, 0.5, 0.7)];
+        let a = arrange(&raw, 120.0, Level::Advanced);
+        assert!(a.iter().all(|n| n.pitch <= 96));
+        assert!(a.iter().any(|n| n.left_hand && n.pitch == 40));
     }
 
     #[test]

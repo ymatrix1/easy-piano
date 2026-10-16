@@ -53,6 +53,14 @@ Custom text inside JSON, parser in `sources/mk/`:
 - Directives `*Name: json*`: `Text` (chord labels/lyrics), `CriticalSectionStart/End` (+ `threshold`), `Swing8ths`, `TimeSignature`, `bpm`, `PhraseStart/End`.
 - Melodies split into `right` and `left` hands.
 
+Parsing rules (confirmed 2026-10-16, for the local stats tool only):
+
+- Tokenize with `\*[^\*]+\*|[^\s\*]+`; tokens are notes (`PITCHES:DUR...`) or `*Event:arg*`.
+- Cursor `t` in whole-note fractions; a note token advances `t` by its duration; chord pitches share `t` and `dur`; `-:d` is a rest.
+- `%n` finger(s), `^` other hand, `(StemU|StemD)` stem direction, `[..]` micro-timing.
+- Events (`CriticalSectionStart/End`, `Text`, `Swing8ths`, `tdm-reservation`, `bgmFileName`, `LevelStart`, `StageStart`) take zero time.
+- Beats = `dur × denominator(timeSignature)` (`1/4` in 4/4 = 1 beat); seconds = `beats × 60 / bpm`.
+
 Compact, diff-friendly, easy to hand-author. We adopt the same idea with our own grammar ([content format](../specs/content-format.md)).
 
 ## Grading

@@ -53,6 +53,45 @@ Level variants (all three inputs):
 
 Caveat: thresholds were tuned on synthetic audio from one melody; numbers will drop on real recordings. Tempo is given (100 bpm), not detected.
 
+## Model benchmark (2026-10-16)
+
+Harness: `tools/spikes/model-bench/bench.py` (Python 3.11 venv, CPU, Windows 11); scoring: `cargo run --example score_notes` in `core/` (same clean + melody steps as the arranger, melody F1, onset ±50 ms). Stems from Demucs `htdemucs_6s` (has piano and guitar stems). New input `nopiano.wav`: sung-like voice (vibrato) carries the melody over plucked guitar chords, bass and drums.
+
+Melody F1 after cleanup + melody step:
+
+| Model | piano | mix | mix→piano stem | mix→other | nopiano | nopiano→vocals | nopiano→other | Time / 20 s |
+|---|---|---|---|---|---|---|---|---|
+| Basic Pitch 0.4 (Py, ONNX) | **1.00** | **1.00** | 0.98 | 0.80 | 0.48 | 0.45 | 0.60 | ~1 s |
+| pYIN (librosa, monophonic) | 0.80 | 0.32 | 0.80 | 0.31 | 0.39 | **0.73** | **0.77** | 3–5 s |
+| ByteDance piano_transcription | 0.00* | 0.33 | 0.07* | 0.06 | 0.29 | 0.23 | 0.52 | 13–26 s |
+| MuScriptor small (CC BY-NC) | 0.72 | 0.72 | 0.73 | 0.00† | 0.31 | 0.00† | 0.21 | 8–96 s |
+| pop2piano | not run: needs `essentia`, no Windows build | | | | | | | |
+| Transkun | not run: `ncls` dependency fails to build on Windows | | | | | | | |
+
+\* ByteDance reports the synthetic tone's overtones (octave, twelfth) as notes louder than the fundamental, so cleanup keeps them and the skyline picks them. Our additive "piano" is not realistic; this test is unfair to piano-trained models. Real recordings needed (bean piano-hces).
+† MuScriptor returned no notes on these stems; not investigated.
+
+Takeaways:
+
+- **Basic Pitch stays the default** for piano content: best here, small, Apache-2.0, already runs in the browser.
+- **No-piano songs:** melody comes best from the Demucs **vocals stem + pYIN** (0.73), or the lead instrument stem + pYIN (0.77). Pipeline: separate → vocals to pYIN for RH melody → bass/other for chords and roots → arranger. pYIN-style tracking is cheap enough to port to Rust/wasm.
+- MuScriptor is not better on this set and cannot ship (non-commercial weights).
+- pop2piano and Transkun need Linux; test later in WSL or CI.
+
+## Real-song test (2026-10-16)
+
+A user-owned commercial pop recording (vocals, guitar, bass, drums, strings; little piano) was run end to end, locally only: no audio, stems, notes or MIDI were committed. Pipeline: Demucs `htdemucs_6s` → Basic Pitch / pYIN / ByteDance / MuScriptor small on stems or full mix → core arranger (beginner, intermediate, advanced) → MIDI, compared by ear on a local page. GPU (RTX 4070 SUPER, CUDA PyTorch): ByteDance ~45 s, MuScriptor ~3 min on the full mix, ~25 s on the vocal stem.
+
+Findings:
+
+- **Results are not good enough yet.** Arrangements are recognizable in places but not musical or reliably playable.
+- **Bug found and fixed:** intermediate/advanced right hand took bass notes in melody gaps (down to MIDI 27) and kept overtones up to MIDI 101. Melody now comes only from notes ≥ middle C; RH folds to ≤ C6 (intermediate) / ≤ C7 (advanced). Regression tests added.
+- **MuScriptor sounded most promising** by ear (cleanest multi-instrument note output), but its weights are CC BY-NC, so it stays a reference unless the license changes or a similar open model appears.
+- The deterministic arranger is too blunt for real songs. Level variants probably need an **LLM pass** that reads the transcribed notes (melody, bass, chords, structure) and writes beginner / intermediate / advanced arrangements in our notation, with the core validating range, playability and timing. Rules stay as guardrails; the LLM does musical choices (simplify rhythm, pick chord voicings, keep the hook).
+- The piano stem was nearly empty (32 notes): for songs without piano, melody must come from the vocal stem.
+
+Still to check: pop2piano and Transkun (need Linux), ByteDance on real piano recordings, larger MuScriptor sizes.
+
 ## Not done
 
 - Real PD piano recordings (needs CC0/PD recordings, e.g. Musopen/IMSLP), with ground truth.
@@ -65,4 +104,4 @@ Caveat: thresholds were tuned on synthetic audio from one melody; numbers will d
 
 ## Follow-ups
 
-- Bean: evaluate on 3 real PD piano recordings and htdemucs_6s.
+- Bean: evaluate on 3 real PD piano recordings and htdemucs_6s (also run pop2piano and Transkun on Linux).
