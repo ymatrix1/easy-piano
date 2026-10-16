@@ -15,6 +15,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D7](#d7-beans-for-task-tracking) | 2026-10-15 | beans for task tracking | accepted |
 | [D8](#d8-local-first-no-account-required) | 2026-10-15 | Local-first, no account required | accepted |
 | [D9](#d9-web-is-the-first-release-target) | 2026-10-15 | Web is the first release target | accepted |
+| [D10](#d10-ui-stack-material-3-themed-riverpod-go_router) | 2026-10-15 | UI stack: Material 3 themed, Riverpod, go_router | proposed |
 
 ## Accepted
 
@@ -107,3 +108,14 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Fastest feedback loop; no store review; Web MIDI is exact on desktop browsers where most MIDI-keyboard learners sit.
 - **Alternatives:** Mobile first (stores, native latency; slower iteration). TS web app + Capacitor (smaller first load, but weaker mobile MIDI/latency later; would supersede D1).
 - **Impact:** Phase 0 spike must measure Flutter web first-load size and Web MIDI latency. If first load > 5 MB or latency > 30 ms p95, revisit D1. Hosting needs COOP/COEP headers.
+
+## Proposed (pending confirmation)
+
+### D10. UI stack: Material 3 themed, Riverpod, go_router
+
+- **Status:** proposed
+- **Context:** Need app-shell widgets, state and routing for Flutter (D1), web first (D9), with a playful game look.
+- **Decision:** Material 3 widgets with a custom theme and `ThemeExtension` tokens; own `CustomPainter`s for staff, keyboard, falling notes and scenes; `flutter_animate` for motion, Rive for mascot/celebrations; Riverpod for state; go_router for URL routing; Material Symbols, a rounded OFL font, Bravura for music glyphs.
+- **Why:** Built in, accessible, cross-platform; theming removes the stock look; Riverpod is testable; go_router gives web deep links.
+- **Alternatives:** shadcn_flutter / forui (SaaS look); Cupertino (iOS only); Flame (game engine, overkill for shell); Bloc (more boilerplate).
+- **Impact:** All screens use theme tokens, no hard-coded colors. Revisit if Material theming can't reach the target look.
