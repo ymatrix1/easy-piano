@@ -342,7 +342,8 @@ class StaffPainter extends CustomPainter {
 
     // Play bar with a soft glow trail behind it (play-along only).
     if (showPlayLine) {
-      final top = staffTop - space * 1.5, bottom = staffBottom + space * 1.5;
+      // Spans the whole band (band is staff ± 2.2 spaces).
+      final top = staffTop - space * 2.2, bottom = staffBottom + space * 2.2;
       final glowRect = Rect.fromLTRB(
         anchorX - space * 2.6,
         top,

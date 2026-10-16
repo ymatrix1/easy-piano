@@ -267,9 +267,15 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   /// Pre-listen: plays the passage while a beam walks over the notes.
-  void _startDemo() {
+  ///
+  /// Samples must be decoded before scheduling, or the notes are silent; the
+  /// beam waits for them too so sound and beam stay together.
+  Future<void> _startDemo() async {
     _demo = true;
     _demoIndex = 0;
+    _demoStartMs = double.infinity;
+    await pianoSynth.load();
+    if (!mounted || !_demo) return;
     _demoStartMs = widget.midi.now() + 400;
     final lead = 0.4;
     for (final t in _initialTargets) {
