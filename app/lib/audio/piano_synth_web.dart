@@ -46,6 +46,24 @@ class _WebPianoSynth implements PianoSynth {
     if (!value) stopAll();
   }
 
+  static const _metronomeKey = 'easy_piano.metronome';
+
+  @override
+  bool get metronome {
+    try {
+      return web.window.localStorage.getItem(_metronomeKey) != 'off';
+    } catch (_) {
+      return true;
+    }
+  }
+
+  @override
+  set metronome(bool value) {
+    try {
+      web.window.localStorage.setItem(_metronomeKey, value ? 'on' : 'off');
+    } catch (_) {}
+  }
+
   web.AudioContext _context() {
     final ctx = _ctx ??= web.AudioContext(
       web.AudioContextOptions(latencyHint: 'interactive'.toJS),

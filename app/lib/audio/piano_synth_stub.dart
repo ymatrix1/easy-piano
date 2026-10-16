@@ -7,6 +7,9 @@ class _SilentSynth implements PianoSynth {
   bool enabled = true;
 
   @override
+  bool metronome = true;
+
+  @override
   Future<void> load() async {}
 
   @override

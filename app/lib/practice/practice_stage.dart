@@ -232,9 +232,8 @@ class _PracticeStageState extends State<PracticeStage>
     if (_playAlong) _scheduleBacking(-_beatsPerBar);
   }
 
-  /// Schedules count-in clicks, the companion notes and, when the song has no
-  /// companion, a metronome on every beat (reference: metronome when there is
-  /// no backing music). [fromBeat] is song time in beats.
+  /// Schedules count-in clicks, the companion notes and, when the metronome
+  /// is on, a click on every beat. [fromBeat] is song time in beats.
   void _scheduleBacking(double fromBeat) {
     final now = widget.midi.now();
     double inSec(double beat) => (_startMs + beat * _msPerBeat - now) / 1000;
@@ -244,7 +243,7 @@ class _PracticeStageState extends State<PracticeStage>
         accent: (b + _beatsPerBar) % _beatsPerBar == 0,
       );
     }
-    if (_companion.isEmpty) {
+    if (pianoSynth.metronome) {
       for (
         var b = math.max(0.0, fromBeat.ceilToDouble());
         b < _totalBeats;
@@ -252,7 +251,6 @@ class _PracticeStageState extends State<PracticeStage>
       ) {
         pianoSynth.click(inSec(b), accent: b % _beatsPerBar == 0);
       }
-      return;
     }
     for (final n in _companion) {
       if (n.beat < fromBeat) continue;
@@ -264,6 +262,15 @@ class _PracticeStageState extends State<PracticeStage>
         force: true,
       );
     }
+  }
+
+  /// Flips the metronome; reschedules backing from the current beat so the
+  /// change is heard at once.
+  void _toggleMetronome() {
+    setState(() => pianoSynth.metronome = !pianoSynth.metronome);
+    if (_demo || _paused || _finished) return;
+    pianoSynth.stopAll();
+    _scheduleBacking(_scroll.value);
   }
 
   /// Pre-listen: plays the passage while a beam walks over the notes.
@@ -610,6 +617,19 @@ class _PracticeStageState extends State<PracticeStage>
               color: StagePalette.text,
             ),
           ),
+          if (_playAlong)
+            IconButton(
+              tooltip: pianoSynth.metronome
+                  ? 'Turn metronome off'
+                  : 'Turn metronome on',
+              onPressed: _toggleMetronome,
+              icon: Icon(
+                Icons.av_timer_rounded,
+                color: pianoSynth.metronome
+                    ? StagePalette.text
+                    : StagePalette.text.withValues(alpha: 0.4),
+              ),
+            ),
           if (widget.onToggleKeyboard != null) ...[
             IconButton(
               tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',

@@ -10,6 +10,11 @@ abstract class PianoSynth {
   bool get enabled;
   set enabled(bool value);
 
+  /// Whether play-along clicks every beat, also under a companion part.
+  /// Off still keeps the count-in. Remembered per device.
+  bool get metronome;
+  set metronome(bool value);
+
   /// Loads the samples. Safe to call more than once.
   Future<void> load();
 
