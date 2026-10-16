@@ -56,6 +56,9 @@ class FrameView {
   final int wrong;
   final bool done;
 
+  /// Wait mode: the note has waited long enough to show the hint.
+  final bool hintActive;
+
   const FrameView({
     required this.playheadBeat,
     required this.cursor,
@@ -63,6 +66,7 @@ class FrameView {
     required this.misses,
     required this.wrong,
     required this.done,
+    required this.hintActive,
   });
 
   @override
@@ -72,7 +76,8 @@ class FrameView {
       hits.hashCode ^
       misses.hashCode ^
       wrong.hashCode ^
-      done.hashCode;
+      done.hashCode ^
+      hintActive.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -84,7 +89,8 @@ class FrameView {
           hits == other.hits &&
           misses == other.misses &&
           wrong == other.wrong &&
-          done == other.done;
+          done == other.done &&
+          hintActive == other.hintActive;
 }
 
 class ResultView {
@@ -97,6 +103,18 @@ class ResultView {
   final double threshold;
   final bool suggestPractice;
 
+  /// Every chord note counts on its own.
+  final int notesHit;
+  final int notesTotal;
+
+  /// Reference song score parts, 0–1.
+  final double timing;
+  final double assists;
+  final double score;
+
+  /// Continuous 0–3 stars (fractional fill on screen).
+  final double starsExact;
+
   const ResultView({
     required this.passed,
     required this.stars,
@@ -106,6 +124,12 @@ class ResultView {
     required this.sections,
     required this.threshold,
     required this.suggestPractice,
+    required this.notesHit,
+    required this.notesTotal,
+    required this.timing,
+    required this.assists,
+    required this.score,
+    required this.starsExact,
   });
 
   @override
@@ -117,7 +141,13 @@ class ResultView {
       meanAbsTimingMs.hashCode ^
       sections.hashCode ^
       threshold.hashCode ^
-      suggestPractice.hashCode;
+      suggestPractice.hashCode ^
+      notesHit.hashCode ^
+      notesTotal.hashCode ^
+      timing.hashCode ^
+      assists.hashCode ^
+      score.hashCode ^
+      starsExact.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -131,7 +161,13 @@ class ResultView {
           meanAbsTimingMs == other.meanAbsTimingMs &&
           sections == other.sections &&
           threshold == other.threshold &&
-          suggestPractice == other.suggestPractice;
+          suggestPractice == other.suggestPractice &&
+          notesHit == other.notesHit &&
+          notesTotal == other.notesTotal &&
+          timing == other.timing &&
+          assists == other.assists &&
+          score == other.score &&
+          starsExact == other.starsExact;
 }
 
 class SongInfo {

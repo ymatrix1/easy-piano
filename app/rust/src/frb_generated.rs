@@ -526,6 +526,7 @@ impl SseDecode for crate::api::practice::FrameView {
         let mut var_misses = <u32>::sse_decode(deserializer);
         let mut var_wrong = <u32>::sse_decode(deserializer);
         let mut var_done = <bool>::sse_decode(deserializer);
+        let mut var_hintActive = <bool>::sse_decode(deserializer);
         return crate::api::practice::FrameView {
             playhead_beat: var_playheadBeat,
             cursor: var_cursor,
@@ -533,6 +534,7 @@ impl SseDecode for crate::api::practice::FrameView {
             misses: var_misses,
             wrong: var_wrong,
             done: var_done,
+            hint_active: var_hintActive,
         };
     }
 }
@@ -602,6 +604,12 @@ impl SseDecode for crate::api::practice::ResultView {
         let mut var_sections = <Vec<f64>>::sse_decode(deserializer);
         let mut var_threshold = <f64>::sse_decode(deserializer);
         let mut var_suggestPractice = <bool>::sse_decode(deserializer);
+        let mut var_notesHit = <u32>::sse_decode(deserializer);
+        let mut var_notesTotal = <u32>::sse_decode(deserializer);
+        let mut var_timing = <f64>::sse_decode(deserializer);
+        let mut var_assists = <f64>::sse_decode(deserializer);
+        let mut var_score = <f64>::sse_decode(deserializer);
+        let mut var_starsExact = <f64>::sse_decode(deserializer);
         return crate::api::practice::ResultView {
             passed: var_passed,
             stars: var_stars,
@@ -611,6 +619,12 @@ impl SseDecode for crate::api::practice::ResultView {
             sections: var_sections,
             threshold: var_threshold,
             suggest_practice: var_suggestPractice,
+            notes_hit: var_notesHit,
+            notes_total: var_notesTotal,
+            timing: var_timing,
+            assists: var_assists,
+            score: var_score,
+            stars_exact: var_starsExact,
         };
     }
 }
@@ -750,6 +764,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::FrameView {
             self.misses.into_into_dart().into_dart(),
             self.wrong.into_into_dart().into_dart(),
             self.done.into_into_dart().into_dart(),
+            self.hint_active.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -777,6 +792,12 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::ResultView {
             self.sections.into_into_dart().into_dart(),
             self.threshold.into_into_dart().into_dart(),
             self.suggest_practice.into_into_dart().into_dart(),
+            self.notes_hit.into_into_dart().into_dart(),
+            self.notes_total.into_into_dart().into_dart(),
+            self.timing.into_into_dart().into_dart(),
+            self.assists.into_into_dart().into_dart(),
+            self.score.into_into_dart().into_dart(),
+            self.stars_exact.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -891,6 +912,7 @@ impl SseEncode for crate::api::practice::FrameView {
         <u32>::sse_encode(self.misses, serializer);
         <u32>::sse_encode(self.wrong, serializer);
         <bool>::sse_encode(self.done, serializer);
+        <bool>::sse_encode(self.hint_active, serializer);
     }
 }
 
@@ -952,6 +974,12 @@ impl SseEncode for crate::api::practice::ResultView {
         <Vec<f64>>::sse_encode(self.sections, serializer);
         <f64>::sse_encode(self.threshold, serializer);
         <bool>::sse_encode(self.suggest_practice, serializer);
+        <u32>::sse_encode(self.notes_hit, serializer);
+        <u32>::sse_encode(self.notes_total, serializer);
+        <f64>::sse_encode(self.timing, serializer);
+        <f64>::sse_encode(self.assists, serializer);
+        <f64>::sse_encode(self.score, serializer);
+        <f64>::sse_encode(self.stars_exact, serializer);
     }
 }
 

@@ -177,8 +177,8 @@ class _LevelPageState extends State<LevelPage> {
       onTempo: _setTempo,
       onRestart: _restart,
       onExit: () => Navigator.of(context).pop(),
-      repeatDone: _repeat,
-      repeatTotal: s.repeats,
+      repeatDone: _index,
+      repeatTotal: widget.level.stages.length,
       showKeyboard: showKeyboard,
       onToggleKeyboard: () => setState(() => _keyboard = !showKeyboard),
       midiLabel: _midiLabel,
@@ -231,11 +231,10 @@ class _LevelPageState extends State<LevelPage> {
 
   Widget _resultScreen(BuildContext context, ResultView r) {
     final s = _stage;
-    final timing = r.meanAbsTimingMs;
-    final windowMs = 150.0;
-    final timingPct = timing == null
-        ? 100.0
-        : (100 * (1 - timing / windowMs)).clamp(0.0, 100.0);
+    // Reference formulas live in the core (session.rs): notes hit/total,
+    // timing from the mean and spread of errors, assists = tempo used.
+    final playAlong = s.type == 'play_along';
+    final notesFrac = r.notesTotal == 0 ? 0.0 : r.notesHit / r.notesTotal;
     final title = _songTitle(s.score);
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -276,36 +275,42 @@ class _LevelPageState extends State<LevelPage> {
                 _stat(
                   Icons.music_note_rounded,
                   'NOTES',
-                  '${(r.hitRatio * 100).round()}%',
-                  r.hitRatio,
+                  '${r.notesHit}/${r.notesTotal}',
+                  notesFrac,
                 ),
-                const SizedBox(width: 40),
-                _stat(
-                  Icons.timer_outlined,
-                  'TIMING',
-                  '${timingPct.round()}%',
-                  timingPct / 100,
-                ),
-                const SizedBox(width: 40),
-                _stat(Icons.support_outlined, 'ASSISTS', '100%', 1),
+                if (playAlong) ...[
+                  const SizedBox(width: 40),
+                  _stat(
+                    Icons.timer_outlined,
+                    'TIMING',
+                    '${(r.timing * 100).round()}%',
+                    r.timing,
+                  ),
+                  const SizedBox(width: 40),
+                  _stat(
+                    Icons.support_outlined,
+                    'ASSISTS',
+                    '${(r.assists * 100).round()}%',
+                    r.assists,
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 20),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Stars fill continuously (e.g. half a star), as in the reference.
                 for (var i = 0; i < 3; i++)
-                  Icon(
-                    Icons.star_rounded,
-                    size: 64,
-                    color: i < r.stars ? StagePalette.current : Colors.white24,
-                  ),
+                  _star((r.starsExact - i).clamp(0.0, 1.0)),
               ],
             ),
             if (!r.passed)
               Text(
-                'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
-                '${r.suggestPractice ? ' Try a slower tempo.' : ''}',
+                playAlong
+                    ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
+                    : 'Play more than 80% of the notes before the hint appears.'
+                          '${r.suggestPractice ? ' Try a slower tempo.' : ''}',
                 style: const TextStyle(color: StagePalette.textDim),
               ),
             const SizedBox(height: 20),
@@ -322,6 +327,28 @@ class _LevelPageState extends State<LevelPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// A star filled from the left by [fill] (0–1).
+  Widget _star(double fill) {
+    const size = 64.0;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          const Icon(Icons.star_rounded, size: size, color: Colors.white24),
+          ClipRect(
+            clipper: _FractionClipper(fill),
+            child: const Icon(
+              Icons.star_rounded,
+              size: size,
+              color: StagePalette.current,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -454,4 +481,17 @@ class _InfoStage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FractionClipper extends CustomClipper<Rect> {
+  _FractionClipper(this.fill);
+
+  final double fill;
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(0, 0, size.width * fill, size.height);
+
+  @override
+  bool shouldReclip(_FractionClipper old) => old.fill != fill;
 }

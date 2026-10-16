@@ -15,8 +15,9 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 - The whole exercise is laid out to fit the width (about 3 bars); longer pieces page with the 1 s slide at 72% width.
 - Current note **yellow**, its badge **orange**; played notes and badges turn **cyan/teal**; no timing pressure.
-- When the last note is played a **green check** appears at the end of the line; the exercise repeats `repeats` times (stage field, default 1) and the pill counts `n / repeats`.
-- A soft white **light beam** stands over the note being waited for; it fades in over 0.2 s each time a new note becomes current (reference: one beam per note, not a sliding cursor).
+- When the last note is played a **green check** appears at the end of the line; the pill counts stages done / stages in the level (the reference has no in-stage repeats; the `repeats` field stays available but unused).
+- No hint at first. After 4 s without the right note, a soft white **light beam** fades in over the awaited note (0.2 s) and the target keys light up; one beam per note.
+- Wrong keys show a blue splash at the played pitch and are not penalised.
 - Each expected note is consumed once; a repeated key press does not count twice (Web MIDI is opened once and duplicate deliveries within 25 ms are dropped).
 - Before the first try, an optional demo dims the staff and sweeps a light beam across the notes while the app plays them (needs audio; bean piano-k0ht).
 
@@ -32,9 +33,7 @@ Pause dims the staff (nothing is drawn over it). In the top bar, resume / restar
 
 ## End of stage
 
-"Completed!" title, the piece name, three circular stats (**Notes** hit / total, **Timing** %, **Assists** %), 0–3 stars with half stars, replay and next buttons.
-
-Timing % = `100 × (1 − mean |timing error| / input window)`, clamped to 0–100. Assists % is 100 until hints / slow-down tracking exists.
+"Completed!" title, the piece name, **Notes** hit / total and, for play-along, **Timing** % and **Assists** %, then 0–3 stars filled continuously, replay and next buttons. Formulas: [exercise engine](exercise-engine.md).
 
 ## Palette (ours)
 

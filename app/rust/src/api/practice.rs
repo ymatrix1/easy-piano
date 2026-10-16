@@ -1,7 +1,7 @@
 //! Bridge over the core session engine for the practice screen.
 //! Logic stays in `easy_piano_core::session`; this file only adapts types.
 
-use easy_piano_core::session::{ChordState, HandFilter, Input, Mode, NoteEvent, Session, Settings};
+use easy_piano_core::session::{ChordState, HandFilter, Input, Mode, NoteEvent, Session, Settings, WAIT_HINT_AFTER_US};
 use easy_piano_core::song::Song;
 use flutter_rust_bridge::frb;
 
@@ -23,6 +23,8 @@ pub struct FrameView {
     pub misses: u32,
     pub wrong: u32,
     pub done: bool,
+    /// Wait mode: the note has waited long enough to show the hint.
+    pub hint_active: bool,
 }
 
 pub struct ResultView {
@@ -34,6 +36,15 @@ pub struct ResultView {
     pub sections: Vec<f64>,
     pub threshold: f64,
     pub suggest_practice: bool,
+    /// Every chord note counts on its own.
+    pub notes_hit: u32,
+    pub notes_total: u32,
+    /// Reference song score parts, 0–1.
+    pub timing: f64,
+    pub assists: f64,
+    pub score: f64,
+    /// Continuous 0–3 stars (fractional fill on screen).
+    pub stars_exact: f64,
 }
 
 pub struct SongInfo {
@@ -102,6 +113,8 @@ impl PracticeSession {
             tempo,
             pass_ratio,
             failed_attempts,
+            // Reference: hint after 1 s in one-note drills, 4 s in note sequences.
+            hint_after_us: if mode == "one_note" { 1_000_000 } else { WAIT_HINT_AFTER_US },
         };
         Ok(PracticeSession { inner: Session::new(&song, settings) })
     }
@@ -141,6 +154,7 @@ impl PracticeSession {
             misses: f.misses as u32,
             wrong: f.wrong as u32,
             done: f.done,
+            hint_active: f.hint_active,
         }
     }
 
@@ -161,6 +175,12 @@ impl PracticeSession {
             sections: r.sections,
             threshold: r.threshold,
             suggest_practice: r.suggest_practice,
+            notes_hit: r.notes_hit as u32,
+            notes_total: r.notes_total as u32,
+            timing: r.timing,
+            assists: r.assists,
+            score: r.score,
+            stars_exact: r.stars_exact,
         }
     }
 }

@@ -24,12 +24,16 @@ class HitBurst {
     required this.pitch,
     required this.leftHand,
     required this.startSec,
+    this.whole = false,
   });
 
   final double beat;
   final int pitch;
   final bool leftHand;
   final double startSec;
+
+  /// Whole notes have a wider head; used to centre the rings on it.
+  final bool whole;
 
   static const durationSec = 0.45;
 }
@@ -423,7 +427,7 @@ class StaffPainter extends CustomPainter {
       final color = colorOf?.call(i) ?? inkColor;
       if (i == current && currentGlow != null) {
         canvas.drawCircle(
-          Offset(x + space * 0.6, y),
+          Offset(x + space * (n.beats >= 4 ? 0.845 : 0.59), y),
           space * 1.5,
           Paint()
             ..color = currentGlow!.withValues(alpha: 0.35)
@@ -508,7 +512,9 @@ class StaffPainter extends CustomPainter {
             ? b.leftHand
             : staves == Staves.bass;
         final c = Offset(
-          anchorX + (b.beat - now) * pixelsPerBeat + space * 0.6,
+          anchorX +
+              (b.beat - now) * pixelsPerBeat +
+              space * (b.whole ? 0.845 : 0.59),
           _noteY(b.pitch, onBass, l),
         );
         for (var k = 0; k < 3; k++) {

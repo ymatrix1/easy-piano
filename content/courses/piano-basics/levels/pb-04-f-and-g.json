@@ -7,8 +7,7 @@
       "type": "wait",
       "score": "cdefg-drill",
       "pre_listen": true,
-      "hand": "RH",
-      "repeats": 3
+      "hand": "RH"
     },
     {
       "type": "wait",

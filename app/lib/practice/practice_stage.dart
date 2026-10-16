@@ -103,7 +103,8 @@ class PracticeStage extends StatefulWidget {
 
 class _PracticeStageState extends State<PracticeStage>
     with TickerProviderStateMixin {
-  static const _low = 36; // C2: middle C sits in the centre (2 octaves each side)
+  static const _low =
+      36; // C2: middle C sits in the centre (2 octaves each side)
   static const _high = 84; // C6
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
@@ -136,6 +137,7 @@ class _PracticeStageState extends State<PracticeStage>
   double _staffWidth = 1200;
   double _ppb = _maxPpb;
   double _cursorSinceSec = 0; // when the current wait note became current
+  double? _hintSinceSec; // when the hint for the current note appeared
   bool _finished = false;
 
   bool get _playAlong => widget.stage.type == 'play_along';
@@ -209,6 +211,22 @@ class _PracticeStageState extends State<PracticeStage>
     on ? next.add(pitch) : next.remove(pitch);
     _pressed.value = next;
     if (_paused || _finished) return;
+    final cursor = _frame?.cursor ?? 0;
+    if (on &&
+        !_playAlong &&
+        cursor < _initialTargets.length &&
+        !_initialTargets[cursor].pitches.contains(pitch)) {
+      // Reference: a wrong key only gets a blue splash; it is not penalised.
+      _bursts.add(
+        HitBurst(
+          beat: _initialTargets[cursor].beat,
+          pitch: pitch,
+          leftHand: pitch < 60,
+          startSec: _nowSec,
+          whole: _initialTargets[cursor].beats >= 4,
+        ),
+      );
+    }
     _session.onNote(
       pitch: pitch,
       on_: on,
@@ -258,6 +276,7 @@ class _PracticeStageState extends State<PracticeStage>
                 pitch: p,
                 leftHand: p < 60,
                 startSec: now,
+                whole: targets[i].beats >= 4,
               ),
             );
           }
@@ -275,10 +294,14 @@ class _PracticeStageState extends State<PracticeStage>
     if (changed ||
         _bursts.isNotEmpty ||
         cursorMoved ||
-        now - _cursorSinceSec < 0.25) {
+        now - _cursorSinceSec < 0.25 ||
+        (_hintSinceSec != null && now - _hintSinceSec! < 0.25)) {
       _marks.value++;
     }
-    _hint.value = f.cursor < targets.length
+    if (f.hintActive && _hintSinceSec == null) _hintSinceSec = now;
+    if (!f.hintActive) _hintSinceSec = null;
+    final showKeys = _playAlong || f.hintActive;
+    _hint.value = showKeys && f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
         : {};
     final countInChanged =
@@ -568,10 +591,14 @@ class _PracticeStageState extends State<PracticeStage>
                           dimmed: _paused,
                           waitBeamOpacity: _playAlong || waitDone
                               ? null
-                              : () => ((_nowSec - _cursorSinceSec) / 0.2).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
+                              : () {
+                                  final since = _hintSinceSec;
+                                  if (since == null) return 0.0;
+                                  return ((_nowSec - since) / 0.2).clamp(
+                                    0.0,
+                                    1.0,
+                                  );
+                                },
                           beatPulse: _playAlong
                               ? () {
                                   final b = _scroll.value;

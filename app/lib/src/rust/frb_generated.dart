@@ -530,8 +530,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   FrameView dco_decode_frame_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return FrameView(
       playheadBeat: dco_decode_f_64(arr[0]),
       cursor: dco_decode_u_32(arr[1]),
@@ -539,6 +539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       misses: dco_decode_u_32(arr[3]),
       wrong: dco_decode_u_32(arr[4]),
       done: dco_decode_bool(arr[5]),
+      hintActive: dco_decode_bool(arr[6]),
     );
   }
 
@@ -576,8 +577,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ResultView dco_decode_result_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 14)
+      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
     return ResultView(
       passed: dco_decode_bool(arr[0]),
       stars: dco_decode_u_8(arr[1]),
@@ -587,6 +588,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       sections: dco_decode_list_prim_f_64_strict(arr[5]),
       threshold: dco_decode_f_64(arr[6]),
       suggestPractice: dco_decode_bool(arr[7]),
+      notesHit: dco_decode_u_32(arr[8]),
+      notesTotal: dco_decode_u_32(arr[9]),
+      timing: dco_decode_f_64(arr[10]),
+      assists: dco_decode_f_64(arr[11]),
+      score: dco_decode_f_64(arr[12]),
+      starsExact: dco_decode_f_64(arr[13]),
     );
   }
 
@@ -728,6 +735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_misses = sse_decode_u_32(deserializer);
     var var_wrong = sse_decode_u_32(deserializer);
     var var_done = sse_decode_bool(deserializer);
+    var var_hintActive = sse_decode_bool(deserializer);
     return FrameView(
       playheadBeat: var_playheadBeat,
       cursor: var_cursor,
@@ -735,6 +743,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       misses: var_misses,
       wrong: var_wrong,
       done: var_done,
+      hintActive: var_hintActive,
     );
   }
 
@@ -792,6 +801,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_sections = sse_decode_list_prim_f_64_strict(deserializer);
     var var_threshold = sse_decode_f_64(deserializer);
     var var_suggestPractice = sse_decode_bool(deserializer);
+    var var_notesHit = sse_decode_u_32(deserializer);
+    var var_notesTotal = sse_decode_u_32(deserializer);
+    var var_timing = sse_decode_f_64(deserializer);
+    var var_assists = sse_decode_f_64(deserializer);
+    var var_score = sse_decode_f_64(deserializer);
+    var var_starsExact = sse_decode_f_64(deserializer);
     return ResultView(
       passed: var_passed,
       stars: var_stars,
@@ -801,6 +816,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       sections: var_sections,
       threshold: var_threshold,
       suggestPractice: var_suggestPractice,
+      notesHit: var_notesHit,
+      notesTotal: var_notesTotal,
+      timing: var_timing,
+      assists: var_assists,
+      score: var_score,
+      starsExact: var_starsExact,
     );
   }
 
@@ -956,6 +977,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.misses, serializer);
     sse_encode_u_32(self.wrong, serializer);
     sse_encode_bool(self.done, serializer);
+    sse_encode_bool(self.hintActive, serializer);
   }
 
   @protected
@@ -1017,6 +1039,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_prim_f_64_strict(self.sections, serializer);
     sse_encode_f_64(self.threshold, serializer);
     sse_encode_bool(self.suggestPractice, serializer);
+    sse_encode_u_32(self.notesHit, serializer);
+    sse_encode_u_32(self.notesTotal, serializer);
+    sse_encode_f_64(self.timing, serializer);
+    sse_encode_f_64(self.assists, serializer);
+    sse_encode_f_64(self.score, serializer);
+    sse_encode_f_64(self.starsExact, serializer);
   }
 
   @protected
