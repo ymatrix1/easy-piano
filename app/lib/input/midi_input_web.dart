@@ -42,7 +42,9 @@ class _WebMidiInput implements MidiInput {
     // MIDIInputMap is a JS maplike; iterate with its forEach(value, key).
     (inputs as JSObject).callMethod(
       'forEach'.toJS,
-      ((web.MIDIInput input, JSAny? _) {
+      // JS calls forEach callbacks with (value, key, map); declare all three
+      // or the dart2js wrapper rejects the call and no handler is attached.
+      ((web.MIDIInput input, JSAny? key, JSAny? map) {
         _names.add(input.name ?? 'MIDI input');
         input.onmidimessage = _onMessage.toJS;
       }).toJS,
