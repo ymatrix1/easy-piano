@@ -37,12 +37,14 @@ void main() {
     final repo = ContentRepo.fromFiles(files);
     expect(repo.sections.map((s) => s.id), ['basic', 'main']);
     final planned = repo.courses.where((c) => c.planned).toList();
-    expect(planned.map((c) => c.id), contains('essentials-2'));
-    final e1 = repo.courses.firstWhere((c) => c.id == 'essentials-1');
-    expect(e1.planned, isFalse);
-    for (final node in e1.nodes) {
-      for (final l in node.levels) {
-        expect(repo.levels[l], isNotNull, reason: l);
+    expect(planned.map((c) => c.id), contains('essentials-3'));
+    for (final id in ['essentials-1', 'essentials-2']) {
+      final course = repo.courses.firstWhere((c) => c.id == id);
+      expect(course.planned, isFalse);
+      for (final node in course.nodes) {
+        for (final l in node.levels) {
+          expect(repo.levels[l], isNotNull, reason: l);
+        }
       }
     }
     expect(planned.every((c) => c.nodes.isEmpty), isTrue);

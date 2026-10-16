@@ -1,0 +1,34 @@
+{
+  "id": "e2-shifting",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.e2.shift.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 1,
+      "press": "F4",
+      "label": "1"
+    },
+    {
+      "at": 9,
+      "prompt": "your_turn"
+    }
+  ]
+}

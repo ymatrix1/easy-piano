@@ -1,0 +1,98 @@
+{
+  "course": "essentials-2",
+  "nodes": [
+    {
+      "id": "new-note-a",
+      "kind": "lesson",
+      "title": "str:node.e2.new-note-a",
+      "icon": "note",
+      "levels": [
+        "e2-01-reach-a"
+      ],
+      "next": [
+        "twinkle"
+      ]
+    },
+    {
+      "id": "twinkle",
+      "kind": "song",
+      "title": "str:node.e2.twinkle",
+      "icon": "play",
+      "levels": [
+        "e2-02-twinkle"
+      ],
+      "next": [
+        "left-hand-a"
+      ],
+      "songs": {
+        "default": "twinkle-twinkle",
+        "folk_world": "twinkle-twinkle"
+      }
+    },
+    {
+      "id": "left-hand-a",
+      "kind": "lesson",
+      "title": "str:node.e2.left-hand-a",
+      "icon": "note",
+      "levels": [
+        "e2-03-left-hand-a"
+      ],
+      "next": [
+        "f-position"
+      ]
+    },
+    {
+      "id": "f-position",
+      "kind": "lesson",
+      "title": "str:node.e2.f-position",
+      "icon": "note",
+      "levels": [
+        "e2-04-f-position"
+      ],
+      "next": [
+        "shifting"
+      ]
+    },
+    {
+      "id": "shifting",
+      "kind": "lesson",
+      "title": "str:node.e2.shifting",
+      "icon": "note",
+      "levels": [
+        "e2-05-shifting"
+      ],
+      "next": [
+        "susanna"
+      ]
+    },
+    {
+      "id": "susanna",
+      "kind": "song",
+      "title": "str:node.e2.susanna",
+      "icon": "play",
+      "levels": [
+        "e2-06-oh-susanna"
+      ],
+      "next": [
+        "boss"
+      ],
+      "songs": {
+        "default": "oh-susanna",
+        "folk_world": "oh-susanna"
+      }
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.e2.boss",
+      "icon": "play",
+      "levels": [
+        "e2-07-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "twinkle-twinkle"
+      }
+    }
+  ]
+}

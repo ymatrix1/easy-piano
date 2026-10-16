@@ -20,7 +20,7 @@ Each course: 10–25 journey nodes, 30–60 levels, a boss at the end. Typical s
 | **Touch Intro** | none | On-screen keys, find C, play along by tapping | C4–G4 / – | 60–90 | Ode to Joy (tap) |
 | **Piano Basics** | none | Sitting and hand shape, finger numbers, RH C position (C–G), first staff reading, quarter/half notes | C4–G4 / – | 60–120 | Ode to Joy, Symphony No. 40 theme (Mozart), Mary Had a Little Lamb |
 | **Essentials I** | Piano Basics | Rhythm (quarter, half, whole, rests), reading notes on treble, LH basic chords and new notes (C3–G3), both hands, RH intervals, coordination, eighth notes | C4–G4 / C3–G3 | 72–104 | When the Saints, Jingle Bells (Twinkle Twinkle and Oh! Susanna need A4: moved to Essentials II) |
-| **Essentials II** | Essentials I | New RH note above G, new LH note, RH F position, shifting positions, coordination in two hands | C#4–C#5 / C#3–A#3 | 60–120 | Musette in D (Bach), When the Saints Go Marching In, Swing Low |
+| **Essentials II** | Essentials I | New RH note above G, new LH note, RH F position, shifting positions, coordination in two hands | C4–C5 / C3–A3 | 76–100 | Twinkle Twinkle, Oh! Susanna (Musette in D and Swing Low later; Saints moved to Essentials I) |
 | **Essentials III** | Essentials II | Rhythm review, new LH position, sharps, flats, mixed accidentals, intro to full sheet music, C major scale | C#4–D#5 / C#3–C#4 | 64–120 | Minuet in G (Petzold, attr. Bach), Greensleeves, Amazing Grace |
 
 ## Soloist track (sheet music, sight reading, technique)
@@ -95,8 +95,9 @@ Example, Piano Basics node "RH C position, first song":
 | Course | Levels | Nodes | Songs | Scenes | Bean |
 |---|---|---|---|---|---|
 | Essentials I | 8 (`e1-01` … `e1-08`) | rests, left-hand, saints, hands-together, intervals, eighths, jingle, boss | 5 original drills + When the Saints, Jingle Bells (PD, our arrangements, ACC/DRUMS/BASS) | e1-rests, e1-left-hand, e1-hands-together, e1-eighth-notes | piano-2uhn |
+| Essentials II | 7 (`e2-01` … `e2-07`) | new-note-a, twinkle, left-hand-a, f-position, shifting, susanna, boss | 4 original drills + Twinkle Twinkle, Oh! Susanna (PD, our arrangements, ACC/DRUMS/BASS) | e2-reach-a, e2-f-position, e2-shifting | piano-f06f |
 
-Smaller than the reference size (30–60 levels); a first playable pass. No accidentals yet in Essentials I (beginner rubric in [song-import.md](../research/song-import.md)).
+Smaller than the reference size (30–60 levels); a first playable pass. No accidentals yet in Essentials I and II; F position avoids B♭ until Essentials III (beginner rubric in [song-import.md](../research/song-import.md)).
 
 ## Build order
 
