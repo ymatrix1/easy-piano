@@ -19,13 +19,18 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 - No hint at first. After 4 s without the right note, a soft white **light beam** fades in over the awaited note (0.2 s) and the target keys light up; one beam per note.
 - Wrong keys show a blue splash at the played pitch and are not penalised.
 - Each expected note is consumed once; a repeated key press does not count twice (Web MIDI is opened once and duplicate deliveries within 25 ms are dropped).
-- Before the first try, an optional demo dims the staff and sweeps a light beam across the notes while the app plays them (needs audio; bean piano-k0ht).
+- **Pre-listen** (stage `pre_listen`, first attempt): the staff dims, the app plays the passage while the beam and highlight walk note by note, input is ignored, and a Skip button ends it. The graded clock starts after the demo.
 
 ## Play-along stages
 
 - Clef and **play bar stay fixed** just after the clef (≈ 12% of the width); the **notes scroll** right to left (reference code: the notes container moves with song time, the rhythm line never moves). The bar's glow **pulses on every beat**.
 - The top progress bar advances with song time.
+- **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. Songs without a companion get a metronome click on every beat (reference: metronome when there is no backing music). A one-bar count-in clicks before the start. Pause stops the sound; resume reschedules from the current beat.
 - Finger numbers above notes; hit notes turn **cyan**, missed notes **red**.
+
+## Sound
+
+Sampled grand piano (FluidR3_GM via midi-js-soundfonts, MIT; `app/assets/piano/`), one sample every 3 semitones C2–C7, pitch-shifted in between, Web Audio on web. The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
 
 ## Pause
 

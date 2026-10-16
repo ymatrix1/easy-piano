@@ -7,6 +7,16 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `hand_filter`
+
+/// Notes the app plays along in play-along: the hand not being practised plus
+/// the song's `ACC` accompaniment.
+List<NoteView> companion({required String songJson, required String hand}) =>
+    RustLib.instance.api.crateApiPracticeCompanion(
+      songJson: songJson,
+      hand: hand,
+    );
+
 /// Validates a song file; returns its summary or the lint errors.
 SongInfo inspectSong({required String json}) =>
     RustLib.instance.api.crateApiPracticeInspectSong(json: json);
@@ -91,6 +101,31 @@ class FrameView {
           wrong == other.wrong &&
           done == other.done &&
           hintActive == other.hintActive;
+}
+
+/// A note the app plays (companion hand, accompaniment, pre-listen).
+class NoteView {
+  final int pitch;
+  final double beat;
+  final double beats;
+
+  const NoteView({
+    required this.pitch,
+    required this.beat,
+    required this.beats,
+  });
+
+  @override
+  int get hashCode => pitch.hashCode ^ beat.hashCode ^ beats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NoteView &&
+          runtimeType == other.runtimeType &&
+          pitch == other.pitch &&
+          beat == other.beat &&
+          beats == other.beats;
 }
 
 class ResultView {

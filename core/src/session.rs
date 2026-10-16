@@ -200,13 +200,24 @@ pub struct Session {
     current_since_us: i64,
 }
 
-fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
-    let mut out: Vec<Target> = Vec::new();
-    for n in notes.iter().filter(|n| match hand {
+/// Whether the student plays this (non-accompaniment) note under [hand].
+fn plays(hand: HandFilter, n: &TimedNote) -> bool {
+    match hand {
         HandFilter::Right => !n.left_hand,
         HandFilter::Left => n.left_hand,
         HandFilter::Both => true,
-    }) {
+    }
+}
+
+/// Notes the app plays along with the student in play-along: the hand that is
+/// not being practised plus the `ACC` accompaniment part.
+pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
+    song.timeline().into_iter().filter(|n| n.accomp || !plays(hand, n)).collect()
+}
+
+fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
+    let mut out: Vec<Target> = Vec::new();
+    for n in notes.iter().filter(|n| !n.accomp && plays(hand, n)) {
         match out.last_mut() {
             Some(t) if (t.beat - n.start_beat).abs() < 1e-9 => {
                 t.pitches.insert(n.pitch);
@@ -726,6 +737,22 @@ mod tests {
         assert_eq!((r.notes_hit, r.notes_total), (4, 7));
         assert!((r.assists - 0.5).abs() < 1e-9 && (r.timing - 1.0).abs() < 1e-9, "{r:?}");
         assert!((r.score - song_score(4.0 / 7.0, 1.0, 0.5)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn accompaniment_is_never_a_target_and_companion_has_other_hand() {
+        let json = r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:1","LH":"C3:1","ACC":"E3G3:2 E3G3:2"}]}"#;
+        let song = Song::from_json(json).unwrap();
+        assert!(song.validate().is_empty(), "{:?}", song.validate());
+        let s = Session::new(&song, Settings { hand: HandFilter::Both, ..Settings::default() });
+        let pitches: Vec<u8> = s.targets().iter().flat_map(|t| t.pitches.iter().copied()).collect();
+        assert_eq!(pitches, vec![48, 60]);
+        let comp: Vec<u8> = companion_notes(&song, HandFilter::Right).iter().map(|n| n.pitch).collect();
+        assert_eq!(comp, vec![48, 52, 55, 52, 55]); // beat 0: LH C3 + ACC E3 G3; beat 2: ACC again
+        assert_eq!(companion_notes(&song, HandFilter::Both).len(), 4);
     }
 
     #[test]

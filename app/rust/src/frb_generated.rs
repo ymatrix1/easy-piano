@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 92033953;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -658477494;
 
 // Section: executor
 
@@ -342,6 +342,37 @@ fn wire__crate__api__practice__PracticeSession_tick_impl(
         },
     )
 }
+fn wire__crate__api__practice__companion_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "companion",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_song_json = <String>::sse_decode(&mut deserializer);
+            let api_hand = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, String>((move || {
+                let output_ok = crate::api::practice::companion(api_song_json, api_hand)?;
+                std::result::Result::Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__api__notation__init_app_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -546,6 +577,18 @@ impl SseDecode for i64 {
     }
 }
 
+impl SseDecode for Vec<crate::api::practice::NoteView> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::practice::NoteView>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<f64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -579,6 +622,20 @@ impl SseDecode for Vec<crate::api::practice::TargetView> {
             ans_.push(<crate::api::practice::TargetView>::sse_decode(deserializer));
         }
         return ans_;
+    }
+}
+
+impl SseDecode for crate::api::practice::NoteView {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_pitch = <u8>::sse_decode(deserializer);
+        let mut var_beat = <f64>::sse_decode(deserializer);
+        let mut var_beats = <f64>::sse_decode(deserializer);
+        return crate::api::practice::NoteView {
+            pitch: var_pitch,
+            beat: var_beat,
+            beats: var_beats,
+        };
     }
 }
 
@@ -711,7 +768,7 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        7 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -730,9 +787,10 @@ fn pde_ffi_dispatcher_sync_impl(
         4 => wire__crate__api__practice__PracticeSession_result_impl(ptr, rust_vec_len, data_len),
         5 => wire__crate__api__practice__PracticeSession_targets_impl(ptr, rust_vec_len, data_len),
         6 => wire__crate__api__practice__PracticeSession_tick_impl(ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__practice__companion_impl(ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -777,6 +835,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::practice::FrameView>
     for crate::api::practice::FrameView
 {
     fn into_into_dart(self) -> crate::api::practice::FrameView {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::practice::NoteView {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.pitch.into_into_dart().into_dart(),
+            self.beat.into_into_dart().into_dart(),
+            self.beats.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::practice::NoteView
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::practice::NoteView>
+    for crate::api::practice::NoteView
+{
+    fn into_into_dart(self) -> crate::api::practice::NoteView {
         self
     }
 }
@@ -923,6 +1003,16 @@ impl SseEncode for i64 {
     }
 }
 
+impl SseEncode for Vec<crate::api::practice::NoteView> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::practice::NoteView>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<f64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -950,6 +1040,15 @@ impl SseEncode for Vec<crate::api::practice::TargetView> {
         for item in self {
             <crate::api::practice::TargetView>::sse_encode(item, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::api::practice::NoteView {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u8>::sse_encode(self.pitch, serializer);
+        <f64>::sse_encode(self.beat, serializer);
+        <f64>::sse_encode(self.beats, serializer);
     }
 }
 

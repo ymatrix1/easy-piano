@@ -2,6 +2,7 @@
 //! Logic stays in `easy_piano_core::session`; this file only adapts types.
 
 use easy_piano_core::session::{ChordState, HandFilter, Input, Mode, NoteEvent, Session, Settings, WAIT_HINT_AFTER_US};
+use easy_piano_core::session::companion_notes;
 use easy_piano_core::song::Song;
 use flutter_rust_bridge::frb;
 
@@ -56,6 +57,32 @@ pub struct SongInfo {
     pub bars: u32,
 }
 
+/// A note the app plays (companion hand, accompaniment, pre-listen).
+pub struct NoteView {
+    pub pitch: u8,
+    pub beat: f64,
+    pub beats: f64,
+}
+
+fn hand_filter(hand: &str) -> HandFilter {
+    match hand {
+        "LH" => HandFilter::Left,
+        "both" => HandFilter::Both,
+        _ => HandFilter::Right,
+    }
+}
+
+/// Notes the app plays along in play-along: the hand not being practised plus
+/// the song's `ACC` accompaniment.
+#[frb(sync)]
+pub fn companion(song_json: String, hand: String) -> Result<Vec<NoteView>, String> {
+    let song = Song::from_json(&song_json)?;
+    Ok(companion_notes(&song, hand_filter(&hand))
+        .into_iter()
+        .map(|n| NoteView { pitch: n.pitch, beat: n.start_beat, beats: n.beats })
+        .collect())
+}
+
 /// Validates a song file; returns its summary or the lint errors.
 #[frb(sync)]
 pub fn inspect_song(json: String) -> Result<SongInfo, String> {
@@ -105,11 +132,7 @@ impl PracticeSession {
                 "touch" => Input::Touch,
                 _ => Input::Midi,
             },
-            hand: match hand.as_str() {
-                "LH" => HandFilter::Left,
-                "both" => HandFilter::Both,
-                _ => HandFilter::Right,
-            },
+            hand: hand_filter(&hand),
             tempo,
             pass_ratio,
             failed_attempts,
