@@ -64,7 +64,7 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 | `GameText` | Heavy uppercase display text with hard drop shadow |
 | `GamePanel`, `GameRibbon` | Glass panel; skewed title banner |
 | `GameProgressBar` | Rounded bar with glow, animates to its value |
-| `GameStar`, `StarRow` | Angular faceted star (sharp points, light/dark facet per arm, miter outline; empty = dark glass with violet edge); staggered pop with flash ring, glint and a bell chime per star |
+| `GameStar`, `StarRow` | Rounded flat gold star (Material `star_rounded`; glow at ≥ 28 px; empty = dark socket), filled from the left; staggered pop with flash ring, glint and a bell chime per star |
 | `ShineSweep` | Diagonal shine crossing a surface every few seconds (CTA buttons, continue card) |
 | `CountUp`, `StarCounter` | Animated numbers; currency pill |
 | `PopIn`, `SlideIn`, `Bob` | Entrances; glow pulse |
@@ -76,7 +76,7 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 |---|---|---|---|
 | Yellow CTA | lift 3 px, glow | confirm chime, burst | shine sweep, glow pulse (continue card) |
 | Module card | lift 3 px, brighten | open / close whoosh, burst in card colour | chevron rotates; inner trail rows slide in staggered |
-| Submodule row | slides right 5 px, tint | tap, cyan burst | next node pulses |
+| Submodule row | colour wash, node grows 12%, chevron slides and turns yellow (layout never moves, so the rail stays continuous) | tap, cyan burst | next node pulses |
 | Nav item | lift 2 px | tab blip | active icon pops (elastic) |
 | Locked module / mode | — | low buzz | — |
 | Outer rail | — | — | light pulses flow down the done/current part |

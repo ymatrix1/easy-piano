@@ -287,6 +287,7 @@ class _ShineSweepState extends State<ShineSweep>
   @override
   Widget build(BuildContext context) {
     return Stack(
+      fit: StackFit.passthrough, // keep the child's constraints (e.g. stretch)
       children: [
         widget.child,
         Positioned.fill(
@@ -962,105 +963,48 @@ class GameStar extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _StarPainter(fill));
+  Widget build(BuildContext context) {
+    // Rounded flat star (Material star_rounded), filled from the left.
+    final glow = size >= 28
+        ? [
+            Shadow(
+              color: GameColors.gold.withValues(alpha: 0.6),
+              blurRadius: size * 0.25,
+            ),
+          ]
+        : null;
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        children: [
+          Icon(Icons.star_rounded, size: size, color: const Color(0x8C0A0830)),
+          if (fill > 0)
+            ClipRect(
+              clipper: _FillClipper(fill.clamp(0.0, 1.0)),
+              child: Icon(
+                Icons.star_rounded,
+                size: size,
+                color: GameColors.gold,
+                shadows: glow,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
-/// Angular, faceted star in the app's chamfer language: sharp points, flat
-/// light/dark facets per arm (like a cut gem), crisp miter outline.
-class _StarPainter extends CustomPainter {
-  _StarPainter(this.fill);
+class _FillClipper extends CustomClipper<Rect> {
+  _FillClipper(this.fill);
 
   final double fill;
 
-  static const _light = Color(0xFFFFF3A8);
-  static const _mid = GameColors.yellow;
-  static const _dark = Color(0xFFE08A00);
-  static const _edge = Color(0xFF5C2E00);
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(0, 0, size.width * fill, size.height);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final rect = (Offset.zero & size).deflate(size.width * 0.07);
-    final c = rect.center + Offset(0, rect.height * 0.04);
-    final r = rect.shortestSide / 2;
-    const inner = 0.4;
-    Offset pt(int i) {
-      final rr = i.isEven ? r : r * inner;
-      final a = -math.pi / 2 + i * math.pi / 5;
-      return c + Offset(math.cos(a) * rr, math.sin(a) * rr);
-    }
-
-    final outline = Path()..moveTo(pt(0).dx, pt(0).dy);
-    for (var i = 1; i < 10; i++) {
-      outline.lineTo(pt(i).dx, pt(i).dy);
-    }
-    outline.close();
-    final stroke = math.max(1.2, size.width * 0.055);
-
-    // Empty socket: dark glass with a violet edge.
-    canvas.drawPath(outline, Paint()..color = const Color(0x8C0A0830));
-    canvas.drawPath(
-      outline,
-      Paint()
-        ..color = GameColors.panelEdge
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke * 0.8
-        ..strokeJoin = StrokeJoin.miter,
-    );
-    if (fill <= 0) return;
-
-    canvas.save();
-    canvas.clipRect(
-      Rect.fromLTWH(0, 0, size.width * fill.clamp(0.0, 1.0), size.height),
-    );
-    if (size.width >= 28) {
-      canvas.drawPath(
-        outline,
-        Paint()
-          ..color = _mid.withValues(alpha: 0.45)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, size.width * 0.1),
-      );
-    }
-    // Facets: each arm is two triangles (tip, centre, inner vertex). The
-    // half facing the top-left light is bright, the other dark.
-    for (var arm = 0; arm < 5; arm++) {
-      final tip = pt(arm * 2);
-      final left = pt((arm * 2 + 9) % 10);
-      final right = pt(arm * 2 + 1);
-      final lit = arm == 0 || arm == 4; // top and upper-left arms face light
-      final l = Path()
-        ..moveTo(tip.dx, tip.dy)
-        ..lineTo(c.dx, c.dy)
-        ..lineTo(left.dx, left.dy)
-        ..close();
-      final rr = Path()
-        ..moveTo(tip.dx, tip.dy)
-        ..lineTo(c.dx, c.dy)
-        ..lineTo(right.dx, right.dy)
-        ..close();
-      canvas.drawPath(l, Paint()..color = lit ? _light : _mid);
-      canvas.drawPath(rr, Paint()..color = lit ? _mid : _dark);
-    }
-    canvas.restore();
-
-    // Crisp outline over the filled part.
-    canvas.save();
-    canvas.clipRect(
-      Rect.fromLTWH(0, 0, size.width * fill.clamp(0.0, 1.0), size.height),
-    );
-    canvas.drawPath(
-      outline,
-      Paint()
-        ..color = _edge
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeJoin = StrokeJoin.miter,
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_StarPainter old) => old.fill != fill;
+  bool shouldReclip(_FillClipper old) => old.fill != fill;
 }
 
 /// Three stars that appear one after another, each filled star with a

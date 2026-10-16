@@ -649,11 +649,20 @@ class _SubmoduleRow extends StatelessWidget {
       onTap: onTap,
       semanticLabel: title,
       burstColor: GameColors.cyan,
+      // Hover never changes layout (the rail must stay continuous): a wash
+      // in the module colour fades in, the node grows, the chevron slides.
       builder: (p, hover) => AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        color: Colors.white.withValues(alpha: hover ? 0.06 : 0),
-        padding: EdgeInsets.only(left: hover ? 19 : 14, right: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              accent.withValues(alpha: hover ? 0.22 : 0),
+              accent.withValues(alpha: hover ? 0.04 : 0),
+            ],
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         child: IntrinsicHeight(
           child: Row(
             children: [
@@ -662,7 +671,12 @@ class _SubmoduleRow extends StatelessWidget {
                 child: Column(
                   children: [
                     Expanded(child: first ? const SizedBox() : rail),
-                    node,
+                    AnimatedScale(
+                      scale: hover ? 1.12 : 1,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutBack,
+                      child: node,
+                    ),
                     Expanded(child: last ? const SizedBox() : rail),
                   ],
                 ),
@@ -713,9 +727,16 @@ class _SubmoduleRow extends StatelessWidget {
                   height: 36,
                 )
               else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: Colors.white.withValues(alpha: hover ? 0.9 : 0.4),
+                AnimatedSlide(
+                  offset: Offset(hover ? 0.25 : 0, 0),
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: hover
+                        ? GameColors.yellow
+                        : Colors.white.withValues(alpha: 0.4),
+                  ),
                 ),
             ],
           ),
