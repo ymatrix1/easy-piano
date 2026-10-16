@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:easy_piano/practice/result_screen.dart';
 import 'package:easy_piano/src/rust/api/practice.dart';
 import 'package:easy_piano/ui/game/game_widgets.dart';
+import 'package:easy_piano/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -31,6 +32,8 @@ Future<void> _pump(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: ResultScreen(
           result: r,

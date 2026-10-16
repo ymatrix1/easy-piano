@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -56,7 +57,7 @@ class _LearnTabState extends State<LearnTab> {
       ...repo.sections,
       // Courses whose section is not declared still show up.
       if (repo.courses.any((c) => !repo.sections.any((s) => s.id == c.section)))
-        const SectionDef(id: '', title: 'More'),
+        SectionDef(id: '', title: AppLocalizations.of(context).sectionMore),
     ];
     var moduleNo = 0;
     return ListView(
@@ -157,11 +158,11 @@ class _ContinueCard extends StatelessWidget {
       shape: chamfer(22),
       opacity: 0.16,
       period: const Duration(milliseconds: 5200),
-      child: _card(),
+      child: _card(context),
     );
   }
 
-  Widget _card() {
+  Widget _card(BuildContext context) {
     return Container(
       decoration: ShapeDecoration(
         shape: chamfer(
@@ -200,7 +201,10 @@ class _ContinueCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Kicker('Continue', color: GameColors.cyan),
+                  _Kicker(
+                    AppLocalizations.of(context).kickerContinue,
+                    color: GameColors.cyan,
+                  ),
                   const SizedBox(height: 8),
                   GameText(title, size: 30, align: TextAlign.left, maxLines: 2),
                   const SizedBox(height: 4),
@@ -215,7 +219,7 @@ class _ContinueCard extends StatelessWidget {
                   const SizedBox(height: 18),
                   Bob(
                     child: GameButton(
-                      label: 'Play',
+                      label: AppLocalizations.of(context).play,
                       icon: Icons.play_arrow_rounded,
                       onTap: onPlay,
                       fontSize: 20,
@@ -424,7 +428,10 @@ class _ModuleCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _Kicker(
-                            locked ? 'Coming soon' : 'Module $number',
+                            locked
+                                ? AppLocalizations.of(context).comingSoon
+                                : AppLocalizations.of(context)
+                                      .moduleNumber(number),
                             color: Colors.white.withValues(alpha: 0.75),
                           ),
                           const SizedBox(height: 4),
@@ -546,12 +553,12 @@ class _InnerTrail extends StatelessWidget {
     _ => Icons.school_rounded,
   };
 
-  static String _kind(String kind) => switch (kind) {
-    'song' => 'Song',
-    'boss' => 'Boss',
-    'mini_boss' => 'Challenge',
-    'star_gate' => 'Star gate',
-    _ => 'Lesson',
+  static String _kind(AppLocalizations l, String kind) => switch (kind) {
+    'song' => l.kindSong,
+    'boss' => l.kindBoss,
+    'mini_boss' => l.kindChallenge,
+    'star_gate' => l.kindStarGate,
+    _ => l.kindLesson,
   };
 
   @override
@@ -571,7 +578,7 @@ class _InnerTrail extends StatelessWidget {
               child: _SubmoduleRow(
                 index: i + 1,
                 title: repo.t(n.title),
-                kind: _kind(n.kind),
+                kind: _kind(AppLocalizations.of(context), n.kind),
                 icon: _icon(n.kind),
                 tasks: n.levels.length,
                 stars: progress.nodeStars(n),
@@ -689,7 +696,7 @@ class _SubmoduleRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${kind.toUpperCase()}  ·  $tasks ${tasks == 1 ? 'TASK' : 'TASKS'}',
+                        '${kind.toUpperCase()}  ·  ${AppLocalizations.of(context).taskCount(tasks).toUpperCase()}',
                         style: TextStyle(
                           fontFamily: displayFont,
                           color: accent,
@@ -720,7 +727,7 @@ class _SubmoduleRow extends StatelessWidget {
               const SizedBox(width: 10),
               if (isNext)
                 GameButton(
-                  label: 'Play',
+                  label: AppLocalizations.of(context).play,
                   onTap: onTap,
                   fontSize: 14,
                   minWidth: 0,
@@ -799,7 +806,7 @@ class _TaskSheet extends StatelessWidget {
                       ),
                     const SizedBox(height: 10),
                     GameButton(
-                      label: 'Play',
+                      label: AppLocalizations.of(context).play,
                       icon: Icons.play_arrow_rounded,
                       onTap: () => Navigator.of(context).pop(open),
                       fontSize: 20,

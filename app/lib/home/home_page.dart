@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/level_page.dart';
@@ -184,10 +185,10 @@ class _TopBar extends StatelessWidget {
                   width: 40,
                   height: 40,
                   filterQuality: FilterQuality.medium,
-                  semanticLabel: 'Easy Piano logo',
+                  semanticLabel: AppLocalizations.of(context).logoLabel,
                 ),
                 const SizedBox(width: 10),
-                const GameText('Easy Piano', size: 20),
+                GameText(AppLocalizations.of(context).appTitle, size: 20),
                 const Spacer(),
                 StarCounter(value: stars),
               ],
@@ -205,14 +206,9 @@ class _NavBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onSelect;
 
-  static const _items = [
-    (Icons.route_rounded, 'Learn'),
-    (Icons.fitness_center_rounded, 'Practice'),
-    (Icons.person_rounded, 'Profile'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(12, 8, 12, 8 + bottom),
@@ -241,7 +237,11 @@ class _NavBar extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 520),
           child: Row(
             children: [
-              for (final (i, (icon, label)) in _items.indexed)
+              for (final (i, (icon, label)) in [
+                (Icons.route_rounded, l.navLearn),
+                (Icons.fitness_center_rounded, l.navPractice),
+                (Icons.person_rounded, l.navProfile),
+              ].indexed)
                 Expanded(
                   child: _NavItem(
                     icon: icon,

@@ -104,5 +104,5 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 - [x] Hover / click / idle animations and synthesised menu sounds with a mute setting
 - [ ] Practice screen palette aligned with the menu (practice-screen spec)
 - [ ] Practice modes beyond free play; persisted progress (settings/progress store)
-- [ ] Localised UI strings (menu labels are English for now)
+- [x] Localised UI strings (gen-l10n, [i18n spec](i18n.md))
 - [ ] Menu sounds on native platforms (needs the native audio engine)
