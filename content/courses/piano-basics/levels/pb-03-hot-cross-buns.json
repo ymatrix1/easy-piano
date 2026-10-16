@@ -1,0 +1,27 @@
+{
+  "id": "pb-03-hot-cross-buns",
+  "title": "str:level.pb03.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "hot-cross-buns",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "hot-cross-buns",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "hot-cross-buns",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

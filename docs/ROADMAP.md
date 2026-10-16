@@ -16,11 +16,12 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 ## Phase 1: First playable
 
 - [ ] Monorepo scaffold, CI (Flutter, Rust, content lint)
-- [ ] Notation parser + JSON schemas + `content lint`
+- [x] Notation parser + JSON schemas + `content lint`
 - [ ] Core session: wait + play_along, critical sections, stars
 - [ ] Practice studio: staff + keyboard, falling notes view
 - [ ] Web only: Web MIDI + touch input; soundfont synth (AudioWorklet)
 - [ ] Deploy web build (static host with COOP/COEP headers)
+- [x] 5 Piano Basics levels authored and lint-clean (`content/`)
 - [ ] 5 Piano Basics 1 levels playable end to end
 
 ## Phase 2: Scenes and course map

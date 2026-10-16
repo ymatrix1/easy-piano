@@ -1,0 +1,12 @@
+{
+  "courses": [
+    {
+      "id": "piano-basics",
+      "title": "str:course.pb.title",
+      "description": "str:course.pb.desc",
+      "section": "basic",
+      "requires": [],
+      "journey": "courses/piano-basics/journey.json"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "c-finder",
+  "title": "Find Middle C",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 70,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:1@1"
+    },
+    {
+      "RH": "C4:1@1"
+    },
+    {
+      "RH": "C4:1@1"
+    },
+    {
+      "RH": "C4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

@@ -1,6 +1,6 @@
 # Content format
 
-Status: draft ([D3](../DECISIONS.md)). JSON Schemas will live in `content/schema/`; `content lint` validates.
+Status: implemented for songs, levels, journeys, courses, scenes (shape) and strings ([D3](../DECISIONS.md)). Parser: `core/src/notation.rs`, songs: `core/src/song.rs`, linter: `tools/content-cli` (`cargo run -- lint ../../content`). Editor schema: `content/schema/song.schema.json`; the linter is the source of truth.
 
 ## Files
 
@@ -62,6 +62,16 @@ directive:= "{" name (":" json)? "}"            ; {chord:"C"} {lyric:"..."} {tie
 Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter rest; `F#4:8.` dotted eighth.
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
+
+## Journey and levels (implemented)
+
+- Journey nodes: `id`, `kind` (`lesson`, `song`, `star_gate`, `boss`, `mini_boss`), `title`, `icon`, `levels`, `next`, optional `songs` slots keyed by taste (`default`, `classical`, `folk_world`, …; D12).
+- Level stages: `type` (`wait`, `play_along`, `one_note`, `animation`, `quiz`); `score` required for wait/play_along/one_note; `scene` for animation; optional `tempo` (0.3–1.5), `pass` (0–1), `hand` (`RH`, `LH`, `both`), `pre_listen`.
+- Beats: duration × time-signature denominator (quarter = 1 beat in x/4).
+
+## What `content lint` checks
+
+Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; every `str:` key exists in `strings/en.json`.
 
 ## Rules
 

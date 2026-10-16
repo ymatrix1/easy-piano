@@ -1,0 +1,72 @@
+{
+  "course": "piano-basics",
+  "nodes": [
+    {
+      "id": "find-c",
+      "kind": "lesson",
+      "title": "str:node.findc",
+      "icon": "note",
+      "levels": [
+        "pb-01-find-c"
+      ],
+      "next": [
+        "c-d-e"
+      ]
+    },
+    {
+      "id": "c-d-e",
+      "kind": "lesson",
+      "title": "str:node.cde",
+      "icon": "note",
+      "levels": [
+        "pb-02-c-d-e"
+      ],
+      "next": [
+        "first-song"
+      ]
+    },
+    {
+      "id": "first-song",
+      "kind": "song",
+      "title": "str:node.firstsong",
+      "icon": "play",
+      "levels": [
+        "pb-03-hot-cross-buns"
+      ],
+      "next": [
+        "f-and-g"
+      ]
+    },
+    {
+      "id": "f-and-g",
+      "kind": "lesson",
+      "title": "str:node.fg",
+      "icon": "note",
+      "levels": [
+        "pb-04-f-and-g"
+      ],
+      "next": [
+        "ode-to-joy"
+      ],
+      "songs": {
+        "default": "mary-had-a-little-lamb",
+        "folk_world": "au-clair-de-la-lune"
+      }
+    },
+    {
+      "id": "ode-to-joy",
+      "kind": "mini_boss",
+      "title": "str:node.ode",
+      "icon": "play",
+      "levels": [
+        "pb-05-ode-to-joy"
+      ],
+      "next": [],
+      "songs": {
+        "default": "ode-to-joy",
+        "classical": "ode-to-joy",
+        "folk_world": "au-clair-de-la-lune"
+      }
+    }
+  ]
+}

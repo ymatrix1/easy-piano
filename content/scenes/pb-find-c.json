@@ -1,0 +1,34 @@
+{
+  "id": "pb-find-c",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.findc.1"
+    },
+    {
+      "at": 4,
+      "highlight": [
+        "C#4",
+        "D#4"
+      ],
+      "style": "group"
+    },
+    {
+      "at": 8,
+      "highlight": [
+        "C4"
+      ],
+      "caption": "str:scene.findc.2"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}

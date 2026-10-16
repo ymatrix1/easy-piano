@@ -1,0 +1,26 @@
+{
+  "id": "pb-04-f-and-g",
+  "title": "str:level.pb04.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "cdefg-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "mary-had-a-little-lamb",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "mary-had-a-little-lamb",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}
