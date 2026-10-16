@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'staff_note.dart';
@@ -12,31 +14,77 @@ abstract final class Smufl {
   static const accidentalSharp = '';
 }
 
-/// Scrolling grand staff: notes move right to left toward a fixed playhead.
+/// A short hit effect: rings that grow and fade at a note position.
+class HitBurst {
+  HitBurst({
+    required this.beat,
+    required this.pitch,
+    required this.leftHand,
+    required this.startSec,
+  });
+
+  final double beat;
+  final int pitch;
+  final bool leftHand;
+  final double startSec;
+
+  static const durationSec = 0.45;
+}
+
+/// Grand staff. [scrollBeat] is the beat drawn at the anchor x
+/// (`lineRatio` × width): in play-along it is the song time and a glowing
+/// play line marks the anchor; in wait mode it is a page offset that slides
+/// only when the current note runs off the page, and no line is drawn.
 /// Only notes inside the visible beat window are laid out and painted.
 class StaffPainter extends CustomPainter {
   StaffPainter({
     required this.notes,
-    required this.playheadBeat,
+    required ValueNotifier<double> playheadBeat,
     required this.inkColor,
     required this.playheadColor,
     this.pixelsPerBeat = 90,
     this.colorOf,
+    this.lineRatio = 0.22,
+    this.showPlayLine = true,
+    this.staffColor,
+    this.currentIndex,
+    this.currentGlow,
+    this.bursts = const [],
+    this.burstColor = const Color(0xFF4FC3FF),
+    this.clockSec,
     Listenable? repaintAlso,
-  }) : super(
+  }) : scrollBeat = playheadBeat,
+       super(
          repaint: repaintAlso == null
              ? playheadBeat
              : Listenable.merge([playheadBeat, repaintAlso]),
        );
 
   final List<StaffNote> notes;
-  final ValueNotifier<double> playheadBeat;
+  final ValueNotifier<double> scrollBeat;
   final Color inkColor;
   final Color playheadColor;
   final double pixelsPerBeat;
 
   /// Optional per-note color (by index into [notes]), e.g. hit/miss feedback.
   final Color Function(int index)? colorOf;
+
+  /// Anchor x as a fraction of the width.
+  final double lineRatio;
+  final bool showPlayLine;
+
+  /// Staff lines and clefs; defaults to [inkColor].
+  final Color? staffColor;
+
+  /// Index into [notes] of the note to play next, drawn with [currentGlow].
+  final int? Function()? currentIndex;
+  final Color? currentGlow;
+
+  final List<HitBurst> bursts;
+  final Color burstColor;
+
+  /// Current time in seconds for animating [bursts].
+  final double Function()? clockSec;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -96,19 +144,39 @@ class StaffPainter extends CustomPainter {
     return lo;
   }
 
+  /// Vertical layout shared by notes and bursts.
+  ({double space, double trebleBottomY, double bassTopY}) _layout(Size size) {
+    final space = (size.height / 16).clamp(6.0, 14.0);
+    final trebleBottomY = size.height * 0.42;
+    return (
+      space: space,
+      trebleBottomY: trebleBottomY,
+      bassTopY: trebleBottomY + space * 4,
+    );
+  }
+
+  double _noteY(
+    int pitch,
+    bool leftHand,
+    ({double space, double trebleBottomY, double bassTopY}) l,
+  ) {
+    final step = diatonicStep(pitch);
+    final half = l.space / 2;
+    return leftHand
+        ? l.bassTopY + (_bassTopStep - step) * half
+        : l.trebleBottomY - (step - _trebleBottomStep) * half;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final space = (size.height / 16).clamp(
-      6.0,
-      14.0,
-    ); // distance between staff lines
-    final half = space / 2;
+    final l = _layout(size);
+    final space = l.space, half = space / 2;
+    final trebleBottomY = l.trebleBottomY, bassTopY = l.bassTopY;
     final glyphSize = space * 4; // SMuFL: 1 em = 4 staff spaces
-    final trebleBottomY = size.height * 0.42;
-    final bassTopY = trebleBottomY + space * 4;
-    final playheadX = size.width * 0.22;
+    final anchorX = size.width * lineRatio;
+    final staff = staffColor ?? inkColor;
     final ink = Paint()
-      ..color = inkColor
+      ..color = staff
       ..strokeWidth = 1.2;
 
     // Staff lines.
@@ -124,22 +192,57 @@ class StaffPainter extends CustomPainter {
       Smufl.gClef,
       glyphSize,
       Offset(8, trebleBottomY - space),
+      staff,
     );
-    _drawGlyph(canvas, Smufl.fClef, glyphSize, Offset(8, bassTopY + space));
+    _drawGlyph(
+      canvas,
+      Smufl.fClef,
+      glyphSize,
+      Offset(8, bassTopY + space),
+      staff,
+    );
+
+    // Play line with a soft glow (play-along only).
+    if (showPlayLine) {
+      final top = trebleBottomY - space * 6, bottom = bassTopY + space * 6;
+      final glowRect = Rect.fromLTRB(
+        anchorX - space * 2.2,
+        top,
+        anchorX,
+        bottom,
+      );
+      canvas.drawRect(
+        glowRect,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              playheadColor.withValues(alpha: 0),
+              playheadColor.withValues(alpha: 0.35),
+            ],
+          ).createShader(glowRect),
+      );
+      canvas.drawLine(
+        Offset(anchorX, top),
+        Offset(anchorX, bottom),
+        Paint()
+          ..color = playheadColor
+          ..strokeWidth = 3
+          ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 3),
+      );
+    }
 
     // Visible window in beats.
-    final now = playheadBeat.value;
-    final firstBeat = now - playheadX / pixelsPerBeat - 4;
-    final lastBeat = now + (size.width - playheadX) / pixelsPerBeat;
+    final now = scrollBeat.value;
+    final firstBeat = now - anchorX / pixelsPerBeat - 4;
+    final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
+    final current = currentIndex?.call();
     for (var i = _lowerBound(firstBeat); i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
-      final x = playheadX + (n.beat - now) * pixelsPerBeat;
+      final x = anchorX + (n.beat - now) * pixelsPerBeat;
       if (x < 60) continue; // behind the clefs
       final step = diatonicStep(n.pitch);
-      final y = n.leftHand
-          ? bassTopY + (_bassTopStep - step) * half
-          : trebleBottomY - (step - _trebleBottomStep) * half;
+      final y = _noteY(n.pitch, n.leftHand, l);
       _drawLedgers(
         canvas,
         x,
@@ -152,12 +255,21 @@ class StaffPainter extends CustomPainter {
         bassTopY,
         ink,
       );
+      final color = colorOf?.call(i) ?? inkColor;
+      if (i == current && currentGlow != null) {
+        canvas.drawCircle(
+          Offset(x + space * 0.6, y),
+          space * 1.6,
+          Paint()
+            ..color = currentGlow!.withValues(alpha: 0.45)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.9),
+        );
+      }
       final head = n.beats >= 4
           ? Smufl.noteheadWhole
           : n.beats >= 2
           ? Smufl.noteheadHalf
           : Smufl.noteheadBlack;
-      final color = colorOf?.call(i) ?? inkColor;
       _drawGlyph(canvas, head, glyphSize, Offset(x, y), color);
       if (_isSharp[n.pitch % 12]) {
         _drawGlyph(
@@ -186,7 +298,7 @@ class StaffPainter extends CustomPainter {
             style: TextStyle(
               color: color,
               fontSize: space * 1.3,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
           textDirection: TextDirection.ltr,
@@ -198,14 +310,31 @@ class StaffPainter extends CustomPainter {
       }
     }
 
-    // Playhead.
-    canvas.drawLine(
-      Offset(playheadX, trebleBottomY - space * 6),
-      Offset(playheadX, bassTopY + space * 6),
-      Paint()
-        ..color = playheadColor
-        ..strokeWidth = 3,
-    );
+    // Hit bursts: three rings that grow and fade.
+    final t = clockSec?.call();
+    if (t != null) {
+      for (final b in bursts) {
+        final age = (t - b.startSec) / HitBurst.durationSec;
+        if (age < 0 || age > 1) continue;
+        final c = Offset(
+          anchorX + (b.beat - now) * pixelsPerBeat + space * 0.6,
+          _noteY(b.pitch, b.leftHand, l),
+        );
+        for (var k = 0; k < 3; k++) {
+          final a = (age - k * 0.12).clamp(0.0, 1.0);
+          if (a <= 0) continue;
+          canvas.drawCircle(
+            c,
+            space * (0.8 + a * 2.4),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = space * 0.35 * (1 - a)
+              ..color = burstColor.withValues(alpha: math.max(0, 0.9 * (1 - a)))
+              ..maskFilter = MaskFilter.blur(BlurStyle.solid, space * 0.3),
+          );
+        }
+      }
+    }
   }
 
   void _drawLedgers(
@@ -256,5 +385,7 @@ class StaffPainter extends CustomPainter {
       old.notes != notes ||
       old.colorOf != colorOf ||
       old.inkColor != inkColor ||
+      old.showPlayLine != showPlayLine ||
+      old.lineRatio != lineRatio ||
       old.pixelsPerBeat != pixelsPerBeat;
 }

@@ -40,6 +40,14 @@ Reference: Simply Piano uses ~0.34 s MIDI / ~0.15 s mic total tolerance.
 | 2 | ≥ 85% hit, ≤ 3 wrong |
 | 3 | ≥ 95% hit, timing mean error ≤ 60 ms |
 
+## Practice screen behaviour
+
+Matches the reference app (studied from its stage logic, not copied):
+
+- **Wait:** notes sit on a still page; the highlight jumps to the next note as soon as the right key is pressed; when the next note passes 72% of the width the page slides left (1 s ease-in-out) so it lands near the left edge. No play line.
+- **Play-along:** notes scroll right to left toward a glowing play line at 30% of the width; one-bar count-in.
+- **Feedback:** current note amber with glow, hit teal with expanding blue rings (~0.45 s), miss red; next keys highlighted on the keyboard; progress bar of judged notes.
+
 ## Interfaces
 
 ```

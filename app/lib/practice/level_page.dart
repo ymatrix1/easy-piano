@@ -62,6 +62,22 @@ class _LevelPageState extends State<LevelPage> {
   @override
   Widget build(BuildContext context) {
     final repo = widget.repo;
+    return Theme(
+      data: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorSchemeSeed: const Color(0xFF6C4CF1),
+        scaffoldBackgroundColor: StagePalette.bgTop,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: StagePalette.bgTop,
+          foregroundColor: StagePalette.ink,
+        ),
+      ),
+      child: _scaffold(context, repo),
+    );
+  }
+
+  Widget _scaffold(BuildContext context, ContentRepo repo) {
     return Scaffold(
       appBar: AppBar(
         title: Text(repo.t(widget.level.title)),
