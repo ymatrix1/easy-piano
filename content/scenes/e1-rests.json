@@ -1,0 +1,37 @@
+{
+  "id": "e1-rests",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.e1.rests.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "caption": "str:scene.e1.rests.2"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}

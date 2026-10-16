@@ -1,0 +1,31 @@
+{
+  "id": "e1-01-rests",
+  "title": "str:level.e1.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e1-rests"
+    },
+    {
+      "type": "wait",
+      "score": "e1-rest-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-rest-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-rest-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

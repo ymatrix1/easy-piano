@@ -1,0 +1,33 @@
+{
+  "id": "e1-07-jingle-bells",
+  "title": "str:level.e1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "jingle-bells",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "jingle-bells",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "jingle-bells",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jingle-bells",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}
