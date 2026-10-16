@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Easy Piano logo: arena-violet chamfered tile, three piano keys,
+       a gold eighth note rising out of them. Original artwork, CC0. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4422C9"/>
+      <stop offset="0.55" stop-color="#15104F"/>
+      <stop offset="1" stop-color="#080726"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFEA9A"/>
+      <stop offset="0.45" stop-color="#FFC83A"/>
+      <stop offset="1" stop-color="#E09A00"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D9D4FF"/>
+    </linearGradient>
+  </defs>
+  <!-- Chamfered tile with cyan rim -->
+  <path d="M96 16H416L496 96V416L416 496H96L16 416V96Z" fill="url(#bg)" stroke="#2EE6FF" stroke-width="14" stroke-linejoin="round"/>
+  <!-- Keys -->
+  <g>
+    <rect x="98" y="292" width="100" height="160" rx="16" fill="url(#key)"/>
+    <rect x="206" y="292" width="100" height="160" rx="16" fill="url(#key)"/>
+    <rect x="314" y="292" width="100" height="160" rx="16" fill="url(#key)"/>
+    <rect x="166" y="292" width="64" height="96" rx="12" fill="#140F3A"/>
+    <rect x="282" y="292" width="64" height="96" rx="12" fill="#140F3A"/>
+  </g>
+  <!-- Gold eighth note -->
+  <g stroke="#140F3A" stroke-width="12" stroke-linejoin="round">
+    <path d="M286 72V232" stroke="url(#gold)" stroke-width="30" stroke-linecap="round"/>
+    <path d="M286 72C330 86 372 108 380 160C352 136 322 128 296 126Z" fill="url(#gold)" stroke="none"/>
+    <ellipse cx="236" cy="236" rx="62" ry="46" transform="rotate(-22 236 236)" fill="url(#gold)"/>
+  </g>
+  <!-- Sparkle -->
+  <path d="M150 104L162 136L194 148L162 160L150 192L138 160L106 148L138 136Z" fill="#2EE6FF"/>
+</svg>
