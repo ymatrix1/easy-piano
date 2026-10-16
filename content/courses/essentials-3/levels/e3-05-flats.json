@@ -1,0 +1,31 @@
+{
+  "id": "e3-05-flats",
+  "title": "str:level.e3.05.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e3-flats"
+    },
+    {
+      "type": "wait",
+      "score": "e3-flat-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e3-flat-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e3-flat-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

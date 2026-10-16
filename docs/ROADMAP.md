@@ -42,6 +42,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 - [x] Essentials I (first pass, 8 levels)
 - [x] Essentials II (first pass, 7 levels)
+- [x] Essentials III (first pass, 9 levels)
 - [ ] Piano Basics 2–4, Pop Chords 1
 - [ ] Localization (pt-BR, es)
 - [ ] Polyphonic mic research result
