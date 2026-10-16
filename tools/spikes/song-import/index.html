@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Song import spike</title>
+    <style>
+      body { font: 15px/1.5 system-ui, sans-serif; margin: 24px; max-width: 900px; }
+      button { font: inherit; padding: 6px 12px; margin: 0 8px 8px 0; }
+      pre { background: #f4f2f8; padding: 12px; white-space: pre-wrap; }
+      audio { display: block; margin: 4px 0 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Song import spike</h1>
+    <p>Synthetic public-domain test audio (see <code>make_test_audio.py</code>). Runs fully in the browser.</p>
+    <button id="t-piano">1. Transcribe piano.wav</button>
+    <button id="t-mix">2. Transcribe mix.wav</button>
+    <button id="sep">3. Separate mix.wav (Demucs) + transcribe "other"</button>
+    <div id="stems"></div>
+    <pre id="log">crossOriginIsolated: …</pre>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

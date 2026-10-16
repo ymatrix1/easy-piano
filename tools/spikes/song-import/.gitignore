@@ -1,0 +1,4 @@
+node_modules/
+public/basic-pitch-model/
+public/*.wav
+dist/
