@@ -44,7 +44,8 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 5: My songs (D11, if accepted)
 
-- [ ] Import own audio/MIDI/MusicXML, on-device transcription
+- [ ] Import own audio/MIDI/MusicXML, on-device stem separation + transcription
+- [ ] Play along with backing stems (mute vocals / piano)
 - [ ] Level-based arranger in core (beginner / intermediate / advanced)
 
 ## Later

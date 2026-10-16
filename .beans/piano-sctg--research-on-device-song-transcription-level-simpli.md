@@ -15,6 +15,8 @@ Learn any song at your level, legally.
 ## Acceptance Criteria
 - [ ] Basic Pitch (or piano-specific model) runs in browser via ONNX/wasm; time per minute of audio measured
 - [ ] Transcription quality on 3 PD piano recordings (note F1)
+- [ ] Stem separation (Demucs class, ONNX) on web (WebGPU) and native: time per minute of audio, model size
+- [ ] Play-along with stems muted per choice (backing track without the played part)
 - [ ] Prototype arranger: melody extraction, transpose to C, 5-finger range, LH roots
 - [ ] Findings in docs/research/song-import.md
 ## Out of Scope
