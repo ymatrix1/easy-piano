@@ -42,6 +42,12 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [ ] Localization (pt-BR, es)
 - [ ] Polyphonic mic research result
 
+## Phase 5: My songs (D11)
+
+- [ ] Import own audio/MIDI/MusicXML, on-device stem separation + transcription
+- [ ] Play along with backing stems (mute vocals / piano)
+- [ ] Level-based arranger in core (beginner / intermediate / advanced)
+
 ## Later
 
 Sync, teacher tools, more tracks, store releases.

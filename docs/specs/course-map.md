@@ -1,0 +1,75 @@
+# Course map
+
+Status: draft. Bean: piano-673h. Shape follows Simply Piano's course paths ([teardown](../research/simply-piano-teardown.md)); skills are written in our own words and every song is public domain or our own ([D6](../DECISIONS.md)).
+
+Reference numbers below (nodes, levels, stage mix, ranges) come from a local scan of the reference app's course structure, recorded only as statistics. No reference content is copied.
+
+## Layout
+
+```
+Touch Intro ─► Piano Basics ─► Essentials I ─► Essentials II ─► Essentials III ─┬─► SOLOIST track
+                                                                               └─► CHORDS track
+```
+
+Each course: 10–25 journey nodes, 30–60 levels, a boss at the end. Typical stage mix in the reference: ~80% wait (`note_sequence`), 10–25% play-along (`moving`), 2–6% teaching (video, replaced by our animation scenes), small share of single-note drills. Later courses raise the play-along share (Bach, Jazz ≈ 25–30%).
+
+## Basic section
+
+| Course | Prereq | Skills | RH / LH range | bpm | PD songs (ours) |
+|---|---|---|---|---|---|
+| **Touch Intro** | none | On-screen keys, find C, play along by tapping | C4–G4 / – | 60–90 | Ode to Joy (tap) |
+| **Piano Basics** | none | Sitting and hand shape, finger numbers, RH C position (C–G), first staff reading, quarter/half notes | C4–G4 / – | 60–120 | Ode to Joy, Symphony No. 40 theme (Mozart), Mary Had a Little Lamb |
+| **Essentials I** | Piano Basics | Rhythm (quarter, half, whole, rests), reading notes on treble, LH basic chords and new notes (C3–G3), both hands, RH intervals, coordination, eighth notes | C#4–G#4 / C3–G#3 | 60–140 | Jingle Bells, Twinkle Twinkle, Au Clair de la Lune, Oh! Susanna |
+| **Essentials II** | Essentials I | New RH note above G, new LH note, RH F position, shifting positions, coordination in two hands | C#4–C#5 / C#3–A#3 | 60–120 | Musette in D (Bach), When the Saints Go Marching In, Swing Low |
+| **Essentials III** | Essentials II | Rhythm review, new LH position, sharps, flats, mixed accidentals, intro to full sheet music, C major scale | C#4–D#5 / C#3–C#4 | 64–120 | Minuet in G (Petzold, attr. Bach), Greensleeves, Amazing Grace |
+
+## Soloist track (sheet music, sight reading, technique)
+
+| Course | Prereq | Skills | RH / LH range | PD songs (ours) |
+|---|---|---|---|---|
+| **Classical I** | Essentials III | Music periods (Baroque, Classical, Romantic), training-then-piece levels | C4–C#5 / G#2–C#4 | Spring (Vivaldi), Minuet (Bach), Sonata K.331 theme (Mozart), New World Largo (Dvořák), Zarathustra fanfare (Strauss) |
+| **Intermediate I** | Classical I | Rhythm, new thumb technique (thumb under), syncopation intro, D position | C4–D#5 / C#3–D#4 | Can-Can (Offenbach), Habanera (Bizet), Morning Mood (Grieg) |
+| **Intermediate II** | Intermediate I | Ties, switching positions, extending C position | C4–D#5 / C#3–D#4 | Hall of the Mountain King, Turkey in the Straw |
+| **Intermediate III** | Intermediate I | Five-finger coordination, extending F and D positions, coordination in scales | C4–D#5 / C#3–C#4 | Maple Leaf Rag (Joplin, simplified), Scarborough Fair |
+| **Intermediate IV** | Intermediate II + III | G position, shifting from G, D and G major scales, high C position, shifting positions | C4–A#5 / A#2–G#4 | Joy to the World, Minuet in G, Simple Gifts |
+| **Taste of Bach I** | Intermediate IV | Bach intro, two-round training per piece | C4–G#5 / F2–D#4 | Minuet in G major, Arioso (Cantata 156) |
+| **Taste of Bach II** | Taste of Bach I | Minor-key Bach, longer phrases | D#4–A#5 / A#2–D#4 | Minuet in G minor, Air on the G String |
+| **Pre-Advanced I** | Intermediate IV | Key signatures (D major, F major), sixteenth notes, theory moments, F major scale | A#3–G#5 / A#2–G#4 | Hallelujah chorus (Handel, simplified), Boléro theme (Ravel*), Ode to Joy in D |
+| **Pre-Advanced II** | Pre-Advanced I | LH technique: triads, oom-pah, Alberti bass | C4–G#5 / C3–D#4 | Sonata facile K.545 (Mozart), Für Elise (A section) |
+| **Showcase: The Entertainer** | Essentials III | Part A/B training, connecting parts, whole piece, performance tips | G#3–C#6 / C#2–C4 | The Entertainer (Joplin) |
+| **Showcase: Turkish March** | Lead Sheet II or Pre-Advanced I | Parts A/B/C, connecting, whole piece | G#4–C#6 / A#2–F4 | Rondo alla Turca (Mozart) |
+
+\* Ravel died 1937; Boléro is public domain only in some countries. Check per release region or swap for another piece.
+
+## Chords track (accompaniment, pop, blues, jazz)
+
+All chord courses use PD melodies (folk, hymns, early jazz/blues standards whose composers died > 70 years ago) or our own originals written to show the progression.
+
+| Course | Prereq | Skills | Songs (ours / PD) |
+|---|---|---|---|
+| **Pop Chords I** | Essentials III | C, G, D, Em chords; adding LH bass; chords + bass practice; I–V–vi–IV; reading chord symbols with lyrics | Original "Four Chords" études, Oh When the Saints |
+| **Chord Styling I** | Pop Chords I | Styling patterns, A minor, same song in different styles | Originals, House of the Rising Sun (trad.) |
+| **Pop Chords II** | Chord Styling I | F major, D minor | Originals, Auld Lang Syne |
+| **Chord Styling II** | Pop Chords II | Rock pattern, ballad pattern | Originals, Danny Boy (trad.) |
+| **Chord Styling III** | Chord Styling II | Alternating bass, ballad style, mixing styles | Originals, Shenandoah |
+| **Pop Chords III** | Chord Styling III | E major, A major, B minor | Originals, Wayfaring Stranger |
+| **Arpeggios I** | Pop Chords II | RH inversions, upward arpeggio, up-and-down, maj7 arpeggio, LH intervals | Originals, Prelude in C (Bach, BWV 846) |
+| **Blues Chords I** | Pop Chords III | G7, C7, D7; swing feel; 12-bar blues; adding bass; rock and roll pattern | Originals, Frankie and Johnny (trad.) |
+| **Jazz Chords I** | Blues Chords I | Dm7, Cmaj7, Am7; ii–V–I; jazz comping pattern; turnaround | Originals on standard changes, Bill Bailey (1902) |
+| **Jazz Chords II** | Jazz Chords I | More 7th chords, diminished, minor ii–V–i, jazz waltz | Originals, Maple Leaf Rag changes |
+| **Lead Sheet I** | Essentials III | LH chords from symbols (C, F, G, Am), melody + chords | Originals, Home on the Range |
+| **Lead Sheet II** | Lead Sheet I | D, Em, Dm chords | Originals, Red River Valley |
+| **Lead Sheet III** | Lead Sheet II | A, Bm chords | Originals, Camptown Races |
+| **Slash Chords** | Jazz Chords II | Pedal bass, moving bass, inversions as slash chords | Originals, Canon in D (Pachelbel) bass line |
+
+## Build order
+
+1. Piano Basics (Phase 2, ~25 levels)
+2. Essentials I–III (Phase 4)
+3. Pop Chords I + Lead Sheet I (first Chords courses)
+4. Classical I, Intermediate I, then rest by demand
+
+## Open points
+
+- Exact PD status per country for 20th-century composers (Ravel; Handy is US-PD but not life+70). Joplin (d. 1917) is fine.
+- Original "étude" songs for chord courses need a composer/arranger contributor flow.
