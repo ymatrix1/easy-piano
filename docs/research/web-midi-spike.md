@@ -24,7 +24,7 @@ Does Flutter web meet D9's gates: first load ≤ 5 MB and MIDI → frame ≤ 30 
 | Path | n | p50 | p95 | Notes |
 |---|---|---|---|---|
 | Touch (mouse click) → frame start | 3 | 2.5 ms | 2.9 ms | Timestamp taken in Dart handler; excludes browser input dispatch. Lower bound only |
-| Web MIDI → frame start (M-Audio Keystation Mini 32, USB, Chrome, 2026-10-16) | 11 | 5.8 ms | 7.4 ms | max 7.4 ms. Passes 30 ms gate. Small sample; rerun with ≥ 50 notes when convenient |
+| Web MIDI → frame start (M-Audio Keystation Mini 32, USB, Chrome, 2026-10-16) | 200 | 3.5 ms | 8.1 ms | max 10.6 ms. Passes 30 ms gate (first run n=11: p50 5.8, p95 7.4) |
 
 Functional check: keys render C3–C6, touch press/release correct per pointer (stuck-key bug found and fixed), `flutter analyze` clean, 4 unit tests pass (`app/test/widget_test.dart`).
 
