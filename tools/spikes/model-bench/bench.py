@@ -76,10 +76,12 @@ _bytedance = None
 
 def bytedance(name, path):
     global _bytedance
-    from piano_transcription_inference import PianoTranscription, load_audio, sample_rate
+    import librosa
+    from piano_transcription_inference import PianoTranscription, sample_rate
 
     _bytedance = _bytedance or PianoTranscription(device="cpu")
-    audio, _ = load_audio(str(path), sr=sample_rate, mono=True)
+    # The package's load_audio uses a librosa API removed in 0.10; load directly.
+    audio, _ = librosa.load(str(path), sr=sample_rate, mono=True)
     res = _bytedance.transcribe(audio, str(OUT / f"bytedance__{name}.mid"))
     rows = [(e["midi_note"], e["onset_time"], e["offset_time"] - e["onset_time"], e["velocity"] / 127) for e in res["est_note_events"]]
     return rows, "ByteDance piano_transcription_inference (Kong et al. 2021)"
@@ -117,7 +119,26 @@ def pop2piano(name, path):
     return midi_rows(mid), "pop2piano (piano cover generator, not a transcriber)"
 
 
-MODELS = {"basic_pitch": basic_pitch, "bytedance": bytedance, "muscriptor": muscriptor, "pop2piano": pop2piano}
+def pyin(name, path):
+    """Monophonic pitch tracking (librosa pYIN), segmented into notes. Suited to vocals."""
+    import librosa
+    import numpy as np
+
+    y, sr = librosa.load(str(path), sr=22050, mono=True)
+    hop = 256
+    f0, voiced, prob = librosa.pyin(y, fmin=80, fmax=1000, sr=sr, hop_length=hop)
+    midi = np.where(voiced, np.round(librosa.hz_to_midi(np.nan_to_num(f0, nan=1.0))), -1)
+    rows, start, cur = [], None, -1
+    dt = hop / sr
+    for i, m in enumerate(list(midi) + [-1]):
+        if m != cur:
+            if cur >= 0 and (i - start) * dt >= 0.08:
+                rows.append((int(cur), start * dt, (i - start) * dt, float(np.nanmean(prob[start:i]))))
+            start, cur = i, m
+    return rows, "librosa pYIN (fmin 80, fmax 1000 Hz, notes >= 80 ms)"
+
+
+MODELS = {"pyin": pyin, "basic_pitch": basic_pitch, "bytedance": bytedance, "muscriptor": muscriptor, "pop2piano": pop2piano}
 
 if __name__ == "__main__":
     wanted = sys.argv[3:] or ["demucs", *MODELS]
