@@ -382,18 +382,32 @@ class _PracticeStageState extends State<PracticeStage>
       padding: const EdgeInsets.fromLTRB(16, 10, 20, 0),
       child: Row(
         children: [
-          _roundButton(Icons.pause_rounded, _pause, size: 44),
-          const SizedBox(width: 14),
-          Text(
-            _playAlong
-                ? 'Play along · ${(widget.tempo * 100).round()}%'
-                : widget.instruction,
-            style: const TextStyle(
-              color: StagePalette.text,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+          // Paused: resume / restart / exit take the pause button's place in
+          // the same bar, so nothing covers the staff or the bar itself.
+          if (_paused) ...[
+            _roundButton(Icons.play_arrow_rounded, _resume, size: 44),
+            const SizedBox(width: 10),
+            _roundButton(Icons.replay_rounded, widget.onRestart, size: 44),
+            const SizedBox(width: 10),
+            _roundButton(
+              Icons.format_list_bulleted_rounded,
+              widget.onExit,
+              size: 44,
             ),
-          ),
+          ] else ...[
+            _roundButton(Icons.pause_rounded, _pause, size: 44),
+            const SizedBox(width: 14),
+            Text(
+              _playAlong
+                  ? 'Play along · ${(widget.tempo * 100).round()}%'
+                  : widget.instruction,
+              style: const TextStyle(
+                color: StagePalette.text,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           const Spacer(),
           if (widget.onConnectMidi != null) ...[
             TextButton.icon(
@@ -422,112 +436,85 @@ class _PracticeStageState extends State<PracticeStage>
             ),
             const SizedBox(width: 8),
           ],
-          SizedBox(
-            width: 220,
-            height: 22,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(11),
-                    child: LinearProgressIndicator(
-                      value: pillValue.clamp(0.0, 1.0),
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation(Colors.white),
+          if (_paused && _playAlong)
+            _tempoSelector()
+          else
+            SizedBox(
+              width: 220,
+              height: 22,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(11),
+                      child: LinearProgressIndicator(
+                        value: pillValue.clamp(0.0, 1.0),
+                        backgroundColor: Colors.white24,
+                        valueColor: const AlwaysStoppedAnimation(Colors.white),
+                      ),
                     ),
                   ),
-                ),
-                if (waitPill)
-                  Text(
-                    '${widget.repeatDone}/${widget.repeatTotal}',
-                    style: const TextStyle(
-                      color: StagePalette.badge,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                  if (waitPill)
+                    Text(
+                      '${widget.repeatDone}/${widget.repeatTotal}',
+                      style: const TextStyle(
+                        color: StagePalette.badge,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _pauseMenu() {
+  /// Tempo choice shown in the top bar while a play-along is paused.
+  Widget _tempoSelector() {
     final options = <double>{0.6, 0.8, 1.0, widget.stage.tempo}.toList()
       ..sort();
-    return ColoredBox(
-      color: const Color(0x8C1B1530),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _roundButton(Icons.play_arrow_rounded, _resume, size: 72),
-                const SizedBox(width: 16),
-                _roundButton(Icons.replay_rounded, widget.onRestart, size: 72),
-                const SizedBox(width: 16),
-                _roundButton(
-                  Icons.format_list_bulleted_rounded,
-                  widget.onExit,
-                  size: 72,
-                ),
-                const Spacer(),
-                if (_playAlong) ...[
-                  const Column(
-                    children: [
-                      Icon(Icons.timer_outlined, color: Colors.white, size: 30),
-                      Text(
-                        'Tempo',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.timer_outlined, color: Colors.white, size: 22),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white70, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Row(
+            children: [
+              for (final t in options)
+                InkWell(
+                  onTap: () => widget.onTempo(t),
+                  child: Container(
+                    width: 64,
+                    height: 36,
+                    alignment: Alignment.center,
+                    color: (t - widget.tempo).abs() < 1e-6
+                        ? Colors.white
+                        : Colors.transparent,
+                    child: Text(
+                      '${(t * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: (t - widget.tempo).abs() < 1e-6
+                            ? StagePalette.ink
+                            : Colors.white,
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white70, width: 2),
-                    ),
-                    child: Row(
-                      children: [
-                        for (final t in options)
-                          InkWell(
-                            onTap: () => widget.onTempo(t),
-                            child: Container(
-                              width: 96,
-                              height: 56,
-                              alignment: Alignment.center,
-                              color: (t - widget.tempo).abs() < 1e-6
-                                  ? Colors.white
-                                  : Colors.transparent,
-                              child: Text(
-                                '${(t * 100).round()}%',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: (t - widget.tempo).abs() < 1e-6
-                                      ? StagePalette.ink
-                                      : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
                     ),
                   ),
-                ],
-              ],
-            ),
-          ],
+                ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -625,7 +612,6 @@ class _PracticeStageState extends State<PracticeStage>
                 ),
               ),
             ),
-          if (_paused) Positioned.fill(child: _pauseMenu()),
         ],
       ),
     );

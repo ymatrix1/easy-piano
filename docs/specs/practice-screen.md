@@ -25,7 +25,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 ## Pause
 
-Pause button dims the staff and opens a menu: resume, restart, back to the list, and a tempo selector (60 / 80 / 100%, plus the stage default) in play-along.
+Pause dims the staff (nothing is drawn over it). In the top bar, resume / restart / back-to-list replace the pause button and instruction text, and in play-along a tempo selector (60 / 80 / 100%, plus the stage default) replaces the progress pill. The layout does not move.
 
 ## End of stage
 
