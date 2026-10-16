@@ -140,3 +140,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** One pedagogy, many flavours; adding a taste means filling song slots, not forking courses; switching profile keeps progress.
 - **Alternatives:** Fork whole courses per audience (reference app's way: authoring and QA cost grows per variant); single course for everyone (weaker motivation, poor fit for kids).
 - **Impact:** Content format gains `audience` overrides and `songs` slots per node (content-format spec update when accepted); onboarding asks age band and styles; each node needs PD songs per taste, which grows the song-curation work (bean piano-ts7r).
+
+### D13. Web hosting on Cloudflare Pages
+
+- **Status:** proposed
+- **Context:** The web build (D9) needs COOP/COEP headers so the Rust/wasm core (flutter_rust_bridge, SharedArrayBuffer) loads. We want free static hosting and a test link per pull request.
+- **Decision:** Host on Cloudflare Pages. GitHub Actions builds (Flutter + nightly Rust/wasm, not available in the Pages build image) and uploads with `wrangler pages deploy`: production from `main`, a preview per PR, linked in a PR comment. Headers come from `app/web/_headers`.
+- **Why:** Native custom headers; automatic preview URLs; global CDN; free tier fits.
+- **Alternatives:** GitHub Pages (no custom headers; needs the coi-serviceworker hack with an extra reload on first visit); Netlify (similar, smaller free build quota); Vercel (similar; commercial-use limits on the free plan).
+- **Impact:** Two repo secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`); site at `easy-piano.pages.dev`; any new cross-origin asset must send CORP/CORS headers or COEP blocks it.

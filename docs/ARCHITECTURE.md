@@ -51,6 +51,10 @@ MIDI input stays on the platform side (Dart plugin per OS) rather than in Rust `
 
 Local SQLite: profile, per-level best score, stars, attempts, streak, settings, device latency offset. Optional sync later ([OQ5](OPEN-QUESTIONS.md)); local-first default.
 
+## Deploy (web)
+
+[D13](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`.
+
 ## Platform matrix
 
 | Target | MIDI | Mic | Notes |
