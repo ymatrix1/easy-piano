@@ -14,5 +14,7 @@ Phase 1 (docs/ROADMAP.md). Builds on MIDI spike. Blocked by: none.
 First playable web version (D9).
 ## Acceptance Criteria
 - [ ] Delivered and verified, ROADMAP box ticked
+- [ ] Piano sound on/off toggle: on by default with a MIDI controller or the on-screen keyboard, off for digital pianos with their own speakers; remembered per device
+- [ ] Pre-listen and wait-stage demo (light beam sweep) play through the synth
 ## Out of Scope
 Other Phase 1 items.

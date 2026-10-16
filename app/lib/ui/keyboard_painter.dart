@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'key_geometry.dart';
 
 /// On-screen piano keyboard with pressed keys and "play this next" hints.
+///
+/// Drawn softly on purpose: small gaps between white keys, rounded fronts,
+/// shadows instead of outlines, and a felt strip along the top.
 class KeyboardPainter extends CustomPainter {
   KeyboardPainter({
     required this.lowPitch,
@@ -33,22 +36,41 @@ class KeyboardPainter extends CustomPainter {
     final g = KeyGeometry(lowPitch: lowPitch, highPitch: highPitch, size: size);
     final down = pressed.value;
     final next = hint?.value ?? const <int>{};
-    final border = Paint()
-      ..color = const Color(0x33000000)
-      ..style = PaintingStyle.stroke;
+    final ww = g.whiteWidth;
+    final gap = (ww * 0.06).clamp(1.0, 3.0);
+    final radius = Radius.circular((ww * 0.18).clamp(3.0, 9.0));
+
+    // Body behind the keys, visible through the gaps.
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = const Color(0xFF1C1726),
+    );
 
     for (var p = lowPitch; p <= highPitch; p++) {
       if (KeyGeometry.isBlack(p)) continue;
-      final r = g.keyRect(p).deflate(0.5);
-      final fill = down.contains(p)
+      final full = g.keyRect(p);
+      final isDown = down.contains(p);
+      // A pressed key sinks a little.
+      final r = Rect.fromLTRB(
+        full.left + gap / 2,
+        full.top,
+        full.right - gap / 2,
+        full.bottom - (isDown ? 2 : 4),
+      );
+      final fill = isDown
           ? pressedColor
           : next.contains(p)
           ? hintColor
           : null;
       final rr = RRect.fromRectAndCorners(
         r,
-        bottomLeft: const Radius.circular(4),
-        bottomRight: const Radius.circular(4),
+        bottomLeft: radius,
+        bottomRight: radius,
+      );
+      // Front edge shadow gives depth without an outline.
+      canvas.drawRRect(
+        rr.shift(const Offset(0, 3)),
+        Paint()..color = const Color(0x66000000),
       );
       canvas.drawRRect(
         rr,
@@ -58,26 +80,25 @@ class KeyboardPainter extends CustomPainter {
             end: Alignment.bottomCenter,
             colors: fill == null
                 ? const [
-                    Color(0xFFE9E6EE),
+                    Color(0xFFDCD8E3),
+                    Color(0xFFFAF9FC),
                     Color(0xFFFFFFFF),
-                    Color(0xFFF2F0F5),
                   ]
                 : [
-                    Color.lerp(fill, Colors.white, 0.25)!,
-                    fill,
                     Color.lerp(fill, Colors.black, 0.08)!,
+                    fill,
+                    Color.lerp(fill, Colors.white, 0.2)!,
                   ],
-            stops: const [0, 0.55, 1],
+            stops: const [0, 0.35, 1],
           ).createShader(r),
       );
-      canvas.drawRRect(rr, border);
       if (labelMiddleC && p == 60) {
         final tp = TextPainter(
           text: TextSpan(
             text: 'C',
             style: TextStyle(
               color: const Color(0xFF6B6578),
-              fontSize: r.width * 0.32,
+              fontSize: ww * 0.34,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -85,29 +106,33 @@ class KeyboardPainter extends CustomPainter {
         )..layout();
         tp.paint(
           canvas,
-          Offset(
-            r.center.dx - tp.width / 2,
-            r.bottom - tp.height - r.width * 0.2,
-          ),
+          Offset(r.center.dx - tp.width / 2, r.bottom - tp.height - ww * 0.22),
         );
       }
     }
+
     for (var p = lowPitch; p <= highPitch; p++) {
       if (!KeyGeometry.isBlack(p)) continue;
-      final r = g.keyRect(p);
-      final fill = down.contains(p)
+      final base = g.keyRect(p);
+      final isDown = down.contains(p);
+      final r = Rect.fromLTRB(
+        base.left + base.width * 0.06,
+        base.top,
+        base.right - base.width * 0.06,
+        base.bottom - (isDown ? 0 : 2),
+      );
+      final fill = isDown
           ? pressedColor
           : next.contains(p)
-          ? Color.lerp(hintColor, Colors.black, 0.25)!
+          ? Color.lerp(hintColor, Colors.black, 0.2)!
           : null;
-      final rr = RRect.fromRectAndCorners(
-        r,
-        bottomLeft: const Radius.circular(3),
-        bottomRight: const Radius.circular(3),
-      );
+      final br = Radius.circular((r.width * 0.22).clamp(2.0, 6.0));
+      final rr = RRect.fromRectAndCorners(r, bottomLeft: br, bottomRight: br);
       canvas.drawRRect(
-        rr.shift(const Offset(1.5, 2)),
-        Paint()..color = const Color(0x55000000),
+        rr.shift(const Offset(2, 3)),
+        Paint()
+          ..color = const Color(0x77000000)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
       canvas.drawRRect(
         rr,
@@ -116,21 +141,49 @@ class KeyboardPainter extends CustomPainter {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: fill == null
-                ? const [Color(0xFF2A2733), Color(0xFF111015)]
-                : [fill, Color.lerp(fill, Colors.black, 0.2)!],
+                ? const [
+                    Color(0xFF16131C),
+                    Color(0xFF2E2938),
+                    Color(0xFF0E0C12),
+                  ]
+                : [
+                    Color.lerp(fill, Colors.black, 0.25)!,
+                    fill,
+                    Color.lerp(fill, Colors.black, 0.3)!,
+                  ],
+            stops: const [0, 0.82, 1],
           ).createShader(r),
       );
-      // Highlight near the front edge, like a lacquered key.
-      canvas.drawRect(
-        Rect.fromLTWH(
-          r.left + r.width * 0.15,
-          r.bottom - r.height * 0.12,
-          r.width * 0.7,
-          r.height * 0.05,
+      // Bevel highlight on the top face, near the front.
+      final face = RRect.fromRectAndCorners(
+        Rect.fromLTRB(
+          r.left + r.width * 0.16,
+          r.top,
+          r.right - r.width * 0.16,
+          r.bottom - r.height * 0.14,
         ),
-        Paint()..color = const Color(0x22FFFFFF),
+        bottomLeft: br,
+        bottomRight: br,
       );
+      canvas.drawRRect(face, Paint()..color = const Color(0x14FFFFFF));
     }
+
+    // Felt strip along the top edge.
+    final felt = Rect.fromLTWH(
+      0,
+      0,
+      size.width,
+      (size.height * 0.05).clamp(3.0, 8.0),
+    );
+    canvas.drawRect(
+      felt,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF3B1E2E), Color(0x003B1E2E)],
+        ).createShader(felt),
+    );
   }
 
   @override

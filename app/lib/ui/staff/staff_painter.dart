@@ -63,6 +63,8 @@ class StaffPainter extends CustomPainter {
     this.clockSec,
     this.beatsPerBar,
     this.dimmed = false,
+    this.waitBeamOpacity,
+    this.beatPulse,
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -114,6 +116,13 @@ class StaffPainter extends CustomPainter {
 
   /// Paused look: band and notation fade.
   final bool dimmed;
+
+  /// Wait stage: opacity 0–1 of the vertical light beam over the note awaited
+  /// (fades in when a new note becomes current, as in the reference).
+  final double Function()? waitBeamOpacity;
+
+  /// Play-along: 0–1 pulse that peaks on each beat; widens the play bar glow.
+  final double Function()? beatPulse;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -357,6 +366,32 @@ class StaffPainter extends CustomPainter {
       );
     }
 
+    // Waiting beam over the current note (wait stages).
+    final beamA = waitBeamOpacity?.call() ?? 0;
+    final cur0 = currentIndex?.call();
+    if (beamA > 0 && cur0 != null && cur0 < notes.length) {
+      final bx =
+          anchorX +
+          (notes[cur0].beat - scrollBeat.value) * pixelsPerBeat +
+          space * 0.6;
+      final w = space * 2.4;
+      final rect = Rect.fromLTRB(bx - w / 2, 0, bx + w / 2, size.height);
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withValues(alpha: 0.05 * beamA),
+              Colors.white.withValues(alpha: 0.55 * beamA),
+              Colors.white.withValues(alpha: 0.05 * beamA),
+            ],
+          ).createShader(rect)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.6),
+      );
+    }
+
     // Visible window in beats.
     final now = scrollBeat.value;
     final firstBeat = now - anchorX / pixelsPerBeat - 4;
@@ -383,6 +418,7 @@ class StaffPainter extends CustomPainter {
         trebleBottomY,
         bassTopY,
         ink,
+        headWidth: (n.beats >= 4 ? 1.69 : 1.18) * space,
       );
       final color = colorOf?.call(i) ?? inkColor;
       if (i == current && currentGlow != null) {
@@ -561,10 +597,12 @@ class StaffPainter extends CustomPainter {
     double space,
     double trebleBottomY,
     double bassTopY,
-    Paint ink,
-  ) {
-    final w = space * 1.6;
-    final left = x - space * 0.2;
+    Paint ink, {
+    required double headWidth,
+  }) {
+    // Ledger lines extend past the notehead equally on both sides.
+    final left = x - space * 0.45;
+    final w = headWidth + space * 0.9;
     if (!bass && step < _trebleBottomStep) {
       for (var s = _trebleBottomStep - 2; s >= step; s -= 2) {
         final ly = trebleBottomY + (_trebleBottomStep - s) * half;

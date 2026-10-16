@@ -135,6 +135,7 @@ class _PracticeStageState extends State<PracticeStage>
   FrameView? _frame;
   double _staffWidth = 1200;
   double _ppb = _maxPpb;
+  double _cursorSinceSec = 0; // when the current wait note became current
   bool _finished = false;
 
   bool get _playAlong => widget.stage.type == 'play_along';
@@ -266,8 +267,17 @@ class _PracticeStageState extends State<PracticeStage>
     _bursts.removeWhere((b) => now - b.startSec > HitBurst.durationSec);
     if (changed) _targetStates = states;
     final cursorMoved = _frame == null || f.cursor != _frame!.cursor;
-    if (cursorMoved) _maybeTurnPage(f.cursor);
-    if (changed || _bursts.isNotEmpty || cursorMoved) _marks.value++;
+    if (cursorMoved) {
+      _maybeTurnPage(f.cursor);
+      _cursorSinceSec = now;
+    }
+    // Repaint while bursts or the beam fade animate, or when marks change.
+    if (changed ||
+        _bursts.isNotEmpty ||
+        cursorMoved ||
+        now - _cursorSinceSec < 0.25) {
+      _marks.value++;
+    }
     _hint.value = f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
         : {};
@@ -374,7 +384,7 @@ class _PracticeStageState extends State<PracticeStage>
     final judged = ((f?.hits ?? 0) + (f?.misses ?? 0)) / total;
     final waitPill = widget.repeatTotal > 1;
     final pillValue = _playAlong
-        ? judged
+        ? ((f?.playheadBeat ?? 0) / _totalBeats)
         : waitPill
         ? widget.repeatDone / widget.repeatTotal
         : judged;
@@ -556,6 +566,19 @@ class _PracticeStageState extends State<PracticeStage>
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
                           dimmed: _paused,
+                          waitBeamOpacity: _playAlong || waitDone
+                              ? null
+                              : () => ((_nowSec - _cursorSinceSec) / 0.2).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                          beatPulse: _playAlong
+                              ? () {
+                                  final b = _scroll.value;
+                                  return (1 - 2 * (b - b.roundToDouble()).abs())
+                                      .clamp(0.0, 1.0);
+                                }
+                              : null,
                           colorOf: _noteColor,
                           badgeColorOf: _badgeColor,
                           showEndCheck: waitDone,

@@ -9,18 +9,21 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 | Top bar | Round pause button (left), instruction text ("Play the following notes"), progress pill (right): repeats done / total in wait mode, thin song progress line in play-along |
 | Staff area | Vivid violet background; a white band behind the staff; black notation. Staff layout comes from the level's `ui` field: `treble` or `bass` draws a **single staff** (beginner levels), `both` draws the grand staff. It does not depend on which hand plays |
 | Finger badges | Plain finger numbers above notes; only the **current** note gets a badge (hand pictogram with the finger highlighted in the reference; ours: rounded badge with the number) |
-| Keyboard | Optional. Wide realistic keyboard across the bottom (about 4 octaves), "C" label on middle C, the next key highlighted. Shown by default when the level's `keyboard` is true and the screen is at least 560 px tall; a top-bar button toggles it |
+| Keyboard | Optional. Soft look: small gaps between white keys, rounded fronts, shadows instead of outlines, felt strip on top. Wide realistic keyboard across the bottom (about 4 octaves), "C" label on middle C, the next key highlighted. Shown by default when the level's `keyboard` is true and the screen is at least 560 px tall; a top-bar button toggles it |
 
 ## Wait stages
 
 - The whole exercise is laid out to fit the width (about 3 bars); longer pieces page with the 1 s slide at 72% width.
 - Current note **yellow**, its badge **orange**; played notes and badges turn **cyan/teal**; no timing pressure.
 - When the last note is played a **green check** appears at the end of the line; the exercise repeats `repeats` times (stage field, default 1) and the pill counts `n / repeats`.
+- A soft white **light beam** stands over the note being waited for; it fades in over 0.2 s each time a new note becomes current (reference: one beam per note, not a sliding cursor).
+- Each expected note is consumed once; a repeated key press does not count twice (Web MIDI is opened once and duplicate deliveries within 25 ms are dropped).
 - Before the first try, an optional demo dims the staff and sweeps a light beam across the notes while the app plays them (needs audio; bean piano-k0ht).
 
 ## Play-along stages
 
-- Clef stays fixed; notes scroll right to left toward a **cyan play bar just after the clef** (≈ 12% of the width) with a soft glow trail behind it.
+- Clef and **play bar stay fixed** just after the clef (≈ 12% of the width); the **notes scroll** right to left (reference code: the notes container moves with song time, the rhythm line never moves). The bar's glow **pulses on every beat**.
+- The top progress bar advances with song time.
 - Finger numbers above notes; hit notes turn **cyan**, missed notes **red**.
 
 ## Pause
