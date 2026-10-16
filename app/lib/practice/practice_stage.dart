@@ -185,7 +185,7 @@ class _PracticeStageState extends State<PracticeStage>
       }
     }
     _targetStates = [for (final t in _initialTargets) t.state];
-    _scroll.value = _playAlong ? -_beatsPerBar : 0;
+    _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
           ..addListener(() {
@@ -226,10 +226,21 @@ class _PracticeStageState extends State<PracticeStage>
 
   double get _msPerBeat => _usPerBeat / 1000;
 
+  /// Count-in: whole bars, at least 2.5 s (the reference's look-ahead), so
+  /// the first note glides in from the right instead of starting at once.
+  double get _countInBeats {
+    var beats = _beatsPerBar.toDouble();
+    while (beats * _msPerBeat < 2500) {
+      beats += _beatsPerBar;
+    }
+    return beats;
+  }
+
   /// Starts the graded part. Play-along gets a one-bar count-in.
   void _begin() {
-    _startMs = widget.midi.now() + (_playAlong ? _beatsPerBar * _msPerBeat : 0);
-    if (_playAlong) _scheduleBacking(-_beatsPerBar);
+    _startMs =
+        widget.midi.now() + (_playAlong ? _countInBeats * _msPerBeat : 0);
+    if (_playAlong) _scheduleBacking(-_countInBeats);
   }
 
   /// Schedules count-in clicks, the companion notes and, when the metronome

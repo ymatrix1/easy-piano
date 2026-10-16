@@ -25,7 +25,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 - Clef and **play bar stay fixed** just after the clef (≈ 12% of the width); the **notes scroll** right to left (reference code: the notes container moves with song time, the rhythm line never moves). The bar's glow **pulses on every beat**.
 - The top progress bar advances with song time.
-- **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. A metronome toggle in the top bar (play-along only, default on, remembered per device) clicks every beat, with or without a companion; off keeps only the count-in. Toggling mid-song reschedules from the current beat. A one-bar count-in clicks before the start. Pause stops the sound; resume reschedules from the current beat.
+- **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. A metronome toggle in the top bar (play-along only, default on, remembered per device) clicks every beat, with or without a companion; off keeps only the count-in. Toggling mid-song reschedules from the current beat. A count-in of whole bars, at least 2.5 s long, clicks before the start while the first note scrolls in from the right. Pause stops the sound; resume reschedules from the current beat.
 - Finger numbers above notes; hit notes turn **cyan**, missed notes **red**.
 
 ## Sound

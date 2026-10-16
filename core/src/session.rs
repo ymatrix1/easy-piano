@@ -21,12 +21,18 @@ pub enum Input {
 }
 
 impl Input {
-    /// Half-width of the hit window in microseconds.
-    pub fn window_us(self) -> i64 {
+    /// How early a press may come before its note (µs). Reference: the note
+    /// opens 0.3 s ahead (0.15 s for the microphone, which lags).
+    pub fn early_us(self) -> i64 {
         match self {
-            Input::Midi => 150_000,
-            Input::Mic | Input::Touch => 200_000,
+            Input::Midi | Input::Touch => 300_000,
+            Input::Mic => 150_000,
         }
+    }
+
+    /// How late a press may come after its note (µs). Reference: 0.43 s.
+    pub fn window_us(self) -> i64 {
+        430_000
     }
 }
 
@@ -320,15 +326,16 @@ impl Session {
 
     fn on_note_play_along(&mut self, e: NoteEvent) {
         self.expire(e.t_us);
-        let window = self.settings.input.window_us();
+        let (early, late) = (self.settings.input.early_us(), self.settings.input.window_us());
         // Nearest pending target containing this pitch, within the window.
         let best = (self.cursor..self.targets.len())
             .filter(|&i| {
                 let t = &self.targets[i];
                 t.state == ChordState::Pending && t.pitches.contains(&e.pitch) && !t.played.contains(&e.pitch)
             })
-            .map(|i| (i, (e.t_us - self.target_us(&self.targets[i])).abs()))
-            .filter(|&(_, d)| d <= window)
+            .map(|i| (i, e.t_us - self.target_us(&self.targets[i])))
+            .filter(|&(_, d)| -early <= d && d <= late)
+            .map(|(i, d)| (i, d.abs()))
             .min_by_key(|&(_, d)| d);
         let Some((i, _)) = best else {
             self.wrong += 1;
@@ -571,9 +578,19 @@ mod tests {
     }
 
     #[test]
+    fn early_press_up_to_300ms_counts_for_midi() {
+        let mut s = play_along(Settings::default());
+        press(&mut s, 62, 750_000); // D at 1 s, 250 ms early
+        press(&mut s, 64, 1_650_000); // E at 2 s, 350 ms early: too early
+        let t = s.targets();
+        assert!(matches!(t[1].state, ChordState::Hit { .. }));
+        assert_eq!(t[2].state, ChordState::Pending);
+    }
+
+    #[test]
     fn outside_window_is_wrong_and_target_is_missed() {
         let mut s = play_along(Settings::default());
-        press(&mut s, 60, 400_000); // 400 ms late for C at 0 s
+        press(&mut s, 60, 500_000); // 500 ms late for C at 0 s
         s.tick(1_000_000);
         assert_eq!(s.targets()[0].state, ChordState::Missed);
         assert_eq!(s.tick(1_000_000).wrong, 1);
