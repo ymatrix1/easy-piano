@@ -14,6 +14,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D6](#d6-clean-room-content) | 2026-10-15 | Clean-room content | proposed |
 | [D7](#d7-beans-for-task-tracking) | 2026-10-15 | beans for task tracking | proposed |
 | [D8](#d8-local-first-no-account-required) | 2026-10-15 | Local-first, no account required | proposed |
+| [D9](#d9-web-is-the-first-release-target) | 2026-10-15 | Web is the first release target | proposed |
 
 ## Proposed (pending confirmation)
 
@@ -84,7 +85,16 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 - **Status:** proposed
 - **Context:** Open-source app; privacy; offline practice.
-- **Decision:** Progress stored locally (SQLite). Accounts/sync optional, later.
+- **Decision:** Progress stored locally in SQLite via `drift`: native SQLite on mobile/desktop, sqlite3 wasm on web (OPFS, IndexedDB fallback). Request `navigator.storage.persist()`; offer progress export/import file. Accounts/sync optional, later.
 - **Why:** No backend cost, no personal data, works offline.
 - **Alternatives:** Supabase/Firebase from day one (cost, privacy, lock-in).
 - **Impact:** Sync design deferred ([OQ5](OPEN-QUESTIONS.md)).
+
+### D9. Web is the first release target
+
+- **Status:** proposed
+- **Context:** User wants the first version to run in the browser: zero install, easiest to share and test.
+- **Decision:** Phase 1 ships web only (Chrome/Edge/Firefox with Web MIDI; Safari via touch, mic later). Mobile builds compile in CI but release in Phase 2. Same Flutter codebase (D1).
+- **Why:** Fastest feedback loop; no store review; Web MIDI is exact on desktop browsers where most MIDI-keyboard learners sit.
+- **Alternatives:** Mobile first (stores, native latency; slower iteration). TS web app + Capacitor (smaller first load, but weaker mobile MIDI/latency later; would supersede D1).
+- **Impact:** Phase 0 spike must measure Flutter web first-load size and Web MIDI latency. If first load > 5 MB or latency > 30 ms p95, revisit D1. Hosting needs COOP/COEP headers.
