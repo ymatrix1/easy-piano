@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'content/content_repo.dart';
+import 'home/home_page.dart';
 import 'input/midi_input.dart';
 import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
@@ -12,12 +14,23 @@ import 'ui/keyboard_painter.dart';
 import 'ui/staff/staff_spike_page.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
-  runApp(const EasyPianoApp());
+  final locale =
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'pt'
+      ? 'pt-BR'
+      : 'en';
+  final repo = await ContentRepo.load(locale: locale);
+  runApp(EasyPianoApp(repo: repo));
 }
 
 class EasyPianoApp extends StatelessWidget {
-  const EasyPianoApp({super.key});
+  EasyPianoApp({super.key, required this.repo});
+
+  final ContentRepo repo;
+
+  /// One MIDI connection shared by every screen.
+  final MidiInput midi = createMidiInput();
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +41,11 @@ class EasyPianoApp extends StatelessWidget {
         colorSchemeSeed: const Color(0xFF6C4CF1),
         useMaterial3: true,
       ),
-      home: const MidiSpikePage(),
+      home: HomePage(
+        repo: repo,
+        midi: midi,
+        spikes: (_) => const MidiSpikePage(),
+      ),
     );
   }
 }

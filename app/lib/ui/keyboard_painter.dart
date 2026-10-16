@@ -8,17 +8,26 @@ class KeyboardPainter extends CustomPainter {
     required this.highPitch,
     required this.pressed,
     required this.pressedColor,
-  }) : super(repaint: pressed);
+    this.hint,
+    this.hintColor = const Color(0xFFB9F0C8),
+  }) : super(
+         repaint: hint == null ? pressed : Listenable.merge([pressed, hint]),
+       );
 
   final int lowPitch;
   final int highPitch;
   final ValueNotifier<Set<int>> pressed;
   final Color pressedColor;
 
+  /// Keys to highlight as "play this next".
+  final ValueNotifier<Set<int>>? hint;
+  final Color hintColor;
+
   @override
   void paint(Canvas canvas, Size size) {
     final g = KeyGeometry(lowPitch: lowPitch, highPitch: highPitch, size: size);
     final down = pressed.value;
+    final next = hint?.value ?? const <int>{};
     final border = Paint()
       ..color = Colors.black54
       ..style = PaintingStyle.stroke;
@@ -28,7 +37,12 @@ class KeyboardPainter extends CustomPainter {
       final r = g.keyRect(p);
       canvas.drawRect(
         r,
-        Paint()..color = down.contains(p) ? pressedColor : Colors.white,
+        Paint()
+          ..color = down.contains(p)
+              ? pressedColor
+              : next.contains(p)
+              ? hintColor
+              : Colors.white,
       );
       canvas.drawRect(r, border);
     }
@@ -42,7 +56,11 @@ class KeyboardPainter extends CustomPainter {
           bottomRight: const Radius.circular(3),
         ),
         Paint()
-          ..color = down.contains(p) ? pressedColor : const Color(0xFF1B1B1F),
+          ..color = down.contains(p)
+              ? pressedColor
+              : next.contains(p)
+              ? Color.lerp(hintColor, Colors.black, 0.45)!
+              : const Color(0xFF1B1B1F),
       );
     }
   }

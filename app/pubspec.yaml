@@ -68,6 +68,14 @@ flutter:
       fonts:
         - asset: assets/fonts/Bravura.otf
 
+  assets:
+    - assets/content/
+    - assets/content/courses/piano-basics/
+    - assets/content/courses/piano-basics/levels/
+    - assets/content/songs/
+    - assets/content/scenes/
+    - assets/content/strings/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

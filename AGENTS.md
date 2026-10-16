@@ -62,6 +62,7 @@ Skills live in `.agents/skills/`; `.claude/skills` points there.
 - `cargo test` in `core/`
 - `cargo run -- lint ../../content` in `tools/content-cli/`
 - `flutter analyze` and `flutter test` in `app/` when app code changes
+- Before running or building the app: `python tools/sync_content.py` (copies `content/` into app assets), and `flutter_rust_bridge_codegen generate` after changing `app/rust/src/api/`
 
 ## Tools
 

@@ -21,13 +21,22 @@ class StaffPainter extends CustomPainter {
     required this.inkColor,
     required this.playheadColor,
     this.pixelsPerBeat = 90,
-  }) : super(repaint: playheadBeat);
+    this.colorOf,
+    Listenable? repaintAlso,
+  }) : super(
+         repaint: repaintAlso == null
+             ? playheadBeat
+             : Listenable.merge([playheadBeat, repaintAlso]),
+       );
 
   final List<StaffNote> notes;
   final ValueNotifier<double> playheadBeat;
   final Color inkColor;
   final Color playheadColor;
   final double pixelsPerBeat;
+
+  /// Optional per-note color (by index into [notes]), e.g. hit/miss feedback.
+  final Color Function(int index)? colorOf;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -55,15 +64,16 @@ class StaffPainter extends CustomPainter {
 
   final _glyphCache = <String, TextPainter>{};
 
-  TextPainter _glyph(String g, double size) {
-    return _glyphCache.putIfAbsent('$g@$size', () {
+  TextPainter _glyph(String g, double size, [Color? color]) {
+    final c = color ?? inkColor;
+    return _glyphCache.putIfAbsent('$g@$size@${c.toARGB32()}', () {
       return TextPainter(
         text: TextSpan(
           text: g,
           style: TextStyle(
             fontFamily: 'Bravura',
             fontSize: size,
-            color: inkColor,
+            color: c,
             height: 1,
           ),
         ),
@@ -147,19 +157,44 @@ class StaffPainter extends CustomPainter {
           : n.beats >= 2
           ? Smufl.noteheadHalf
           : Smufl.noteheadBlack;
-      _drawGlyph(canvas, head, glyphSize, Offset(x, y));
+      final color = colorOf?.call(i) ?? inkColor;
+      _drawGlyph(canvas, head, glyphSize, Offset(x, y), color);
       if (_isSharp[n.pitch % 12]) {
         _drawGlyph(
           canvas,
           Smufl.accidentalSharp,
           glyphSize,
           Offset(x - space * 1.4, y),
+          color,
         );
       }
       if (n.beats < 4) {
         // Stem up from the right side of the notehead (1.18 spaces wide in Bravura).
         final sx = x + space * 1.18 - 0.6;
-        canvas.drawLine(Offset(sx, y), Offset(sx, y - space * 3.5), ink);
+        canvas.drawLine(
+          Offset(sx, y),
+          Offset(sx, y - space * 3.5),
+          Paint()
+            ..color = color
+            ..strokeWidth = 1.2,
+        );
+      }
+      if (n.finger != null) {
+        final tp = TextPainter(
+          text: TextSpan(
+            text: '${n.finger}',
+            style: TextStyle(
+              color: color,
+              fontSize: space * 1.3,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final top = n.leftHand
+            ? bassTopY + space * 5
+            : trebleBottomY - space * 6.2;
+        tp.paint(canvas, Offset(x + space * 0.1, top));
       }
     }
 
@@ -202,8 +237,14 @@ class StaffPainter extends CustomPainter {
   }
 
   /// Draws a SMuFL glyph with its baseline origin at [origin].
-  void _drawGlyph(Canvas canvas, String g, double size, Offset origin) {
-    final tp = _glyph(g, size);
+  void _drawGlyph(
+    Canvas canvas,
+    String g,
+    double size,
+    Offset origin, [
+    Color? color,
+  ]) {
+    final tp = _glyph(g, size, color);
     final baseline = tp.computeDistanceToActualBaseline(
       TextBaseline.alphabetic,
     );
@@ -213,6 +254,7 @@ class StaffPainter extends CustomPainter {
   @override
   bool shouldRepaint(StaffPainter old) =>
       old.notes != notes ||
+      old.colorOf != colorOf ||
       old.inkColor != inkColor ||
       old.pixelsPerBeat != pixelsPerBeat;
 }
