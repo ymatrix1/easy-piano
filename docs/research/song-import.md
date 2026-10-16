@@ -78,6 +78,20 @@ Takeaways:
 - MuScriptor is not better on this set and cannot ship (non-commercial weights).
 - pop2piano and Transkun need Linux; test later in WSL or CI.
 
+## Real-song test (2026-10-16)
+
+A user-owned commercial pop recording (vocals, guitar, bass, drums, strings; little piano) was run end to end, locally only: no audio, stems, notes or MIDI were committed. Pipeline: Demucs `htdemucs_6s` → Basic Pitch / pYIN / ByteDance / MuScriptor small on stems or full mix → core arranger (beginner, intermediate, advanced) → MIDI, compared by ear on a local page. GPU (RTX 4070 SUPER, CUDA PyTorch): ByteDance ~45 s, MuScriptor ~3 min on the full mix, ~25 s on the vocal stem.
+
+Findings:
+
+- **Results are not good enough yet.** Arrangements are recognizable in places but not musical or reliably playable.
+- **Bug found and fixed:** intermediate/advanced right hand took bass notes in melody gaps (down to MIDI 27) and kept overtones up to MIDI 101. Melody now comes only from notes ≥ middle C; RH folds to ≤ C6 (intermediate) / ≤ C7 (advanced). Regression tests added.
+- **MuScriptor sounded most promising** by ear (cleanest multi-instrument note output), but its weights are CC BY-NC, so it stays a reference unless the license changes or a similar open model appears.
+- The deterministic arranger is too blunt for real songs. Level variants probably need an **LLM pass** that reads the transcribed notes (melody, bass, chords, structure) and writes beginner / intermediate / advanced arrangements in our notation, with the core validating range, playability and timing. Rules stay as guardrails; the LLM does musical choices (simplify rhythm, pick chord voicings, keep the hook).
+- The piano stem was nearly empty (32 notes): for songs without piano, melody must come from the vocal stem.
+
+Still to check: pop2piano and Transkun (need Linux), ByteDance on real piano recordings, larger MuScriptor sizes.
+
 ## Not done
 
 - Real PD piano recordings (needs CC0/PD recordings, e.g. Musopen/IMSLP), with ground truth.
