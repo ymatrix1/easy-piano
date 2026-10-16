@@ -1,5 +1,6 @@
 import 'dart:js_interop';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
@@ -112,7 +113,7 @@ class _WebPianoSynth implements PianoSynth {
     return best;
   }
 
-  _Voice? _start(int pitch, double when, int velocity) {
+  _Voice? _start(int pitch, double when, int velocity, [web.AudioNode? dest]) {
     final ctx = _context();
     final sample = _nearest(pitch);
     if (sample == null) return null;
@@ -123,7 +124,7 @@ class _WebPianoSynth implements PianoSynth {
     final level = (velocity.clamp(1, 127) / 127) * 0.9;
     gain.gain.setValueAtTime(level, when);
     src.connect(gain);
-    gain.connect(_master!);
+    gain.connect(dest ?? _bus('piano'));
     src.start(when);
     return _Voice(src, gain);
   }
@@ -157,11 +158,12 @@ class _WebPianoSynth implements PianoSynth {
     double durSec, {
     int velocity = 80,
     bool force = false,
+    String part = 'piano',
   }) {
     if (!enabled && !force) return;
     final ctx = _context();
-    final at = ctx.currentTime + startSec;
-    final v = _start(pitch, at, velocity);
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final v = _start(pitch, at, velocity, _bus(part));
     if (v == null) return;
     _release(v, at + durSec);
     _scheduled.add(v);
@@ -172,7 +174,7 @@ class _WebPianoSynth implements PianoSynth {
   @override
   void click(double startSec, {bool accent = false}) {
     final ctx = _context();
-    final at = ctx.currentTime + startSec;
+    final at = ctx.currentTime + math.max(0.0, startSec);
     final osc = ctx.createOscillator()
       ..type = 'square'
       ..frequency.value = accent ? 1600 : 1100;
@@ -187,8 +189,248 @@ class _WebPianoSynth implements PianoSynth {
     _clicks.add(osc);
   }
 
+  /// One gain node per part, between the voices and the master.
+  final _buses = <String, web.GainNode>{};
+
+  /// Default mix, from offline RMS measurements (docs/specs/content-format.md):
+  /// the piano samples peak near -21 dBFS, so piano parts get +12 dB; band
+  /// parts sit below the companion piano (bass, drums about -3 dB; choir -6;
+  /// pad -9) because synth saws are far louder than the samples at equal gain.
+  static const _defaultLevels = {
+    'piano': 4.0,
+    'ACC': 3.0,
+    'DRUMS': 0.17,
+    'BASS': 0.07,
+    'PAD': 0.06,
+    'CHOIR': 0.32,
+  };
+
+  web.GainNode _bus(String part) {
+    final ctx = _context();
+    return _buses[part] ??= ctx.createGain()
+      ..gain.value = _defaultLevels[part] ?? 1.0
+      ..connect(_master!);
+  }
+
+  @override
+  void setPartLevel(String part, double level) {
+    _bus(part).gain.value = level.clamp(0.0, 2.0);
+  }
+
+  @override
+  void pad(int pitch, double startSec, double durSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final freq = 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+    final level = velocity.clamp(1, 127) / 127 * 0.12;
+    // Three slightly detuned saws through a soft low-pass: an ensemble
+    // strings pad. Slow attack and release keep it behind the piano.
+    final filter = ctx.createBiquadFilter()
+      ..type = 'lowpass'
+      ..frequency.value = 1800
+      ..Q.value = 0.5;
+    final gain = ctx.createGain();
+    final end = at + math.max(0.3, durSec);
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.25);
+    gain.gain.setValueAtTime(level, end);
+    gain.gain.setTargetAtTime(0, end, 0.15);
+    filter.connect(gain);
+    gain.connect(_bus('PAD'));
+    for (final cents in [-7.0, 0.0, 7.0]) {
+      final o = ctx.createOscillator()
+        ..type = 'sawtooth'
+        ..frequency.value = freq
+        ..detune.value = cents;
+      o.connect(filter);
+      o.start(at);
+      o.stop(end + 0.8);
+      _band.add(o);
+    }
+  }
+
+  /// "Ooh" vowel formants (Hz, Q, gain): a buzzy source through these band
+  /// passes reads as a voice singing /u/.
+  static const _oohFormants = [
+    (300.0, 5.0, 1.0),
+    (870.0, 8.0, 0.35),
+    (2240.0, 10.0, 0.12),
+  ];
+
+  @override
+  void choir(int pitch, double startSec, double durSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final freq = 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+    final level = velocity.clamp(1, 127) / 127 * 0.5;
+    final end = at + math.max(0.3, durSec);
+    final gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.3);
+    gain.gain.setValueAtTime(level, end);
+    gain.gain.setTargetAtTime(0, end, 0.15);
+    gain.connect(_bus('CHOIR'));
+    final source = ctx.createGain();
+    for (final (hz, q, g) in _oohFormants) {
+      final bp = ctx.createBiquadFilter()
+        ..type = 'bandpass'
+        ..frequency.value = hz
+        ..Q.value = q;
+      final fg = ctx.createGain()..gain.value = g;
+      source.connect(bp);
+      bp.connect(fg);
+      fg.connect(gain);
+    }
+    // Vibrato (5.5 Hz, about ±15 cents) fading in, like a held sung note.
+    final lfo = ctx.createOscillator()..frequency.value = 5.5;
+    final depth = ctx.createGain();
+    depth.gain.setValueAtTime(0, at);
+    depth.gain.linearRampToValueAtTime(15, at + 0.6);
+    lfo.connect(depth);
+    lfo.start(at);
+    lfo.stop(end + 0.8);
+    _band.add(lfo);
+    // Two singers, slightly apart, for an ensemble sound.
+    for (final cents in [-5.0, 5.0]) {
+      final o = ctx.createOscillator()
+        ..type = 'sawtooth'
+        ..frequency.value = freq
+        ..detune.value = cents;
+      depth.connect(o.detune);
+      o.connect(source);
+      o.start(at);
+      o.stop(end + 0.8);
+      _band.add(o);
+    }
+  }
+
+  /// Drum and bass nodes, kept so [stopAll] can silence them.
+  final _band = <web.AudioScheduledSourceNode>[];
+  web.AudioBuffer? _noise;
+
+  /// One second of white noise, shared by snare, hi-hats and crash.
+  web.AudioBuffer _noiseBuffer(web.AudioContext ctx) {
+    final cached = _noise;
+    if (cached != null) return cached;
+    final len = ctx.sampleRate.toInt();
+    final buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    final data = Float32List(len);
+    final rnd = math.Random(7);
+    for (var i = 0; i < len; i++) {
+      data[i] = rnd.nextDouble() * 2 - 1;
+    }
+    buf.copyToChannel(data.toJS, 0);
+    return _noise = buf;
+  }
+
+  /// Filtered noise with a fast decay: snare rattle, hi-hats, crash.
+  void _noiseHit(
+    web.AudioContext ctx,
+    double at,
+    double level,
+    double decay,
+    double highpassHz,
+  ) {
+    final src = ctx.createBufferSource()..buffer = _noiseBuffer(ctx);
+    final filter = ctx.createBiquadFilter()
+      ..type = 'highpass'
+      ..frequency.value = highpassHz;
+    final gain = ctx.createGain();
+    gain.gain.setValueAtTime(level, at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(_bus('DRUMS'));
+    src.start(at);
+    src.stop(at + decay + 0.02);
+    _band.add(src);
+  }
+
+  /// A sine or triangle blip with an exponential decay.
+  void _toneHit(
+    web.AudioContext ctx,
+    double at,
+    String type,
+    double fromHz,
+    double toHz,
+    double level,
+    double decay,
+  ) {
+    final osc = ctx.createOscillator()..type = type;
+    osc.frequency.setValueAtTime(fromHz, at);
+    osc.frequency.exponentialRampToValueAtTime(toHz, at + decay * 0.35);
+    final gain = ctx.createGain();
+    gain.gain.setValueAtTime(level, at);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + decay);
+    osc.connect(gain);
+    gain.connect(_bus('DRUMS'));
+    osc.start(at);
+    osc.stop(at + decay + 0.02);
+    _band.add(osc);
+  }
+
+  @override
+  void drum(int gmPitch, double startSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final v = velocity.clamp(1, 127) / 127;
+    switch (gmPitch) {
+      case 36: // kick: sine sweeping down from 150 Hz
+        _toneHit(ctx, at, 'sine', 150, 45, 0.9 * v, 0.35);
+      case 38: // snare: noise rattle plus a short body tone
+        _noiseHit(ctx, at, 0.45 * v, 0.18, 1200);
+        _toneHit(ctx, at, 'triangle', 200, 170, 0.35 * v, 0.1);
+      case 42: // closed hi-hat
+        _noiseHit(ctx, at, 0.18 * v, 0.05, 7000);
+      case 46: // open hi-hat
+        _noiseHit(ctx, at, 0.18 * v, 0.3, 7000);
+      case 49: // crash
+        _noiseHit(ctx, at, 0.22 * v, 1.2, 5000);
+    }
+  }
+
+  @override
+  void bass(int pitch, double startSec, double durSec, {int velocity = 80}) {
+    final ctx = _context();
+    final at = ctx.currentTime + math.max(0.0, startSec);
+    final freq = 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+    final level = velocity.clamp(1, 127) / 127 * 0.5;
+    // A sawtooth through a closing low-pass reads as a plucked electric bass;
+    // the sine keeps the fundamental on small speakers.
+    final saw = ctx.createOscillator()
+      ..type = 'sawtooth'
+      ..frequency.value = freq;
+    final sine = ctx.createOscillator()
+      ..type = 'sine'
+      ..frequency.value = freq;
+    final filter = ctx.createBiquadFilter()..type = 'lowpass';
+    filter.frequency.setValueAtTime(freq * 8, at);
+    filter.frequency.exponentialRampToValueAtTime(freq * 2, at + 0.25);
+    final gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.01);
+    gain.gain.setTargetAtTime(level * 0.6, at + 0.01, 0.2);
+    final end = at + math.max(0.05, durSec);
+    gain.gain.setTargetAtTime(0, end, 0.04);
+    saw.connect(filter);
+    sine.connect(filter);
+    filter.connect(gain);
+    gain.connect(_bus('BASS'));
+    for (final o in [saw, sine]) {
+      o.start(at);
+      o.stop(end + 0.3);
+      _band.add(o);
+    }
+  }
+
   @override
   void stopAll() {
+    for (final n in _band) {
+      try {
+        n.stop();
+      } catch (_) {}
+    }
+    _band.clear();
     for (final o in _clicks) {
       try {
         o.stop();

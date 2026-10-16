@@ -32,10 +32,30 @@ abstract class PianoSynth {
     double durSec, {
     int velocity = 80,
     bool force = false,
+    String part = 'piano',
   });
 
   /// Schedules a metronome click [startSec] seconds from now (accent = beat 1).
   void click(double startSec, {bool accent = false});
+
+  /// Schedules a synthesized drum hit [startSec] seconds from now. [gmPitch]
+  /// is a General MIDI percussion number: 36 kick, 38 snare, 42 closed hi-hat,
+  /// 46 open hi-hat, 49 crash.
+  void drum(int gmPitch, double startSec, {int velocity = 80});
+
+  /// Schedules a synthesized bass note [startSec] seconds from now.
+  void bass(int pitch, double startSec, double durSec, {int velocity = 80});
+
+  /// Schedules a synthesized strings-pad note [startSec] seconds from now.
+  void pad(int pitch, double startSec, double durSec, {int velocity = 80});
+
+  /// Schedules a synthesized wordless "ooh" voice [startSec] seconds from now.
+  void choir(int pitch, double startSec, double durSec, {int velocity = 80});
+
+  /// Sets a part's volume (1 = default mix level ... 0 = muted). [part] is a
+  /// score part key (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`) or `piano` for everything
+  /// else on the piano voice.
+  void setPartLevel(String part, double level);
 
   /// Stops everything scheduled or sounding.
   void stopAll();

@@ -245,7 +245,14 @@ class _PracticeStageState extends State<PracticeStage>
   void _begin() {
     _startMs =
         widget.midi.now() + (_playAlong ? _countInBeats * _msPerBeat : 0);
-    if (_playAlong) _scheduleBacking(-_countInBeats);
+    if (!_playAlong) return;
+    // Piano notes scheduled before the samples decode are silent, so wait for
+    // them; the count-in (>= 2.5 s) usually covers the first load.
+    pianoSynth.load().then((_) {
+      if (!mounted || _finished || _paused) return;
+      final nowBeat = (widget.midi.now() - _startMs) / _msPerBeat;
+      _scheduleBacking(math.max(-_countInBeats, nowBeat));
+    });
   }
 
   /// Schedules count-in clicks, the companion notes and, when the metronome
@@ -270,12 +277,34 @@ class _PracticeStageState extends State<PracticeStage>
     }
     for (final n in _companion) {
       if (n.beat < fromBeat) continue;
+      if (n.partName == 'DRUMS') {
+        pianoSynth.drum(n.pitch, inSec(n.beat));
+        continue;
+      }
+      if (n.partName == 'BASS') {
+        pianoSynth.bass(
+          n.pitch,
+          inSec(n.beat),
+          n.beats * _msPerBeat / 1000 * 0.9,
+          velocity: 90,
+        );
+        continue;
+      }
+      if (n.partName == 'CHOIR') {
+        pianoSynth.choir(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
+        continue;
+      }
+      if (n.partName == 'PAD') {
+        pianoSynth.pad(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
+        continue;
+      }
       pianoSynth.schedule(
         n.pitch,
         inSec(n.beat),
         n.beats * _msPerBeat / 1000 * 0.95,
         velocity: 62,
         force: true,
+        part: n.partName == 'ACC' ? 'ACC' : 'piano',
       );
     }
   }
