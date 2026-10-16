@@ -16,7 +16,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D8](#d8-local-first-no-account-required) | 2026-10-15 | Local-first, no account required | accepted |
 | [D9](#d9-web-is-the-first-release-target) | 2026-10-15 | Web is the first release target | accepted |
 | [D10](#d10-ui-stack-material-3-themed-riverpod-go_router) | 2026-10-15 | UI stack: Material 3 themed, Riverpod, go_router | accepted |
-| [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | proposed |
+| [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | accepted |
 
 ## Accepted
 
@@ -120,11 +120,10 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** shadcn_flutter / forui (SaaS look); Cupertino (iOS only); Flame (game engine, overkill for shell); Bloc (more boilerplate).
 - **Impact:** All screens use theme tokens, no hard-coded colors. Revisit if Material theming can't reach the target look.
 
-## Proposed (pending confirmation)
-
 ### D11. Personal song import with level-based simplification
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-16
+- **Decided by:** Yuri Olive
 - **Context:** Users want to learn any song they like at their level, e.g. a song they hear on YouTube, with simplified versions generated for them.
 - **Decision:** Add a "My songs" import: the user supplies their own audio file, MIDI or MusicXML. Audio is first split into stems on device (Demucs class model, MIT: vocals, drums, bass, piano, other); the piano or vocal-melody stem is transcribed (Basic Pitch class model, ONNX/wasm), then a deterministic arranger in Rust `core` produces level variants (beginner: RH melody in C within a 5-finger position; intermediate: melody + LH roots; advanced: chords/styles). The remaining stems become the play-along backing track (user can mute any stem, e.g. remove vocals or the piano part they play). Results stay on the device, for personal use; never uploaded to or shared through our catalog. No YouTube or other site downloader.
 - **Why:** Big motivation boost (learn the song you want); keeps the app legal: downloading from YouTube breaks its terms, and copyrighted songs can't be distributed with an open catalog.
