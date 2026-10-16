@@ -58,6 +58,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _onMenu(String v) {
+    if (v.startsWith('skin:')) {
+      skinNotifier.value = GameSkin.all.firstWhere((s) => 'skin:${s.id}' == v);
+      return;
+    }
+    _openSpike(v);
+  }
+
   void _openSpike(String v) => Navigator.of(context).push(
     MaterialPageRoute(
       builder: v == 'midi' ? widget.spikes : (_) => const StaffSpikePage(),
@@ -69,7 +77,7 @@ class _HomePageState extends State<HomePage> {
     final repo = widget.repo;
     final total = _stars.values.fold<int>(0, (a, b) => a + b);
     return Scaffold(
-      body: SkyBackground(
+      body: MenuBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -85,11 +93,21 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(width: 10),
                     PopupMenuButton<String>(
-                      tooltip: 'Developer spikes',
-                      onSelected: _openSpike,
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'midi', child: Text('MIDI spike')),
-                        PopupMenuItem(
+                      tooltip: 'Settings',
+                      onSelected: _onMenu,
+                      itemBuilder: (_) => [
+                        for (final s in GameSkin.all)
+                          CheckedPopupMenuItem(
+                            value: 'skin:${s.id}',
+                            checked: s == skinNotifier.value,
+                            child: Text('Theme: ${s.label}'),
+                          ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'midi',
+                          child: Text('MIDI spike'),
+                        ),
+                        const PopupMenuItem(
                           value: 'staff',
                           child: Text('Staff spike'),
                         ),
@@ -142,26 +160,31 @@ class _LogoPlaque extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    final wood = skin.tone(GameTone.wood);
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 18, 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: GameColors.outline, width: 3),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(skin.radius),
+        border: Border.all(
+          color: skin.playful ? skin.outline : skin.panelFrame,
+          width: skin.playful ? 3 : 1,
+        ),
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [GameColors.wood, GameColors.woodDark],
+          colors: [wood.face, wood.lip],
         ),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 5)),
         ],
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.piano_rounded, color: GameColors.goldLight, size: 30),
-          SizedBox(width: 8),
-          GameText('Easy Piano', size: 26, color: GameColors.goldLight),
+          Icon(Icons.piano_rounded, color: skin.accentLight, size: 28),
+          const SizedBox(width: 8),
+          GameText('Easy Piano', size: 24, color: skin.accentLight),
         ],
       ),
     );
@@ -209,6 +232,7 @@ class _CourseTrail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final next = nodes.indexWhere((n) => (stars[n.id] ?? 0) == 0);
+    final skin = GameSkin.of(context);
     return Column(
       children: [
         const SizedBox(height: 12),
@@ -222,15 +246,18 @@ class _CourseTrail extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: GameColors.parchment.withValues(alpha: 0.92),
+              color: skin.panelFill.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: GameColors.outline, width: 2.5),
+              border: Border.all(
+                color: skin.playful ? skin.outline : skin.panelFrame,
+                width: skin.playful ? 2.5 : 1,
+              ),
             ),
             child: Text(
               description,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: GameColors.outline,
+              style: TextStyle(
+                color: skin.panelText,
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
               ),
@@ -249,6 +276,7 @@ class _CourseTrail extends StatelessWidget {
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _TrailPainter(
+                        skin: skin,
                         points: [
                           for (var i = 0; i < nodes.length; i++)
                             Offset(_x(i) * w, i * _rowH + _nodeSize / 2 + 8),
@@ -352,22 +380,33 @@ class _PlayTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
-        color: GameColors.gold,
+        color: skin.playful ? skin.accent : skin.bgTop,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: GameColors.outline, width: 2.5),
+        border: Border.all(
+          color: skin.playful ? skin.outline : skin.accent,
+          width: skin.playful ? 2.5 : 1,
+        ),
       ),
-      child: const GameText('PLAY', size: 14, stroke: 2),
+      child: GameText(
+        skin.playful ? 'PLAY' : 'NEXT',
+        size: skin.playful ? 14 : 11,
+        stroke: 2,
+        color: skin.playful ? Colors.white : skin.accentLight,
+      ),
     );
   }
 }
 
-/// Dotted path joining the nodes.
+/// Path joining the nodes: a sandy dotted road (playful) or a thin dashed
+/// brass line (classic).
 class _TrailPainter extends CustomPainter {
-  _TrailPainter({required this.points});
+  _TrailPainter({required this.skin, required this.points});
 
+  final GameSkin skin;
   final List<Offset> points;
 
   @override
@@ -379,11 +418,23 @@ class _TrailPainter extends CustomPainter {
       final mid = (a.dy + b.dy) / 2;
       path.cubicTo(a.dx, mid, b.dx, mid, b.dx, b.dy);
     }
-    // Wide sandy road with an outline, then dashes down its middle.
+    if (!skin.playful) {
+      final dash = Paint()
+        ..color = skin.trail
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      for (final m in path.computeMetrics()) {
+        for (var d = 0.0; d < m.length; d += 14) {
+          canvas.drawPath(m.extractPath(d, d + 7), dash);
+        }
+      }
+      return;
+    }
     canvas.drawPath(
       path,
       Paint()
-        ..color = GameColors.outline.withValues(alpha: 0.55)
+        ..color = skin.outline.withValues(alpha: 0.55)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 26
         ..strokeCap = StrokeCap.round,
@@ -391,20 +442,21 @@ class _TrailPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFFF2D59A)
+        ..color = skin.trail
         ..style = PaintingStyle.stroke
         ..strokeWidth = 20
         ..strokeCap = StrokeCap.round,
     );
-    final dash = Paint()..color = Colors.white.withValues(alpha: 0.9);
+    final dot = Paint()..color = Colors.white.withValues(alpha: 0.9);
     for (final m in path.computeMetrics()) {
       for (var d = 0.0; d < m.length; d += 22) {
         final t = m.getTangentForOffset(d);
-        if (t != null) canvas.drawCircle(t.position, 3.2, dash);
+        if (t != null) canvas.drawCircle(t.position, 3.2, dot);
       }
     }
   }
 
   @override
-  bool shouldRepaint(_TrailPainter old) => old.points != points;
+  bool shouldRepaint(_TrailPainter old) =>
+      old.points != points || old.skin != skin;
 }

@@ -198,6 +198,7 @@ class _LevelPageState extends State<LevelPage> {
     int order,
   ) {
     final delay = Duration(milliseconds: 900 + 150 * order);
+    final skin = GameSkin.of(context);
     return PopIn(
       delay: delay,
       child: Column(
@@ -207,8 +208,11 @@ class _LevelPageState extends State<LevelPage> {
             height: 92,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: GameColors.nightDeep,
-              border: Border.all(color: GameColors.outline, width: 3),
+              color: skin.resultBottom,
+              border: Border.all(
+                color: skin.playful ? skin.outline : skin.panelFrame,
+                width: skin.playful ? 3 : 1,
+              ),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black38,
@@ -231,14 +235,14 @@ class _LevelPageState extends State<LevelPage> {
                       strokeWidth: 7,
                       strokeCap: StrokeCap.round,
                       backgroundColor: Colors.white12,
-                      valueColor: const AlwaysStoppedAnimation(GameColors.gold),
+                      valueColor: AlwaysStoppedAnimation(skin.accent),
                     ),
                   ),
                 ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, color: GameColors.goldLight, size: 24),
+                    Icon(icon, color: skin.accentLight, size: 24),
                     CountUp(
                       value: value,
                       format: format,
@@ -269,7 +273,7 @@ class _LevelPageState extends State<LevelPage> {
         ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
         : 'Play more than 80% of the notes before the hint appears.'
               '${r.suggestPractice ? ' Try a slower tempo.' : ''}';
-    return RaysBackground(
+    return ResultBackground(
       child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -291,7 +295,7 @@ class _LevelPageState extends State<LevelPage> {
                     child: GameText(
                       title,
                       size: 20,
-                      color: GameColors.goldLight,
+                      color: GameSkin.of(context).accentLight,
                     ),
                   ),
                 ),
@@ -396,7 +400,7 @@ class _InfoStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkyBackground(
+    return MenuBackground(
       child: Stack(
         children: [
           Center(
@@ -415,8 +419,8 @@ class _InfoStage extends StatelessWidget {
                           child: Text(
                             l,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: GameColors.outline,
+                            style: TextStyle(
+                              color: GameSkin.of(context).panelText,
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
                             ),

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'game_theme.dart';
 
-/// Heavy display text with a dark outline and drop shadow.
+/// Display text. Playful skin: heavy, dark outline and hard drop shadow.
+/// Classic skin: semibold with a soft shadow.
 class GameText extends StatelessWidget {
   const GameText(
     this.text, {
@@ -19,12 +20,29 @@ class GameText extends StatelessWidget {
   final double size;
   final Color color;
 
-  /// Outline width; defaults to about 1/8 of the font size.
+  /// Outline width (playful only); defaults to about 1/8 of the font size.
   final double? stroke;
   final TextAlign align;
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    if (!skin.textStroke) {
+      return Text(
+        text,
+        textAlign: align,
+        style: TextStyle(
+          fontSize: size,
+          fontWeight: FontWeight.w700,
+          letterSpacing: size > 20 ? 0.3 : 0.6,
+          height: 1.15,
+          color: color,
+          shadows: const [
+            Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 3),
+          ],
+        ),
+      );
+    }
     final w = stroke ?? (size / 8).clamp(2.0, 5.0);
     final base = TextStyle(
       fontSize: size,
@@ -42,13 +60,9 @@ class GameText extends StatelessWidget {
               ..style = PaintingStyle.stroke
               ..strokeWidth = w * 2
               ..strokeJoin = StrokeJoin.round
-              ..color = GameColors.outline,
+              ..color = skin.outline,
             shadows: [
-              Shadow(
-                color: Colors.black38,
-                offset: Offset(0, w * 0.9),
-                blurRadius: 0,
-              ),
+              Shadow(color: Colors.black38, offset: Offset(0, w * 0.9)),
             ],
           ),
         ),
@@ -62,8 +76,8 @@ class GameText extends StatelessWidget {
   }
 }
 
-/// Press feedback shared by the chunky buttons: the face sinks onto its lip
-/// and squashes, then springs back.
+/// Press feedback shared by the buttons: the face sinks onto its lip and
+/// shrinks, then springs back (elastic in the playful skin).
 class _Pressable extends StatefulWidget {
   const _Pressable({required this.onTap, required this.builder});
 
@@ -79,8 +93,9 @@ class _PressableState extends State<_Pressable>
   late final _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 90),
-    reverseDuration: const Duration(milliseconds: 380),
+    reverseDuration: const Duration(milliseconds: 320),
   );
+  bool _hover = false;
 
   @override
   void dispose() {
@@ -88,28 +103,34 @@ class _PressableState extends State<_Pressable>
     super.dispose();
   }
 
-  void _down() => _c.forward();
-  void _up() => _c.reverse();
-
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null;
+    final playful = GameSkin.of(context).playful;
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTapDown: enabled ? (_) => _down() : null,
-        onTapUp: enabled ? (_) => _up() : null,
-        onTapCancel: enabled ? _up : null,
+        onTapDown: enabled ? (_) => _c.forward() : null,
+        onTapUp: enabled ? (_) => _c.reverse() : null,
+        onTapCancel: enabled ? _c.reverse : null,
         onTap: widget.onTap,
         child: AnimatedBuilder(
           animation: _c,
           builder: (context, _) {
-            // Springy release: elastic curve on the way back.
             final t = _c.status == AnimationStatus.reverse
-                ? Curves.elasticIn.transform(_c.value)
+                ? (playful ? Curves.elasticIn : Curves.easeIn).transform(
+                    _c.value,
+                  )
                 : _c.value;
-            return widget.builder(t);
+            // Hover lifts the classic buttons slightly.
+            final lift = enabled && _hover && !playful ? 0.08 : 0.0;
+            return Opacity(
+              opacity: enabled || playful ? 1 : 0.6,
+              child: widget.builder(t - lift),
+            );
           },
         ),
       ),
@@ -117,26 +138,28 @@ class _PressableState extends State<_Pressable>
   }
 }
 
-const _lip = 6.0;
-
 BoxDecoration _faceDecoration(
-  GameTone tone,
+  GameSkin skin,
+  ToneColors c,
   BorderRadius radius, {
   BoxShape shape = BoxShape.rectangle,
 }) {
   return BoxDecoration(
     shape: shape,
     borderRadius: shape == BoxShape.circle ? null : radius,
-    border: Border.all(color: GameColors.outline, width: 3),
+    border: Border.all(color: skin.outline, width: skin.outlineWidth),
     gradient: LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [Color.lerp(tone.face, Colors.white, 0.35)!, tone.face],
+      colors: [
+        Color.lerp(c.face, Colors.white, skin.playful ? 0.35 : 0.12)!,
+        c.face,
+      ],
     ),
   );
 }
 
-/// Chunky beveled button with an outlined label.
+/// Beveled button with a label.
 class GameButton extends StatelessWidget {
   const GameButton({
     super.key,
@@ -144,8 +167,8 @@ class GameButton extends StatelessWidget {
     required this.onTap,
     this.tone = GameTone.gold,
     this.icon,
-    this.fontSize = 22,
-    this.minWidth = 160,
+    this.fontSize = 20,
+    this.minWidth = 150,
   });
 
   final String label;
@@ -157,8 +180,10 @@ class GameButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = onTap == null ? GameTone.grey : tone;
-    final radius = BorderRadius.circular(16);
+    final skin = GameSkin.of(context);
+    final c = skin.tone(onTap == null ? GameTone.grey : tone);
+    final radius = BorderRadius.circular(skin.radius);
+    final lip = skin.lip;
     return Semantics(
       button: true,
       enabled: onTap != null,
@@ -166,46 +191,47 @@ class GameButton extends StatelessWidget {
       child: _Pressable(
         onTap: onTap,
         builder: (p) => Transform.scale(
-          scale: 1 - 0.06 * p,
+          scale: 1 - (skin.playful ? 0.06 : 0.03) * p,
           child: Padding(
-            padding: EdgeInsets.only(top: _lip * p),
+            padding: EdgeInsets.only(top: lip * p.clamp(0.0, 1.0)),
             child: Container(
               constraints: BoxConstraints(minWidth: minWidth),
               decoration: BoxDecoration(
                 borderRadius: radius,
-                color: GameColors.outline,
-                boxShadow: const [
+                color: c.lip,
+                border: skin.playful
+                    ? Border.all(color: skin.outline, width: skin.outlineWidth)
+                    : null,
+                boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(0, 6),
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: skin.playful ? 8 : 12,
+                    offset: Offset(0, skin.playful ? 6 : 4),
                   ),
                 ],
               ),
-              padding: EdgeInsets.only(bottom: _lip * (1 - p)),
-              child: Container(
-                decoration: BoxDecoration(borderRadius: radius, color: t.lip),
-                padding: const EdgeInsets.only(bottom: 3),
-                child: DecoratedBox(
-                  decoration: _faceDecoration(t, radius),
-                  child: _Gloss(
-                    radius: radius,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (icon != null) ...[
-                            _OutlinedIcon(icon!, size: fontSize * 1.2),
-                            const SizedBox(width: 8),
-                          ],
-                          GameText(label, size: fontSize),
+              padding: EdgeInsets.only(bottom: lip * (1 - p.clamp(0.0, 1.0))),
+              child: DecoratedBox(
+                decoration: _faceDecoration(skin, c, radius),
+                child: _Gloss(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 22,
+                      vertical: skin.playful ? 10 : 12,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (icon != null) ...[
+                          _SkinIcon(icon!, size: fontSize * 1.15),
+                          const SizedBox(width: 8),
                         ],
-                      ),
+                        GameText(
+                          skin.playful ? label : label.toUpperCase(),
+                          size: skin.playful ? fontSize : fontSize * 0.8,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -237,7 +263,9 @@ class GameRoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = onTap == null ? GameTone.grey : tone;
+    final skin = GameSkin.of(context);
+    final c = skin.tone(onTap == null ? GameTone.grey : tone);
+    final lip = skin.lip;
     final button = Semantics(
       button: true,
       enabled: onTap != null,
@@ -246,12 +274,11 @@ class GameRoundButton extends StatelessWidget {
         onTap: onTap,
         builder: (p) => SizedBox(
           width: size,
-          height: size + _lip,
+          height: size + lip,
           child: Transform.scale(
-            scale: 1 - 0.08 * p,
+            scale: 1 - (skin.playful ? 0.08 : 0.04) * p,
             child: Stack(
               children: [
-                // Lip.
                 Positioned(
                   left: 0,
                   right: 0,
@@ -260,8 +287,11 @@ class GameRoundButton extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: t.lip,
-                      border: Border.all(color: GameColors.outline, width: 3),
+                      color: c.lip,
+                      border: Border.all(
+                        color: skin.outline,
+                        width: skin.outlineWidth,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
@@ -272,23 +302,25 @@ class GameRoundButton extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Face.
                 Positioned(
                   left: 0,
                   right: 0,
-                  top: _lip * p,
+                  top: lip * p.clamp(-1.0, 1.0),
                   height: size,
                   child: DecoratedBox(
                     decoration: _faceDecoration(
-                      t,
+                      skin,
+                      c,
                       BorderRadius.zero,
                       shape: BoxShape.circle,
                     ),
                     child: ClipOval(
                       child: _Gloss(
-                        radius: BorderRadius.circular(size),
                         child: Center(
-                          child: _OutlinedIcon(icon, size: size * 0.56),
+                          child: _SkinIcon(
+                            icon,
+                            size: size * (skin.playful ? 0.56 : 0.5),
+                          ),
                         ),
                       ),
                     ),
@@ -304,15 +336,15 @@ class GameRoundButton extends StatelessWidget {
   }
 }
 
-/// White top-half shine over a button face.
+/// Top shine over a button face (playful skin only).
 class _Gloss extends StatelessWidget {
-  const _Gloss({required this.radius, required this.child});
+  const _Gloss({required this.child});
 
-  final BorderRadius radius;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
+    if (!GameSkin.of(context).playful) return child;
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -320,14 +352,11 @@ class _Gloss extends StatelessWidget {
           left: 6,
           right: 6,
           top: 3,
-          child: FractionallySizedBox(
-            widthFactor: 1,
-            child: Container(
-              height: 10,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.white.withValues(alpha: 0.35),
-              ),
+          height: 10,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withValues(alpha: 0.35),
             ),
           ),
         ),
@@ -337,15 +366,24 @@ class _Gloss extends StatelessWidget {
   }
 }
 
-/// Icon with a dark outline (drawn as offset copies) and drop shadow.
-class _OutlinedIcon extends StatelessWidget {
-  const _OutlinedIcon(this.icon, {required this.size});
+/// Icon; outlined with a drop shadow in the playful skin.
+class _SkinIcon extends StatelessWidget {
+  const _SkinIcon(this.icon, {required this.size});
 
   final IconData icon;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    if (!skin.playful) {
+      return Icon(
+        icon,
+        size: size,
+        color: Colors.white,
+        shadows: const [Shadow(color: Colors.black38, blurRadius: 3)],
+      );
+    }
     final o = (size / 14).clamp(1.5, 3.0);
     return SizedBox(
       width: size + o * 2,
@@ -366,7 +404,7 @@ class _OutlinedIcon extends StatelessWidget {
           ])
             Transform.translate(
               offset: d * o,
-              child: Icon(icon, size: size, color: GameColors.outline),
+              child: Icon(icon, size: size, color: skin.outline),
             ),
           Icon(icon, size: size, color: Colors.white),
         ],
@@ -375,7 +413,8 @@ class _OutlinedIcon extends StatelessWidget {
   }
 }
 
-/// Parchment card in a wood frame, with an optional ribbon title.
+/// Card for dialogs and info. Playful: parchment in a wood frame. Classic:
+/// dark glass card with a thin brass edge.
 class GamePanel extends StatelessWidget {
   const GamePanel({
     super.key,
@@ -390,54 +429,77 @@ class GamePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final panel = Container(
-      constraints: BoxConstraints(maxWidth: maxWidth),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        color: GameColors.outline,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black38,
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(3),
-      child: Container(
+    final skin = GameSkin.of(context);
+    final Widget panel;
+    if (skin.playful) {
+      panel = Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(23),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [GameColors.wood, GameColors.woodDark],
-          ),
+          borderRadius: BorderRadius.circular(26),
+          color: skin.outline,
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(3),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: GameColors.parchment,
-            border: Border.all(color: GameColors.outline, width: 2.5),
+            borderRadius: BorderRadius.circular(23),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [skin.panelFrame, skin.tone(GameTone.wood).lip],
+            ),
           ),
-          padding: EdgeInsets.fromLTRB(24, title == null ? 22 : 40, 24, 22),
-          child: child,
+          padding: const EdgeInsets.all(10),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: skin.panelFill,
+              border: Border.all(color: skin.outline, width: 2.5),
+            ),
+            padding: EdgeInsets.fromLTRB(24, title == null ? 22 : 40, 24, 22),
+            child: child,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      panel = Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: skin.panelFill,
+          border: Border.all(color: skin.panelFrame),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 30,
+              offset: Offset(0, 14),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.fromLTRB(28, title == null ? 24 : 40, 28, 24),
+        child: child,
+      );
+    }
     if (title == null) return panel;
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        Padding(padding: const EdgeInsets.only(top: 26), child: panel),
+        Padding(padding: const EdgeInsets.only(top: 22), child: panel),
         GameRibbon(title!),
       ],
     );
   }
 }
 
-/// Banner-style title plaque with folded tails.
+/// Title plaque. Playful: banner with folded tails. Classic: slim plaque
+/// with a brass border.
 class GameRibbon extends StatelessWidget {
   const GameRibbon(
     this.text, {
@@ -452,8 +514,27 @@ class GameRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    if (!skin.playful) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+        decoration: BoxDecoration(
+          color: skin.bgTop,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: skin.accent, width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: GameText(text, size: fontSize * 0.8, color: skin.accentLight),
+      );
+    }
     return CustomPaint(
-      painter: _RibbonPainter(tone),
+      painter: _RibbonPainter(skin.tone(tone), skin.outline),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 46, vertical: 10),
         child: GameText(text, size: fontSize),
@@ -463,20 +544,20 @@ class GameRibbon extends StatelessWidget {
 }
 
 class _RibbonPainter extends CustomPainter {
-  _RibbonPainter(this.tone);
+  _RibbonPainter(this.c, this.outlineColor);
 
-  final GameTone tone;
+  final ToneColors c;
+  final Color outlineColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     final outline = Paint()
-      ..color = GameColors.outline
+      ..color = outlineColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..strokeJoin = StrokeJoin.round;
-    // Tails behind the band.
-    final tailPaint = Paint()..color = tone.lip;
+    final tailPaint = Paint()..color = c.lip;
     for (final s in [-1.0, 1.0]) {
       final x0 = s < 0 ? 18.0 : w - 18.0;
       final x1 = s < 0 ? -8.0 : w + 8.0;
@@ -500,11 +581,7 @@ class _RibbonPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color.lerp(tone.face, Colors.white, 0.25)!,
-            tone.face,
-            tone.lip,
-          ],
+          colors: [Color.lerp(c.face, Colors.white, 0.25)!, c.face, c.lip],
           stops: const [0, 0.6, 1],
         ).createShader(band.outerRect),
     );
@@ -512,10 +589,42 @@ class _RibbonPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RibbonPainter old) => old.tone != tone;
+  bool shouldRepaint(_RibbonPainter old) => old.c != c;
 }
 
-/// Entrance: scales up from [from] with overshoot after [delay].
+/// Mixin for one-shot entrance animations that start after a delay.
+mixin _Entrance<T extends StatefulWidget> on State<T>, TickerProvider {
+  late final AnimationController entrance = AnimationController(
+    vsync: this,
+    duration: entranceDuration,
+  );
+  bool _started = false;
+
+  Duration get entranceDuration;
+  Duration get entranceDelay;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (reduceMotion(context)) {
+      entrance.value = 1;
+    } else {
+      Future.delayed(entranceDelay, () {
+        if (mounted) entrance.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    entrance.dispose();
+    super.dispose();
+  }
+}
+
+/// Entrance: scales up (overshoot in the playful skin) and fades in.
 class PopIn extends StatefulWidget {
   const PopIn({
     super.key,
@@ -534,50 +643,33 @@ class PopIn extends StatefulWidget {
   State<PopIn> createState() => _PopInState();
 }
 
-class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: widget.duration);
-  bool _started = false;
-
+class _PopInState extends State<PopIn>
+    with SingleTickerProviderStateMixin, _Entrance {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    if (reduceMotion(context)) {
-      _c.value = 1;
-    } else {
-      Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
-      });
-    }
-  }
-
+  Duration get entranceDuration => widget.duration;
   @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+  Duration get entranceDelay => widget.delay;
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    // Classic: subtle zoom, no bounce.
+    final from = skin.playful ? widget.from : math.max(widget.from, 0.92);
     return AnimatedBuilder(
-      animation: _c,
+      animation: entrance,
       child: widget.child,
       builder: (context, child) {
-        final t = Curves.easeOutBack.transform(_c.value);
+        final t = skin.enterCurve.transform(entrance.value);
         return Opacity(
-          opacity: Curves.easeOut.transform(_c.value),
-          child: Transform.scale(
-            scale: widget.from + (1 - widget.from) * t,
-            child: child,
-          ),
+          opacity: Curves.easeOut.transform(entrance.value),
+          child: Transform.scale(scale: from + (1 - from) * t, child: child),
         );
       },
     );
   }
 }
 
-/// Entrance: slides in from [offset] (in logical pixels) after [delay].
+/// Entrance: slides in from [offset] (logical pixels) and fades in.
 class SlideIn extends StatefulWidget {
   const SlideIn({
     super.key,
@@ -594,53 +686,33 @@ class SlideIn extends StatefulWidget {
   State<SlideIn> createState() => _SlideInState();
 }
 
-class _SlideInState extends State<SlideIn> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 420),
-  );
-  bool _started = false;
-
+class _SlideInState extends State<SlideIn>
+    with SingleTickerProviderStateMixin, _Entrance {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    if (reduceMotion(context)) {
-      _c.value = 1;
-    } else {
-      Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
-      });
-    }
-  }
-
+  Duration get entranceDuration => const Duration(milliseconds: 420);
   @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+  Duration get entranceDelay => widget.delay;
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    final offset = skin.playful ? widget.offset : widget.offset * 0.5;
     return AnimatedBuilder(
-      animation: _c,
+      animation: entrance,
       child: widget.child,
       builder: (context, child) {
-        final t = Curves.easeOutBack.transform(_c.value);
+        final t = skin.enterCurve.transform(entrance.value);
         return Opacity(
-          opacity: _c.value,
-          child: Transform.translate(
-            offset: widget.offset * (1 - t),
-            child: child,
-          ),
+          opacity: entrance.value,
+          child: Transform.translate(offset: offset * (1 - t), child: child),
         );
       },
     );
   }
 }
 
-/// Endless gentle float, e.g. for the next level node.
+/// Endless gentle float (playful) or soft glow pulse (classic) to mark the
+/// next thing to do.
 class Bob extends StatefulWidget {
   const Bob({super.key, required this.child, this.amplitude = 6});
 
@@ -671,13 +743,32 @@ class _BobState extends State<Bob> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
     return AnimatedBuilder(
       animation: _c,
       child: widget.child,
-      builder: (context, child) => Transform.translate(
-        offset: Offset(0, math.sin(_c.value * 2 * math.pi) * widget.amplitude),
-        child: child,
-      ),
+      builder: (context, child) {
+        final s = math.sin(_c.value * 2 * math.pi);
+        if (skin.playful) {
+          return Transform.translate(
+            offset: Offset(0, s * widget.amplitude),
+            child: child,
+          );
+        }
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: skin.accent.withValues(alpha: 0.25 + 0.2 * s),
+                blurRadius: 18 + 8 * s,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -752,7 +843,7 @@ Path starPath(Rect rect, {double inner = 0.48}) {
   return path..close();
 }
 
-/// Chunky outlined star filled from the left by [fill] (0–1).
+/// Star filled from the left by [fill] (0–1), drawn in the skin's style.
 class GameStar extends StatelessWidget {
   const GameStar({super.key, required this.fill, this.size = 64});
 
@@ -760,27 +851,35 @@ class GameStar extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _StarPainter(fill));
+  Widget build(BuildContext context) => CustomPaint(
+    size: Size.square(size),
+    painter: _StarPainter(fill, GameSkin.of(context)),
+  );
 }
 
 class _StarPainter extends CustomPainter {
-  _StarPainter(this.fill);
+  _StarPainter(this.fill, this.skin);
 
   final double fill;
+  final GameSkin skin;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = (Offset.zero & size).deflate(size.width * 0.06);
-    final path = starPath(rect);
-    final stroke = size.width * 0.07;
-    // Drop shadow.
+    final playful = skin.playful;
+    final path = starPath(rect, inner: playful ? 0.48 : 0.42);
+    final stroke = size.width * (playful ? 0.07 : 0.025);
+    if (playful) {
+      canvas.drawPath(
+        path.shift(Offset(0, stroke * 0.9)),
+        Paint()..color = Colors.black38,
+      );
+    }
     canvas.drawPath(
-      path.shift(Offset(0, stroke * 0.9)),
-      Paint()..color = Colors.black38,
+      path,
+      Paint()
+        ..color = playful ? const Color(0x55000000) : const Color(0x22FFFFFF),
     );
-    // Empty socket.
-    canvas.drawPath(path, Paint()..color = const Color(0x55000000));
     if (fill > 0) {
       canvas.save();
       canvas.clipRect(
@@ -789,31 +888,30 @@ class _StarPainter extends CustomPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..shader = const LinearGradient(
+          ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              GameColors.goldLight,
-              GameColors.gold,
-              GameColors.goldDark,
-            ],
-            stops: [0, 0.55, 1],
+            colors: [skin.accentLight, skin.accent, skin.accentDark],
+            stops: const [0, 0.55, 1],
           ).createShader(rect),
       );
-      // Shine.
-      canvas.drawPath(
-        starPath(
-          rect.deflate(rect.width * 0.22),
-          inner: 0.5,
-        ).shift(Offset(-rect.width * 0.04, -rect.height * 0.06)),
-        Paint()..color = Colors.white.withValues(alpha: 0.28),
-      );
+      if (playful) {
+        canvas.drawPath(
+          starPath(
+            rect.deflate(rect.width * 0.22),
+            inner: 0.5,
+          ).shift(Offset(-rect.width * 0.04, -rect.height * 0.06)),
+          Paint()..color = Colors.white.withValues(alpha: 0.28),
+        );
+      }
       canvas.restore();
     }
     canvas.drawPath(
       path,
       Paint()
-        ..color = GameColors.outline
+        ..color = playful
+            ? skin.outline
+            : (fill > 0 ? skin.accentLight : const Color(0x55FFFFFF))
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
         ..strokeJoin = StrokeJoin.round,
@@ -821,16 +919,16 @@ class _StarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StarPainter old) => old.fill != fill;
+  bool shouldRepaint(_StarPainter old) => old.fill != fill || old.skin != skin;
 }
 
-/// Three stars that pop in one after another, with a sparkle burst on each
-/// filled star. The middle star sits higher and bigger.
+/// Three stars that appear one after another, with a burst on each filled
+/// star. Playful: the middle star sits higher and bigger, stars tilt.
 class StarRow extends StatelessWidget {
   const StarRow({
     super.key,
     required this.stars,
-    this.size = 72,
+    this.size = 64,
     this.delay = Duration.zero,
   });
 
@@ -841,18 +939,21 @@ class StarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final playful = GameSkin.of(context).playful;
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         for (var i = 0; i < 3; i++)
           Padding(
-            padding: EdgeInsets.only(bottom: i == 1 ? size * 0.25 : 0),
+            padding: EdgeInsets.only(
+              bottom: playful && i == 1 ? size * 0.25 : 0,
+            ),
             child: _StarSlot(
               fill: (stars - i).clamp(0.0, 1.0),
-              size: i == 1 ? size * 1.2 : size,
+              size: playful && i == 1 ? size * 1.2 : size,
               delay: delay + Duration(milliseconds: 220 * i),
-              tilt: (i - 1) * 0.18,
+              tilt: playful ? (i - 1) * 0.18 : 0,
             ),
           ),
       ],
@@ -878,50 +979,30 @@ class _StarSlot extends StatefulWidget {
 }
 
 class _StarSlotState extends State<_StarSlot>
-    with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  );
-  bool _started = false;
-
+    with SingleTickerProviderStateMixin, _Entrance {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    if (reduceMotion(context)) {
-      _c.value = 1;
-    } else {
-      Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
-      });
-    }
-  }
-
+  Duration get entranceDuration => const Duration(milliseconds: 900);
   @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+  Duration get entranceDelay => widget.delay;
 
   @override
   Widget build(BuildContext context) {
     final s = widget.size;
+    final playful = GameSkin.of(context).playful;
     return SizedBox(
       width: s * 1.25,
       height: s * 1.25,
       child: AnimatedBuilder(
-        animation: _c,
+        animation: entrance,
         builder: (context, _) {
-          final pop = Curves.elasticOut.transform(
-            (_c.value / 0.7).clamp(0.0, 1.0),
-          );
-          final burst = ((_c.value - 0.15) / 0.85).clamp(0.0, 1.0);
+          final v = (entrance.value / 0.7).clamp(0.0, 1.0);
+          final pop = playful
+              ? Curves.elasticOut.transform(v)
+              : 0.7 + 0.3 * Curves.easeOutCubic.transform(v);
+          final burst = ((entrance.value - 0.15) / 0.85).clamp(0.0, 1.0);
           return Stack(
             alignment: Alignment.center,
             children: [
-              // Empty socket always visible.
               Transform.rotate(
                 angle: widget.tilt,
                 child: GameStar(fill: 0, size: s),
@@ -929,14 +1010,17 @@ class _StarSlotState extends State<_StarSlot>
               if (widget.fill > 0 && burst > 0 && burst < 1)
                 CustomPaint(
                   size: Size.square(s * 1.25),
-                  painter: _SparklePainter(burst),
+                  painter: _SparklePainter(burst, GameSkin.of(context)),
                 ),
               if (widget.fill > 0)
-                Transform.rotate(
-                  angle: widget.tilt + (1 - pop) * 0.8,
-                  child: Transform.scale(
-                    scale: pop,
-                    child: GameStar(fill: widget.fill, size: s),
+                Opacity(
+                  opacity: playful ? 1 : v,
+                  child: Transform.rotate(
+                    angle: widget.tilt + (playful ? (1 - pop) * 0.8 : 0),
+                    child: Transform.scale(
+                      scale: pop,
+                      child: GameStar(fill: widget.fill, size: s),
+                    ),
                   ),
                 ),
             ],
@@ -948,26 +1032,38 @@ class _StarSlotState extends State<_StarSlot>
 }
 
 class _SparklePainter extends CustomPainter {
-  _SparklePainter(this.t);
+  _SparklePainter(this.t, this.skin);
 
   final double t;
+  final GameSkin skin;
 
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
+    final alpha = 1 - t;
+    if (!skin.playful) {
+      // Classic: one soft expanding ring of light.
+      canvas.drawCircle(
+        c,
+        size.width * (0.3 + 0.25 * Curves.easeOut.transform(t)),
+        Paint()
+          ..color = skin.accentLight.withValues(alpha: alpha * 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      return;
+    }
     final r = size.width * (0.3 + 0.45 * Curves.easeOut.transform(t));
-    final alpha = (1 - t);
     for (var i = 0; i < 10; i++) {
       final a = i * math.pi / 5 + 0.3;
       final p = c + Offset(math.cos(a), math.sin(a)) * r;
       final dot = size.width * 0.05 * (1 - t * 0.6) * (i.isEven ? 1 : 0.7);
-      final paint = Paint()
-        ..color = (i.isEven ? GameColors.goldLight : Colors.white).withValues(
-          alpha: alpha,
-        );
       canvas.drawPath(
         starPath(Rect.fromCircle(center: p, radius: dot * 1.6), inner: 0.4),
-        paint,
+        Paint()
+          ..color = (i.isEven ? skin.accentLight : Colors.white).withValues(
+            alpha: alpha,
+          ),
       );
     }
   }
@@ -976,7 +1072,7 @@ class _SparklePainter extends CustomPainter {
   bool shouldRepaint(_SparklePainter old) => old.t != t;
 }
 
-/// Pill showing a counter with a gold star icon (e.g. total stars).
+/// Pill showing a counter with a star icon (e.g. total stars).
 class StarCounter extends StatelessWidget {
   const StarCounter({super.key, required this.value});
 
@@ -984,26 +1080,28 @@ class StarCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
     return Container(
-      height: 42,
-      padding: const EdgeInsets.only(right: 16),
+      height: 40,
+      padding: const EdgeInsets.only(left: 6, right: 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(21),
-        color: const Color(0xAA1E1442),
-        border: Border.all(color: GameColors.outline, width: 3),
+        borderRadius: BorderRadius.circular(20),
+        color: skin.chipFill,
+        border: Border.all(
+          color: skin.playful ? skin.outline : skin.panelFrame,
+          width: skin.playful ? 3 : 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Transform.translate(
-            offset: const Offset(-8, 0),
-            child: const GameStar(fill: 1, size: 46),
-          ),
+          GameStar(fill: 1, size: skin.playful ? 40 : 26),
+          const SizedBox(width: 6),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: value.toDouble()),
             duration: const Duration(milliseconds: 700),
             curve: Curves.easeOutCubic,
-            builder: (context, v, _) => GameText('${v.round()}', size: 22),
+            builder: (context, v, _) => GameText('${v.round()}', size: 20),
           ),
         ],
       ),
@@ -1011,17 +1109,18 @@ class StarCounter extends StatelessWidget {
   }
 }
 
-/// Sky with drifting clouds and rolling hills (home background).
-class SkyBackground extends StatefulWidget {
-  const SkyBackground({super.key, required this.child});
+/// Menu backdrop. Playful: sky with drifting clouds and hills. Classic: deep
+/// blue with a soft spotlight and slowly drifting specks of light.
+class MenuBackground extends StatefulWidget {
+  const MenuBackground({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<SkyBackground> createState() => _SkyBackgroundState();
+  State<MenuBackground> createState() => _MenuBackgroundState();
 }
 
-class _SkyBackgroundState extends State<SkyBackground>
+class _MenuBackgroundState extends State<MenuBackground>
     with SingleTickerProviderStateMixin {
   late final _c = AnimationController(
     vsync: this,
@@ -1042,10 +1141,17 @@ class _SkyBackgroundState extends State<SkyBackground>
 
   @override
   Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
     return Stack(
       children: [
         Positioned.fill(
-          child: RepaintBoundary(child: CustomPaint(painter: _SkyPainter(_c))),
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: skin.playful
+                  ? _SkyPainter(_c, skin)
+                  : _StagePainter(_c, skin),
+            ),
+          ),
         ),
         Positioned.fill(child: widget.child),
       ],
@@ -1053,10 +1159,11 @@ class _SkyBackgroundState extends State<SkyBackground>
   }
 }
 
-class _SkyPainter extends CustomPainter {
-  _SkyPainter(this.anim) : super(repaint: anim);
+class _StagePainter extends CustomPainter {
+  _StagePainter(this.anim, this.skin) : super(repaint: anim);
 
   final Animation<double> anim;
+  final GameSkin skin;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1064,29 +1171,80 @@ class _SkyPainter extends CustomPainter {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [GameColors.skyTop, GameColors.skyBottom],
+          colors: [skin.bgTop, skin.bgBottom],
         ).createShader(rect),
     );
-    // Sun glow.
+    // Spotlight from the top.
+    final spot = Offset(size.width * 0.5, -size.height * 0.1);
+    final r = size.longestSide * 0.8;
+    canvas.drawCircle(
+      spot,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            skin.accent.withValues(alpha: 0.12),
+            skin.accent.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: spot, radius: r)),
+    );
+    // Drifting specks (deterministic).
+    final rnd = math.Random(7);
+    for (var i = 0; i < 40; i++) {
+      final x = rnd.nextDouble();
+      final y0 = rnd.nextDouble();
+      final speed = 0.3 + rnd.nextDouble();
+      final y = (y0 - anim.value * speed) % 1.0;
+      final a = 0.05 + 0.12 * rnd.nextDouble();
+      canvas.drawCircle(
+        Offset(x * size.width, y * size.height),
+        0.8 + rnd.nextDouble() * 1.6,
+        Paint()..color = skin.accentLight.withValues(alpha: a),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_StagePainter old) => old.skin != skin;
+}
+
+class _SkyPainter extends CustomPainter {
+  _SkyPainter(this.anim, this.skin) : super(repaint: anim);
+
+  final Animation<double> anim;
+  final GameSkin skin;
+
+  static const _grass = Color(0xFF7BD148);
+  static const _grassDark = Color(0xFF4E9A2A);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [skin.bgTop, skin.bgBottom],
+        ).createShader(rect),
+    );
     final sun = Offset(size.width * 0.85, size.height * 0.08);
+    final sr = size.shortestSide * 0.35;
     canvas.drawCircle(
       sun,
-      size.shortestSide * 0.35,
+      sr,
       Paint()
-        ..shader =
-            RadialGradient(
-              colors: [
-                Colors.white.withValues(alpha: 0.55),
-                Colors.white.withValues(alpha: 0),
-              ],
-            ).createShader(
-              Rect.fromCircle(center: sun, radius: size.shortestSide * 0.35),
-            ),
+        ..shader = RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.55),
+            Colors.white.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: sun, radius: sr)),
     );
-    // Clouds.
     const clouds = [
       (0.10, 0.12, 1.0, 1.0),
       (0.55, 0.22, 0.7, 1.6),
@@ -1100,29 +1258,25 @@ class _SkyPainter extends CustomPainter {
       final cx = ((x * span + anim.value * span * speed) % span) - w;
       _cloud(canvas, Offset(cx, y * size.height), scale);
     }
-    // Hills.
     final h = size.height;
-    _hill(canvas, size, h * 0.86, 0.9, GameColors.grassDark);
-    _hill(canvas, size, h * 0.91, 1.4, GameColors.grass);
+    _hill(canvas, size, h * 0.86, 0.9, _grassDark);
+    _hill(canvas, size, h * 0.91, 1.4, _grass);
   }
+
+  static const _puffs = [
+    (0.0, 10.0, 28.0),
+    (34.0, -6.0, 38.0),
+    (76.0, 4.0, 32.0),
+    (106.0, 14.0, 22.0),
+  ];
 
   void _cloud(Canvas canvas, Offset o, double s) {
     final paint = Paint()..color = Colors.white.withValues(alpha: 0.92);
     final shade = Paint()..color = const Color(0x33215A8F);
-    for (final (dx, dy, r) in const [
-      (0.0, 10.0, 28.0),
-      (34.0, -6.0, 38.0),
-      (76.0, 4.0, 32.0),
-      (106.0, 14.0, 22.0),
-    ]) {
+    for (final (dx, dy, r) in _puffs) {
       canvas.drawCircle(o + Offset(dx, dy + 8) * s, r * s, shade);
     }
-    for (final (dx, dy, r) in const [
-      (0.0, 10.0, 28.0),
-      (34.0, -6.0, 38.0),
-      (76.0, 4.0, 32.0),
-      (106.0, 14.0, 22.0),
-    ]) {
+    for (final (dx, dy, r) in _puffs) {
       canvas.drawCircle(o + Offset(dx, dy) * s, r * s, paint);
     }
   }
@@ -1130,8 +1284,10 @@ class _SkyPainter extends CustomPainter {
   void _hill(Canvas canvas, Size size, double y, double freq, Color color) {
     final path = Path()..moveTo(0, size.height);
     for (var x = 0.0; x <= size.width; x += 8) {
-      final yy = y + math.sin(x / size.width * math.pi * 2 * freq + freq) * 18;
-      path.lineTo(x, yy);
+      path.lineTo(
+        x,
+        y + math.sin(x / size.width * math.pi * 2 * freq + freq) * 18,
+      );
     }
     path
       ..lineTo(size.width, size.height)
@@ -1140,27 +1296,27 @@ class _SkyPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = GameColors.outline.withValues(alpha: 0.5)
+        ..color = skin.outline.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5,
     );
   }
 
   @override
-  bool shouldRepaint(_SkyPainter old) => false;
+  bool shouldRepaint(_SkyPainter old) => old.skin != skin;
 }
 
-/// Night backdrop with slowly turning light rays (result screen).
-class RaysBackground extends StatefulWidget {
-  const RaysBackground({super.key, required this.child});
+/// Result backdrop: radial glow; the playful skin adds turning light rays.
+class ResultBackground extends StatefulWidget {
+  const ResultBackground({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<RaysBackground> createState() => _RaysBackgroundState();
+  State<ResultBackground> createState() => _ResultBackgroundState();
 }
 
-class _RaysBackgroundState extends State<RaysBackground>
+class _ResultBackgroundState extends State<ResultBackground>
     with SingleTickerProviderStateMixin {
   late final _c = AnimationController(
     vsync: this,
@@ -1184,7 +1340,9 @@ class _RaysBackgroundState extends State<RaysBackground>
     return Stack(
       children: [
         Positioned.fill(
-          child: RepaintBoundary(child: CustomPaint(painter: _RaysPainter(_c))),
+          child: RepaintBoundary(
+            child: CustomPaint(painter: _RaysPainter(_c, GameSkin.of(context))),
+          ),
         ),
         Positioned.fill(child: widget.child),
       ],
@@ -1193,26 +1351,31 @@ class _RaysBackgroundState extends State<RaysBackground>
 }
 
 class _RaysPainter extends CustomPainter {
-  _RaysPainter(this.anim) : super(repaint: anim);
+  _RaysPainter(this.anim, this.skin) : super(repaint: anim);
 
   final Animation<double> anim;
+  final GameSkin skin;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    final glow = skin.playful
+        ? const Color(0xFF6A4FD8)
+        : Color.lerp(skin.resultTop, skin.accent, 0.18)!;
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(0, -0.3),
+        ..shader = RadialGradient(
+          center: const Alignment(0, -0.3),
           radius: 1.1,
-          colors: [Color(0xFF6A4FD8), GameColors.night, GameColors.nightDeep],
-          stops: [0, 0.5, 1],
+          colors: [glow, skin.resultTop, skin.resultBottom],
+          stops: const [0, 0.5, 1],
         ).createShader(rect),
     );
+    if (!skin.playful) return;
     final c = Offset(size.width / 2, size.height * 0.35);
     final r = size.longestSide;
-    final paint = Paint()..color = Colors.white.withValues(alpha: 0.06);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.05);
     const n = 14;
     for (var i = 0; i < n; i++) {
       final a = anim.value * 2 * math.pi + i * 2 * math.pi / n;
@@ -1226,5 +1389,5 @@ class _RaysPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RaysPainter old) => false;
+  bool shouldRepaint(_RaysPainter old) => old.skin != skin;
 }

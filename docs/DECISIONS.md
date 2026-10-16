@@ -18,7 +18,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D10](#d10-ui-stack-material-3-themed-riverpod-go_router) | 2026-10-15 | UI stack: Material 3 themed, Riverpod, go_router | accepted |
 | [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | accepted |
 | [D12](#d12-skill-backbone-with-profile-variants) | 2026-10-16 | Skill backbone with profile variants (audience, taste, locale) | accepted |
-| [D13](#d13-chunky-game-style-menus-with-an-in-code-widget-kit) | 2026-10-16 | Chunky game-style menus with an in-code widget kit | proposed |
+| [D13](#d13-skinnable-game-menus-classic-default-playful-option-with-an-in-code-widget-kit) | 2026-10-16 | Skinnable game menus (Classic default, Playful option) | proposed |
 
 ## Accepted
 
@@ -144,11 +144,11 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 ## Proposed
 
-### D13. Chunky game-style menus with an in-code widget kit
+### D13. Skinnable game menus (Classic default, Playful option) with an in-code widget kit
 
 - **Status:** proposed
-- **Context:** Menus used stock Material widgets; the user wants them to look and feel like a polished mobile game with animations, in the spirit of casual strategy games (beveled gold buttons, outlined display type, sky palette, bouncy motion). D10 already calls for a playful custom theme.
-- **Decision:** Add a game widget kit in `app/lib/ui/game/` (tokens, `GameButton`, `GamePanel`, `GameText`, `StarRow`, `CountUp`, entrance/bob wrappers, sky background) drawn entirely in code with gradients and `CustomPainter`, using Flutter's built-in animation classes. Menus (home, info stage, result, pause) use it; see [visual-style.md](specs/visual-style.md). Original style only: no third-party game assets, fonts, logos or characters.
-- **Why:** Code-drawn art is license-clean, scales to any DPI, themes easily and adds no download weight; built-in animations avoid a new dependency for now.
-- **Alternatives:** Raster art packs (license checks, size, blur on scaling); AI-generated images (provenance and license unclear, hard to restyle); `flutter_animate` now (nicer API, but one more dependency for what a few controllers do; still allowed by D10 later); keep Material look (doesn't meet the goal).
-- **Impact:** Menus stop using Material buttons/cards. Display font stays the platform sans in heavy weight until an OFL font is picked. Practice staff/keyboard colours unchanged.
+- **Context:** Menus used stock Material widgets; the user wants them to look and feel like a polished mobile game with animations, but not childish by default: kids and adults both use the app (D12), so the look should be configurable. D10 already calls for a playful custom theme.
+- **Decision:** Add a widget kit in `app/lib/ui/game/` (`GameButton`, `GamePanel`, `GameText`, `StarRow`, `CountUp`, entrance wrappers, backdrops) drawn entirely in code with gradients and `CustomPainter`, using Flutter's built-in animation classes. Every token comes from a `GameSkin`: `classic` (default: midnight blue, brass, thin lines, smooth motion) and `playful` (sky, wood, gold, thick outlines, bounce). The user switches skins in Settings; see [visual-style.md](specs/visual-style.md). Original style only: no third-party game assets, fonts, logos or characters.
+- **Why:** One kit serves both audiences; the grown-up default avoids putting off adult learners while kids can opt into the cartoon look. Code-drawn art is license-clean, scales to any DPI and adds no download weight; built-in animations avoid a new dependency for now.
+- **Alternatives:** Single cartoon look (felt childish for adults); single flat look (loses the game feel kids enjoy); raster art packs (license checks, size, blur on scaling); AI-generated images (provenance and license unclear, hard to restyle); `flutter_animate` now (nicer API, one more dependency; still allowed by D10 later); keep Material look (doesn't meet the goal).
+- **Impact:** Menus stop using Material buttons/cards and read colours from `GameSkin`. Skin choice is in memory until the settings store lands; onboarding can later pick it from the audience axis (D12). Display font stays the platform sans until an OFL font is picked. Practice staff/keyboard colours unchanged.

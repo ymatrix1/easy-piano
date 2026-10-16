@@ -29,3 +29,4 @@ Rive mascot, sound effects, real progress store, practice staff colours.
 - app/lib/ui/game/: GameColors/GameTone tokens; GameButton, GameRoundButton (press squash + elastic release), GameText (outlined), GamePanel, GameRibbon, GameStar/StarRow (staggered pop + sparkles), CountUp, StarCounter, PopIn/SlideIn/Bob, SkyBackground (drifting clouds, hills), RaysBackground.
 - Home: sky course map with winding trail, bobbing next node, star counter. Info stage: wood panel. Result: rays, ribbon, star row, count-up medallions. Pause bar: chunky round buttons, gold tempo pills.
 - test/game_widgets_test.dart.
+- Follow-up (user feedback "too childish"): added `GameSkin` with `classic` (default, grown-up) and `playful` skins, switchable from the home Settings gear; all kit widgets and screens read the skin. Spec and D13 updated.
