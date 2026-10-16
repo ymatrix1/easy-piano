@@ -18,19 +18,43 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Easy Piano: a free, open-source, gamified piano course.">
+  <meta name="theme-color" content="#15104F">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="easy_piano">
+  <meta name="apple-mobile-web-app-title" content="Easy Piano">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>easy_piano</title>
+  <title>Easy Piano</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* Loading splash: shown until Flutter paints its first frame. */
+    html, body { margin: 0; height: 100%; background: #080726; }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 28px;
+      background: radial-gradient(circle at 50% 40%, #4422C9 0%, #15104F 45%, #080726 100%);
+      font-family: system-ui, sans-serif; color: #B8B3F0;
+      transition: opacity .35s ease;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash img { width: 132px; height: 132px; animation: bob 1.6s ease-in-out infinite;
+      filter: drop-shadow(0 0 24px rgba(46, 230, 255, .35)); }
+    #splash .bar { width: 200px; height: 8px; border-radius: 4px; overflow: hidden;
+      background: #1A1458; box-shadow: inset 0 0 0 1px #4A3CC0; }
+    #splash .bar i { display: block; width: 40%; height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #2EE6FF, #FFD21F); animation: slide 1.1s ease-in-out infinite; }
+    #splash p { margin: 0; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; }
+    @keyframes bob { 50% { transform: translateY(-8px) scale(1.03); } }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) { #splash img, #splash .bar i { animation: none; } }
+  </style>
 </head>
 <body>
   <!--
@@ -41,6 +65,27 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <div id="splash" role="status" aria-live="polite">
+    <img src="favicon.svg" alt="Easy Piano">
+    <div class="bar"><i></i></div>
+    <p>Tuning the piano…</p>
+  </div>
+  <script>
+    // Hide on Flutter's first frame; fall back to the view appearing (the
+    // event doesn't fire in background tabs).
+    (function () {
+      var s = document.getElementById('splash');
+      function hide() {
+        if (!s.isConnected || s.classList.contains('done')) return;
+        s.classList.add('done');
+        setTimeout(function () { s.remove(); }, 400);
+      }
+      window.addEventListener('flutter-first-frame', hide);
+      new MutationObserver(function (_, obs) {
+        if (document.querySelector('flutter-view')) { obs.disconnect(); setTimeout(hide, 300); }
+      }).observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
