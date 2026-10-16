@@ -62,6 +62,34 @@ All chord courses use PD melodies (folk, hymns, early jazz/blues standards whose
 | **Lead Sheet III** | Lead Sheet II | A, Bm chords | Originals, Camptown Races |
 | **Slash Chords** | Jazz Chords II | Pedal bass, moving bass, inversions as slash chords | Originals, Canon in D (Pachelbel) bass line |
 
+## Profile variants
+
+Accepted in [D12](../DECISIONS.md). The reference app ships the same skill path in several variants: of 48 courses, 10 are Kids versions, plus locale (JP), licensed-character and difficulty-fix variants; Piano Basics 1 alone has 8. We formalize this as a fixed skill backbone with swappable content.
+
+**Backbone (fixed per module):** the ordered list of skills, their journey nodes and their pass rules. Progress, stars and unlocks are keyed by skill node, so switching variant never loses progress.
+
+**Variant axes (swappable content):**
+
+| Axis | Values | What changes |
+|---|---|---|
+| Audience | `kids` (≈ 6–11), `teen_adult` | Kids: shorter levels (≤ 3 min), more scenes and mascot, fewer words, larger UI, no streak pressure, parent gate for settings. Adult: direct tone, theory moments, longer play-alongs |
+| Taste | `classical`, `folk_world`, `jazz_blues`, `hymns_spirituals`, `originals_pop` | Song picks per node: each node lists 2–4 PD/original songs that train the same skill; the profile picks one |
+| Locale | any | Strings, scene captions, and folk songs from that culture where PD (e.g. Brazilian *cantigas de roda* for pt-BR) |
+
+**Resolution:** `variant = backbone node + audience overrides + taste song choice + locale strings`. A node declares defaults; variants only override. Authors add a taste by filling song slots, not by forking a course.
+
+**Onboarding:** asks age band and up to two favourite styles; the user can change both in settings at any time.
+
+Example, Piano Basics node "RH C position, first song":
+
+| Taste | Song slot (PD) |
+|---|---|
+| classical | Ode to Joy (Beethoven) |
+| folk_world | Au Clair de la Lune / Ciranda Cirandinha (pt-BR) |
+| jazz_blues | Original 5-note blues riff étude |
+| hymns_spirituals | Amazing Grace (first phrase, simplified) |
+| originals_pop | Original "First Steps" pop étude |
+
 ## Build order
 
 1. Piano Basics (Phase 2, ~25 levels)
