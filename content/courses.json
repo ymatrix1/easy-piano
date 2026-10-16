@@ -46,7 +46,7 @@
       "requires": [
         "essentials-2"
       ],
-      "status": "planned"
+      "journey": "courses/essentials-3/journey.json"
     }
   ]
 }
