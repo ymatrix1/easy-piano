@@ -101,18 +101,33 @@ class JourneyNode {
   final Map<String, String> songs;
 }
 
+/// A module (course). Planned modules are listed, locked, without a journey.
 class CourseDef {
   const CourseDef({
     required this.id,
     required this.title,
     required this.description,
     required this.nodes,
+    this.section = '',
+    this.planned = false,
   });
 
   final String id;
   final String title;
   final String description;
+
+  /// Journey nodes, shown as submodules; each holds levels (tasks).
   final List<JourneyNode> nodes;
+  final String section;
+  final bool planned;
+}
+
+/// A named group of modules (e.g. Basics).
+class SectionDef {
+  const SectionDef({required this.id, required this.title});
+
+  final String id;
+  final String title;
 }
 
 /// Scene caption lines in order (the scene player itself is Phase 2).
@@ -125,6 +140,7 @@ List<String> sceneCaptions(Map<String, dynamic> scene) => [
 class ContentRepo {
   ContentRepo({
     required this.courses,
+    this.sections = const [],
     required this.levels,
     required this.songJson,
     required this.scenes,
@@ -133,6 +149,7 @@ class ContentRepo {
   });
 
   final List<CourseDef> courses;
+  final List<SectionDef> sections;
   final Map<String, LevelDef> levels;
   final Map<String, String> songJson;
   final Map<String, Map<String, dynamic>> scenes;
@@ -172,22 +189,32 @@ class ContentRepo {
         scenes[path.substring(7, path.length - 5)] = json(path);
       }
     }
+    final index = json('courses.json');
+    final sections = [
+      for (final s in (index['sections'] as List?) ?? const [])
+        SectionDef(id: s['id'] as String, title: s['title'] as String),
+    ];
     final courses = [
-      for (final c in json('courses.json')['courses'] as List)
+      for (final c in index['courses'] as List)
         CourseDef(
           id: c['id'] as String,
           title: c['title'] as String,
           description: c['description'] as String,
-          nodes: [
-            for (final n in json(c['journey'] as String)['nodes'] as List)
-              JourneyNode.fromJson(n as Map<String, dynamic>),
-          ],
+          section: c['section'] as String? ?? '',
+          planned: c['status'] == 'planned',
+          nodes: c['journey'] == null
+              ? const []
+              : [
+                  for (final n in json(c['journey'] as String)['nodes'] as List)
+                    JourneyNode.fromJson(n as Map<String, dynamic>),
+                ],
         ),
     ];
     final en = _stringMap(files['strings/en.json']!);
     final local = files['strings/$locale.json'];
     return ContentRepo(
       courses: courses,
+      sections: sections,
       levels: levels,
       songJson: songs,
       scenes: scenes,

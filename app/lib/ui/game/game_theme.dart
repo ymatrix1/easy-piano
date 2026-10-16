@@ -1,157 +1,62 @@
 import 'package:flutter/material.dart';
 
-/// Fixed colours shared by both skins (see docs/specs/visual-style.md).
+/// Menu palette: deep night-violet arena, electric cyan, signal yellow
+/// (ours; see docs/specs/visual-style.md).
 abstract final class GameColors {
-  static const gold = Color(0xFFFFC93C);
-  static const goldDark = Color(0xFFD98E04);
-  static const goldLight = Color(0xFFFFE58A);
+  static const bgDeep = Color(0xFF080726);
+  static const bgMid = Color(0xFF15104F);
+  static const bgGlow = Color(0xFF4422C9);
+  static const panel = Color(0xFF1A1458);
+  static const panelHi = Color(0xFF261D78);
+  static const panelEdge = Color(0xFF4A3CC0);
+  static const cyan = Color(0xFF2EE6FF);
+  static const yellow = Color(0xFFFFD21F);
+  static const yellowDark = Color(0xFFE09A00);
+  static const gold = Color(0xFFFFC83A);
+  static const goldLight = Color(0xFFFFEA9A);
+  static const goldDark = Color(0xFFB86E00);
+  static const ink = Color(0xFF140F3A); // text on yellow / green
+  static const text = Color(0xFFFFFFFF);
+  static const textDim = Color(0xFFB8B3F0);
+  static const success = Color(0xFF3CE07A);
+  static const danger = Color(0xFFFF4D6D);
 }
 
-/// Role of a button; each skin maps it to its own face and lip colours.
-enum GameTone { gold, green, blue, red, grey, wood }
+/// Role of a button or card.
+enum GameTone {
+  /// Primary call to action (signal yellow).
+  gold(Color(0xFFFFE15A), Color(0xFFFFB800), GameColors.ink),
+  green(Color(0xFF5CF08F), Color(0xFF18B055), GameColors.ink),
+  blue(Color(0xFF4FA8FF), Color(0xFF1D4FD6), Colors.white),
+  purple(Color(0xFFB277FF), Color(0xFF5B23C9), Colors.white),
+  red(Color(0xFFFF6B83), Color(0xFFC81E45), Colors.white),
+  grey(Color(0xFF4A4770), Color(0xFF2A2850), Color(0xFF9C99C8)),
 
-/// Colours of one button tone: face (top) and lip (shadow side).
-typedef ToneColors = ({Color face, Color lip});
+  /// Dark glass, for secondary actions.
+  wood(Color(0xFF2E2690), Color(0xFF1A1458), Colors.white);
 
-/// Visual skin for menus. [classic] is the default; [playful] is the brighter,
-/// cartoon look for kids. Chosen by the user in Settings.
-class GameSkin {
-  const GameSkin._({
-    required this.id,
-    required this.label,
-    required this.playful,
-    required this.bgTop,
-    required this.bgBottom,
-    required this.outline,
-    required this.outlineWidth,
-    required this.lip,
-    required this.radius,
-    required this.textStroke,
-    required this.panelFill,
-    required this.panelFrame,
-    required this.panelText,
-    required this.chipFill,
-    required this.accent,
-    required this.accentLight,
-    required this.accentDark,
-    required this.trail,
-    required this.resultTop,
-    required this.resultBottom,
-    required this.tones,
-  });
+  const GameTone(this.top, this.bottom, this.label);
+  final Color top;
+  final Color bottom;
+  final Color label;
 
-  final String id;
-  final String label;
-
-  /// Cartoon extras: thick outlines, gloss, clouds, bouncy motion, ribbons.
-  final bool playful;
-  final Color bgTop;
-  final Color bgBottom;
-  final Color outline;
-  final double outlineWidth;
-  final double lip;
-  final double radius;
-  final bool textStroke;
-  final Color panelFill;
-  final Color panelFrame;
-  final Color panelText;
-  final Color chipFill;
-  final Color accent;
-  final Color accentLight;
-  final Color accentDark;
-  final Color trail;
-  final Color resultTop;
-  final Color resultBottom;
-  final Map<GameTone, ToneColors> tones;
-
-  ToneColors tone(GameTone t) => tones[t]!;
-
-  /// Entrance curve: overshoot for playful, smooth for classic.
-  Curve get enterCurve => playful ? Curves.easeOutBack : Curves.easeOutCubic;
-
-  /// Calm, grown-up look: midnight blue, brass accents, thin lines.
-  static const classic = GameSkin._(
-    id: 'classic',
-    label: 'Classic',
-    playful: false,
-    bgTop: Color(0xFF0E1726),
-    bgBottom: Color(0xFF1B2940),
-    outline: Color(0x33FFFFFF),
-    outlineWidth: 1.2,
-    lip: 3,
-    radius: 12,
-    textStroke: false,
-    panelFill: Color(0xF2182335),
-    panelFrame: Color(0x40D4A84B),
-    panelText: Color(0xFFE6EAF2),
-    chipFill: Color(0xCC0E1726),
-    accent: Color(0xFFD4A84B),
-    accentLight: Color(0xFFF0D38A),
-    accentDark: Color(0xFF8F6A22),
-    trail: Color(0x66D4A84B),
-    resultTop: Color(0xFF1B2940),
-    resultBottom: Color(0xFF0B121E),
-    tones: {
-      GameTone.gold: (face: Color(0xFFD4A84B), lip: Color(0xFF8F6A22)),
-      GameTone.green: (face: Color(0xFF2FA572), lip: Color(0xFF1C6646)),
-      GameTone.blue: (face: Color(0xFF3B6FC4), lip: Color(0xFF244680)),
-      GameTone.red: (face: Color(0xFFC9504B), lip: Color(0xFF80302D)),
-      GameTone.grey: (face: Color(0xFF4A5468), lip: Color(0xFF2C3342)),
-      GameTone.wood: (face: Color(0xFF2B3850), lip: Color(0xFF172030)),
-    },
+  LinearGradient get gradient => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [top, bottom],
   );
-
-  /// Bright cartoon look: sky, wood, gold, thick outlines, bounce.
-  static const playfulSkin = GameSkin._(
-    id: 'playful',
-    label: 'Playful',
-    playful: true,
-    bgTop: Color(0xFF3FA9F5),
-    bgBottom: Color(0xFF9FE0FF),
-    outline: Color(0xFF2B1A0E),
-    outlineWidth: 3,
-    lip: 6,
-    radius: 16,
-    textStroke: true,
-    panelFill: Color(0xFFFFF4D6),
-    panelFrame: Color(0xFFB9773C),
-    panelText: Color(0xFF2B1A0E),
-    chipFill: Color(0xAA1E1442),
-    accent: GameColors.gold,
-    accentLight: GameColors.goldLight,
-    accentDark: GameColors.goldDark,
-    trail: Color(0xFFF2D59A),
-    resultTop: Color(0xFF3B2A7A),
-    resultBottom: Color(0xFF1E1442),
-    tones: {
-      GameTone.gold: (face: Color(0xFFFFC93C), lip: Color(0xFFD98E04)),
-      GameTone.green: (face: Color(0xFF6FD13B), lip: Color(0xFF3E9418)),
-      GameTone.blue: (face: Color(0xFF46B3FF), lip: Color(0xFF1C74C9)),
-      GameTone.red: (face: Color(0xFFFF6B5B), lip: Color(0xFFC0392B)),
-      GameTone.grey: (face: Color(0xFFB8B8C4), lip: Color(0xFF7A7A88)),
-      GameTone.wood: (face: Color(0xFFB9773C), lip: Color(0xFF7A4520)),
-    },
-  );
-
-  static const all = [classic, playfulSkin];
-
-  static GameSkin of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<GameSkinScope>()?.skin ??
-      classic;
 }
 
-/// Current skin for the app (in memory until the settings store lands).
-final skinNotifier = ValueNotifier<GameSkin>(GameSkin.classic);
-
-/// Provides the [GameSkin] to the widget kit.
-class GameSkinScope extends InheritedWidget {
-  const GameSkinScope({super.key, required this.skin, required super.child});
-
-  final GameSkin skin;
-
-  @override
-  bool updateShouldNotify(GameSkinScope old) => old.skin != skin;
-}
+/// The signature shape: rectangle with the top-right and bottom-left corners
+/// cut at 45°.
+ShapeBorder chamfer(double cut, {BorderSide side = BorderSide.none}) =>
+    BeveledRectangleBorder(
+      side: side,
+      borderRadius: BorderRadius.only(
+        topRight: Radius.circular(cut),
+        bottomLeft: Radius.circular(cut),
+      ),
+    );
 
 /// True when the platform asks for reduced motion.
 bool reduceMotion(BuildContext context) =>

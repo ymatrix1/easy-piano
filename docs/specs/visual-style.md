@@ -1,67 +1,84 @@
-# Visual style: menu skins
+# Visual style and main menu
 
-Status: draft (decision [D13](../DECISIONS.md#d13-skinnable-game-menus-classic-default-playful-option-with-an-in-code-widget-kit), proposed). Applies to menus and overlays: home / course map, level info cards, result screen, pause bar. The staff band and keyboard keep the practice palette ([practice-screen.md](practice-screen.md)).
+Status: draft (decision [D13](../DECISIONS.md#d13-one-polished-arena-style-theme-main-menu-with-nav-bar-and-two-level-course-trail), proposed). Applies to the main menu (top bar, tabs, nav bar), level info cards, result screen and pause bar. The staff band and keyboard keep the practice palette ([practice-screen.md](practice-screen.md)).
 
 ## Direction
 
-Menus feel like a polished game (tactile buttons, rewarding motion), but the **default look is grown-up**. A brighter cartoon look is an option, not the default. Skins are chosen in Settings (gear on the home screen) and apply live.
+One theme, polished like a modern battle-arena game menu: deep night-violet backdrop with a big glow and light beams, chamfered (cut-corner) cards and buttons, heavy uppercase display type, signal-yellow calls to action, electric-cyan accents, gold stars. Motion is quick and crisp (entrances 260–460 ms, light overshoot, press-sink on every tappable surface, glow pulse on the next thing to do).
 
-| Skin | For | Look |
-|---|---|---|
-| `classic` (default) | Teens and adults | Midnight-blue backdrop with a soft spotlight and drifting specks; brass accent; thin 1 px edges; small 3 px button lip; semibold text with a soft shadow, uppercase button labels; dark glass panels; slim brass title plaque; thin dashed trail; smooth `easeOutCubic` motion, no bounce |
-| `playful` | Kids | Sky with drifting clouds and hills; wood and gold; 3 px dark outlines; 6 px lip and gloss; heavy outlined text; parchment-in-wood panels; banner ribbons with tails; sandy dotted trail; bouncy `easeOutBack` / elastic motion; light rays on the result screen |
+Inspiration is the genre, not any one game. **No third-party assets**: no logos, fonts, characters, icons or screenshots from Fortnite, Clash of Clans, Simply Piano or any other app. All art is drawn in code (`ShapeDecoration`, gradients, `CustomPainter`, Material icons).
 
-Inspiration is the genre (casual mobile games), not any one game. **No third-party assets**: no logos, fonts, characters, icons or screenshots from Clash of Clans, Simply Piano or any other app. All art is drawn in code (`CustomPainter`, gradients, Material icons).
+## Content hierarchy
 
-Later, the audience axis from D12 (`kids` / `teen_adult`) can pick the initial skin during onboarding.
+Validated against the reference app's structure (local teardown, structure only): **section → course box → journey nodes (each with a display name and several levels) → stages**. The reference has no named groups inside a journey; grouping above courses is by section (touch, basic, then main split into two tracks).
+
+| Ours | Reference | Content file | UI |
+|---|---|---|---|
+| Section | `touchSection`, `basicSection`, `mainSection` tracks | `courses.json` `sections[]` (`id`, `title`) | Section header on the Learn tab |
+| Module | Course box | `courses.json` `courses[]` (`section`, `status`) | Card on the **outer trail** |
+| Submodule | Journey node (`displayName`, `levels`) | `journey.json` `nodes[]` | Row on the module's **inner trail** |
+| Task | Level | `levels/*.json` | Row in the task sheet |
+
+Modules with `status: "planned"` (Essentials I–III for now) are listed locked ("Coming soon") with no journey.
+
+## Main menu
+
+- **Top bar:** yellow chamfered logo tile + "EASY PIANO", star counter pill (total stars).
+- **Nav bar** (bottom, dark glass): **Learn**, **Practice**, **Profile**. Active tab is a yellow chamfered tile with a glow; tabs cross-fade.
+- **Learn tab**
+  - **Continue card:** big violet-blue gradient card with the next submodule's name, its module, and a pulsing yellow PLAY that starts the first unplayed task.
+  - Per section: header (yellow tick + title + fading rule), then the **outer trail**: numbered chamfered markers joined by a vertical rail (done = green check, current = yellow + glow, open = violet, planned = grey lock), each next to its module card.
+  - **Module card:** gradient by position (blue, purple, green; grey when planned), "MODULE n" kicker, title, description, star progress bar `earned / nodes × 3`, chevron. Tap toggles the **inner trail** (animated expand/collapse; the current module starts open).
+  - **Inner trail:** dark glass panel; one row per submodule with a chamfered node on a thin rail (done = green check, next = yellow + glow + PLAY button, others = kind icon), "KIND · n TASKS" kicker, numbered title, three stars.
+  - **Task sheet:** bottom sheet panel with module kicker, submodule title, task rows (number, title, stars; next one outlined yellow) and a PLAY button.
+- **Practice tab:** grid of mode cards (Free play — interim: the MIDI spike screen; Sight reading, Rhythm drills, Song library marked SOON).
+- **Profile tab:** stat tiles (stars, tasks, modules) and developer tools (MIDI and staff spikes).
+
+Progress rules (in memory until the progress store lands): submodule stars = lowest stars of its tasks; module stars = sum of its submodules; "next" = first submodule with 0 stars in the first unfinished module.
 
 ## Tokens (`app/lib/ui/game/game_theme.dart`)
 
-`GameSkin` holds every token; `GameSkin.of(context)` reads the current one (default `classic`). `GameSkinScope` is installed by `MaterialApp.builder`; `skinNotifier` holds the choice in memory until the settings store lands.
-
-| Token | Classic | Playful |
+| Token | Value | Use |
 |---|---|---|
-| `bgTop` / `bgBottom` | `#0E1726` / `#1B2940` | `#3FA9F5` / `#9FE0FF` |
-| `accent` / `accentLight` / `accentDark` | `#D4A84B` / `#F0D38A` / `#8F6A22` | `#FFC93C` / `#FFE58A` / `#D98E04` |
-| `outline`, `outlineWidth` | white 20%, 1.2 | `#2B1A0E`, 3 |
-| `lip`, `radius` | 3, 12 | 6, 16 |
-| `panelFill` / `panelText` | `#182335` / `#E6EAF2` | `#FFF4D6` / `#2B1A0E` |
-| `resultTop` / `resultBottom` | `#1B2940` / `#0B121E` | `#3B2A7A` / `#1E1442` |
-| Tones (gold, green, blue, red, grey, wood) | muted: `#D4A84B`, `#2FA572`, `#3B6FC4`, `#C9504B`, `#4A5468`, slate `#2B3850` | saturated: `#FFC93C`, `#6FD13B`, `#46B3FF`, `#FF6B5B`, `#B8B8C4`, wood `#B9773C` |
+| `bgDeep` / `bgMid` / `bgGlow` | `#080726` / `#15104F` / `#4422C9` | Backdrop gradient and glow |
+| `panel` / `panelHi` / `panelEdge` | `#1A1458` / `#261D78` / `#4A3CC0` | Glass panels and borders |
+| `yellow` / `yellowDark` | `#FFD21F` / `#E09A00` | Primary CTA, active tab, current marker |
+| `cyan` | `#2EE6FF` | Kickers, beams, accents |
+| `gold` / `goldLight` / `goldDark` | `#FFC83A` / `#FFEA9A` / `#B86E00` | Stars |
+| `success` / `danger` | `#3CE07A` / `#FF4D6D` | Done, exit |
+| `GameTone` | gold, green, blue, purple, red, grey, wood (dark glass) | Top/bottom gradient + label colour |
+| `chamfer(cut)` | Top-right and bottom-left corners cut at 45° | Every card, button, marker |
 
 ## Components (`app/lib/ui/game/game_widgets.dart`)
 
 | Widget | Behaviour |
 |---|---|
-| `GameButton`, `GameRoundButton` | Beveled face on a lip. Press: face sinks onto the lip and shrinks (6–8% playful, 3–4% classic); release springs back (elastic in playful). Classic lifts slightly on hover. Disabled: grey tone |
-| `GameText` | Outlined heavy text (playful) or semibold with soft shadow (classic) |
-| `GamePanel`, `GameRibbon` | Card + title plaque per skin |
-| `GameStar`, `StarRow` | Stars appear staggered 220 ms; playful: elastic pop, tilt, sparkles, raised middle star; classic: fade + gentle scale, one light ring |
-| `CountUp`, `StarCounter` | Numbers tick up over 700–800 ms |
-| `PopIn`, `SlideIn` | Entrances; overshoot only in playful, classic travels half the distance |
-| `Bob` | Marks the next level: float (playful) or soft brass glow pulse (classic) |
-| `MenuBackground`, `ResultBackground` | Backdrops per skin |
-
-## Screens
-
-- **Home / course map.** Logo plaque, star counter, Settings gear (theme choice + developer spikes). Each course: title plaque and description, then its levels grouped into **parts**, each a card with a header (`PART n`, level count, stars earned / possible). Interim rule until journeys declare sections in content: a part ends after a song, boss or star gate node.
-- **Level node.** Fixed vertical slots so nothing overlaps: tag slot (`PLAY` / `NEXT` on the next level) → round button (soft elliptical highlight, kind colour: lesson blue, song green, boss red, star gate gold) → three small stars → title (max 2 lines). Nodes alternate centre / right / centre / left; the trail leaves each node sideways at its centre height and turns down into the top of the next one, so it never crosses stars or titles.
-- **Level info stage** (scene placeholder): `GamePanel` with title, captions, green CONTINUE, red close.
-- **Result screen.** Title plaque (green "Completed!" / red "Almost there!"), `StarRow`, stat medallions with progress rings and `CountUp`, retry (round) and NEXT / LOCKED buttons.
-- **Pause.** Pause is a gold round button. Paused: resume (green), restart (blue), exit (red) slide in; tempo choice becomes a row of small buttons, the current one gold.
+| `Pressable` | Shared press (sink 2 px, shrink 4%, springy release) and hover (brighten, tone glow) |
+| `GameButton` | Chamfered CTA with dark base edge, gloss band, uppercase label |
+| `GameRoundButton` | Square chamfered icon button (pause, retry, close) |
+| `GameText` | Heavy uppercase display text with hard drop shadow |
+| `GamePanel`, `GameRibbon` | Glass panel; skewed title banner |
+| `GameProgressBar` | Rounded bar with glow, animates to its value |
+| `GameStar`, `StarRow` | Faceted gold stars; staggered pop with flash ring and glint |
+| `CountUp`, `StarCounter` | Animated numbers; currency pill |
+| `PopIn`, `SlideIn`, `Bob` | Entrances; glow pulse |
+| `MenuBackground`, `ResultBackground` | Arena backdrop (beams + rising specks); with turning rays |
 
 ## Motion rules
 
-- Entrances ≤ 600 ms; staggers 60–220 ms; nothing blocks input longer than 300 ms.
+- Entrances ≤ 460 ms; staggers 60–220 ms; nothing blocks input longer than 300 ms.
 - Respect `MediaQuery.disableAnimations`: entrance and loop animations jump to the end state.
 - Menu animations never touch song time (rule 7): they run on their own controllers, outside the practice clock.
 
 ## Acceptance
 
-- [x] `GameSkin` tokens with `classic` (default) and `playful` skins, switchable live from Settings
-- [x] Widget kit in `app/lib/ui/game/` reads the skin
-- [x] Home course map, info stage, result screen and pause bar use the kit
-- [ ] Persist the skin choice (needs the settings store)
-- [ ] Pick the initial skin from the onboarding audience (D12)
-- [ ] Bundled OFL display font (follow-up)
-- [ ] Sound effects on press / star (follow-up, needs audio engine)
+- [x] One theme; tokens and widget kit in `app/lib/ui/game/`
+- [x] Main menu: top bar, nav bar (Learn, Practice, Profile)
+- [x] Learn: continue card, sections, outer module trail, collapsible inner submodule trail, task sheet
+- [x] Content: `sections` and planned modules in `courses.json`, linted
+- [x] Info stage, result screen and pause bar use the kit
+- [ ] Bundled OFL condensed display font (needs a font file; follow-up)
+- [ ] Practice screen palette aligned with the menu (practice-screen spec)
+- [ ] Practice modes beyond free play; persisted progress (settings/progress store)
+- [ ] Localised UI strings (menu labels are English for now)
+- [ ] Sound effects on press / star (needs audio engine)

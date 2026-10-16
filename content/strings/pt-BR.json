@@ -15,5 +15,13 @@
   "scene.sit.2": "Curve os dedos como se segurasse uma bolinha.",
   "scene.findc.1": "As teclas pretas vêm em grupos de duas e de três.",
   "scene.findc.2": "O Dó é a tecla branca logo à esquerda do grupo de duas teclas pretas.",
-  "scene.fingers.1": "Seus dedos têm números: o polegar é 1 e o mindinho é 5."
+  "scene.fingers.1": "Seus dedos têm números: o polegar é 1 e o mindinho é 5.",
+  "section.basic": "Básico",
+  "section.main": "Trilha principal",
+  "course.e1.title": "Essenciais I",
+  "course.e1.desc": "Ritmo, leitura na clave de sol e as primeiras notas da mão esquerda.",
+  "course.e2.title": "Essenciais II",
+  "course.e2.desc": "Notas novas acima do Sol, a posição de Fá e mudança de posição.",
+  "course.e3.title": "Essenciais III",
+  "course.e3.desc": "Sustenidos, bemóis, partitura completa e a escala de Dó maior."
 }

@@ -9,7 +9,6 @@ import 'home/home_page.dart';
 import 'input/midi_input.dart';
 import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
-import 'ui/game/game_theme.dart';
 import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
 import 'ui/staff/staff_spike_page.dart';
@@ -41,11 +40,6 @@ class EasyPianoApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: const Color(0xFF6C4CF1),
         useMaterial3: true,
-      ),
-      // Menu skin (Classic / Playful) for every route.
-      builder: (context, child) => ValueListenableBuilder(
-        valueListenable: skinNotifier,
-        builder: (context, skin, _) => GameSkinScope(skin: skin, child: child!),
       ),
       home: HomePage(
         repo: repo,

@@ -198,7 +198,6 @@ class _LevelPageState extends State<LevelPage> {
     int order,
   ) {
     final delay = Duration(milliseconds: 900 + 150 * order);
-    final skin = GameSkin.of(context);
     return PopIn(
       delay: delay,
       child: Column(
@@ -208,11 +207,8 @@ class _LevelPageState extends State<LevelPage> {
             height: 92,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: skin.resultBottom,
-              border: Border.all(
-                color: skin.playful ? skin.outline : skin.panelFrame,
-                width: skin.playful ? 3 : 1,
-              ),
+              color: GameColors.panel,
+              border: Border.all(color: GameColors.panelEdge, width: 1.5),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black38,
@@ -235,14 +231,14 @@ class _LevelPageState extends State<LevelPage> {
                       strokeWidth: 7,
                       strokeCap: StrokeCap.round,
                       backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation(skin.accent),
+                      valueColor: AlwaysStoppedAnimation(GameColors.yellow),
                     ),
                   ),
                 ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, color: skin.accentLight, size: 24),
+                    Icon(icon, color: GameColors.yellow, size: 24),
                     CountUp(
                       value: value,
                       format: format,
@@ -255,7 +251,7 @@ class _LevelPageState extends State<LevelPage> {
             ),
           ),
           const SizedBox(height: 6),
-          GameText(label, size: 15, stroke: 2),
+          GameText(label, size: 14, color: GameColors.textDim),
         ],
       ),
     );
@@ -292,11 +288,7 @@ class _LevelPageState extends State<LevelPage> {
                   delay: const Duration(milliseconds: 150),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10),
-                    child: GameText(
-                      title,
-                      size: 20,
-                      color: GameSkin.of(context).accentLight,
-                    ),
+                    child: GameText(title, size: 20, color: GameColors.cyan),
                   ),
                 ),
               const SizedBox(height: 12),
@@ -420,7 +412,7 @@ class _InfoStage extends StatelessWidget {
                             l,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: GameSkin.of(context).panelText,
+                              color: GameColors.text,
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
                             ),

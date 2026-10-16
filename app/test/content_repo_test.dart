@@ -19,7 +19,7 @@ void main() {
 
   test('loads Piano Basics with five nodes, levels and songs', () {
     final repo = ContentRepo.fromFiles(files);
-    final pb = repo.courses.single;
+    final pb = repo.courses.first;
     expect(pb.id, 'piano-basics');
     expect(pb.nodes, hasLength(5));
     for (final node in pb.nodes) {
@@ -31,6 +31,15 @@ void main() {
     expect(ode.stages.map((s) => s.type), ['wait', 'play_along', 'play_along']);
     expect(ode.stages[1].tempo, 0.7);
     expect(repo.songJson['ode-to-joy'], contains('Beethoven'));
+  });
+
+  test('sections and planned modules load', () {
+    final repo = ContentRepo.fromFiles(files);
+    expect(repo.sections.map((s) => s.id), ['basic', 'main']);
+    final planned = repo.courses.where((c) => c.planned).toList();
+    expect(planned.map((c) => c.id), contains('essentials-1'));
+    expect(planned.every((c) => c.nodes.isEmpty), isTrue);
+    expect(repo.courses.first.planned, isFalse);
   });
 
   test('strings resolve in locale with English fallback', () {

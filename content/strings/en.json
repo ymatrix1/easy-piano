@@ -15,5 +15,13 @@
   "scene.sit.2": "Curve your fingers as if holding a small ball.",
   "scene.findc.1": "Black keys come in groups of two and three.",
   "scene.findc.2": "C is the white key just left of the group of two black keys.",
-  "scene.fingers.1": "Your fingers have numbers: the thumb is 1, the little finger is 5."
+  "scene.fingers.1": "Your fingers have numbers: the thumb is 1, the little finger is 5.",
+  "section.basic": "Basics",
+  "section.main": "Main path",
+  "course.e1.title": "Essentials I",
+  "course.e1.desc": "Rhythm, reading the treble staff and your first left-hand notes.",
+  "course.e2.title": "Essentials II",
+  "course.e2.desc": "New notes above G, the F position and shifting your hands.",
+  "course.e3.title": "Essentials III",
+  "course.e3.desc": "Sharps, flats, full sheet music and the C major scale."
 }
