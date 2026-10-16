@@ -44,7 +44,8 @@ Later, the audience axis from D12 (`kids` / `teen_adult`) can pick the initial s
 
 ## Screens
 
-- **Home / course map.** Logo plaque, star counter, Settings gear (theme choice + developer spikes). Each course: title plaque, description card, winding trail of round level nodes coloured by kind (lesson blue, song green, boss red, star gate gold); next node is marked (`PLAY` / `NEXT` tag + `Bob`); earned stars under each node; staggered entrance.
+- **Home / course map.** Logo plaque, star counter, Settings gear (theme choice + developer spikes). Each course: title plaque and description, then its levels grouped into **parts**, each a card with a header (`PART n`, level count, stars earned / possible). Interim rule until journeys declare sections in content: a part ends after a song, boss or star gate node.
+- **Level node.** Fixed vertical slots so nothing overlaps: tag slot (`PLAY` / `NEXT` on the next level) → round button (soft elliptical highlight, kind colour: lesson blue, song green, boss red, star gate gold) → three small stars → title (max 2 lines). Nodes alternate centre / right / centre / left; the trail leaves each node sideways at its centre height and turns down into the top of the next one, so it never crosses stars or titles.
 - **Level info stage** (scene placeholder): `GamePanel` with title, captions, green CONTINUE, red close.
 - **Result screen.** Title plaque (green "Completed!" / red "Almost there!"), `StarRow`, stat medallions with progress rings and `CountUp`, retry (round) and NEXT / LOCKED buttons.
 - **Pause.** Pause is a gold round button. Paused: resume (green), restart (blue), exit (red) slide in; tempo choice becomes a row of small buttons, the current one gold.

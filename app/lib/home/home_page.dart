@@ -209,20 +209,206 @@ class _CourseTrail extends StatelessWidget {
   final Map<String, int> stars;
   final void Function(JourneyNode) onOpen;
 
-  static const _rowH = 132.0;
-  static const _nodeSize = 84.0;
+  /// Splits the journey into parts: a part ends after a song, boss or star
+  /// gate. Interim grouping until journeys declare sections in content.
+  static List<List<(int, JourneyNode)>> _parts(List<JourneyNode> nodes) {
+    final parts = <List<(int, JourneyNode)>>[[]];
+    for (final (i, n) in nodes.indexed) {
+      parts.last.add((i, n));
+      final ends = const {'song', 'boss', 'mini_boss', 'star_gate'};
+      if (ends.contains(n.kind) && i < nodes.length - 1) parts.add([]);
+    }
+    return parts.where((p) => p.isNotEmpty).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final next = nodes.indexWhere((n) => (stars[n.id] ?? 0) == 0);
+    final skin = GameSkin.of(context);
+    final parts = _parts(nodes);
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        SlideIn(
+          offset: const Offset(0, -30),
+          child: GameRibbon(title, tone: GameTone.red, fontSize: 28),
+        ),
+        const SizedBox(height: 10),
+        SlideIn(
+          delay: const Duration(milliseconds: 120),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: skin.playful
+                ? BoxDecoration(
+                    color: const Color(0x33103A66),
+                    borderRadius: BorderRadius.circular(12),
+                  )
+                : null,
+            child: Text(
+              description,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: skin.playful ? Colors.white : skin.panelText,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                height: 1.35,
+                shadows: const [Shadow(color: Colors.black38, blurRadius: 4)],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        for (final (p, part) in parts.indexed) ...[
+          SlideIn(
+            delay: Duration(milliseconds: 180 + 120 * p),
+            child: _PartCard(
+              number: p + 1,
+              earned: part.fold(0, (a, e) => a + (stars[e.$2.id] ?? 0)),
+              total: part.length * 3,
+              levels: part.length,
+              child: _PartTrail(
+                part: part,
+                next: next,
+                label: label,
+                stars: stars,
+                onOpen: onOpen,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
+      ],
+    );
+  }
+}
+
+/// A group of levels: header (part number, level count, stars) over a card
+/// holding that part's trail.
+class _PartCard extends StatelessWidget {
+  const _PartCard({
+    required this.number,
+    required this.earned,
+    required this.total,
+    required this.levels,
+    required this.child,
+  });
+
+  final int number;
+  final int earned;
+  final int total;
+  final int levels;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = GameSkin.of(context);
+    final headerStyle = TextStyle(
+      color: skin.playful ? Colors.white : skin.accentLight,
+      fontWeight: FontWeight.w800,
+      fontSize: 13,
+      letterSpacing: 1.4,
+    );
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(skin.playful ? 22 : 16),
+        color: skin.playful
+            ? Colors.white.withValues(alpha: 0.18)
+            : skin.panelFill.withValues(alpha: 0.55),
+        border: Border.all(
+          color: skin.playful
+              ? Colors.white.withValues(alpha: 0.55)
+              : skin.panelFrame,
+          width: skin.playful ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(18, 12, 16, 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: skin.playful
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : skin.panelFrame,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text('PART $number', style: headerStyle),
+                const SizedBox(width: 10),
+                Text(
+                  '$levels ${levels == 1 ? 'level' : 'levels'}',
+                  style: headerStyle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                    color: headerStyle.color!.withValues(alpha: 0.7),
+                  ),
+                ),
+                const Spacer(),
+                GameStar(fill: 1, size: 18),
+                const SizedBox(width: 6),
+                Text('$earned / $total', style: headerStyle),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: child,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Zig-zag trail of one part's nodes.
+class _PartTrail extends StatelessWidget {
+  const _PartTrail({
+    required this.part,
+    required this.next,
+    required this.label,
+    required this.stars,
+    required this.onOpen,
+  });
+
+  final List<(int, JourneyNode)> part;
+  final int next;
+  final String Function(JourneyNode) label;
+  final Map<String, int> stars;
+  final void Function(JourneyNode) onOpen;
+
+  static const _nodeSize = 76.0;
+  static const _tagH = 26.0; // room for the PLAY / NEXT tag
+  static const _rowH = 168.0;
+  static const _cellW = 136.0;
 
   /// Horizontal position of node [i] as a fraction of the width.
-  static double _x(int i) => 0.5 + 0.28 * math.sin(i * 1.15);
+  /// Alternates centre, right, centre, left so consecutive nodes are always
+  /// a fixed step apart and the trail can pass beside each label.
+  static double _x(int i) => const [0.5, 0.72, 0.5, 0.28][i % 4];
 
-  GameTone _tone(String kind) => switch (kind) {
+  /// Trail from the side of node [k] (at its centre height) to the top of
+  /// the next node, so it never crosses stars or titles.
+  static (Offset, Offset) _link(double x0, double x1, int k) {
+    final cy = k * _rowH + _tagH + _nodeSize / 2;
+    final dir = (x1 - x0).sign;
+    return (
+      Offset(x0 + dir * _nodeSize / 2, cy),
+      Offset(x1, (k + 1) * _rowH + _tagH - 2),
+    );
+  }
+
+  static GameTone _tone(String kind) => switch (kind) {
     'song' => GameTone.green,
     'boss' || 'mini_boss' => GameTone.red,
     'star_gate' => GameTone.gold,
     _ => GameTone.blue,
   };
 
-  IconData _icon(String kind) => switch (kind) {
+  static IconData _icon(String kind) => switch (kind) {
     'song' => Icons.music_note_rounded,
     'boss' || 'mini_boss' => Icons.emoji_events_rounded,
     'star_gate' => Icons.star_rounded,
@@ -231,88 +417,58 @@ class _CourseTrail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final next = nodes.indexWhere((n) => (stars[n.id] ?? 0) == 0);
     final skin = GameSkin.of(context);
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        SlideIn(
-          offset: const Offset(0, -30),
-          child: GameRibbon(title, tone: GameTone.red, fontSize: 28),
-        ),
-        const SizedBox(height: 8),
-        SlideIn(
-          delay: const Duration(milliseconds: 120),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: skin.panelFill.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: skin.playful ? skin.outline : skin.panelFrame,
-                width: skin.playful ? 2.5 : 1,
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth;
+        double cx(int i) =>
+            (_x(i) * w).clamp(_cellW / 2, math.max(_cellW / 2, w - _cellW / 2));
+        return SizedBox(
+          height: part.length * _rowH,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _TrailPainter(
+                    skin: skin,
+                    links: [
+                      for (var k = 0; k + 1 < part.length; k++)
+                        _link(cx(part[k].$1), cx(part[k + 1].$1), k),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              description,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: skin.panelText,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, c) {
-            final w = c.maxWidth;
-            return SizedBox(
-              height: nodes.length * _rowH,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _TrailPainter(
-                        skin: skin,
-                        points: [
-                          for (var i = 0; i < nodes.length; i++)
-                            Offset(_x(i) * w, i * _rowH + _nodeSize / 2 + 8),
-                        ],
-                      ),
+              for (final (k, (i, node)) in part.indexed)
+                Positioned(
+                  left: cx(i) - _cellW / 2,
+                  top: k * _rowH,
+                  width: _cellW,
+                  height: _rowH,
+                  child: PopIn(
+                    delay: Duration(milliseconds: 250 + 70 * i),
+                    child: _NodeButton(
+                      title: label(node),
+                      index: i + 1,
+                      tone: _tone(node.kind),
+                      icon: _icon(node.kind),
+                      stars: stars[node.id] ?? 0,
+                      isNext: i == next,
+                      size: _nodeSize,
+                      tagHeight: _tagH,
+                      onTap: () => onOpen(node),
                     ),
                   ),
-                  for (final (i, node) in nodes.indexed)
-                    Positioned(
-                      left: _x(i) * w - 80,
-                      top: i * _rowH,
-                      width: 160,
-                      child: PopIn(
-                        delay: Duration(milliseconds: 200 + 70 * i),
-                        child: _NodeButton(
-                          title: label(node),
-                          index: i + 1,
-                          tone: _tone(node.kind),
-                          icon: _icon(node.kind),
-                          stars: stars[node.id] ?? 0,
-                          isNext: i == next,
-                          size: _nodeSize,
-                          onTap: () => onOpen(node),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
+/// One level node: tag slot, round button, stars, then the title. Each piece
+/// has its own row so nothing overlaps.
 class _NodeButton extends StatelessWidget {
   const _NodeButton({
     required this.title,
@@ -322,6 +478,7 @@ class _NodeButton extends StatelessWidget {
     required this.stars,
     required this.isNext,
     required this.size,
+    required this.tagHeight,
     required this.onTap,
   });
 
@@ -332,43 +489,59 @@ class _NodeButton extends StatelessWidget {
   final int stars;
   final bool isNext;
   final double size;
+  final double tagHeight;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    Widget node = Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.topCenter,
-      children: [
-        GameRoundButton(
-          icon: icon,
-          onTap: onTap,
-          tone: tone,
-          size: size,
-          tooltip: '$index. $title',
-        ),
-        if (isNext)
-          const Positioned(top: -22, child: IgnorePointer(child: _PlayTag())),
-      ],
+    final skin = GameSkin.of(context);
+    Widget button = GameRoundButton(
+      icon: icon,
+      onTap: onTap,
+      tone: tone,
+      size: size,
+      tooltip: '$index. $title',
     );
-    if (isNext) node = Bob(child: node);
+    if (isNext) button = Bob(amplitude: 4, child: button);
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        node,
-        Transform.translate(
-          offset: const Offset(0, -10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var s = 0; s < 3; s++)
-                GameStar(fill: s < stars ? 1 : 0, size: 20),
+        SizedBox(
+          height: tagHeight,
+          child: isNext
+              ? const Align(alignment: Alignment.topCenter, child: _PlayTag())
+              : null,
+        ),
+        button,
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var s = 0; s < 3; s++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: GameStar(fill: s < stars ? 1 : 0, size: 16),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: skin.playful ? FontWeight.w800 : FontWeight.w600,
+            height: 1.2,
+            shadows: [
+              Shadow(
+                color: skin.playful ? Colors.black54 : Colors.black45,
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
             ],
           ),
-        ),
-        Transform.translate(
-          offset: const Offset(0, -10),
-          child: GameText(title, size: 15, stroke: 2),
         ),
       ],
     );
@@ -404,19 +577,20 @@ class _PlayTag extends StatelessWidget {
 /// Path joining the nodes: a sandy dotted road (playful) or a thin dashed
 /// brass line (classic).
 class _TrailPainter extends CustomPainter {
-  _TrailPainter({required this.skin, required this.points});
+  _TrailPainter({required this.skin, required this.links});
 
   final GameSkin skin;
-  final List<Offset> points;
+  final List<(Offset, Offset)> links;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length; i++) {
-      final a = points[i - 1], b = points[i];
-      final mid = (a.dy + b.dy) / 2;
-      path.cubicTo(a.dx, mid, b.dx, mid, b.dx, b.dy);
+    if (links.isEmpty) return;
+    final path = Path();
+    for (final (a, b) in links) {
+      // Leave sideways, then turn down into the next node.
+      path
+        ..moveTo(a.dx, a.dy)
+        ..cubicTo(b.dx, a.dy, b.dx, a.dy, b.dx, b.dy);
     }
     if (!skin.playful) {
       final dash = Paint()
@@ -458,5 +632,5 @@ class _TrailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TrailPainter old) =>
-      old.points != points || old.skin != skin;
+      old.links != links || old.skin != skin;
 }

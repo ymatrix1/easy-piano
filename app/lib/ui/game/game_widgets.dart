@@ -294,9 +294,9 @@ class GameRoundButton extends StatelessWidget {
                       ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 4),
+                          color: Color(0x33000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 3),
                         ),
                       ],
                     ),
@@ -315,13 +315,39 @@ class GameRoundButton extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: ClipOval(
-                      child: _Gloss(
-                        child: Center(
-                          child: _SkinIcon(
-                            icon,
-                            size: size * (skin.playful ? 0.56 : 0.5),
+                      child: Stack(
+                        children: [
+                          // Soft elliptical highlight on the upper half.
+                          Positioned(
+                            top: size * 0.07,
+                            left: size * 0.2,
+                            right: size * 0.2,
+                            height: size * 0.34,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                  Radius.elliptical(size * 0.3, size * 0.17),
+                                ),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white.withValues(
+                                      alpha: skin.playful ? 0.45 : 0.14,
+                                    ),
+                                    Colors.white.withValues(alpha: 0),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          Center(
+                            child: _SkinIcon(
+                              icon,
+                              size: size * (skin.playful ? 0.5 : 0.46),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
