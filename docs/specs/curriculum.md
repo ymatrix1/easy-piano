@@ -16,6 +16,8 @@ Course → Journey (graph of nodes) → Level → Stage.
 
 ## Course map
 
+Full per-course skills, ranges and PD song picks: [course-map.md](course-map.md).
+
 Same organization as Simply Piano (`DefaultCoursePaths`): touch section → basic section → main section split into two tracks. Course names are generic skill names; content is ours.
 
 | Section | Course | Prereq | Focus |

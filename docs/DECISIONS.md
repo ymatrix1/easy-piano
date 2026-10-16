@@ -16,6 +16,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D8](#d8-local-first-no-account-required) | 2026-10-15 | Local-first, no account required | accepted |
 | [D9](#d9-web-is-the-first-release-target) | 2026-10-15 | Web is the first release target | accepted |
 | [D10](#d10-ui-stack-material-3-themed-riverpod-go_router) | 2026-10-15 | UI stack: Material 3 themed, Riverpod, go_router | accepted |
+| [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | proposed |
 
 ## Accepted
 
@@ -118,3 +119,14 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Built in, accessible, cross-platform; theming removes the stock look; Riverpod is testable; go_router gives web deep links.
 - **Alternatives:** shadcn_flutter / forui (SaaS look); Cupertino (iOS only); Flame (game engine, overkill for shell); Bloc (more boilerplate).
 - **Impact:** All screens use theme tokens, no hard-coded colors. Revisit if Material theming can't reach the target look.
+
+## Proposed (pending confirmation)
+
+### D11. Personal song import with level-based simplification
+
+- **Status:** proposed
+- **Context:** Users want to learn any song they like at their level, e.g. a song they hear on YouTube, with simplified versions generated for them.
+- **Decision:** Add a "My songs" import: the user supplies their own audio file, MIDI or MusicXML. Audio is transcribed on device (Basic Pitch class model, ONNX/wasm), then a deterministic arranger in Rust `core` produces level variants (beginner: RH melody in C within a 5-finger position; intermediate: melody + LH roots; advanced: chords/styles). Results stay on the device, for personal use; never uploaded to or shared through our catalog. No YouTube or other site downloader.
+- **Why:** Big motivation boost (learn the song you want); keeps the app legal: downloading from YouTube breaks its terms, and copyrighted songs can't be distributed with an open catalog.
+- **Alternatives:** YouTube URL downloader (ToS violation, legal risk, store rejection); server-side transcription (cost, uploads copyrighted audio, privacy); LLM-only arrangement (non-deterministic, hard to test; may assist fingering later).
+- **Impact:** New research spike (bean). Adds an ONNX model (~a few MB) as optional download. Transcription quality limits results for dense mixes; piano-only recordings work best. Revisit if on-device inference is too slow on web.
