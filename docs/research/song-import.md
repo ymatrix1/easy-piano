@@ -91,6 +91,20 @@ Findings:
 - **No fingering yet.** Arrangements carry no finger numbers. Beginner can use a fixed five-finger map (C=1 … G=5); intermediate needs position rules plus marked shifts; **advanced is where it matters** (thumb-under, chords, leaps) and needs a cost-based fingering algorithm (dynamic programming over hand effort, e.g. Parncutt-style rules) or the LLM pass, with the core checking that fingerings are physically playable.
 - The piano stem was nearly empty (32 notes): for songs without piano, melody must come from the vocal stem.
 
+### Level rubric (target for the arranger and the LLM pass)
+
+Today only beginner handles key (transpose to C). Each level is defined on several axes; the core validates an arrangement against its level.
+
+| Axis | Beginner | Intermediate | Advanced |
+|---|---|---|---|
+| Key / accidentals | C major, no sharps or flats | Key signature with at most 2 accidentals (G, F, D, B♭); transpose a hard original to the nearest easy key | Original key, passing accidentals allowed |
+| RH range | C4–G4, fixed position | Up to C6, position shifts | Up to C7 |
+| Rhythm | Quarter and half notes | Eighths, dotted notes | Sixteenths, syncopation, tuplets |
+| Hands | RH only | RH + LH root per bar | Both hands, full accompaniment |
+| Polyphony | One note at a time | Up to 2 notes | Full chords |
+| Tempo | Slowed (≈ 70%) | ≈ 85% | Original |
+| Fingering | Fixed five-finger map | Position rules + marked shifts | Cost-based or LLM, validated |
+
 Still to check: pop2piano and Transkun (need Linux), ByteDance on real piano recordings, larger MuScriptor sizes.
 
 ## Not done

@@ -16,5 +16,7 @@ Musical, playable level variants for My songs (D11).
 - [ ] Prompt + schema: transcribed melody/bass/chords in, arrangement in our notation out
 - [ ] Core validates range, hand split, bar sums, playability; rejects or repairs
 - [ ] Compared by ear vs deterministic arranger on 3 songs
+- [ ] Follows the level rubric in docs/research/song-import.md (key/accidentals, range, rhythm, hands, polyphony, tempo, fingering)
+
 ## Out of Scope
 Shipping a model on device; licensing of commercial songs (personal use only).
