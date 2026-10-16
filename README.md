@@ -1,6 +1,15 @@
-# Easy Piano
+<p align="center">
+  <img src="app/assets/brand/logo.svg" alt="Easy Piano logo" width="128">
+</p>
 
-**A free, open-source piano course that feels like a game.**
+<h1 align="center">Easy Piano</h1>
+
+<p align="center"><strong>A free, open-source piano course that feels like a game.</strong></p>
+
+<p align="center">
+  <a href="https://easy-piano.pages.dev/"><strong>▶ Play it now at easy-piano.pages.dev</strong></a><br>
+  <sub>Runs in Chrome or Edge on desktop; plug in a MIDI keyboard or use the on-screen keys.</sub>
+</p>
 
 Plug in a MIDI keyboard (or tap the on-screen keys), pick a lesson, and play. Easy Piano waits for the right note, scores your timing, and hands out stars as you work through short, bite-sized lessons on a course map. Every song in it is public domain or our own arrangement, so the whole thing can be shared, forked and improved.
 
