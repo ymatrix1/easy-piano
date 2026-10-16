@@ -64,7 +64,7 @@ All chord courses use PD melodies (folk, hymns, early jazz/blues standards whose
 
 ## Profile variants
 
-Proposed in [D12](../DECISIONS.md). The reference app ships the same skill path in several variants: of 48 courses, 10 are Kids versions, plus locale (JP), licensed-character and difficulty-fix variants; Piano Basics 1 alone has 8. We formalize this as a fixed skill backbone with swappable content.
+Accepted in [D12](../DECISIONS.md). The reference app ships the same skill path in several variants: of 48 courses, 10 are Kids versions, plus locale (JP), licensed-character and difficulty-fix variants; Piano Basics 1 alone has 8. We formalize this as a fixed skill backbone with swappable content.
 
 **Backbone (fixed per module):** the ordered list of skills, their journey nodes and their pass rules. Progress, stars and unlocks are keyed by skill node, so switching variant never loses progress.
 

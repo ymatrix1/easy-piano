@@ -9,7 +9,7 @@ parent: piano-eeut
 ---
 
 ## Context
-D12 (proposed) adds profile variants. Blocked by: D12 acceptance.
+D12 (proposed) adds profile variants. Blocked by: none (D12 accepted).
 ## Higher Goal
 Kids/adult and taste-specific courses from one backbone.
 ## Acceptance Criteria
