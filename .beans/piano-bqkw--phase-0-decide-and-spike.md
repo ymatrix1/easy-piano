@@ -1,10 +1,11 @@
 ---
 # piano-bqkw
 title: 'Phase 0: Decide and spike'
-status: todo
+status: in-progress
 type: epic
+priority: normal
 created_at: 2026-10-16T02:43:03Z
-updated_at: 2026-10-16T02:43:03Z
+updated_at: 2026-10-16T02:46:13Z
 ---
 
 ## Context

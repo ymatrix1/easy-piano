@@ -1,6 +1,6 @@
 # Architecture
 
-Status: proposed ([D1](DECISIONS.md), [D2](DECISIONS.md)). Nothing built yet.
+Status: accepted ([D1](DECISIONS.md), [D2](DECISIONS.md)). Nothing built yet.
 
 ## Overview
 

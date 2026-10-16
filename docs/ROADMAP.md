@@ -4,7 +4,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 0: Decide and spike
 
-- [ ] User confirms D1–D8 and OQ1–OQ2
+- [x] User confirms D1–D9 (OQ1 name, OQ2 license still open)
 - [ ] Spike: Flutter web + flutter_rust_bridge wasm; Web MIDI in → colored key; measure latency and first-load size (OQ7). Android/iOS build smoke test only
 - [ ] Spike: staff rendering with Bravura, 60 fps scroll
 - [ ] Research: Simply Piano numeric stats (stage mix, note ranges, bpm per course)
