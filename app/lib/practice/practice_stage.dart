@@ -22,7 +22,9 @@ abstract final class StagePalette {
   static const bgBottom = Color(0xFF7B3BFF);
   static const band = Color(0xFFFFFFFF);
   static const ink = Color(0xFF16131F);
-  static const current = Color(0xFFFFB400);
+  static const current = Color(0xFFF57C00); // readable on the white band
+  static const keyTarget = Color(0xFFFFB400);
+  static const currentGlow = Color(0xFFFFC266);
   static const badgeCurrent = Color(0xFFFF8A1F);
   static const done = Color(0xFF19C6DE);
   static const miss = Color(0xFFFF4D6A);
@@ -67,6 +69,8 @@ class PracticeStage extends StatefulWidget {
     this.repeatTotal = 1,
     this.showKeyboard = true,
     this.onToggleKeyboard,
+    this.midiLabel,
+    this.onConnectMidi,
   });
 
   final StageDef stage;
@@ -88,6 +92,10 @@ class PracticeStage extends StatefulWidget {
   /// The on-screen keyboard is optional (MIDI players may hide it).
   final bool showKeyboard;
   final VoidCallback? onToggleKeyboard;
+
+  /// Connected MIDI device name, or null when none; tapping connects.
+  final String? midiLabel;
+  final VoidCallback? onConnectMidi;
 
   @override
   State<PracticeStage> createState() => _PracticeStageState();
@@ -387,6 +395,22 @@ class _PracticeStageState extends State<PracticeStage>
             ),
           ),
           const Spacer(),
+          if (widget.onConnectMidi != null) ...[
+            TextButton.icon(
+              onPressed: widget.onConnectMidi,
+              style: TextButton.styleFrom(foregroundColor: StagePalette.text),
+              icon: Icon(
+                widget.midiLabel == null
+                    ? Icons.usb_off_rounded
+                    : Icons.usb_rounded,
+                color: widget.midiLabel == null
+                    ? StagePalette.textDim
+                    : StagePalette.done,
+              ),
+              label: Text(widget.midiLabel ?? 'Connect MIDI'),
+            ),
+            const SizedBox(width: 4),
+          ],
           if (widget.onToggleKeyboard != null) ...[
             IconButton(
               tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',
@@ -549,7 +573,7 @@ class _PracticeStageState extends State<PracticeStage>
                           badgeColorOf: _badgeColor,
                           showEndCheck: waitDone,
                           currentIndex: _currentNoteIndex,
-                          currentGlow: StagePalette.current,
+                          currentGlow: StagePalette.currentGlow,
                           bursts: _bursts,
                           burstColor: StagePalette.burst,
                           clockSec: () => _nowSec,
@@ -579,7 +603,7 @@ class _PracticeStageState extends State<PracticeStage>
                             pressed: _pressed,
                             pressedColor: StagePalette.done,
                             hint: _hint,
-                            hintColor: StagePalette.current,
+                            hintColor: StagePalette.keyTarget,
                             labelMiddleC: true,
                           ),
                         ),

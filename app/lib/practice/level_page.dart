@@ -36,6 +36,34 @@ class _LevelPageState extends State<LevelPage> {
   bool? _keyboard; // user override for the on-screen keyboard
   ResultView? _result;
   final _bestStars = <int, int>{};
+  String? _midiLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectMidi(quiet: true);
+  }
+
+  /// Connects Web MIDI (the browser may ask for permission the first time).
+  Future<void> _connectMidi({bool quiet = false}) async {
+    final ok = await widget.midi.start();
+    if (!mounted) return;
+    final names = widget.midi.deviceNames;
+    setState(
+      () => _midiLabel = ok && names.isNotEmpty ? names.join(', ') : null,
+    );
+    if (!quiet && _midiLabel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? 'No MIDI keyboard found. Plug it in and try again.'
+                : 'Web MIDI is not available in this browser.',
+          ),
+        ),
+      );
+    }
+  }
 
   StageDef get _stage => widget.level.stages[_index];
   bool get _last => _index == widget.level.stages.length - 1;
@@ -153,6 +181,8 @@ class _LevelPageState extends State<LevelPage> {
       repeatTotal: s.repeats,
       showKeyboard: showKeyboard,
       onToggleKeyboard: () => setState(() => _keyboard = !showKeyboard),
+      midiLabel: _midiLabel,
+      onConnectMidi: _connectMidi,
     );
   }
 

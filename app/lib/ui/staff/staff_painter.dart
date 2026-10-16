@@ -390,7 +390,7 @@ class StaffPainter extends CustomPainter {
           Offset(x + space * 0.6, y),
           space * 1.5,
           Paint()
-            ..color = currentGlow!.withValues(alpha: 0.5)
+            ..color = currentGlow!.withValues(alpha: 0.35)
             ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.8),
         );
       }
@@ -522,6 +522,7 @@ class StaffPainter extends CustomPainter {
     // Badges sit above the treble band, or below the bass band.
     final cy = onBass ? staffBottom + space * 3.6 : staffTop - space * 3.6;
     if (badge != null) {
+      // Badge and pointer as one shape, so there is no seam between them.
       final r = RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(cx, cy),
@@ -530,19 +531,22 @@ class StaffPainter extends CustomPainter {
         ),
         Radius.circular(space * 0.6),
       );
-      canvas.drawRRect(
-        r.shift(Offset(0, space * 0.15)),
+      final tip = onBass ? -1.0 : 1.0;
+      final pointer = Path()
+        ..moveTo(cx - space * 0.4, cy + tip * space * 0.9)
+        ..lineTo(cx + space * 0.4, cy + tip * space * 0.9)
+        ..lineTo(cx, cy + tip * space * 1.6)
+        ..close();
+      final shape = Path.combine(
+        PathOperation.union,
+        Path()..addRRect(r),
+        pointer,
+      );
+      canvas.drawPath(
+        shape.shift(Offset(0, space * 0.15)),
         Paint()..color = Colors.black26,
       );
-      canvas.drawRRect(r, Paint()..color = badge);
-      // Pointer toward the note.
-      final tip = onBass ? -1.0 : 1.0;
-      final path = Path()
-        ..moveTo(cx - space * 0.35, cy + tip * space * 1.1)
-        ..lineTo(cx + space * 0.35, cy + tip * space * 1.1)
-        ..lineTo(cx, cy + tip * space * 1.55)
-        ..close();
-      canvas.drawPath(path, Paint()..color = badge);
+      canvas.drawPath(shape, Paint()..color = badge);
     }
     tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }

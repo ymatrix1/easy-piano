@@ -40,7 +40,8 @@ Timing % = `100 × (1 − mean |timing error| / input window)`, clamped to 0–1
 | `bg` | `#6E2CF2` → `#7B3BFF` | Stage background gradient |
 | `band` | `#FFFFFF` | Staff band |
 | `ink` | `#16131F` | Notation |
-| `current` | `#FFB400` | Current note, target key |
+| `current` | `#F57C00` | Current note (dark enough to read on the white band) |
+| `keyTarget` | `#FFB400` | Target key on the keyboard |
 | `badgeCurrent` | `#FF8A1F` | Current finger badge |
 | `done` | `#19C6DE` | Played notes and badges, play bar |
 | `miss` | `#FF4D6A` | Missed notes |
