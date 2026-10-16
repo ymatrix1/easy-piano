@@ -112,7 +112,8 @@ class _PracticeStageState extends State<PracticeStage>
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
   static const _waitAnchor = 0.10; // page start, as a fraction of the width
-  static const _pageTurnAt = 0.80; // next note past this fraction → slide
+  static const _pageTurnAt =
+      0.60; // next note past this fraction → slide (reference)
   static const _playLine = 0.12; // play bar right after the clef
 
   late final PracticeSession _session;
@@ -374,9 +375,16 @@ class _PracticeStageState extends State<PracticeStage>
     if (_playAlong || cursor >= _initialTargets.length) return;
     final nextBeat = _initialTargets[cursor].beat;
     final x = (nextBeat - _scroll.value) * _ppb;
+    if (_pageAnim.isAnimating) return;
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
-      _pageTween = Tween(begin: _scroll.value, end: nextBeat).animate(
-        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
+      // Reference: slide so the next note returns to the left margin, but
+      // never past the point where the end of the piece is already in view.
+      final lastVisible =
+          _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
+      final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
+      if (end <= _scroll.value + 0.01) return;
+      _pageTween = Tween(begin: _scroll.value, end: end).animate(
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutSine),
       );
       _pageAnim.forward(from: 0);
     }
@@ -814,7 +822,11 @@ class _PracticeStageState extends State<PracticeStage>
               ),
               if (widget.showKeyboard)
                 SizedBox(
-                  height: 150,
+                  // Taller on big screens: about a quarter of the height.
+                  height: (MediaQuery.sizeOf(context).height * 0.24).clamp(
+                    150.0,
+                    260.0,
+                  ),
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final size = Size(c.maxWidth, c.maxHeight);
