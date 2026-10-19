@@ -624,6 +624,36 @@ class _PracticeStageState extends State<PracticeStage>
     super.dispose();
   }
 
+  /// Progress pill: song position (play-along), repeats done, or notes judged.
+  Widget _progressPill(double value, bool showCount) => SizedBox(
+    width: 220,
+    height: 22,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11),
+            child: LinearProgressIndicator(
+              value: value.clamp(0.0, 1.0),
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+            ),
+          ),
+        ),
+        if (showCount)
+          Text(
+            '${widget.repeatDone}/${widget.repeatTotal}',
+            style: const TextStyle(
+              color: StagePalette.badge,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+      ],
+    ),
+  );
+
   Widget _topBar() {
     final f = _frame;
     final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
@@ -634,169 +664,186 @@ class _PracticeStageState extends State<PracticeStage>
         : waitPill
         ? widget.repeatDone / widget.repeatTotal
         : judged;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 20, 0),
-      child: Row(
-        children: [
-          // Paused: resume / restart / exit take the pause button's place in
-          // the same bar, so nothing covers the staff or the bar itself.
-          if (_paused) ...[
-            SlideIn(
-              offset: const Offset(-30, 0),
-              child: GameRoundButton(
-                icon: Icons.play_arrow_rounded,
-                onTap: _resume,
-                tone: GameTone.green,
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Phones: MIDI shows as an icon and the progress bar drops to its own
+        // full-width row, so nothing overflows off the right edge.
+        final narrow = box.maxWidth < 720;
+        final progress = _paused && _playAlong
+            ? _tempoSelector()
+            : _progressPill(pillValue, waitPill);
+        final row = Row(
+          children: [
+            // Paused: resume / restart / exit take the pause button's place in
+            // the same bar, so nothing covers the staff or the bar itself.
+            if (_paused) ...[
+              SlideIn(
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.play_arrow_rounded,
+                  onTap: _resume,
+                  tone: GameTone.green,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).resume,
+                ),
+              ),
+              const SizedBox(width: 10),
+              SlideIn(
+                delay: const Duration(milliseconds: 60),
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.replay_rounded,
+                  onTap: widget.onRestart,
+                  tone: GameTone.blue,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).restart,
+                ),
+              ),
+              const SizedBox(width: 10),
+              SlideIn(
+                delay: const Duration(milliseconds: 120),
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.format_list_bulleted_rounded,
+                  onTap: widget.onExit,
+                  tone: GameTone.red,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).exitToMap,
+                ),
+              ),
+            ] else ...[
+              GameRoundButton(
+                icon: Icons.pause_rounded,
+                onTap: _pause,
+                tone: GameTone.gold,
                 size: 46,
-                tooltip: AppLocalizations.of(context).resume,
+                tooltip: AppLocalizations.of(context).pause,
               ),
-            ),
-            const SizedBox(width: 10),
-            SlideIn(
-              delay: const Duration(milliseconds: 60),
-              offset: const Offset(-30, 0),
-              child: GameRoundButton(
-                icon: Icons.replay_rounded,
-                onTap: widget.onRestart,
-                tone: GameTone.blue,
-                size: 46,
-                tooltip: AppLocalizations.of(context).restart,
-              ),
-            ),
-            const SizedBox(width: 10),
-            SlideIn(
-              delay: const Duration(milliseconds: 120),
-              offset: const Offset(-30, 0),
-              child: GameRoundButton(
-                icon: Icons.format_list_bulleted_rounded,
-                onTap: widget.onExit,
-                tone: GameTone.red,
-                size: 46,
-                tooltip: AppLocalizations.of(context).exitToMap,
-              ),
-            ),
-          ] else ...[
-            GameRoundButton(
-              icon: Icons.pause_rounded,
-              onTap: _pause,
-              tone: GameTone.gold,
-              size: 46,
-              tooltip: AppLocalizations.of(context).pause,
-            ),
-            const SizedBox(width: 14),
-            Text(
-              _demo
-                  ? AppLocalizations.of(context).listenFirst
-                  : _playAlong
-                  ? AppLocalizations.of(context)
-                        .playAlongTempo((widget.tempo * 100).round())
-                  : widget.instruction ??
-                        AppLocalizations.of(context).playFollowingNotes,
-              style: const TextStyle(
-                color: StagePalette.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (_demo) ...[
-              const SizedBox(width: 12),
-              TextButton(
-                onPressed: _endDemo,
-                style: TextButton.styleFrom(foregroundColor: StagePalette.text),
-                child: Text(AppLocalizations.of(context).skip),
-              ),
-            ],
-          ],
-          const Spacer(),
-          if (widget.onConnectMidi != null) ...[
-            TextButton.icon(
-              onPressed: widget.onConnectMidi,
-              style: TextButton.styleFrom(foregroundColor: StagePalette.text),
-              icon: Icon(
-                widget.midiLabel == null
-                    ? Icons.usb_off_rounded
-                    : Icons.usb_rounded,
-                color: widget.midiLabel == null
-                    ? StagePalette.textDim
-                    : StagePalette.done,
-              ),
-              label: Text(
-                widget.midiLabel ?? AppLocalizations.of(context).connectMidi,
-              ),
-            ),
-            const SizedBox(width: 4),
-          ],
-          IconButton(
-            tooltip: pianoSynth.enabled
-                ? AppLocalizations.of(context).mutePianoSound
-                : AppLocalizations.of(context).playPianoSound,
-            onPressed: () =>
-                setState(() => pianoSynth.enabled = !pianoSynth.enabled),
-            icon: Icon(
-              pianoSynth.enabled
-                  ? Icons.volume_up_rounded
-                  : Icons.volume_off_rounded,
-              color: StagePalette.text,
-            ),
-          ),
-          if (_playAlong)
-            IconButton(
-              tooltip: pianoSynth.metronome
-                  ? AppLocalizations.of(context).metronomeOff
-                  : AppLocalizations.of(context).metronomeOn,
-              onPressed: _toggleMetronome,
-              icon: MetronomeIcon(
-                color: pianoSynth.metronome
-                    ? StagePalette.text
-                    : StagePalette.text.withValues(alpha: 0.4),
-              ),
-            ),
-          if (widget.onToggleKeyboard != null) ...[
-            IconButton(
-              tooltip: widget.showKeyboard
-                  ? AppLocalizations.of(context).hideKeyboard
-                  : AppLocalizations.of(context).showKeyboard,
-              onPressed: widget.onToggleKeyboard,
-              icon: Icon(
-                widget.showKeyboard ? Icons.piano : Icons.piano_off,
-                color: StagePalette.text,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (_paused && _playAlong)
-            _tempoSelector()
-          else
-            SizedBox(
-              width: 220,
-              height: 22,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(11),
-                      child: LinearProgressIndicator(
-                        value: pillValue.clamp(0.0, 1.0),
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  _demo
+                      ? AppLocalizations.of(context).listenFirst
+                      : _playAlong
+                      ? AppLocalizations.of(context)
+                            .playAlongTempo((widget.tempo * 100).round())
+                      : widget.instruction ??
+                            AppLocalizations.of(context).playFollowingNotes,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: StagePalette.text,
+                    fontSize: narrow ? 14 : 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                  if (waitPill)
-                    Text(
-                      '${widget.repeatDone}/${widget.repeatTotal}',
-                      style: const TextStyle(
-                        color: StagePalette.badge,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
+                ),
+              ),
+              if (_demo) ...[
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: _endDemo,
+                  style: TextButton.styleFrom(
+                    foregroundColor: StagePalette.text,
+                  ),
+                  child: Text(AppLocalizations.of(context).skip),
+                ),
+              ],
+            ],
+            if (_paused) const Spacer() else const SizedBox(width: 8),
+            if (widget.onConnectMidi != null && narrow)
+              IconButton(
+                onPressed: widget.onConnectMidi,
+                tooltip:
+                    widget.midiLabel ??
+                    AppLocalizations.of(context).connectMidi,
+                icon: Icon(
+                  widget.midiLabel == null
+                      ? Icons.usb_off_rounded
+                      : Icons.usb_rounded,
+                  color: widget.midiLabel == null
+                      ? StagePalette.textDim
+                      : StagePalette.done,
+                ),
+              )
+            else if (widget.onConnectMidi != null) ...[
+              TextButton.icon(
+                onPressed: widget.onConnectMidi,
+                style: TextButton.styleFrom(foregroundColor: StagePalette.text),
+                icon: Icon(
+                  widget.midiLabel == null
+                      ? Icons.usb_off_rounded
+                      : Icons.usb_rounded,
+                  color: widget.midiLabel == null
+                      ? StagePalette.textDim
+                      : StagePalette.done,
+                ),
+                label: Text(
+                  widget.midiLabel ?? AppLocalizations.of(context).connectMidi,
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+            IconButton(
+              tooltip: pianoSynth.enabled
+                  ? AppLocalizations.of(context).mutePianoSound
+                  : AppLocalizations.of(context).playPianoSound,
+              onPressed: () =>
+                  setState(() => pianoSynth.enabled = !pianoSynth.enabled),
+              icon: Icon(
+                pianoSynth.enabled
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_off_rounded,
+                color: StagePalette.text,
               ),
             ),
-        ],
-      ),
+            if (_playAlong)
+              IconButton(
+                tooltip: pianoSynth.metronome
+                    ? AppLocalizations.of(context).metronomeOff
+                    : AppLocalizations.of(context).metronomeOn,
+                onPressed: _toggleMetronome,
+                icon: MetronomeIcon(
+                  color: pianoSynth.metronome
+                      ? StagePalette.text
+                      : StagePalette.text.withValues(alpha: 0.4),
+                ),
+              ),
+            if (widget.onToggleKeyboard != null) ...[
+              IconButton(
+                tooltip: widget.showKeyboard
+                    ? AppLocalizations.of(context).hideKeyboard
+                    : AppLocalizations.of(context).showKeyboard,
+                onPressed: widget.onToggleKeyboard,
+                icon: Icon(
+                  widget.showKeyboard ? Icons.piano : Icons.piano_off,
+                  color: StagePalette.text,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            if (!narrow) progress,
+          ],
+        );
+        return Padding(
+          padding: EdgeInsets.fromLTRB(narrow ? 8 : 16, 10, narrow ? 8 : 20, 0),
+          child: narrow
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    row,
+                    const SizedBox(height: 6),
+                    _paused && _playAlong
+                        ? progress
+                        : SizedBox(
+                            height: 16,
+                            width: double.infinity,
+                            child: _progressPill(pillValue, waitPill),
+                          ),
+                  ],
+                )
+              : row,
+        );
+      },
     );
   }
 
