@@ -61,7 +61,12 @@ class _LearnTabState extends State<LearnTab> {
     ];
     var moduleNo = 0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8 + MediaQuery.paddingOf(context).top,
+        16,
+        32,
+      ),
       children: [
         Center(
           child: ConstrainedBox(

@@ -71,7 +71,10 @@ class _HomePageState extends State<HomePage> {
     final progress = Progress(widget.repo, _stars);
     final tabs = [
       LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
-      PracticeTab(onFreePlay: () => _push(widget.spikes)),
+      SafeArea(
+        bottom: false,
+        child: PracticeTab(onFreePlay: () => _push(widget.spikes)),
+      ),
       ProfileTab(
         progress: progress,
         onMidiSpike: () => _push(widget.spikes),
@@ -85,22 +88,44 @@ class _HomePageState extends State<HomePage> {
           bottom: false,
           child: Column(
             children: [
-              _TopBar(stars: progress.totalStars),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  switchInCurve: Curves.easeOutCubic,
-                  transitionBuilder: (child, a) => FadeTransition(
-                    opacity: a,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.02),
-                        end: Offset.zero,
-                      ).animate(a),
-                      child: child,
+                child: Stack(
+                  children: [
+                    // Tabs scroll under the floating glass bar: their top inset
+                    // comes in as MediaQuery padding.
+                    Positioned.fill(
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          padding: MediaQuery.paddingOf(context)
+                              .copyWith(top: _TopBar.inset),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          switchInCurve: Curves.easeOutCubic,
+                          transitionBuilder: (child, a) => FadeTransition(
+                            opacity: a,
+                            child: SlideTransition(
+                              position: Tween(
+                                begin: const Offset(0, 0.02),
+                                end: Offset.zero,
+                              ).animate(a),
+                              child: child,
+                            ),
+                          ),
+                          child: KeyedSubtree(
+                            key: ValueKey(_tab),
+                            child: tabs[_tab],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: KeyedSubtree(key: ValueKey(_tab), child: tabs[_tab]),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      child: _TopBar(stars: progress.totalStars),
+                    ),
+                  ],
                 ),
               ),
               _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
@@ -153,45 +178,67 @@ class _TopBar extends StatelessWidget {
 
   final int stars;
 
+  static const _margin = 10.0, _height = 58.0;
+
+  /// Space the tabs leave at the top so their first item starts below the bar.
+  static const inset = _margin + _height + 6;
+
   @override
   Widget build(BuildContext context) {
-    // Glass bar: blurred, translucent violet over the arena backdrop, with a
-    // light top rim and a cyan hairline underneath.
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: 0.10),
-                GameColors.panel.withValues(alpha: 0.35),
-              ],
+    final radius = BorderRadius.circular(20);
+    // Floating glass pill: the content behind scrolls under it, blurred.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_margin, _margin, _margin, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
-            border: Border(
-              bottom: BorderSide(
-                color: GameColors.cyan.withValues(alpha: 0.35),
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/brand/logo.png',
-                  width: 40,
-                  height: 40,
-                  filterQuality: FilterQuality.medium,
-                  semanticLabel: AppLocalizations.of(context).logoLabel,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              height: _height,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.16),
+                    GameColors.bgGlow.withValues(alpha: 0.10),
+                    GameColors.panel.withValues(alpha: 0.30),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                GameText(AppLocalizations.of(context).appTitle, size: 20),
-                const Spacer(),
-                StarCounter(value: stars),
-              ],
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/brand/logo.png',
+                    width: 38,
+                    height: 38,
+                    filterQuality: FilterQuality.medium,
+                    semanticLabel: AppLocalizations.of(context).logoLabel,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GameText(
+                      AppLocalizations.of(context).appTitle,
+                      size: 18,
+                    ),
+                  ),
+                  StarCounter(value: stars),
+                ],
+              ),
             ),
           ),
         ),
