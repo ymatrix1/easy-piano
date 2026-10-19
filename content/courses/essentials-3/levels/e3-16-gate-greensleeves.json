@@ -1,0 +1,20 @@
+{
+  "id": "e3-16-gate-greensleeves",
+  "title": "str:level.e3.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "greensleeves",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "greensleeves",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

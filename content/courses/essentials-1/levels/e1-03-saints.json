@@ -17,6 +17,12 @@
       "hand": "RH"
     },
     {
+      "type": "wait",
+      "score": "when-the-saints",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
       "type": "play_along",
       "score": "when-the-saints",
       "tempo": 1.0,

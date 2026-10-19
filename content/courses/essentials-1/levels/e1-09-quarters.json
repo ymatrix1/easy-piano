@@ -1,0 +1,27 @@
+{
+  "id": "e1-09-quarters",
+  "title": "str:level.e1.09.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "e1-quarter-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-quarter-drill",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-quarter-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

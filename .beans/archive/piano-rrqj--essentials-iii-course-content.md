@@ -34,3 +34,7 @@ Scope: Rhythm review, new LH position, sharps, flats, mixed accidentals, grand s
 - Songs: 5 original drills (3/4 waltz with dotted notes, LH G position, F♯, B♭, C major scale with thumb under) + Minuet in G (Petzold), Amazing Grace (LH B♭), Greensleeves (G♯ and F♯), PD, our simplified arrangements, ACC/DRUMS/BASS.
 - Scenes: e3-three-four, e3-lh-g-position, e3-sharps, e3-flats, e3-thumb-under. Strings en + pt-BR.
 - Found: companion hand not drawn on the staff in single-hand stages; new bean filed.
+
+### Expansion (2026-10-19)
+- 17 levels in 13 nodes. New PD songs: Auld Lang Syne, Joy to the World (descending scale with thumb-over fingering).
+- Song packs: gate-1 (Minuet, Amazing Grace, Auld Lang Syne; 6 stars), gate-2 (Joy to the World, Greensleeves both hands, faster scale; 6 stars).

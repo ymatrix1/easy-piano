@@ -74,12 +74,43 @@
         "e3-06-amazing-grace"
       ],
       "next": [
-        "greensleeves"
+        "auld-lang-syne"
       ],
       "songs": {
         "default": "amazing-grace",
         "hymns_spirituals": "amazing-grace"
       }
+    },
+    {
+      "id": "auld-lang-syne",
+      "kind": "song",
+      "title": "str:node.e3.auld-lang-syne",
+      "icon": "play",
+      "levels": [
+        "e3-10-auld-lang-syne"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "auld-lang-syne",
+        "folk_world": "auld-lang-syne"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.e3.gate-1",
+      "icon": "star",
+      "levels": [
+        "e3-11-gate-minuet",
+        "e3-12-gate-amazing-grace",
+        "e3-13-gate-auld-lang-syne"
+      ],
+      "next": [
+        "greensleeves"
+      ],
+      "stars_needed": 6
     },
     {
       "id": "greensleeves",
@@ -106,8 +137,39 @@
         "e3-08-scale"
       ],
       "next": [
-        "boss"
+        "joy-to-the-world"
       ]
+    },
+    {
+      "id": "joy-to-the-world",
+      "kind": "song",
+      "title": "str:node.e3.joy-to-the-world",
+      "icon": "play",
+      "levels": [
+        "e3-14-joy-to-the-world"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "joy-to-the-world",
+        "hymns_spirituals": "joy-to-the-world"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.e3.gate-2",
+      "icon": "star",
+      "levels": [
+        "e3-15-gate-joy",
+        "e3-16-gate-greensleeves",
+        "e3-17-gate-scale"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
     },
     {
       "id": "boss",

@@ -1,0 +1,20 @@
+{
+  "id": "e2-16-gate-camptown",
+  "title": "str:level.e2.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "camptown-races",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "camptown-races",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

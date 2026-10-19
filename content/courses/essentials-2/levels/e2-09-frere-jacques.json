@@ -1,0 +1,33 @@
+{
+  "id": "e2-09-frere-jacques",
+  "title": "str:level.e2.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "frere-jacques",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "frere-jacques",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "frere-jacques",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "frere-jacques",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

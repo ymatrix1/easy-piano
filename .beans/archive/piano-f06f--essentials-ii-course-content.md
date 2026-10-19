@@ -34,3 +34,7 @@ Scope: New RH note A4, new LH note A2/B2 below C, F position, shifting positions
 - Songs: 4 original drills (A4 reach, LH thumb to A3, F position, shifting) + Twinkle Twinkle, Oh! Susanna (PD, our arrangements) with ACC/DRUMS/BASS.
 - Scenes: e2-reach-a, e2-f-position, e2-shifting. Strings en + pt-BR. pubspec lists the new folders.
 - Musette in D / Swing Low not built (need D5 and more shifting); left for a later pass.
+
+### Expansion (2026-10-19)
+- 18 levels in 12 nodes. New PD songs: London Bridge, Frère Jacques (hands take turns), Camptown Races; original F Position Waltz.
+- Song packs: gate-1 (3 songs, 5 stars), gate-2 (4 songs, 7 stars), matching the reference shape.

@@ -1,0 +1,20 @@
+{
+  "id": "e1-12-gate-lightly-row",
+  "title": "str:level.e1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "lightly-row",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "lightly-row",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}
