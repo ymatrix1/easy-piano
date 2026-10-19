@@ -94,10 +94,10 @@ Example, Piano Basics node "RH C position, first song":
 
 | Course | Levels | Nodes | Songs | Scenes | Bean |
 |---|---|---|---|---|---|
-| Essentials I | 8 (`e1-01` … `e1-08`) | rests, left-hand, saints, hands-together, intervals, eighths, jingle, boss | 5 original drills + When the Saints, Jingle Bells (PD, our arrangements, ACC/DRUMS/BASS) | e1-rests, e1-left-hand, e1-hands-together, e1-eighth-notes | piano-2uhn |
-| Essentials II | 7 (`e2-01` … `e2-07`) | new-note-a, twinkle, left-hand-a, f-position, shifting, susanna, boss | 4 original drills + Twinkle Twinkle, Oh! Susanna (PD, our arrangements, ACC/DRUMS/BASS) | e2-reach-a, e2-f-position, e2-shifting | piano-f06f |
+| Essentials I | 19 in 12 nodes | rests, intervals, lightly-row, left-hand (+ first LH chords), saints, gate-1, hands-together, eighths, jingle, gate-2, boss | 7 original drills + When the Saints, Jingle Bells, Lightly Row, Go Tell Aunt Rhody, Au Clair de la Lune (PD, our arrangements, ACC/DRUMS/BASS). 2 star gates of 3 songs, `stars_needed: 5` | e1-rests, e1-left-hand, e1-hands-together, e1-eighth-notes | piano-2uhn |
+| Essentials II | 18 in 12 nodes | new-note-a, twinkle, london-bridge, left-hand-a, frere-jacques, gate-1, f-position (+ waltz), shifting, susanna, camptown, gate-2, boss | 5 original drills + Twinkle, London Bridge, Frère Jacques, Oh! Susanna, Camptown Races (PD, our arrangements, ACC/DRUMS/BASS). Gates: 3 songs / 5 stars, 4 songs / 7 stars | e2-reach-a, e2-f-position, e2-shifting | piano-f06f |
 
-Smaller than the reference size (30–60 levels); a first playable pass. No accidentals yet in Essentials I and II; F position avoids B♭ until Essentials III (beginner rubric in [song-import.md](../research/song-import.md)).
+Reference shape (local scan, stats only): Essentials I 25 nodes / 50 levels with 9 song nodes and 5 star gates (3–4 songs each, 2–5 stars needed); Essentials II 14 / 41, 2 gates (7 stars of 4 songs); Essentials III 19 / 55, 3 gates (5–6 stars). Ours is smaller and grows by adding songs to gates. No accidentals yet in Essentials I and II; F position avoids B♭ until Essentials III (beginner rubric in [song-import.md](../research/song-import.md)).
 
 ## Build order
 

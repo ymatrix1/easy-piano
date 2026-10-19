@@ -1,0 +1,27 @@
+{
+  "id": "e2-14-camptown",
+  "title": "str:level.e2.14.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "camptown-races",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "camptown-races",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "camptown-races",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

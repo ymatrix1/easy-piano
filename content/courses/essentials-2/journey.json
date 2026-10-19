@@ -22,11 +22,27 @@
         "e2-02-twinkle"
       ],
       "next": [
-        "left-hand-a"
+        "london-bridge"
       ],
       "songs": {
         "default": "twinkle-twinkle",
         "folk_world": "twinkle-twinkle"
+      }
+    },
+    {
+      "id": "london-bridge",
+      "kind": "song",
+      "title": "str:node.e2.london-bridge",
+      "icon": "play",
+      "levels": [
+        "e2-08-london-bridge"
+      ],
+      "next": [
+        "left-hand-a"
+      ],
+      "songs": {
+        "default": "london-bridge",
+        "folk_world": "london-bridge"
       }
     },
     {
@@ -38,8 +54,39 @@
         "e2-03-left-hand-a"
       ],
       "next": [
-        "f-position"
+        "frere-jacques"
       ]
+    },
+    {
+      "id": "frere-jacques",
+      "kind": "song",
+      "title": "str:node.e2.frere-jacques",
+      "icon": "play",
+      "levels": [
+        "e2-09-frere-jacques"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "frere-jacques",
+        "folk_world": "frere-jacques"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.e2.gate-1",
+      "icon": "star",
+      "levels": [
+        "e2-10-gate-twinkle",
+        "e2-11-gate-london-bridge",
+        "e2-12-gate-frere-jacques"
+      ],
+      "next": [
+        "f-position"
+      ],
+      "stars_needed": 5
     },
     {
       "id": "f-position",
@@ -47,7 +94,8 @@
       "title": "str:node.e2.f-position",
       "icon": "note",
       "levels": [
-        "e2-04-f-position"
+        "e2-04-f-position",
+        "e2-13-f-waltz"
       ],
       "next": [
         "shifting"
@@ -74,12 +122,44 @@
         "e2-06-oh-susanna"
       ],
       "next": [
-        "boss"
+        "camptown"
       ],
       "songs": {
         "default": "oh-susanna",
         "folk_world": "oh-susanna"
       }
+    },
+    {
+      "id": "camptown",
+      "kind": "song",
+      "title": "str:node.e2.camptown",
+      "icon": "play",
+      "levels": [
+        "e2-14-camptown"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "camptown-races",
+        "folk_world": "camptown-races"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.e2.gate-2",
+      "icon": "star",
+      "levels": [
+        "e2-15-gate-susanna",
+        "e2-16-gate-camptown",
+        "e2-17-gate-f-waltz",
+        "e2-18-gate-shift"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 7
     },
     {
       "id": "boss",

@@ -1,0 +1,14 @@
+{
+  "id": "e2-12-gate-frere-jacques",
+  "title": "str:level.e2.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "frere-jacques",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

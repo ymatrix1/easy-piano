@@ -1,0 +1,20 @@
+{
+  "id": "e2-10-gate-twinkle",
+  "title": "str:level.e2.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "twinkle-twinkle",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "twinkle-twinkle",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}
