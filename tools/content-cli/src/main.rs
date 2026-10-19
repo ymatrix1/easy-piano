@@ -210,6 +210,16 @@ fn lint_dir(root: &Path) -> Lint {
             if !NODE_KINDS.contains(&kind) {
                 lint.err(&jpath, format!("node `{nid}`: unknown kind `{kind}`"));
             }
+            let n_levels = node.get("levels").and_then(Value::as_array).map_or(0, Vec::len);
+            match (kind, node.get("stars_needed").map(Value::as_u64)) {
+                ("star_gate", Some(Some(n))) if n >= 1 && n as usize <= 3 * n_levels => {}
+                ("star_gate", _) => lint.err(
+                    &jpath,
+                    format!("node `{nid}`: star_gate needs `stars_needed` 1..={}", 3 * n_levels),
+                ),
+                (_, Some(_)) => lint.err(&jpath, format!("node `{nid}`: `stars_needed` only on star_gate")),
+                _ => {}
+            }
             for l in node.get("levels").and_then(Value::as_array).into_iter().flatten() {
                 if let Some(l) = l.as_str().filter(|l| !levels.contains_key(*l)) {
                     lint.err(&jpath, format!("node `{nid}`: unknown level `{l}`"));

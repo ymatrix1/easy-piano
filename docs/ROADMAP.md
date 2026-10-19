@@ -40,7 +40,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 4: Content scale
 
-- [x] Essentials I (first pass, 8 levels)
+- [x] Essentials I (19 levels, 2 star gates)
 - [ ] Piano Basics 2–4, Pop Chords 1
 - [ ] Localization (pt-BR, es)
 - [ ] Polyphonic mic research result

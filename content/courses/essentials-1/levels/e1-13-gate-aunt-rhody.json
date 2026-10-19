@@ -1,0 +1,27 @@
+{
+  "id": "e1-13-gate-aunt-rhody",
+  "title": "str:level.e1.13.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "go-tell-aunt-rhody",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "go-tell-aunt-rhody",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "go-tell-aunt-rhody",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

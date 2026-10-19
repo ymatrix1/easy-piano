@@ -45,5 +45,19 @@
   "node.e1.jingle": "Jingle Bells",
   "level.e1.07.title": "Jingle Bells",
   "node.e1.boss": "Saints, both hands",
-  "level.e1.08.title": "The Saints, both hands"
+  "level.e1.08.title": "The Saints, both hands",
+  "level.e1.09.title": "Clap and count",
+  "node.e1.lightly-row": "Lightly Row",
+  "level.e1.10.title": "Lightly Row",
+  "level.e1.11.title": "First chords",
+  "node.e1.gate-1": "Song pack: folk tunes",
+  "level.e1.12.title": "Lightly Row, both hands",
+  "level.e1.13.title": "Go Tell Aunt Rhody",
+  "level.e1.14.title": "Au Clair de la Lune",
+  "level.e1.15.title": "Call and answer",
+  "level.e1.16.title": "Eighth note boogie",
+  "node.e1.gate-2": "Song pack: both hands",
+  "level.e1.17.title": "Jingle Bells, full speed",
+  "level.e1.18.title": "Aunt Rhody, both hands",
+  "level.e1.19.title": "Boogie, full speed"
 }

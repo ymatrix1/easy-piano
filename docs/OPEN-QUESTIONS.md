@@ -9,4 +9,5 @@
 | OQ5 | Sync: none, self-hostable server, or file export/import? | D8 says local-first |
 | OQ6 | Voice-over in scenes: none, TTS at build time, or recorded? | TTS keeps localization cheap |
 | OQ7 | Does Flutter Web + flutter_rust_bridge wasm meet the latency budget? | Phase 0 spike answers |
+| OQ9 | How do we detect a learner's current level (placement) and choose their start node? | Until answered every course and node stays open; star gates score progress but never lock. Bean piano-vg8h |
 | OQ8 | How far do we mirror Simply Piano's course list vs design our own order? | Proposal in [curriculum](specs/curriculum.md) |

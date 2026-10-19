@@ -10,7 +10,7 @@ Course → Journey (graph of nodes) → Level → Stage.
 |---|---|
 | `lesson` | 3–8 levels teaching one skill |
 | `song` | Reward song, practice sub-levels (RH, LH, both, slow, full) |
-| `star_gate` | Needs N stars from listed songs to pass |
+| `star_gate` | Song pack of 3–4 songs; pass by earning `stars_needed` stars across any of them (reference uses 2–7 stars, often ≈ two songs). Never locks: all nodes stay open until placement (OQ9) |
 | `boss` / `mini_boss` | Review challenge of the course |
 | `workout` | Generated daily review from pool levels |
 

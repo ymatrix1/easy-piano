@@ -79,6 +79,7 @@ class JourneyNode {
     required this.title,
     required this.levels,
     required this.songs,
+    this.starsNeeded,
   });
 
   factory JourneyNode.fromJson(Map<String, dynamic> j) => JourneyNode(
@@ -90,6 +91,7 @@ class JourneyNode {
       for (final e in ((j['songs'] as Map?) ?? {}).entries)
         e.key as String: e.value as String,
     },
+    starsNeeded: (j['stars_needed'] as num?)?.toInt(),
   );
 
   final String id;
@@ -99,6 +101,9 @@ class JourneyNode {
 
   /// Taste → song id slots (D12).
   final Map<String, String> songs;
+
+  /// `star_gate` only: stars to earn across its levels (pick any songs).
+  final int? starsNeeded;
 }
 
 /// A module (course). Planned modules are listed, locked, without a journey.
