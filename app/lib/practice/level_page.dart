@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
@@ -61,8 +62,8 @@ class _LevelPageState extends State<LevelPage> {
         SnackBar(
           content: Text(
             ok
-                ? 'No MIDI keyboard found. Plug it in and try again.'
-                : 'Web MIDI is not available in this browser.',
+                ? AppLocalizations.of(context).midiNotFound
+                : AppLocalizations.of(context).midiUnavailable,
           ),
         ),
       );
@@ -164,7 +165,7 @@ class _LevelPageState extends State<LevelPage> {
         title: repo.t(widget.level.title),
         lines: [
           for (final l in lines) repo.t(l),
-          '(Animated scene arrives with the Phase 2 scene player.)',
+          AppLocalizations.of(context).scenePending,
         ],
         onContinue: _next,
         onExit: () => Navigator.of(context).pop(),
@@ -173,7 +174,7 @@ class _LevelPageState extends State<LevelPage> {
     if (!s.isPlayable || repo.songJson[s.score] == null) {
       return _InfoStage(
         title: s.type,
-        lines: const ['Not available yet.'],
+        lines: [AppLocalizations.of(context).notAvailableYet],
         onContinue: _next,
         onExit: () => Navigator.of(context).pop(),
       );
@@ -243,7 +244,8 @@ class _InfoStage extends StatelessWidget {
                         ),
                       const SizedBox(height: 14),
                       GameButton(
-                        label: 'CONTINUE',
+                        label: AppLocalizations.of(context).continueButton
+                            .toUpperCase(),
                         onTap: onContinue,
                         tone: GameTone.green,
                       ),
@@ -261,7 +263,7 @@ class _InfoStage extends StatelessWidget {
               onTap: onExit,
               tone: GameTone.red,
               size: 48,
-              tooltip: 'Exit',
+              tooltip: AppLocalizations.of(context).exit,
             ),
           ),
         ],

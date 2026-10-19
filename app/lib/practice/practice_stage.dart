@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show PlatformInt64Util;
 
+import '../l10n/app_localizations.dart';
 import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
@@ -69,7 +70,7 @@ class PracticeStage extends StatefulWidget {
     required this.onTempo,
     required this.onRestart,
     required this.onExit,
-    this.instruction = 'Play the following notes',
+    this.instruction,
     this.repeatDone = 0,
     this.repeatTotal = 1,
     this.showKeyboard = true,
@@ -90,7 +91,9 @@ class PracticeStage extends StatefulWidget {
   final void Function(double tempo) onTempo;
   final VoidCallback onRestart;
   final VoidCallback onExit;
-  final String instruction;
+
+  /// Banner text; defaults to the localized "Play the following notes".
+  final String? instruction;
   final int repeatDone;
   final int repeatTotal;
 
@@ -604,7 +607,7 @@ class _PracticeStageState extends State<PracticeStage>
                 onTap: _resume,
                 tone: GameTone.green,
                 size: 46,
-                tooltip: 'Resume',
+                tooltip: AppLocalizations.of(context).resume,
               ),
             ),
             const SizedBox(width: 10),
@@ -616,7 +619,7 @@ class _PracticeStageState extends State<PracticeStage>
                 onTap: widget.onRestart,
                 tone: GameTone.blue,
                 size: 46,
-                tooltip: 'Restart',
+                tooltip: AppLocalizations.of(context).restart,
               ),
             ),
             const SizedBox(width: 10),
@@ -628,7 +631,7 @@ class _PracticeStageState extends State<PracticeStage>
                 onTap: widget.onExit,
                 tone: GameTone.red,
                 size: 46,
-                tooltip: 'Exit to map',
+                tooltip: AppLocalizations.of(context).exitToMap,
               ),
             ),
           ] else ...[
@@ -637,15 +640,17 @@ class _PracticeStageState extends State<PracticeStage>
               onTap: _pause,
               tone: GameTone.gold,
               size: 46,
-              tooltip: 'Pause',
+              tooltip: AppLocalizations.of(context).pause,
             ),
             const SizedBox(width: 14),
             Text(
               _demo
-                  ? 'Listen first…'
+                  ? AppLocalizations.of(context).listenFirst
                   : _playAlong
-                  ? 'Play along · ${(widget.tempo * 100).round()}%'
-                  : widget.instruction,
+                  ? AppLocalizations.of(context)
+                        .playAlongTempo((widget.tempo * 100).round())
+                  : widget.instruction ??
+                        AppLocalizations.of(context).playFollowingNotes,
               style: const TextStyle(
                 color: StagePalette.text,
                 fontSize: 16,
@@ -657,7 +662,7 @@ class _PracticeStageState extends State<PracticeStage>
               TextButton(
                 onPressed: _endDemo,
                 style: TextButton.styleFrom(foregroundColor: StagePalette.text),
-                child: const Text('Skip'),
+                child: Text(AppLocalizations.of(context).skip),
               ),
             ],
           ],
@@ -674,14 +679,16 @@ class _PracticeStageState extends State<PracticeStage>
                     ? StagePalette.textDim
                     : StagePalette.done,
               ),
-              label: Text(widget.midiLabel ?? 'Connect MIDI'),
+              label: Text(
+                widget.midiLabel ?? AppLocalizations.of(context).connectMidi,
+              ),
             ),
             const SizedBox(width: 4),
           ],
           IconButton(
             tooltip: pianoSynth.enabled
-                ? 'Mute piano sound'
-                : 'Play piano sound',
+                ? AppLocalizations.of(context).mutePianoSound
+                : AppLocalizations.of(context).playPianoSound,
             onPressed: () =>
                 setState(() => pianoSynth.enabled = !pianoSynth.enabled),
             icon: Icon(
@@ -694,8 +701,8 @@ class _PracticeStageState extends State<PracticeStage>
           if (_playAlong)
             IconButton(
               tooltip: pianoSynth.metronome
-                  ? 'Turn metronome off'
-                  : 'Turn metronome on',
+                  ? AppLocalizations.of(context).metronomeOff
+                  : AppLocalizations.of(context).metronomeOn,
               onPressed: _toggleMetronome,
               icon: MetronomeIcon(
                 color: pianoSynth.metronome
@@ -705,7 +712,9 @@ class _PracticeStageState extends State<PracticeStage>
             ),
           if (widget.onToggleKeyboard != null) ...[
             IconButton(
-              tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',
+              tooltip: widget.showKeyboard
+                  ? AppLocalizations.of(context).hideKeyboard
+                  : AppLocalizations.of(context).showKeyboard,
               onPressed: widget.onToggleKeyboard,
               icon: Icon(
                 widget.showKeyboard ? Icons.piano : Icons.piano_off,
@@ -874,6 +883,8 @@ class _PracticeStageState extends State<PracticeStage>
                             hint: _hint,
                             hintColor: StagePalette.keyTarget,
                             labelMiddleC: true,
+                            middleCLabel: AppLocalizations.of(context)
+                                .middleCLabel,
                           ),
                         ),
                       );
@@ -883,11 +894,11 @@ class _PracticeStageState extends State<PracticeStage>
             ],
           ),
           if (countIn)
-            const Align(
-              alignment: Alignment(0, -0.55),
+            Align(
+              alignment: const Alignment(0, -0.55),
               child: Text(
-                'Get ready…',
-                style: TextStyle(
+                AppLocalizations.of(context).getReady,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
