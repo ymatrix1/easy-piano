@@ -111,15 +111,56 @@ class PracticeStage extends StatefulWidget {
 
 class _PracticeStageState extends State<PracticeStage>
     with TickerProviderStateMixin {
-  static const _low =
-      36; // C2: middle C sits in the centre (2 octaves each side)
-  static const _high = 84; // C6
+  /// Widest keyboard: C2–C6, middle C in the centre.
+  static const _fullLow = 36, _fullHigh = 84;
+
+  /// White keys narrower than this are hard to read and tap.
+  static const _minWhiteKeyPx = 30.0;
+
+  /// Visible key range for the keyboard width: as many octaves as fit, centred
+  /// on the exercise's notes (middle C when they fit around it), whole octaves
+  /// from C to C.
+  int _low = _fullLow, _high = _fullHigh;
+  double _keyboardWidth = 0;
+
+  void _fitKeyboard(double width) {
+    if (width == _keyboardWidth) return;
+    _keyboardWidth = width;
+    final octaves = ((width / _minWhiteKeyPx - 1) / 7).floor().clamp(1, 4);
+    final pitches = [for (final t in _initialTargets) ...t.pitches];
+    final lo = pitches.isEmpty ? 60 : pitches.reduce(math.min);
+    final hi = pitches.isEmpty ? 60 : pitches.reduce(math.max);
+    final centre = (lo + hi) / 2;
+    // Lowest C such that the range [c, c + 12*octaves] is centred on the notes.
+    var c = (((centre - 6.0 * octaves) / 12).round() * 12).clamp(
+      _fullLow,
+      _fullHigh - 12 * octaves,
+    );
+    if (lo < c) c = math.max(_fullLow, (lo ~/ 12) * 12);
+    if (hi > c + 12 * octaves) {
+      c = math.min(
+        _fullHigh - 12 * octaves,
+        ((hi + 11) ~/ 12) * 12 - 12 * octaves,
+      );
+    }
+    _low = c;
+    _high = math.min(_fullHigh, c + 12 * octaves);
+  }
+
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
-  static const _waitAnchor = 0.10; // page start, as a fraction of the width
+  static const _waitAnchorBase = 0.10; // page start, as a fraction of the width
   static const _pageTurnAt =
       0.60; // next note past this fraction → slide (reference)
-  static const _playLine = 0.12; // play bar right after the clef
+  static const _playLineBase = 0.12; // play bar right after the clef
+
+  /// Never start notes under the clef: on narrow screens a fraction of the
+  /// width is less than the clef's own width.
+  static const _clefClearPx = 96.0;
+  double get _waitAnchor =>
+      math.max(_waitAnchorBase, _clefClearPx / _staffWidth);
+  double get _playLine =>
+      math.max(_playLineBase, (_clefClearPx + 8) / _staffWidth);
 
   late final PracticeSession _session;
   late final List<StaffNote> _notes;
@@ -868,6 +909,7 @@ class _PracticeStageState extends State<PracticeStage>
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final size = Size(c.maxWidth, c.maxHeight);
+                      _fitKeyboard(c.maxWidth);
                       return Listener(
                         onPointerDown: (e) =>
                             _touchDown(e.pointer, e.localPosition, size),
