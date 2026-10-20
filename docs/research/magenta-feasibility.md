@@ -63,7 +63,7 @@ Rules: C4–C5 plus F#4 and Bb4, eighth / quarter / dotted quarter / half, quart
 | `melody_rnn` | 1141 | 20/20 | 0.598 | 0.828 | 1492 | 0/200 |
 | `chord_pitches_improv` | 627 | 20/20 | 0.562 | 0.672 | 665 | 0/200 |
 
-The 15 written e3 songs use 25 F#, 18 Bb, 22 rests and 8 dotted quarters, and pass `content lint` apart from the same `source_url` error. Fingering: each bar takes the first five-finger position (C, G, F, D) that covers its notes, else spreads its span over 1–5; good enough to read, not teaching-grade. Rerunning `--level e1` reproduced the e1 table's scores exactly (same seeds); ms/tune varied by up to 0.5 s between runs.
+Seen in the viewer: 3 of the 15 kept e3 tunes collapse into a loop (basic_rnn seed 17, the top basic_rnn tune, is C4 + quarter rest eight bars long; basic_rnn 14 and melody_rnn 19 are close). The model loops, and the ranking rewards it because exact bar repetition scores full marks. A real ranker needs a pitch-variety / range term and a cap on rests. The 15 written e3 songs use 25 F#, 18 Bb, 22 rests and 8 dotted quarters, and pass `content lint` apart from the same `source_url` error. Fingering: each bar takes the first five-finger position (C, G, F, D) that covers its notes, else spreads its span over 1–5; good enough to read, not teaching-grade. Rerunning `--level e1` reproduced the e1 table's scores exactly (same seeds); ms/tune varied by up to 0.5 s between runs.
 
 ### Viewer
 
