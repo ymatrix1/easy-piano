@@ -23,6 +23,9 @@ BLOCKED_TITLES = re.compile(
     r"opening|ending|meme|remix|cover|fnaf|genshin|tiktok)\b",
     re.I)
 
+# A PD composition does not clear a modern arrangement (docs/research/melody-corpora.md).
+ARRANGED = re.compile(r"\b(arr\.?|arranged|arrangement|version|easy piano|simplified)\b", re.I)
+
 
 def pdmx_ok(row: dict) -> tuple[bool, str]:
     if row["subset:no_license_conflict"] != "True":
@@ -34,12 +37,17 @@ def pdmx_ok(row: dict) -> tuple[bool, str]:
         return False, "pdmx genre"
     if not genres and row["is_original"] != "True":
         return False, "pdmx untagged non-original"
+    original = row["is_original"] == "True"
+    if row["composer_name"] == "NA" and not original:
+        return False, "pdmx no composer"
     names = " ".join(row[k] for k in ("composer_name", "artist_name") if row[k] != "NA")
     if names and BLOCKED_NAMES.search(names):
         return False, "pdmx blocked name"
     title = " ".join(row[k] for k in ("title", "song_name", "subtitle") if row[k] != "NA")
     if BLOCKED_TITLES.search(title):
         return False, "pdmx blocked title"
+    if not original and ARRANGED.search(title):
+        return False, "pdmx third-party arrangement"
     try:
         bars = int(float(row["song_length.bars"]))
     except ValueError:
