@@ -1,13 +1,14 @@
 # Input
 
-Status: draft ([D5](../DECISIONS.md)).
+Status: draft ([D5](../DECISIONS.md), mic: [D17](../DECISIONS.md)).
 
 | Source | Phase | Path |
 |---|---|---|
 | Touch keyboard | 1 | Flutter `Listener` multi-touch → NoteEvent |
 | MIDI USB/BLE | 1 | Dart plugin per platform (Android `MidiManager`, iOS/macOS CoreMIDI, Web MIDI, Windows WinRT MIDI, Linux ALSA) → timestamp on audio clock → core |
-| Mic monophonic | 3 | Rust YIN/MPM in audio thread |
-| Mic polyphonic | research | score-informed spectral check vs expected notes; later small ONNX/TFLite model (Basic Pitch class) |
+| Mic (web) | 3 | `getUserMedia` → AudioWorklet (`web/mic_worklet.js`) → Dart `NoteDetector` (onset + harmonic salience, up to 4 notes) → NoteEvent, `Input::Mic` |
+| Mic (native) | later | same detector over the native audio engine's input, or ported to Rust `core` |
+| Mic score-informed / ML | research | spectral check vs expected notes; Basic Pitch class model for "My songs" |
 
 ## Latency
 
@@ -16,5 +17,9 @@ Status: draft ([D5](../DECISIONS.md)).
 
 ## Mic details
 
-- Disable echo cancellation, noise suppression, AGC on web `getUserMedia`.
-- Backing track bleed: duck/disable backing in mic mode until reference subtraction exists.
+- Picker: mic button in the practice top bar. Off → explanation dialog (audio analysed on device, never recorded or sent; app piano muted) → browser permission → calibration the first time → listening. On → sheet with *Calibrate* or *Use MIDI / screen keys*. Choice and offset are stored per device (`localStorage` `easy_piano.input`, `easy_piano.mic_offset_ms`). Denied or unsupported permission shows a snackbar; the stage keeps MIDI/touch.
+- `getUserMedia` with echo cancellation, noise suppression and AGC **off** (they smear attacks and pump levels).
+- Feedback: in mic mode the app plays no piano for key presses and no metronome or backing after the count-in (`PracticeStage.micMode`). Pre-listen demos still play (input is ignored then).
+- Timing: the worklet posts 512-frame chunks with their context frame; onsets are timed to the sample and mapped to `performance.now()`. Events carry the onset time minus the calibration offset, not the time they were reported (~100 ms later), and the session uses `Input::Mic` (early 150 ms, late 430 ms, timing bonus per `session.rs`).
+- Calibration: a circle lights 8 times, 0.8 s apart (visual cue, so speakers can't trigger the mic); the student plays any key with it. Offset = median(onset − cue) over beats 3–8 with an onset within ±350 ms; needs ≥4.
+- Detector and fixture scores: [research/mic-input.md](../research/mic-input.md). Known limits: notes below C3, octave doublings (not reported), one chord note sometimes missing.

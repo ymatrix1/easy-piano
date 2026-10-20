@@ -242,6 +242,55 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get middleCLabel => 'Dó';
+
+  @override
+  String get micInput => 'Microfone';
+
+  @override
+  String get micUseMidi => 'Usar MIDI / teclas na tela';
+
+  @override
+  String get micExplainTitle => 'Tocar com o microfone';
+
+  @override
+  String get micExplainBody =>
+      'O Easy Piano escuta o seu piano pelo microfone para você tocar sem cabo. O áudio é analisado neste aparelho e nunca é gravado nem enviado. O som de piano do app fica mudo enquanto escuta.';
+
+  @override
+  String get micAllow => 'Permitir microfone';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get micDenied =>
+      'O acesso ao microfone foi bloqueado. Permita nas configurações do site no navegador e tente de novo.';
+
+  @override
+  String get micUnavailable =>
+      'A entrada por microfone não está disponível neste navegador.';
+
+  @override
+  String get micCalibrate => 'Calibrar';
+
+  @override
+  String get micCalibrateTitle => 'Calibrar o microfone';
+
+  @override
+  String get micCalibrateBody =>
+      'Toque qualquer tecla cada vez que o círculo acender.';
+
+  @override
+  String get micCalibrateRetry =>
+      'Não ouvi notas suficientes. Tente de novo um pouco mais forte.';
+
+  @override
+  String micCalibrateDone(int ms) {
+    return 'Pronto: atraso de $ms ms';
+  }
+
+  @override
+  String get micListening => 'Escutando';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

@@ -34,7 +34,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 3: Mic and library
 
-- [ ] Mic monophonic detection + calibration
+- [x] Mic detection (single notes + chords) + calibration, web ([input](specs/input.md), [research](research/mic-input.md)); native capture pending
 - [ ] MusicXML/MIDI importers; song library with 30 PD pieces
 - [ ] Daily workout, streaks, daily goal
 

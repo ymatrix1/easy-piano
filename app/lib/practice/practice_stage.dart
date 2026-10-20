@@ -63,6 +63,8 @@ class PracticeStage extends StatefulWidget {
     required this.stage,
     required this.songJson,
     required this.midi,
+    this.micMode = false,
+    this.onMic,
     required this.failedAttempts,
     required this.onFinished,
     required this.staves,
@@ -82,6 +84,12 @@ class PracticeStage extends StatefulWidget {
   final StageDef stage;
   final String songJson;
   final MidiInput midi;
+
+  /// Notes come from the microphone: core uses its mic timing window, and
+  /// the app's own piano and backing stay silent so the mic only hears the
+  /// student (docs/specs/input.md).
+  final bool micMode;
+  final VoidCallback? onMic;
   final int failedAttempts;
   final void Function(ResultView result) onFinished;
   final Staves staves;
@@ -211,7 +219,7 @@ class _PracticeStageState extends State<PracticeStage>
     _session = PracticeSession.create(
       songJson: widget.songJson,
       mode: widget.stage.type,
-      input: 'midi',
+      input: widget.micMode ? 'mic' : 'midi',
       hand: widget.stage.hand,
       tempo: widget.tempo,
       passRatio: widget.stage.pass,
@@ -310,6 +318,8 @@ class _PracticeStageState extends State<PracticeStage>
         accent: (b + _beatsPerBar) % _beatsPerBar == 0,
       );
     }
+    // Mic: count-in only; clicks and backing would reach the microphone.
+    if (widget.micMode) return;
     if (pianoSynth.metronome) {
       for (
         var b = math.max(0.0, fromBeat.ceilToDouble());
@@ -405,7 +415,9 @@ class _PracticeStageState extends State<PracticeStage>
   double get _nowSec => widget.midi.now() / 1000;
 
   void _onNote(int pitch, bool on, double timestampMs) {
-    on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
+    if (!widget.micMode) {
+      on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
+    }
     final next = {..._pressed.value};
     on ? next.add(pitch) : next.remove(pitch);
     _pressed.value = next;
@@ -750,7 +762,20 @@ class _PracticeStageState extends State<PracticeStage>
               ],
             ],
             if (_paused) const Spacer() else const SizedBox(width: 8),
-            if (widget.onConnectMidi != null && narrow)
+            if (widget.onMic != null)
+              IconButton(
+                onPressed: widget.onMic,
+                tooltip: widget.micMode
+                    ? AppLocalizations.of(context).micListening
+                    : AppLocalizations.of(context).micInput,
+                icon: Icon(
+                  widget.micMode ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  color: widget.micMode
+                      ? StagePalette.done
+                      : StagePalette.textDim,
+                ),
+              ),
+            if (widget.onConnectMidi != null && !widget.micMode && narrow)
               IconButton(
                 onPressed: widget.onConnectMidi,
                 tooltip:
@@ -765,7 +790,7 @@ class _PracticeStageState extends State<PracticeStage>
                       : StagePalette.done,
                 ),
               )
-            else if (widget.onConnectMidi != null) ...[
+            else if (widget.onConnectMidi != null && !widget.micMode) ...[
               TextButton.icon(
                 onPressed: widget.onConnectMidi,
                 style: TextButton.styleFrom(foregroundColor: StagePalette.text),

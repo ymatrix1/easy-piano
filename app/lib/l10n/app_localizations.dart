@@ -524,6 +524,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'C'**
   String get middleCLabel;
+
+  /// No description provided for @micInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone'**
+  String get micInput;
+
+  /// No description provided for @micUseMidi.
+  ///
+  /// In en, this message translates to:
+  /// **'Use MIDI / screen keys'**
+  String get micUseMidi;
+
+  /// No description provided for @micExplainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play with the microphone'**
+  String get micExplainTitle;
+
+  /// No description provided for @micExplainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy Piano listens to your piano through the microphone so you can play without a cable. Audio is analysed on this device and never recorded or sent. The app\'s own piano sound is muted while listening.'**
+  String get micExplainBody;
+
+  /// No description provided for @micAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone'**
+  String get micAllow;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @micDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access was blocked. Allow it in the browser\'s site settings and try again.'**
+  String get micDenied;
+
+  /// No description provided for @micUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone input is not available in this browser.'**
+  String get micUnavailable;
+
+  /// No description provided for @micCalibrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate'**
+  String get micCalibrate;
+
+  /// No description provided for @micCalibrateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate the microphone'**
+  String get micCalibrateTitle;
+
+  /// No description provided for @micCalibrateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Play any key each time the circle lights up.'**
+  String get micCalibrateBody;
+
+  /// No description provided for @micCalibrateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'I didn\'t hear enough notes. Try again a little louder.'**
+  String get micCalibrateRetry;
+
+  /// No description provided for @micCalibrateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done: {ms} ms delay'**
+  String micCalibrateDone(int ms);
+
+  /// No description provided for @micListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening'**
+  String get micListening;
 }
 
 class _AppLocalizationsDelegate

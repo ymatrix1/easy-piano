@@ -4,3 +4,4 @@ references/
 target/
 *.mp4
 *.mov
+tools/mic-fixtures/

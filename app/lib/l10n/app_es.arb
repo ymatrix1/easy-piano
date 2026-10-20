@@ -69,5 +69,19 @@
   "retry": "Reintentar",
   "next": "Siguiente",
   "locked": "Bloqueado",
-  "middleCLabel": "Do"
+  "middleCLabel": "Do",
+  "micInput": "Micrófono",
+  "micUseMidi": "Usar MIDI / teclas en pantalla",
+  "micExplainTitle": "Tocar con el micrófono",
+  "micExplainBody": "Easy Piano escucha tu piano por el micrófono para que toques sin cable. El audio se analiza en este dispositivo y nunca se graba ni se envía. El sonido de piano de la app se silencia mientras escucha.",
+  "micAllow": "Permitir micrófono",
+  "cancel": "Cancelar",
+  "micDenied": "Se bloqueó el acceso al micrófono. Permítelo en la configuración del sitio del navegador e inténtalo de nuevo.",
+  "micUnavailable": "La entrada por micrófono no está disponible en este navegador.",
+  "micCalibrate": "Calibrar",
+  "micCalibrateTitle": "Calibrar el micrófono",
+  "micCalibrateBody": "Toca cualquier tecla cada vez que se ilumine el círculo.",
+  "micCalibrateRetry": "No oí suficientes notas. Inténtalo de nuevo un poco más fuerte.",
+  "micCalibrateDone": "Listo: {ms} ms de retraso",
+  "micListening": "Escuchando"
 }

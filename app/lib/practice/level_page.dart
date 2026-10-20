@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
+import '../input/mic/mic_input.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
+import 'mic_calibration.dart';
 import 'practice_stage.dart';
 import 'result_screen.dart';
 
@@ -42,11 +44,109 @@ class _LevelPageState extends State<LevelPage> {
   ResultView? _result;
   final _bestStars = <int, int>{};
   String? _midiLabel;
+  bool _mic = false; // listening through the microphone instead of MIDI
 
   @override
   void initState() {
     super.initState();
     _connectMidi(quiet: true);
+    // A student who picked the mic before gets it back; the browser keeps
+    // the permission, so this doesn't prompt again.
+    if (micInput.preferred && micInput.offsetMs != null) {
+      micInput.start().then((ok) {
+        if (mounted && ok) setState(() => _mic = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    micInput.stop();
+    super.dispose();
+  }
+
+  /// Mic button: off → explain, ask permission, calibrate once, listen.
+  /// On → recalibrate or go back to MIDI / screen keys.
+  Future<void> _onMicButton() async {
+    final l = AppLocalizations.of(context);
+    if (_mic) {
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        builder: (c) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.tune_rounded),
+                title: Text(l.micCalibrate),
+                onTap: () => Navigator.of(c).pop('calibrate'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.piano_rounded),
+                title: Text(l.micUseMidi),
+                onTap: () => Navigator.of(c).pop('off'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted) return;
+      if (choice == 'calibrate') {
+        await showMicCalibration(context, micInput);
+        if (mounted) setState(() => _run++);
+      } else if (choice == 'off') {
+        micInput.stop();
+        micInput.preferred = false;
+        setState(() {
+          _mic = false;
+          _run++;
+        });
+      }
+      return;
+    }
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l.micExplainTitle),
+        content: Text(l.micExplainBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(c).pop(true),
+            child: Text(l.micAllow),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+    final ok = await micInput.start();
+    if (!mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            micInput.error == MicError.denied ? l.micDenied : l.micUnavailable,
+          ),
+        ),
+      );
+      return;
+    }
+    if (micInput.offsetMs == null) {
+      await showMicCalibration(context, micInput);
+      if (!mounted) return;
+      if (micInput.offsetMs == null) {
+        micInput.stop();
+        return;
+      }
+    }
+    micInput.preferred = true;
+    setState(() {
+      _mic = true;
+      _run++;
+    });
   }
 
   /// Connects Web MIDI (the browser may ask for permission the first time).
@@ -183,7 +283,9 @@ class _LevelPageState extends State<LevelPage> {
       key: ValueKey('$_index-$_run'),
       stage: s,
       songJson: repo.songJson[s.score]!,
-      midi: widget.midi,
+      midi: _mic ? micInput : widget.midi,
+      micMode: _mic,
+      onMic: _onMicButton,
       failedAttempts: _attempt,
       onFinished: _finished,
       staves: stavesForUi(widget.level.ui),
