@@ -1,0 +1,10 @@
+{
+  "name": "magenta-spike",
+  "private": true,
+  "type": "commonjs",
+  "description": "Feasibility spike: rule-limited melody generation with Magenta.js",
+  "scripts": { "generate": "node generate.js" },
+  "dependencies": {
+    "@magenta/music": "1.23.1"
+  }
+}
