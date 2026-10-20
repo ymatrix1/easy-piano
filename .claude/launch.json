@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["tools/serve_web.py", "app/build/web", "8765"],
       "port": 8765
+    },
+    {
+      "name": "listening-test",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8770", "--bind", "127.0.0.1", "--directory", "tools/listening-test/out/site"],
+      "port": 8770
     }
   ]
 }

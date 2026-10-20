@@ -6,4 +6,5 @@ pub mod notation;
 pub mod pitch;
 pub mod rubric;
 pub mod session;
+pub mod similarity;
 pub mod song;

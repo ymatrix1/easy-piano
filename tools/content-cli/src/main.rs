@@ -3,6 +3,8 @@
 //! `content specs <content_dir> [--out <file>]`: cumulative taught set per journey
 //! node plus its skill spec (docs/specs/skill-specs.md).
 
+mod similar;
+
 use easy_piano_core::rubric::{check, CourseSpecs, NodeSpec, TaughtSet};
 use easy_piano_core::song::Song;
 use serde_json::Value;
@@ -588,6 +590,9 @@ fn lint_dir(root: &Path) -> Lint {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some("similar") {
+        std::process::exit(similar::run(&args[2..]));
+    }
     let (Some(cmd @ ("lint" | "specs")), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
         eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]");
         std::process::exit(2);
