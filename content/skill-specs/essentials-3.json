@@ -1,0 +1,122 @@
+{
+  "course": "essentials-3",
+  "nodes": [
+    {
+      "node": "waltz",
+      "new_skill": "3/4 time: strong first beat, dotted halves fill a bar.",
+      "required": [{ "rhythm": "2." }],
+      "bars": [8, 8],
+      "bpm": [88, 104],
+      "hands": "RH",
+      "time": "3/4"
+    },
+    {
+      "node": "left-hand-g",
+      "new_skill": "Left hand G position, down to G2.",
+      "required": [{ "pitch": "G2", "hand": "LH" }],
+      "bars": [8, 8],
+      "bpm": [68, 84],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "sharps",
+      "new_skill": "First black key: F sharp in G position.",
+      "required": [{ "accidental": "F#" }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "minuet",
+      "new_skill": "Classic 3/4 song in G with eighth-note runs and F sharp.",
+      "required": [{ "accidental": "F#" }, { "rhythm": "8" }],
+      "bars": [8, 16],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "flats",
+      "new_skill": "B flat in F position.",
+      "required": [{ "accidental": "Bb" }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "amazing-grace",
+      "new_skill": "Slow 3/4 song in F with B flat and pickups.",
+      "required": [{ "accidental": "Bb" }, { "hands_together": true }],
+      "bars": [8, 16],
+      "bpm": [76, 92],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "auld-lang-syne",
+      "new_skill": "4/4 song in F with dotted rhythm and wide leaps.",
+      "required": [{ "rhythm": "4." }, { "interval_min": 4 }],
+      "bars": [8, 9],
+      "bpm": [76, 92],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: sharps, flats and 3/4 time.",
+      "required": [{ "hands_together": true }],
+      "bars": [8, 16],
+      "bpm": [80, 100],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "greensleeves",
+      "new_skill": "Minor key (A minor) with G sharp in 3/4.",
+      "required": [{ "accidental": "G#" }],
+      "bars": [8, 16],
+      "bpm": [80, 96],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "scale",
+      "new_skill": "C major scale over the octave: thumb under and finger crossing.",
+      "required": [{ "pitch": "C5", "hand": "RH" }, { "pitch": "B4", "hand": "RH" }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "joy-to-the-world",
+      "new_skill": "Song built on a descending scale from C5, dotted rhythm.",
+      "required": [{ "pitch": "C5", "hand": "RH" }, { "rhythm": "4." }],
+      "bars": [7, 8],
+      "bpm": [80, 96],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: scales, minor key, full octave range.",
+      "required": [{ "pitch": "C5", "hand": "RH" }],
+      "bars": [7, 16],
+      "bpm": [80, 96],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course review: a 3/4 song in G with accidentals and both hands.",
+      "required": [{ "accidental": "F#" }, { "hands_together": true }],
+      "bars": [12, 16],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "3/4"
+    }
+  ]
+}
