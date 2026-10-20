@@ -1,0 +1,33 @@
+{
+  "id": "e2-06-oh-susanna",
+  "title": "str:level.e2.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "oh-susanna",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "oh-susanna",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "oh-susanna",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "oh-susanna",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

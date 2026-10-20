@@ -1,0 +1,14 @@
+{
+  "id": "e2-17-gate-f-waltz",
+  "title": "str:level.e2.17.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "e2-f-waltz",
+      "tempo": 1.1,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

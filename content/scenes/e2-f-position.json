@@ -1,0 +1,48 @@
+{
+  "id": "e2-f-position",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.e2.f.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "F4",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 2,
+      "press": "G4",
+      "label": "2"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 10,
+      "hand": "R",
+      "finger": 5,
+      "press": "C5",
+      "label": "5"
+    },
+    {
+      "at": 13,
+      "prompt": "your_turn"
+    }
+  ]
+}
