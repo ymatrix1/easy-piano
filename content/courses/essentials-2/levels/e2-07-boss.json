@@ -1,0 +1,33 @@
+{
+  "id": "e2-07-boss",
+  "title": "str:level.e2.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "twinkle-twinkle",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "wait",
+      "score": "twinkle-twinkle",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "twinkle-twinkle",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "twinkle-twinkle",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

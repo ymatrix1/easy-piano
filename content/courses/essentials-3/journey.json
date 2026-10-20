@@ -1,0 +1,188 @@
+{
+  "course": "essentials-3",
+  "nodes": [
+    {
+      "id": "waltz",
+      "kind": "lesson",
+      "title": "str:node.e3.waltz",
+      "icon": "note",
+      "levels": [
+        "e3-01-waltz"
+      ],
+      "next": [
+        "left-hand-g"
+      ]
+    },
+    {
+      "id": "left-hand-g",
+      "kind": "lesson",
+      "title": "str:node.e3.left-hand-g",
+      "icon": "note",
+      "levels": [
+        "e3-02-left-hand-g"
+      ],
+      "next": [
+        "sharps"
+      ]
+    },
+    {
+      "id": "sharps",
+      "kind": "lesson",
+      "title": "str:node.e3.sharps",
+      "icon": "note",
+      "levels": [
+        "e3-03-sharps"
+      ],
+      "next": [
+        "minuet"
+      ]
+    },
+    {
+      "id": "minuet",
+      "kind": "song",
+      "title": "str:node.e3.minuet",
+      "icon": "play",
+      "levels": [
+        "e3-04-minuet"
+      ],
+      "next": [
+        "flats"
+      ],
+      "songs": {
+        "default": "minuet-in-g",
+        "classical": "minuet-in-g"
+      }
+    },
+    {
+      "id": "flats",
+      "kind": "lesson",
+      "title": "str:node.e3.flats",
+      "icon": "note",
+      "levels": [
+        "e3-05-flats"
+      ],
+      "next": [
+        "amazing-grace"
+      ]
+    },
+    {
+      "id": "amazing-grace",
+      "kind": "song",
+      "title": "str:node.e3.amazing-grace",
+      "icon": "play",
+      "levels": [
+        "e3-06-amazing-grace"
+      ],
+      "next": [
+        "auld-lang-syne"
+      ],
+      "songs": {
+        "default": "amazing-grace",
+        "hymns_spirituals": "amazing-grace"
+      }
+    },
+    {
+      "id": "auld-lang-syne",
+      "kind": "song",
+      "title": "str:node.e3.auld-lang-syne",
+      "icon": "play",
+      "levels": [
+        "e3-10-auld-lang-syne"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "auld-lang-syne",
+        "folk_world": "auld-lang-syne"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.e3.gate-1",
+      "icon": "star",
+      "levels": [
+        "e3-11-gate-minuet",
+        "e3-12-gate-amazing-grace",
+        "e3-13-gate-auld-lang-syne"
+      ],
+      "next": [
+        "greensleeves"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "greensleeves",
+      "kind": "song",
+      "title": "str:node.e3.greensleeves",
+      "icon": "play",
+      "levels": [
+        "e3-07-greensleeves"
+      ],
+      "next": [
+        "scale"
+      ],
+      "songs": {
+        "default": "greensleeves",
+        "folk_world": "greensleeves"
+      }
+    },
+    {
+      "id": "scale",
+      "kind": "lesson",
+      "title": "str:node.e3.scale",
+      "icon": "note",
+      "levels": [
+        "e3-08-scale"
+      ],
+      "next": [
+        "joy-to-the-world"
+      ]
+    },
+    {
+      "id": "joy-to-the-world",
+      "kind": "song",
+      "title": "str:node.e3.joy-to-the-world",
+      "icon": "play",
+      "levels": [
+        "e3-14-joy-to-the-world"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "joy-to-the-world",
+        "hymns_spirituals": "joy-to-the-world"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.e3.gate-2",
+      "icon": "star",
+      "levels": [
+        "e3-15-gate-joy",
+        "e3-16-gate-greensleeves",
+        "e3-17-gate-scale"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.e3.boss",
+      "icon": "play",
+      "levels": [
+        "e3-09-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "minuet-in-g"
+      }
+    }
+  ]
+}

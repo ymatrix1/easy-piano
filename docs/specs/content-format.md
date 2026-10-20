@@ -82,13 +82,14 @@ Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:
 
 - `courses.json`: `sections[]` (`id`, `title`) and `courses[]` (`id`, `title`, `description`, `section`, `requires`, `journey`, optional `status`: `ready` (default) or `planned`). Planned courses have no journey and show locked in the app. Hierarchy: section → module (course) → submodule (journey node) → task (level); see [visual-style.md](visual-style.md).
 - Journey nodes: `id`, `kind` (`lesson`, `song`, `star_gate`, `boss`, `mini_boss`), `title`, `icon`, `levels`, `next`, optional `songs` slots keyed by taste (`default`, `classical`, `folk_world`, …; D12).
+- `star_gate` nodes also need `stars_needed` (1 to 3 × level count): one level per song, and the gate is passed when the stars summed over its levels reach it, so the learner picks which songs to play (e.g. 3 songs, `stars_needed: 5` ≈ any two played well). Other kinds must not set it. Gates never lock anything: until placement exists (OQ9) every node stays open.
 - Level stages: `type` (`wait`, `play_along`, `one_note`, `animation`, `quiz`); `score` required for wait/play_along/one_note; `scene` for animation; optional `tempo` (0.3–1.5), `pass` (0–1), `hand` (`RH`, `LH`, `both`), `pre_listen`, `repeats` (1–10, wait stages repeat in a row).
 - Levels: `ui` (`treble` / `bass` single staff for beginners, `both` grand staff), optional `keyboard` (default `true`; on-screen keyboard shown by default).
 - Beats: duration × time-signature denominator (quarter = 1 beat in x/4).
 
 ## What `content lint` checks
 
-Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
+Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
 
 ## Rules
 

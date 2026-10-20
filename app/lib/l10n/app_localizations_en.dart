@@ -243,6 +243,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get middleCLabel => 'C';
 
   @override
+  String gateProgress(int need, int have) {
+    return 'Earn $need stars from any of these songs ($have/$need)';
+  }
+
+  @override
   String get micInput => 'Microphone';
 
   @override

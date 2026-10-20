@@ -1,0 +1,113 @@
+{
+  "id": "twinkle-twinkle",
+  "title": "Twinkle, Twinkle, Little Star",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 96,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 C4:4@1 G4:4@5 G4:4@5",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "A4:4@5 A4:4@5 G4:2@5",
+      "LH": "F3:2@2 C3:2@5",
+      "ACC": "C3F3A3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "F4:4@4 F4:4@4 E4:4@3 E4:4@3",
+      "LH": "F3:2@2 C3:2@5",
+      "ACC": "C3F3A3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "D4:4@2 D4:4@2 C4:2@1",
+      "LH": "G3:2@1 C3:2@5",
+      "ACC": "B2D3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "G4:4@5 G4:4@5 F4:4@4 F4:4@4",
+      "LH": "C3:2@5 F3:2@2",
+      "ACC": "C3E3G3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 F1:4 C2:4"
+    },
+    {
+      "RH": "E4:4@3 E4:4@3 D4:2@2",
+      "LH": "C3:2@5 G3:2@1",
+      "ACC": "C3E3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 G1:4 D2:4"
+    },
+    {
+      "RH": "G4:4@5 G4:4@5 F4:4@4 F4:4@4",
+      "LH": "C3:2@5 F3:2@2",
+      "ACC": "C3E3G3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 F1:4 C2:4"
+    },
+    {
+      "RH": "E4:4@3 E4:4@3 D4:2@2",
+      "LH": "C3:2@5 G3:2@1",
+      "ACC": "C3E3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 G1:4 D2:4"
+    },
+    {
+      "RH": "C4:4@1 C4:4@1 G4:4@5 G4:4@5",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "A4:4@5 A4:4@5 G4:2@5",
+      "LH": "F3:2@2 C3:2@5",
+      "ACC": "C3F3A3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "F4:4@4 F4:4@4 E4:4@3 E4:4@3",
+      "LH": "F3:2@2 C3:2@5",
+      "ACC": "C3F3A3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "D4:4@2 D4:4@2 C4:2@1",
+      "LH": "G3:2@1 C3:2@5",
+      "ACC": "B2D3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 C2:4 G2:4"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ],
+    [
+      4,
+      8
+    ],
+    [
+      8,
+      12
+    ]
+  ]
+}

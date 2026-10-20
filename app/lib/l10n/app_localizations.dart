@@ -525,6 +525,12 @@ abstract class AppLocalizations {
   /// **'C'**
   String get middleCLabel;
 
+  /// No description provided for @gateProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn {need} stars from any of these songs ({have}/{need})'**
+  String gateProgress(int need, int have);
+
   /// No description provided for @micInput.
   ///
   /// In en, this message translates to:

@@ -244,6 +244,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get middleCLabel => 'Dó';
 
   @override
+  String gateProgress(int need, int have) {
+    return 'Ganhe $need estrelas em qualquer uma destas músicas ($have/$need)';
+  }
+
+  @override
   String get micInput => 'Microfone';
 
   @override
@@ -296,4 +301,9 @@ class AppLocalizationsPt extends AppLocalizations {
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
 class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
+
+  @override
+  String gateProgress(int need, int have) {
+    return 'Ganhe $need estrelas em qualquer uma destas músicas ($have/$need)';
+  }
 }

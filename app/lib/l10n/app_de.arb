@@ -70,6 +70,7 @@
   "next": "Weiter",
   "locked": "Gesperrt",
   "middleCLabel": "C",
+  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})",
   "micInput": "Mikrofon",
   "micUseMidi": "MIDI / Bildschirmtasten nutzen",
   "micExplainTitle": "Mit dem Mikrofon spielen",

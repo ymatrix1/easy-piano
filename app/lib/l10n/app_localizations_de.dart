@@ -246,6 +246,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get middleCLabel => 'C';
 
   @override
+  String gateProgress(int need, int have) {
+    return 'Sammle $need Sterne mit beliebigen dieser Lieder ($have/$need)';
+  }
+
+  @override
   String get micInput => 'Mikrofon';
 
   @override

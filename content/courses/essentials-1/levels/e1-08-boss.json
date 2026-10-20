@@ -1,0 +1,27 @@
+{
+  "id": "e1-08-boss",
+  "title": "str:level.e1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "when-the-saints",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "when-the-saints",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "when-the-saints",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

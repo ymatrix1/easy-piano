@@ -71,7 +71,10 @@ class _HomePageState extends State<HomePage> {
     final progress = Progress(widget.repo, _stars);
     final tabs = [
       LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
-      PracticeTab(onFreePlay: () => _push(widget.spikes)),
+      SafeArea(
+        bottom: false,
+        child: PracticeTab(onFreePlay: () => _push(widget.spikes)),
+      ),
       ProfileTab(
         progress: progress,
         onMidiSpike: () => _push(widget.spikes),
@@ -85,22 +88,44 @@ class _HomePageState extends State<HomePage> {
           bottom: false,
           child: Column(
             children: [
-              _TopBar(stars: progress.totalStars),
               Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  switchInCurve: Curves.easeOutCubic,
-                  transitionBuilder: (child, a) => FadeTransition(
-                    opacity: a,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.02),
-                        end: Offset.zero,
-                      ).animate(a),
-                      child: child,
+                child: Stack(
+                  children: [
+                    // Tabs scroll under the floating glass bar: their top inset
+                    // comes in as MediaQuery padding.
+                    Positioned.fill(
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          padding: MediaQuery.paddingOf(context)
+                              .copyWith(top: _TopBar.inset),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          switchInCurve: Curves.easeOutCubic,
+                          transitionBuilder: (child, a) => FadeTransition(
+                            opacity: a,
+                            child: SlideTransition(
+                              position: Tween(
+                                begin: const Offset(0, 0.02),
+                                end: Offset.zero,
+                              ).animate(a),
+                              child: child,
+                            ),
+                          ),
+                          child: KeyedSubtree(
+                            key: ValueKey(_tab),
+                            child: tabs[_tab],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: KeyedSubtree(key: ValueKey(_tab), child: tabs[_tab]),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      child: _TopBar(stars: progress.totalStars),
+                    ),
+                  ],
                 ),
               ),
               _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
@@ -120,9 +145,24 @@ class Progress {
   final Map<String, int> levelStars;
 
   /// A submodule's stars: the lowest of its tasks (0 until all are played).
-  int nodeStars(JourneyNode n) => n.levels.isEmpty
-      ? 0
-      : n.levels.map((l) => levelStars[l] ?? 0).reduce((a, b) => a < b ? a : b);
+  /// A star gate scores its earned stars against `starsNeeded` instead, so
+  /// any mix of its songs can open it.
+  int nodeStars(JourneyNode n) {
+    if (n.levels.isEmpty) return 0;
+    final need = n.starsNeeded;
+    if (need != null) return (3 * gateStars(n) ~/ need).clamp(0, 3);
+    return n.levels
+        .map((l) => levelStars[l] ?? 0)
+        .reduce((a, b) => a < b ? a : b);
+  }
+
+  /// Passed: a gate has its stars, any other node has every task played.
+  bool nodeDone(JourneyNode n) =>
+      n.starsNeeded != null ? gateStars(n) >= n.starsNeeded! : nodeStars(n) > 0;
+
+  /// Stars earned so far across a node's tasks.
+  int gateStars(JourneyNode n) =>
+      n.levels.fold(0, (a, l) => a + (levelStars[l] ?? 0));
 
   int courseStars(CourseDef c) => c.nodes.fold(0, (a, n) => a + nodeStars(n));
 
@@ -135,7 +175,7 @@ class Progress {
     for (final c in repo.courses) {
       if (c.planned) continue;
       for (final n in c.nodes) {
-        if (nodeStars(n) == 0) return (c, n);
+        if (!nodeDone(n)) return (c, n);
       }
     }
     return null;
@@ -153,45 +193,70 @@ class _TopBar extends StatelessWidget {
 
   final int stars;
 
+  static const _height = 60.0;
+
+  /// Space the tabs leave at the top so their first item starts below the bar.
+  static const inset = _height + 8;
+
   @override
   Widget build(BuildContext context) {
-    // Glass bar: blurred, translucent violet over the arena backdrop, with a
-    // light top rim and a cyan hairline underneath.
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: 0.10),
-                GameColors.panel.withValues(alpha: 0.35),
-              ],
-            ),
-            border: Border(
-              bottom: BorderSide(
-                color: GameColors.cyan.withValues(alpha: 0.35),
+    // Edge-to-edge glass bar, mirroring the bottom nav: the content scrolls
+    // under it, blurred; same edge colour and shadow, content capped at 520.
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 20,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            height: _height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  GameColors.bgDeep.withValues(alpha: 0.70),
+                  GameColors.panel.withValues(alpha: 0.45),
+                ],
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: GameColors.panelEdge.withValues(alpha: 0.8),
+                ),
               ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/brand/logo.png',
-                  width: 40,
-                  height: 40,
-                  filterQuality: FilterQuality.medium,
-                  semanticLabel: AppLocalizations.of(context).logoLabel,
+            child: Center(
+              child: ConstrainedBox(
+                // + the 16 px side padding, so the row lines up with the tab content.
+                constraints: BoxConstraints(
+                  maxWidth: homeMaxWidth(context) + 32,
                 ),
-                const SizedBox(width: 10),
-                GameText(AppLocalizations.of(context).appTitle, size: 20),
-                const Spacer(),
-                StarCounter(value: stars),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/brand/logo.png',
+                        width: 38,
+                        height: 38,
+                        filterQuality: FilterQuality.medium,
+                        semanticLabel: AppLocalizations.of(context).logoLabel,
+                      ),
+                      const SizedBox(width: 10),
+                      GameText(AppLocalizations.of(context).appTitle, size: 18),
+                      const Spacer(),
+                      StarCounter(value: stars),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -234,7 +299,7 @@ class _NavBar extends StatelessWidget {
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
+          constraints: BoxConstraints(maxWidth: homeMaxWidth(context) + 8),
           child: Row(
             children: [
               for (final (i, (icon, label)) in [

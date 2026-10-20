@@ -61,11 +61,16 @@ class _LearnTabState extends State<LearnTab> {
     ];
     var moduleNo = 0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8 + MediaQuery.paddingOf(context).top,
+        16,
+        32,
+      ),
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
+            constraints: BoxConstraints(maxWidth: homeMaxWidth(context)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -792,6 +797,16 @@ class _TaskSheet extends StatelessWidget {
                       size: 26,
                       align: TextAlign.left,
                     ),
+                    if (node.starsNeeded case final need?) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context).gateProgress(
+                          need,
+                          progress.gateStars(node).clamp(0, need),
+                        ),
+                        style: const TextStyle(color: GameColors.textDim),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     for (final (i, id) in node.levels.indexed)
                       Padding(

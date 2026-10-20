@@ -1,0 +1,27 @@
+{
+  "id": "e2-08-london-bridge",
+  "title": "str:level.e2.08.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "london-bridge",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "london-bridge",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "london-bridge",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

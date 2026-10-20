@@ -1,0 +1,29 @@
+{
+  "id": "e3-02-left-hand-g",
+  "title": "str:level.e3.02.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e3-lh-g-position"
+    },
+    {
+      "type": "one_note",
+      "score": "e3-lh-g-drill",
+      "hand": "LH"
+    },
+    {
+      "type": "wait",
+      "score": "e3-lh-g-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "e3-lh-g-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

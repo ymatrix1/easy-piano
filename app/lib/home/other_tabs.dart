@@ -374,11 +374,16 @@ class _TabScroll extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12 + MediaQuery.paddingOf(context).top,
+        16,
+        32,
+      ),
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
+            constraints: BoxConstraints(maxWidth: homeMaxWidth(context)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

@@ -1,0 +1,20 @@
+{
+  "id": "e1-14-gate-au-clair",
+  "title": "str:level.e1.14.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "au-clair-de-la-lune",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "au-clair-de-la-lune",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "id": "go-tell-aunt-rhody",
+  "title": "Go Tell Aunt Rhody",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 92,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:2.@3 D4:4@2",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "C4:2@1 C4:2@1",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "D4:4@2 D4:4@2 F4:4@4 E4:4@3",
+      "LH": "G3:1@1",
+      "ACC": "B2D3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 B1:4 D2:4"
+    },
+    {
+      "RH": "D4:2@2 C4:2@1",
+      "LH": "C3:2@5 G3:2@1",
+      "ACC": "B2D3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "G4:2.@5 F4:4@4",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "E4:2@3 C4:2@1",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "D4:4@2 C4:4@1 D4:4@2 E4:4@3",
+      "LH": "G3:1@1",
+      "ACC": "B2D3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 B1:4 D2:4"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5",
+      "ACC": "C3E3G3:1",
+      "DRUMS": "C2C#3:1",
+      "BASS": "C2:1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      8
+    ]
+  ]
+}

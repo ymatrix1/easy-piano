@@ -36,10 +36,10 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 2));
 
-    // Outer trail: Piano Basics open, Essentials planned and locked.
+    // Outer trail: Piano Basics open, all three Essentials ready.
     expect(find.text('PIANO BASICS'), findsOneWidget);
     expect(find.text('ESSENTIALS I'), findsOneWidget);
-    expect(find.text('COMING SOON'), findsNWidgets(3));
+    expect(find.text('COMING SOON'), findsNothing);
     // Inner trail of the current module is expanded.
     expect(find.text('2. C, D and E'), findsOneWidget);
 

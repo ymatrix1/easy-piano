@@ -1,0 +1,14 @@
+{
+  "id": "e2-18-gate-shift",
+  "title": "str:level.e2.18.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "e2-shift-drill",
+      "tempo": 1.2,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

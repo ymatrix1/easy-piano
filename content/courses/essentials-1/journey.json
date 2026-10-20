@@ -1,0 +1,160 @@
+{
+  "course": "essentials-1",
+  "nodes": [
+    {
+      "id": "rests",
+      "kind": "lesson",
+      "title": "str:node.e1.rests",
+      "icon": "note",
+      "levels": [
+        "e1-01-rests",
+        "e1-09-quarters"
+      ],
+      "next": [
+        "intervals"
+      ]
+    },
+    {
+      "id": "intervals",
+      "kind": "lesson",
+      "title": "str:node.e1.intervals",
+      "icon": "note",
+      "levels": [
+        "e1-05-intervals"
+      ],
+      "next": [
+        "lightly-row"
+      ]
+    },
+    {
+      "id": "lightly-row",
+      "kind": "song",
+      "title": "str:node.e1.lightly-row",
+      "icon": "play",
+      "levels": [
+        "e1-10-lightly-row"
+      ],
+      "next": [
+        "left-hand"
+      ],
+      "songs": {
+        "default": "lightly-row",
+        "folk_world": "lightly-row"
+      }
+    },
+    {
+      "id": "left-hand",
+      "kind": "lesson",
+      "title": "str:node.e1.left-hand",
+      "icon": "note",
+      "levels": [
+        "e1-02-left-hand",
+        "e1-11-lh-chords"
+      ],
+      "next": [
+        "saints"
+      ]
+    },
+    {
+      "id": "saints",
+      "kind": "song",
+      "title": "str:node.e1.saints",
+      "icon": "play",
+      "levels": [
+        "e1-03-saints"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "when-the-saints",
+        "hymns_spirituals": "when-the-saints"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.e1.gate-1",
+      "icon": "star",
+      "levels": [
+        "e1-12-gate-lightly-row",
+        "e1-13-gate-aunt-rhody",
+        "e1-14-gate-au-clair"
+      ],
+      "next": [
+        "hands-together"
+      ],
+      "stars_needed": 5
+    },
+    {
+      "id": "hands-together",
+      "kind": "lesson",
+      "title": "str:node.e1.hands-together",
+      "icon": "note",
+      "levels": [
+        "e1-15-call-answer",
+        "e1-04-hands-together"
+      ],
+      "next": [
+        "eighths"
+      ]
+    },
+    {
+      "id": "eighths",
+      "kind": "lesson",
+      "title": "str:node.e1.eighths",
+      "icon": "note",
+      "levels": [
+        "e1-06-eighth-notes",
+        "e1-16-boogie"
+      ],
+      "next": [
+        "jingle"
+      ]
+    },
+    {
+      "id": "jingle",
+      "kind": "song",
+      "title": "str:node.e1.jingle",
+      "icon": "play",
+      "levels": [
+        "e1-07-jingle-bells"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "jingle-bells",
+        "folk_world": "jingle-bells"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.e1.gate-2",
+      "icon": "star",
+      "levels": [
+        "e1-17-gate-jingle",
+        "e1-18-gate-aunt-rhody",
+        "e1-19-gate-boogie"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 5
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.e1.boss",
+      "icon": "play",
+      "levels": [
+        "e1-08-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "when-the-saints"
+      }
+    }
+  ]
+}

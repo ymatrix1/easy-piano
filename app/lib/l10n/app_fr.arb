@@ -70,6 +70,7 @@
   "next": "Suivant",
   "locked": "Verrouillé",
   "middleCLabel": "Do",
+  "gateProgress": "Gagne {need} étoiles avec n'importe lesquels de ces morceaux ({have}/{need})",
   "micInput": "Microphone",
   "micUseMidi": "Utiliser MIDI / touches à l'écran",
   "micExplainTitle": "Jouer avec le microphone",
