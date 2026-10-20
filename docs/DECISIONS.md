@@ -19,6 +19,9 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | accepted |
 | [D12](#d12-skill-backbone-with-profile-variants) | 2026-10-16 | Skill backbone with profile variants (audience, taste, locale) | accepted |
 | [D13](#d13-one-polished-arena-style-theme-main-menu-with-nav-bar-and-two-level-course-trail) | 2026-10-16 | One polished arena-style theme, main menu, two-level course trail | proposed |
+| [D18](#d18-nottingham-music-database-minus-ashover-in-the-melody-model-training-set) | 2026-10-20 | NMD (minus Ashover) in melody-model training | accepted |
+| [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted |
+| [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | accepted |
 
 ## Accepted
 
@@ -180,3 +183,33 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** ARB gives typed getters, ICU plurals/placeholders, compile-time key checks and Material widget translations for free. Content stays editable by non-developers in the content pipeline, linted by `content-cli`, and can ship English-first (missing keys warn, not fail).
 - **Alternatives:** Everything in `content/strings` (no type safety, no plurals, Material widgets untranslated); everything in ARB (content authors would edit app code; lessons need an app rebuild per string); `easy_localization`/`slang` packages (extra dependency, no gain over the SDK tool).
 - **Impact:** New deps `flutter_localizations`, `intl`, `shared_preferences`. New UI text must go in `app_en.arb` and all other ARBs (test enforces). Translations are machine-assisted; native review wanted. Content lint prints warnings for untranslated keys.
+
+### D18. Nottingham Music Database (minus Ashover) in the melody-model training set
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-20 (PR #37 review)
+- **Context:** The practice-tune model (bean epic piano-bovj) needs simple folk melodies. The Nottingham Music Database (NMD, ~1,000 traditional tunes in ABC) is the closest match to beginner style, but the original files carry [no licence grant](https://abc.sourceforge.net/NMD/), the [jukedeck clean-up](https://github.com/jukedeck/nottingham-dataset) is GPLv3, and the NMD page states the Ashover collection's IPR "reside with Mick Peat".
+- **Decision:** Train on the **original** NMD ABC files only, **excluding the Ashover collection** and tunes credited to a named composer (`S:` line starting "By", "Composed", …). Never use the jukedeck GPLv3 files. NMD stays a separate corpus in the dataset manifest (`corpus: "nottingham"`) so it can be dropped and the model retrained.
+- **Why:** Musically the best fit; the tunes are traditional, and ABC transcriptions of traditional melodies are treated as uncopyrightable facts. **Risk accepted:** that position is untested legally and there is no explicit grant.
+- **Alternatives:** Skip NMD (smaller, less beginner-like data); use jukedeck GPLv3 files (would raise the question whether weights inherit GPL); ask the maintainers for a licence (slow, may not answer).
+- **Impact:** Provenance record lists NMD with this risk. If challenged, drop `corpus: "nottingham"` and retrain; generated tunes are checked for similarity to the training set either way.
+
+### D19. Approved training corpora for the melody model
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-20 (PR #37)
+- **Context:** Model weights ship in the open-source app, so training data must be clean. Licence review: [melody-corpora.md](research/melody-corpora.md).
+- **Decision:** Train only on OpenScore Lieder (composer death-year checked), Mutopia (PD / CC-BY / CC-BY-SA pieces, attribution kept), our own songs, PDMX `no_license_conflict` after the pop screen and a 50-tune sample approved by the user, and NMD per D18. Excluded: Essen (CCARH licence), Meertens (NC), The Session (no-LLM clause), music21 sets of unverified origin, IMSLP, all pop/film/game material. PD rule: public domain in both the EU/UK/Brazil life+70 regime (composer died ≤ 1955) and the US (published before 1931), or traditional.
+- **Why:** Only these sources allow training and shipping weights without non-commercial, research-only or no-AI terms.
+- **Alternatives:** Larger mixed-licence corpora (Lakh, MuseScore at large): rejected, weights would not be clean.
+- **Impact:** Raw data stays in git-ignored `data/`; manifests record URL, licence and hash per file. CC-BY/CC-BY-SA sources need credits in the app. Weights licence is open (OQ10).
+
+### D20. Melody model design: compound tokens, form plan, FIM, constrained search
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-20 (planning, relayed to session melody-model)
+- **Context:** We need original practice tunes conditioned on a course node's spec, generated in the browser.
+- **Decision:** Small decoder-only transformer (5–15M params) exported to ONNX int8 for onnxruntime-web. Compound tokens (one step = pitch, duration, finger, kind) with a spec prefix; two-level generation (bar-level form plan: section letter, cadence, contour; then notes); fill-in-the-middle training on the same decoder; constrained search at inference (masking, many samples, ranking by spec coverage, cadence, repetition, melody score, similarity < 0.6) with the rubric as a hard gate; later preference tuning (DPO) on blind listening ratings. Spec: [melody-model.md](specs/melody-model.md).
+- **Why:** Short sequences and a small model keep browser inference fast; the plan gives tunes form; FIM allows bar-level edits; search plus rubric guarantees level fit.
+- **Alternatives:** Magenta.js MusicVAE (pretrained on non-clean data); rules-only generator (dull); a large model behind a server (breaks local-first, D8).
+- **Impact:** Steps: corpora, converters + tokenizer, dataset, training on the user's GPU, ONNX + browser demo, evaluation. Note: D17 is used by PR #38 (skill specs); renumber here if that PR changes.
