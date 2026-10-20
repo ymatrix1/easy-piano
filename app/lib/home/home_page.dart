@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
+import '../practice/free_play_page.dart';
 import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -27,7 +28,7 @@ class HomePage extends StatefulWidget {
   final ContentRepo repo;
   final MidiInput midi;
 
-  /// Opens the Phase 0 MIDI spike page (also the interim free-play screen).
+  /// Opens the Phase 0 MIDI latency spike page (developer tools).
   final WidgetBuilder spikes;
 
   @override
@@ -73,7 +74,9 @@ class _HomePageState extends State<HomePage> {
       LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
       SafeArea(
         bottom: false,
-        child: PracticeTab(onFreePlay: () => _push(widget.spikes)),
+        child: PracticeTab(
+          onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
+        ),
       ),
       ProfileTab(
         progress: progress,

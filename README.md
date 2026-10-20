@@ -74,7 +74,8 @@ Ideas, bug reports and pull requests are welcome. Before you start:
 - Read [AGENTS.md](AGENTS.md) for project conventions (it's written for AI agents, but applies to humans too).
 - Tasks are tracked as [beans](https://github.com/hmans/beans) in [`.beans/`](.beans/).
 - Content must be clean: only original or public-domain material. See [content and licensing](.agents/rules/content-and-licensing.md).
-- Run `cargo test` in `core/` and `cargo run -- lint ../../content` in `tools/content-cli/` before opening a PR.
+- Run `cargo test` in `core/` and `cargo run -- lint ../../content` in `tools/content-cli/` before opening a PR; for app changes also `flutter analyze` and `flutter test` in `app/`.
+- CI runs the same checks on every PR and push to `main` ([`ci.yml`](.github/workflows/ci.yml)); the web build runs in [`deploy-web.yml`](.github/workflows/deploy-web.yml).
 
 ## License
 

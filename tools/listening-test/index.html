@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening test</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #14161c; color: #eee; margin: 0; }
+  main { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 1.3rem; }
+  .card { background: #1f2330; border-radius: 12px; padding: 20px; }
+  .muted { color: #9aa; font-size: .9rem; }
+  button { font: inherit; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: #333a4d; color: #eee; }
+  button.primary { background: #4c7dff; }
+  button:disabled { opacity: .4; cursor: default; }
+  .stars { display: flex; gap: 8px; margin: 16px 0; }
+  .stars button { width: 52px; font-size: 1.1rem; }
+  .stars button.on { background: #f2b630; color: #111; }
+  .row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+  input[type=text] { flex: 1; font: inherit; padding: 8px; border-radius: 6px; border: 1px solid #445; background: #14161c; color: #eee; }
+  progress { width: 100%; }
+  .err { color: #ff8080; min-height: 1em; margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; } td, th { padding: 4px 8px; text-align: left; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Which tunes sound good?</h1>
+  <p class="muted">Rate each tune 1 (bad) to 5 (great). Tick "familiar" if it sounds like a song you know. Keys: Space play/stop, 1-5 rate, Enter next. Which method made each tune stays hidden.</p>
+  <div id="app" class="card">Loading...</div>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
