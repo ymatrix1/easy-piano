@@ -89,7 +89,7 @@ Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:
 
 ## What `content lint` checks
 
-Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`.
+Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
 
 ## Rules
 

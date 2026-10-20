@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -107,12 +108,13 @@ class ResultScreen extends StatelessWidget {
     final notesFrac = r.notesTotal == 0 ? 0.0 : r.notesHit / r.notesTotal;
     final title = songTitle;
     String pct(double v) => '${v.round()}%';
-    final hint = playAlong
-        ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
+    final l = AppLocalizations.of(context);
+    final rule = playAlong
+        ? l.passRulePlayAlong((r.threshold * 100).round())
         : stageType == 'one_note'
-        ? 'Play more than 80% of the notes.'
-        : 'Play more than 80% of the notes before the hint appears.'
-              '${r.suggestPractice ? ' Try a slower tempo.' : ''}';
+        ? l.passRuleOneNote
+        : l.passRuleWait;
+    final hint = r.suggestPractice ? '$rule ${l.trySlowerTempo}' : rule;
     return ResultBackground(
       child: Center(
         child: SingleChildScrollView(
@@ -122,7 +124,9 @@ class ResultScreen extends StatelessWidget {
             children: [
               PopIn(
                 child: GameRibbon(
-                  r.passed ? 'Completed!' : 'Almost there!',
+                  r.passed
+                      ? AppLocalizations.of(context).completed
+                      : AppLocalizations.of(context).almostThere,
                   tone: r.passed ? GameTone.green : GameTone.red,
                   fontSize: 36,
                 ),
@@ -149,7 +153,7 @@ class ResultScreen extends StatelessWidget {
                 children: [
                   _stat(
                     Icons.music_note_rounded,
-                    'NOTES',
+                    AppLocalizations.of(context).statNotes.toUpperCase(),
                     r.notesHit.toDouble(),
                     (v) => '${v.round()}/${r.notesTotal}',
                     notesFrac,
@@ -158,7 +162,7 @@ class ResultScreen extends StatelessWidget {
                   if (playAlong) ...[
                     _stat(
                       Icons.timer_rounded,
-                      'TIMING',
+                      AppLocalizations.of(context).statTiming.toUpperCase(),
                       r.timing * 100,
                       pct,
                       r.timing,
@@ -166,7 +170,7 @@ class ResultScreen extends StatelessWidget {
                     ),
                     _stat(
                       Icons.support_rounded,
-                      'ASSISTS',
+                      AppLocalizations.of(context).statAssists.toUpperCase(),
                       r.assists * 100,
                       pct,
                       r.assists,
@@ -199,11 +203,13 @@ class ResultScreen extends StatelessWidget {
                       onTap: onRetry,
                       tone: GameTone.blue,
                       size: 58,
-                      tooltip: 'Retry',
+                      tooltip: AppLocalizations.of(context).retry,
                     ),
                     const SizedBox(width: 14),
                     GameButton(
-                      label: r.passed ? 'Next' : 'Locked',
+                      label: r.passed
+                          ? AppLocalizations.of(context).next
+                          : AppLocalizations.of(context).locked,
                       icon: r.passed ? null : Icons.lock_rounded,
                       trailingIcon: r.passed
                           ? Icons.arrow_forward_rounded
