@@ -1,6 +1,6 @@
 # Mic input: detector accuracy and latency
 
-Checked: 2026-10-20. Bean: piano-mlyf. Decision: [D17](../DECISIONS.md). Code: `app/lib/input/mic/`, `app/web/mic_worklet.js`, `app/tool/mic_eval.dart`, `tools/mic_fixtures.py`.
+Checked: 2026-10-20. Bean: piano-mlyf. Decision: [D18](../DECISIONS.md). Code: `app/lib/input/mic/`, `app/web/mic_worklet.js`, `app/tool/mic_eval.dart`, `tools/mic_fixtures.py`.
 
 Sources: app piano samples (`app/assets/piano`, midi-js-soundfonts, MIT); Klapuri, "Multiple fundamental frequency estimation by summing harmonic amplitudes" (ISMIR 2006) for the salience/removal idea; Bello et al., "A tutorial on onset detection in music signals" (2005) for spectral flux; [song-import.md](song-import.md) for Basic Pitch.
 

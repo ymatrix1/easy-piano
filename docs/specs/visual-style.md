@@ -36,7 +36,7 @@ Modules with `status: "planned"` (Essentials I–III for now) are listed locked 
   - **Module card:** gradient by position (blue, purple, green; grey when planned), "MODULE n" kicker, title, description, star progress bar `earned / nodes × 3`, chevron. Tap toggles the **inner trail** (animated expand/collapse; the current module starts open).
   - **Inner trail:** dark glass panel; one row per submodule with a chamfered node on a thin rail (done = green check, next = yellow + glow + PLAY button, others = kind icon), "KIND · n TASKS" kicker, numbered title, three stars.
   - **Task sheet:** bottom sheet panel with module kicker, submodule title, task rows (number, title, stars; next one outlined yellow) and a PLAY button.
-- **Practice tab:** grid of mode cards (Free play — interim: the MIDI spike screen; Sight reading, Rhythm drills, Song library marked SOON).
+- **Practice tab:** grid of mode cards (Free play — own screen: keyboard, held-note names, octave shift, glissando, MIDI status, sound toggle; Sight reading, Rhythm drills, Song library marked SOON).
 - **Profile tab:** stat tiles (stars, tasks, modules) and developer tools (MIDI and staff spikes).
 
 Progress rules (in memory until the progress store lands): submodule stars = lowest stars of its tasks; module stars = sum of its submodules; "next" = first submodule with 0 stars in the first unfinished module.

@@ -79,6 +79,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get freePlay => 'Free play';
 
   @override
+  String get noteNames => 'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B';
+
+  @override
+  String get freePlayHint =>
+      'Play any key. Use a MIDI keyboard or tap the screen.';
+
+  @override
+  String get octaveDown => 'Lower octave';
+
+  @override
+  String get octaveUp => 'Higher octave';
+
+  @override
   String get freePlayDesc =>
       'Play anything on your MIDI keyboard or the screen.';
 
