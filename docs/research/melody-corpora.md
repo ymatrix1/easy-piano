@@ -48,6 +48,18 @@ Without PDMX the clean set is small (~2k tunes, ~15k fragments after phrase cuts
 - PDMX needs our own pop filter before use: composer death year ≤ 1955 or "Traditional", reject titles matching a pop blocklist, and run the similarity checker (`tools/content-cli similar`) against a local pop corpus; drop hits ≥ 0.6.
 - Raw corpora live in git-ignored `data/`; only download scripts and manifests (source URL, licence, hash) are committed.
 
+## Approved training set (user, 2026-10-20)
+
+| Corpus | Scope |
+|---|---|
+| OpenScore Lieder | all |
+| Mutopia | pieces licensed PD, CC-BY or CC-BY-SA; attribution kept |
+| Own songs (`content/songs/`) | all |
+| PDMX | `no_license_conflict` subset, after pop filter (composer death year / Traditional, title blocklist, similarity < 0.6) |
+| Nottingham Music Database | original NMD ABC files, **excluding the Ashover collection** |
+
+Everything else in the table above stays excluded.
+
 ## Model design (approved by user, 2026-10-20)
 
 How the corpus will be used; recorded here so later step PRs build on it.
@@ -64,6 +76,6 @@ Backbone stays a small decoder-only transformer (5–15M params) for a simple ON
 
 ## Follow-ups
 
-- User decision: PDMX (filtered) yes/no; Nottingham yes/no (and on which basis).
+- Done: user approved the set above (2026-10-20).
 - Bean: converters (MusicXML, LilyPond via `lilypond`/`musicxml2ly` round trip, ABC) + tokenizer.
 - Decision (proposed): model weights licence and training-data provenance record.
