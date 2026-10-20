@@ -46,12 +46,13 @@ def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[str]]:
     return songs, errors
 
 
-def convert_score(score: m21.stream.Score) -> dict:
+def convert_score(score: m21.stream.Score, melody_only: bool = False) -> dict:
+    """melody_only: keep the first part as RH and drop the rest (voice + piano scores, MIDI)."""
     parts = list(score.parts)
     if not parts:
         raise Unsupported("no parts")
     rh = parts[0]
-    lh = parts[1] if len(parts) > 1 else None
+    lh = parts[1] if len(parts) > 1 and not melody_only else None
     time = _time_sig(score)
     bar_ql = Fraction(m21.meter.TimeSignature(time).barDuration.quarterLength).limit_denominator(64)
     rh_bars = _hand_bars(rh, bar_ql)
@@ -77,10 +78,18 @@ def convert_score(score: m21.stream.Score) -> dict:
 
 
 def _time_sig(score) -> str:
-    sigs = {ts.ratioString for ts in score.recurse().getElementsByClass(m21.meter.TimeSignature)}
-    if len(sigs) != 1:
-        raise Unsupported(f"time signatures {sorted(sigs)}")
-    t = sigs.pop()
+    # ABC headers can stack M: fields; the last one in a measure wins
+    per_measure = {}
+    for ts in score.parts[0].recurse().getElementsByClass(m21.meter.TimeSignature):
+        per_measure[ts.measureNumber] = ts
+    if not per_measure:
+        raise Unsupported("no time signature")
+    main = per_measure[min(per_measure)]
+    for ts in per_measure.values():
+        # a shorter bar (e.g. 3/8 or 2/4 before a repeat in 6/8) is a short bar, not a meter change
+        if ts.barDuration.quarterLength >= main.barDuration.quarterLength and ts.ratioString != main.ratioString:
+            raise Unsupported(f"time signatures {sorted({t.ratioString for t in per_measure.values()})}")
+    t = main.ratioString
     if t not in tk.TIME_SIGS:
         raise Unsupported(f"time {t}")
     return t
@@ -107,28 +116,53 @@ def _hand_bars(part, bar_ql: Fraction) -> list[list[Event]]:
     measures = list(part.getElementsByClass(m21.stream.Measure))
     if not measures:
         measures = list(part.makeMeasures().getElementsByClass(m21.stream.Measure))
-    bars = []
-    for n, m in enumerate(measures):
+    raw: list[tuple[list[Event], Fraction]] = []
+    for m in measures:
         voice = m.voices[0] if m.voices else m
         events: list[Event] = []
         pad_left = Fraction(m.paddingLeft).limit_denominator(64)
         if pad_left:
             events += _rests(pad_left)
         for el in voice.notesAndRests:
-            if el.duration.isGrace:
+            if el.duration.isGrace or isinstance(el, m21.harmony.ChordSymbol):
                 continue
             events.append(_event(el))
         _merge_ties(events, voice)
-        total = sum(Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events)
-        if total < bar_ql and n in (0, len(measures) - 1):
-            # pickup or short final bar: fill with rests (pickup rests go first)
-            fill = _rests(bar_ql - total)
-            events = fill + events if n == 0 and not pad_left else events + fill
-            total = bar_ql
-        if total != bar_ql:
-            raise Unsupported(f"bar {n + 1} lasts {total} quarters, expected {bar_ql}")
+        raw.append((events, sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events), Fraction(0))))
+    bars: list[list[Event]] = []
+    i = 0
+    while i < len(raw):
+        events, total = raw[i]
+        if total > bar_ql:
+            raise Unsupported(f"bar {i + 1} lasts {total} quarters, expected {bar_ql}")
+        if total < bar_ql:
+            # strain end + next strain's pickup written as two short measures: join them
+            j, acc, merged = i, total, list(events)
+            while acc < bar_ql and j + 1 < len(raw) and raw[j + 1][1] < bar_ql:
+                j += 1
+                acc += raw[j][1]
+                merged += raw[j][0]
+            if acc == bar_ql and j > i:
+                bars.append(merged)
+                i = j + 1
+                continue
+            if i == 0:
+                events = _rests(bar_ql - total) + events  # opening pickup
+            elif i == len(raw) - 1 or _at_section_end(measures[i], measures, i):
+                events = events + _rests(bar_ql - total)
+            else:
+                raise Unsupported(f"bar {i + 1} lasts {total} quarters, expected {bar_ql}")
         bars.append(events)
+        i += 1
     return bars
+
+
+def _at_section_end(m, measures, n) -> bool:
+    """Short bars before a repeat or double bar (pickup tunes) are padded too."""
+    right = m.rightBarline
+    nxt = measures[n + 1].leftBarline if n + 1 < len(measures) else None
+    ends = isinstance(right, m21.bar.Repeat) or (right is not None and right.type in ("final", "light-heavy", "double", "heavy-light"))
+    return ends or isinstance(nxt, m21.bar.Repeat)
 
 
 def _event(el) -> Event:
@@ -162,7 +196,7 @@ def _fingers(el, count: int) -> list[int]:
 
 def _merge_ties(events: list[Event], voice) -> None:
     """Merge a tie start/stop pair inside a bar when the sum is one duration."""
-    els = [el for el in voice.notesAndRests if not el.duration.isGrace]
+    els = [el for el in voice.notesAndRests if not el.duration.isGrace and not isinstance(el, m21.harmony.ChordSymbol)]
     offset = len(events) - len(els)
     i = len(els) - 2
     while i >= 0:
