@@ -22,6 +22,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D18](#d18-nottingham-music-database-minus-ashover-in-the-melody-model-training-set) | 2026-10-20 | NMD (minus Ashover) in melody-model training | accepted |
 | [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted |
 | [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | accepted |
+| [D21](#d21-allow-pop-film-and-game-material-in-melody-model-training-flagged-and-separable) | 2026-10-20 | Pop/film/game in training, flagged (supersedes part of D19) | accepted |
 
 ## Accepted
 
@@ -222,3 +223,13 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Short sequences and a small model keep browser inference fast; the plan gives tunes form; FIM allows bar-level edits; search plus rubric guarantees level fit.
 - **Alternatives:** Magenta.js MusicVAE (pretrained on non-clean data); rules-only generator (dull); a large model behind a server (breaks local-first, D8).
 - **Impact:** Steps: corpora, converters + tokenizer, dataset, training on the user's GPU, ONNX + browser demo, evaluation.
+
+### D21. Allow pop, film and game material in melody-model training, flagged and separable
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-20 ("you can revert no issue")
+- **Context:** D19 excluded pop/film/game material. The user wants modern styles in the model and accepted the risk after being told the weights ship in the open-source app.
+- **Decision:** Supersedes D19's exclusion of pop, film and game material. PDMX screen rules (genre, untagged, no composer, pop name/title, third-party arrangement) no longer drop tunes; each tune keeps `flags` in the dataset. Other corpora (POP909, NES-MDB, Lakh) may be added later, each its own corpus and flagged `pop`. Hard rejects stay: PDMX licence conflict, duplicates. Every generated tune must pass the similarity gate (`content-cli similar` < 0.6 against training set and pop corpus) before it ships.
+- **Why:** Modern-sounding practice tunes; the user owns the legal call.
+- **Alternatives:** Keep D19 (clean only, style tokens trained on clean data); pop only as a similarity negative set.
+- **Impact:** **Risk:** weights trained on copyrighted melodies may not be clean, and generated tunes may echo them. Mitigations: flags allow a clean retrain (exclude flagged tunes); the similarity gate; OQ10 (weights licence) now also covers copyrighted training data. Dataset 2026-10-20: PDMX 28,537 kept, 8,314 unflagged.
