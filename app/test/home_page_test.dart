@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:easy_piano/content/content_repo.dart';
 import 'package:easy_piano/home/home_page.dart';
 import 'package:easy_piano/input/midi_input.dart';
+import 'package:easy_piano/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,6 +25,8 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: HomePage(
           repo: _repo(),
           midi: createMidiInput(),

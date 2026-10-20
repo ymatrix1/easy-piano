@@ -149,9 +149,9 @@ class ContentRepo {
     required this.levels,
     required this.songJson,
     required this.scenes,
-    required this.strings,
-    required this.fallback,
-  });
+    required Map<String, Map<String, String>> stringsByLocale,
+    this.locale = 'en',
+  }) : _byLocale = stringsByLocale;
 
   final List<CourseDef> courses;
   final List<SectionDef> sections;
@@ -159,14 +159,28 @@ class ContentRepo {
   final Map<String, String> songJson;
   final Map<String, Map<String, dynamic>> scenes;
 
-  /// Strings in the user's locale, and English as fallback.
-  final Map<String, String> strings;
-  final Map<String, String> fallback;
+  /// Content strings per locale tag (`en`, `pt-BR`, ...), from `strings/<tag>.json`.
+  final Map<String, Map<String, String>> _byLocale;
 
-  /// Resolves `str:key` (or a bare key) in the user's locale, then English.
+  /// Locale tags that have a strings file.
+  Iterable<String> get locales => _byLocale.keys;
+
+  /// Active content locale tag. See docs/specs/i18n.md.
+  String locale;
+
+  /// Strings in the active locale, and English as fallback.
+  Map<String, String> get strings => _byLocale[locale] ?? fallback;
+  Map<String, String> get fallback => _byLocale['en'] ?? const {};
+
+  /// Resolves `str:key` (or a bare key) in the active locale, then its base
+  /// language (`pt` for `pt-BR`), then English, then the key itself.
   String t(String ref) {
     final key = ref.startsWith('str:') ? ref.substring(4) : ref;
-    return strings[key] ?? fallback[key] ?? key;
+    final base = locale.split('-').first;
+    return _byLocale[locale]?[key] ??
+        _byLocale[base]?[key] ??
+        fallback[key] ??
+        key;
   }
 
   static Map<String, String> _stringMap(String text) =>
@@ -215,16 +229,19 @@ class ContentRepo {
                 ],
         ),
     ];
-    final en = _stringMap(files['strings/en.json']!);
-    final local = files['strings/$locale.json'];
+    final byLocale = <String, Map<String, String>>{
+      for (final path in files.keys)
+        if (path.startsWith('strings/') && path.endsWith('.json'))
+          path.substring(8, path.length - 5): _stringMap(files[path]!),
+    };
     return ContentRepo(
       courses: courses,
       sections: sections,
       levels: levels,
       songJson: songs,
       scenes: scenes,
-      strings: local == null ? en : _stringMap(local),
-      fallback: en,
+      stringsByLocale: byLocale,
+      locale: locale,
     );
   }
 

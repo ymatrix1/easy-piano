@@ -1,5 +1,8 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/level_page.dart';
@@ -167,28 +170,46 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: ShapeDecoration(
-              shape: chamfer(9),
-              gradient: GameTone.gold.gradient,
+    // Glass bar: blurred, translucent violet over the arena backdrop, with a
+    // light top rim and a cyan hairline underneath.
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: 0.10),
+                GameColors.panel.withValues(alpha: 0.35),
+              ],
             ),
-            child: const Icon(
-              Icons.piano_rounded,
-              color: GameColors.ink,
-              size: 24,
+            border: Border(
+              bottom: BorderSide(
+                color: GameColors.cyan.withValues(alpha: 0.35),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
-          const GameText('Easy Piano', size: 20),
-          const Spacer(),
-          StarCounter(value: stars),
-        ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/brand/logo.png',
+                  width: 40,
+                  height: 40,
+                  filterQuality: FilterQuality.medium,
+                  semanticLabel: AppLocalizations.of(context).logoLabel,
+                ),
+                const SizedBox(width: 10),
+                GameText(AppLocalizations.of(context).appTitle, size: 20),
+                const Spacer(),
+                StarCounter(value: stars),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -200,14 +221,9 @@ class _NavBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onSelect;
 
-  static const _items = [
-    (Icons.route_rounded, 'Learn'),
-    (Icons.fitness_center_rounded, 'Practice'),
-    (Icons.person_rounded, 'Profile'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(12, 8, 12, 8 + bottom),
@@ -236,7 +252,11 @@ class _NavBar extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 520),
           child: Row(
             children: [
-              for (final (i, (icon, label)) in _items.indexed)
+              for (final (i, (icon, label)) in [
+                (Icons.route_rounded, l.navLearn),
+                (Icons.fitness_center_rounded, l.navPractice),
+                (Icons.person_rounded, l.navProfile),
+              ].indexed)
                 Expanded(
                   child: _NavItem(
                     icon: icon,
