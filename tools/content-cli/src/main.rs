@@ -1,6 +1,8 @@
 //! `content lint <content_dir>`: validates every content file and cross-reference.
 //! Exit code 1 on any error. Layout: docs/specs/content-format.md.
 
+mod similar;
+
 use easy_piano_core::song::Song;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -412,6 +414,9 @@ fn lint_dir(root: &Path) -> Lint {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some("similar") {
+        std::process::exit(similar::run(&args[2..]));
+    }
     let (Some("lint"), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
         eprintln!("usage: content lint <content_dir>");
         std::process::exit(2);
