@@ -1,0 +1,74 @@
+# Pre-push checks from AGENTS.md, run on every PR and push to main.
+# The web build (flutter_rust_bridge_codegen build-web + flutter build web)
+# runs in deploy-web.yml on the same triggers, so it is not repeated here.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with deploy-web.yml.
+  FLUTTER_VERSION: 3.47.7
+
+jobs:
+  rust:
+    name: Rust core + content lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            core
+            tools/content-cli
+
+      - name: cargo test (core)
+        working-directory: core
+        run: cargo test
+
+      - name: Lint content
+        working-directory: tools/content-cli
+        run: cargo run -- lint ../../content
+
+  flutter:
+    name: Flutter analyze + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: flutter pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: flutter analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: flutter test
+        working-directory: app
+        run: flutter test
