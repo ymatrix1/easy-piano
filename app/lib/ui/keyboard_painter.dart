@@ -15,6 +15,7 @@ class KeyboardPainter extends CustomPainter {
     this.hint,
     this.hintColor = const Color(0xFFB9F0C8),
     this.labelMiddleC = false,
+    this.middleCLabel = 'C',
   }) : super(
          repaint: hint == null ? pressed : Listenable.merge([pressed, hint]),
        );
@@ -28,8 +29,11 @@ class KeyboardPainter extends CustomPainter {
   final ValueNotifier<Set<int>>? hint;
   final Color hintColor;
 
-  /// Writes a small "C" on middle C, as a landmark for beginners.
+  /// Writes middle C's name ([middleCLabel]) on it, as a landmark for beginners.
   final bool labelMiddleC;
+
+  /// Middle C's name in the UI language (`C`, `Dó`, `Do`); docs/specs/i18n.md.
+  final String middleCLabel;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -95,7 +99,7 @@ class KeyboardPainter extends CustomPainter {
       if (labelMiddleC && p == 60) {
         final tp = TextPainter(
           text: TextSpan(
-            text: 'C',
+            text: middleCLabel,
             style: TextStyle(
               color: const Color(0xFF6B6578),
               fontSize: ww * 0.34,
@@ -191,5 +195,6 @@ class KeyboardPainter extends CustomPainter {
       old.lowPitch != lowPitch ||
       old.highPitch != highPitch ||
       old.pressedColor != pressedColor ||
-      old.labelMiddleC != labelMiddleC;
+      old.labelMiddleC != labelMiddleC ||
+      old.middleCLabel != middleCLabel;
 }

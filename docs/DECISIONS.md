@@ -171,3 +171,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Native custom headers; automatic preview URLs; global CDN; free tier fits.
 - **Alternatives:** GitHub Pages (no custom headers; needs the coi-serviceworker hack with an extra reload on first visit); Netlify (similar, smaller free build quota); Vercel (similar; commercial-use limits on the free plan).
 - **Impact:** Two repo secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`); site at `easy-piano.pages.dev`; any new cross-origin asset must send CORP/CORS headers or COEP blocks it.
+
+### D16. UI strings in gen-l10n ARB files, content strings in `content/strings`; five launch languages
+
+- **Status:** proposed
+- **Context:** UI text was hard-coded English in `app/lib`; content already used `str:` keys in `content/strings/<locale>.json` (en, pt-BR), with the locale fixed at startup. We want en, pt-BR, es, fr, de, a language picker and live switching.
+- **Decision:** App UI text moves to Flutter `gen-l10n` ARB files (`app/lib/l10n/`, `flutter_localizations`, `intl`). Lesson content keeps `content/strings/<tag>.json` with fallback active tag → base language → English. Language defaults to the device locale, can be picked in Profile, and is stored per device with `shared_preferences`. Note naming is per locale: letters for en/de (de uses H), fixed-do solfège for pt-BR/es/fr. Spec: [i18n.md](specs/i18n.md).
+- **Why:** ARB gives typed getters, ICU plurals/placeholders, compile-time key checks and Material widget translations for free. Content stays editable by non-developers in the content pipeline, linted by `content-cli`, and can ship English-first (missing keys warn, not fail).
+- **Alternatives:** Everything in `content/strings` (no type safety, no plurals, Material widgets untranslated); everything in ARB (content authors would edit app code; lessons need an app rebuild per string); `easy_localization`/`slang` packages (extra dependency, no gain over the SDK tool).
+- **Impact:** New deps `flutter_localizations`, `intl`, `shared_preferences`. New UI text must go in `app_en.arb` and all other ARBs (test enforces). Translations are machine-assisted; native review wanted. Content lint prints warnings for untranslated keys.
