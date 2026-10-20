@@ -660,7 +660,7 @@ abstract class AppLocalizations {
   /// No description provided for @micTurnOff.
   ///
   /// In en, this message translates to:
-  /// **'Turn off microphone'**
+  /// **'Turn off'**
   String get micTurnOff;
 
   /// 12 pitch-class names from C, comma-separated, in the locale's note naming.

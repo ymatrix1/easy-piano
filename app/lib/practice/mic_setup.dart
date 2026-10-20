@@ -7,26 +7,33 @@ import '../l10n/app_localizations.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 
-/// Median of (onset − cue) over cues that got an onset within ±[window] ms;
-/// null when fewer than [minHits] cues were answered. Pure for testing.
+/// Latency from visual cues to played onsets, in ms. Each cue takes the
+/// first onset in [cue − 200, cue + period − 200), so latency up to
+/// period − 200 ms (Bluetooth, slow reactions) still counts. Returns the
+/// median when at least [minHits] cues were answered and agree within
+/// ±[spread] ms of it; null otherwise. Pure for testing.
 double? calibrationOffset(
   List<double> cues,
   List<double> onsets, {
-  double window = 350,
+  double period = 800,
   int minHits = 4,
+  double spread = 150,
 }) {
   final diffs = <double>[];
   for (final c in cues) {
-    double? best;
     for (final o in onsets) {
       final d = o - c;
-      if (d.abs() <= window && (best == null || d.abs() < best.abs())) best = d;
+      if (d >= -200 && d < period - 200) {
+        diffs.add(d);
+        break;
+      }
     }
-    if (best != null) diffs.add(best);
   }
   if (diffs.length < minHits) return null;
   diffs.sort();
-  return diffs[diffs.length ~/ 2];
+  final median = diffs[diffs.length ~/ 2];
+  final agree = diffs.where((d) => (d - median).abs() <= spread).length;
+  return agree >= minHits ? median : null;
 }
 
 /// Localized note name with octave, e.g. "C4" or "Dó4".
@@ -139,6 +146,7 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
   int _beat = -1;
   bool _lit = false;
   int? _heard;
+  DateTime? _lastHit;
   _Cal _cal = _Cal.idle;
 
   MicInput get _mic => widget.mic;
@@ -160,6 +168,7 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
       if (!e.on) return;
       _onsets.add(e.timestampMs);
       _heard = e.pitch;
+      _lastHit = DateTime.now();
     });
   }
 
@@ -202,7 +211,7 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
 
   void _finish() {
     if (!mounted) return;
-    final off = calibrationOffset(_cues, _onsets);
+    final off = calibrationOffset(_cues, [..._onsets]..sort());
     if (off != null) _mic.offsetMs = off;
     setState(() => _cal = off == null ? _Cal.failed : _Cal.done);
   }
@@ -343,7 +352,17 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _lit ? GameColors.yellow : GameColors.panelHi,
-                border: Border.all(color: GameColors.panelEdge, width: 3),
+                // Green ring for a moment after each note heard, so the
+                // student sees the mic is getting their taps.
+                border: Border.all(
+                  color:
+                      _lastHit != null &&
+                          DateTime.now().difference(_lastHit!).inMilliseconds <
+                              250
+                      ? GameColors.success
+                      : GameColors.panelEdge,
+                  width: 4,
+                ),
                 boxShadow: _lit
                     ? [
                         BoxShadow(
@@ -364,46 +383,52 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
                   : null,
             ),
           ),
-          const SizedBox(height: 12),
-          Center(
-            child: GameButton(
-              label: l.micCalibrate.toUpperCase(),
-              icon: Icons.tune_rounded,
-              onTap: running ? null : _calibrate,
-              tone: GameTone.purple,
-              fontSize: 15,
-              height: 44,
-            ),
+          const SizedBox(height: 16),
+          GameButton(
+            label: l.micCalibrate.toUpperCase(),
+            icon: Icons.tune_rounded,
+            onTap: running ? null : _calibrate,
+            tone: GameTone.purple,
+            fontSize: 15,
+            minWidth: 0,
           ),
-          const SizedBox(height: 20),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 10,
+          const SizedBox(height: 12),
+          Row(
             children: [
-              if (widget.active)
-                GameButton(
-                  label: l.micTurnOff.toUpperCase(),
-                  icon: Icons.mic_off_rounded,
-                  onTap: running
+              Expanded(
+                child: widget.active
+                    ? GameButton(
+                        label: l.micTurnOff.toUpperCase(),
+                        icon: Icons.mic_off_rounded,
+                        onTap: running
+                            ? null
+                            : () =>
+                                  Navigator.of(context).pop(MicSetupResult.off),
+                        tone: GameTone.red,
+                        fontSize: 15,
+                        minWidth: 0,
+                      )
+                    : GameButton(
+                        label: l.cancel.toUpperCase(),
+                        onTap: running
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        tone: GameTone.wood,
+                        fontSize: 15,
+                        minWidth: 0,
+                      ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GameButton(
+                  label: l.continueButton.toUpperCase(),
+                  onTap: running || _mic.offsetMs == null
                       ? null
-                      : () => Navigator.of(context).pop(MicSetupResult.off),
-                  tone: GameTone.red,
+                      : () => Navigator.of(context).pop(MicSetupResult.listen),
+                  tone: GameTone.green,
                   fontSize: 15,
-                )
-              else
-                GameButton(
-                  label: l.cancel.toUpperCase(),
-                  onTap: running ? null : () => Navigator.of(context).pop(),
-                  tone: GameTone.wood,
-                  minWidth: 120,
+                  minWidth: 0,
                 ),
-              GameButton(
-                label: l.continueButton.toUpperCase(),
-                onTap: running || _mic.offsetMs == null
-                    ? null
-                    : () => Navigator.of(context).pop(MicSetupResult.listen),
-                tone: GameTone.green,
               ),
             ],
           ),

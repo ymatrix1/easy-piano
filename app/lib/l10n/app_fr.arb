@@ -92,6 +92,6 @@
   "micDefaultDevice": "Microphone par défaut",
   "micHeard": "Entendu : {note}",
   "micTestHint": "Jouez une touche : la barre bouge et la note s'affiche ici.",
-  "micTurnOff": "Couper le microphone",
+  "micTurnOff": "Couper",
   "micNoteNames": "Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si"
 }

@@ -325,7 +325,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca una tecla: la barra se mueve y la nota aparece aquí.';
 
   @override
-  String get micTurnOff => 'Apagar micrófono';
+  String get micTurnOff => 'Apagar';
 
   @override
   String get micNoteNames => 'Do,Do♯,Re,Re♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si';

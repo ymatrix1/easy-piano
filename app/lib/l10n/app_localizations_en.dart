@@ -321,7 +321,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Play a key: the bar moves and the note shows here.';
 
   @override
-  String get micTurnOff => 'Turn off microphone';
+  String get micTurnOff => 'Turn off';
 
   @override
   String get micNoteNames => 'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B';

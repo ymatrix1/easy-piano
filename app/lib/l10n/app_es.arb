@@ -92,6 +92,6 @@
   "micDefaultDevice": "Micrófono predeterminado",
   "micHeard": "Oí: {note}",
   "micTestHint": "Toca una tecla: la barra se mueve y la nota aparece aquí.",
-  "micTurnOff": "Apagar micrófono",
+  "micTurnOff": "Apagar",
   "micNoteNames": "Do,Do♯,Re,Re♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si"
 }

@@ -88,4 +88,16 @@ void main() {
     expect(calibrationOffset(cues, onsets), 90);
     expect(calibrationOffset(cues, const [1090.0, 1880.0]), isNull);
   });
+
+  test('calibration accepts long latency (reaction + Bluetooth)', () {
+    final cues = <double>[1000, 1800, 2600, 3400, 4200, 5000];
+    final onsets = [for (final c in cues) c + 480];
+    expect(calibrationOffset(cues, onsets), 480);
+  });
+
+  test('calibration rejects random taps', () {
+    final cues = <double>[1000, 1800, 2600, 3400, 4200, 5000];
+    final onsets = <double>[1010, 2100, 2650, 3900, 4250, 5500];
+    expect(calibrationOffset(cues, onsets), isNull);
+  });
 }

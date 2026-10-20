@@ -325,7 +325,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Spiel eine Taste: Der Balken bewegt sich und der Ton erscheint hier.';
 
   @override
-  String get micTurnOff => 'Mikrofon ausschalten';
+  String get micTurnOff => 'Ausschalten';
 
   @override
   String get micNoteNames => 'C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H';
