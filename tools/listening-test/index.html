@@ -19,13 +19,14 @@
   .row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
   input[type=text] { flex: 1; font: inherit; padding: 8px; border-radius: 6px; border: 1px solid #445; background: #14161c; color: #eee; }
   progress { width: 100%; }
+  .err { color: #ff8080; min-height: 1em; margin: 4px 0; }
   table { border-collapse: collapse; width: 100%; } td, th { padding: 4px 8px; text-align: left; }
 </style>
 </head>
 <body>
 <main>
   <h1>Which tunes sound good?</h1>
-  <p class="muted">Rate each tune 1 (bad) to 5 (great). Tick "familiar" if it sounds like a song you know. Keys: Space play/stop, 1-5 rate, Enter next. The method behind each tune stays hidden until the end.</p>
+  <p class="muted">Rate each tune 1 (bad) to 5 (great). Tick "familiar" if it sounds like a song you know. Keys: Space play/stop, 1-5 rate, Enter next. Which method made each tune stays hidden.</p>
   <div id="app" class="card">Loading...</div>
 </main>
 <script type="module" src="app.js"></script>

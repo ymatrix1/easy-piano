@@ -29,13 +29,18 @@ export class Synth {
     for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
   }
 
-  /** Schedules every note on the audio clock; returns { stop, length }. */
-  async play({ notes, length }) {
+  /**
+   * Schedules every note on the audio clock; returns { stop, length }, or null
+   * when isCancelled() turned true while samples were loading.
+   */
+  async play({ notes, length }, isCancelled = () => false) {
     await this.init();
+    if (isCancelled()) return null;
     const ctx = this.ctx;
     const bus = ctx.createGain();
     bus.gain.value = 0.5;
     bus.connect(ctx.destination);
+    this.sources = [];
     const t0 = ctx.currentTime + 0.15;
     for (const n of notes) {
       const at = t0 + n.start;
@@ -43,19 +48,29 @@ export class Synth {
       else if (n.part === 'BASS') this.bass(bus, n.midi, at, n.dur);
       else this.piano(bus, n.midi, at, n.dur, LEVEL[n.part]);
     }
+    const sources = this.sources;
     return {
       length,
       stop: () => {
-        bus.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+        const now = ctx.currentTime;
+        bus.gain.setTargetAtTime(0, now, 0.03);
+        for (const s of sources) {
+          try { s.stop(now + 0.2); } catch { /* already stopped */ }
+        }
         setTimeout(() => bus.disconnect(), 300);
       },
     };
   }
 
+  track(src) {
+    this.sources.push(src);
+    return src;
+  }
+
   piano(out, m, at, dur, level) {
     let best = null;
     for (const k of this.buffers.keys()) if (best === null || Math.abs(k - m) < Math.abs(best - m)) best = k;
-    const src = this.ctx.createBufferSource();
+    const src = this.track(this.ctx.createBufferSource());
     src.buffer = this.buffers.get(best);
     src.playbackRate.value = 2 ** ((m - best) / 12);
     const g = this.ctx.createGain();
@@ -68,7 +83,7 @@ export class Synth {
 
   bass(out, m, at, dur) {
     const ctx = this.ctx;
-    const osc = ctx.createOscillator();
+    const osc = this.track(ctx.createOscillator());
     osc.type = 'sawtooth';
     osc.frequency.value = 440 * 2 ** ((m - 69) / 12);
     const lp = ctx.createBiquadFilter();
@@ -88,7 +103,7 @@ export class Synth {
     const g = ctx.createGain();
     g.connect(out);
     if (m === 36) { // kick: falling sine
-      const osc = ctx.createOscillator();
+      const osc = this.track(ctx.createOscillator());
       osc.frequency.setValueAtTime(140, at);
       osc.frequency.exponentialRampToValueAtTime(45, at + 0.12);
       g.gain.setValueAtTime(LEVEL.DRUMS * 2.5, at);
@@ -99,7 +114,7 @@ export class Synth {
       return;
     }
     // snare 38, hats 42/46, crash 49: filtered noise
-    const src = ctx.createBufferSource();
+    const src = this.track(ctx.createBufferSource());
     src.buffer = this.noise;
     const f = ctx.createBiquadFilter();
     const snare = m === 38;

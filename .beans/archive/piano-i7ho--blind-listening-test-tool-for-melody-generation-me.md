@@ -31,4 +31,5 @@ Generators themselves, similarity checker, rubric; PAD/CHOIR voices; app integra
 
 ## Summary of Changes
 - `tools/listening-test/`: `build.py` (manifest -> shuffled `out/playlist.json` + `out/key.json`), static page (`index.html`, `app.js`, `notation.js`, `synth.js`) using the app's MIT FluidR3 piano samples, `summarize.py`, `demo-manifest.json` (40 content songs), `notation.test.mjs`, README.
-- `.claude/launch.json`: `listening-test` preview server.
+- `.claude/launch.json`: `listening-test` preview server serving only `tools/listening-test/out/site`.
+- Review fixes: staged blind site (key not served, no in-page reveal), playback generation counter + source tracking, bad-token errors shown, bar-sum test, playlist-change backup download, single end-of-test download incl. familiar-only answers, fingering/annotations stripped from playlist, `package.json` (type module).

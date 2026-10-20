@@ -22,21 +22,25 @@ export function wholeNotes(dur) {
   return len;
 }
 
+const TOKEN = /^(r|(?:[A-G][#bn]?-?\d)+):(\d+\.*|\d+\/\d+)(?:@[1-5]+)?$/;
+
+/** Hand string -> { notes: [{t, dur, pitches}], length } in whole notes. Throws on a bad token. */
 export function parseHand(text) {
-  const out = [];
+  const notes = [];
   let t = 0;
   const clean = text.replace(/\{[^}]*\}/g, ' ').replace(/\([^)]*\)/g, '');
   for (const tok of clean.trim().split(/\s+/)) {
     if (!tok) continue;
-    const [head, rest] = tok.split(':');
-    const dur = wholeNotes(rest.split('@')[0]);
-    if (head !== 'r') {
-      const pitches = [...head.matchAll(PITCH)].map((m) => midi(m[1], m[2], m[3]));
-      out.push({ t, dur, pitches });
+    const m = TOKEN.exec(tok);
+    if (!m) throw new Error(`bad note token "${tok}"`);
+    const dur = wholeNotes(m[2]);
+    if (m[1] !== 'r') {
+      const pitches = [...m[1].matchAll(PITCH)].map((p) => midi(p[1], p[2], p[3]));
+      notes.push({ t, dur, pitches });
     }
     t += dur;
   }
-  return out;
+  return { notes, length: t };
 }
 
 /** Song -> { notes: [{part, start, dur, midi}] in seconds, length }. */
@@ -48,7 +52,7 @@ export function parseSong(song) {
   song.bars.forEach((bar, i) => {
     for (const part of PARTS) {
       if (!bar[part]) continue;
-      for (const n of parseHand(bar[part])) {
+      for (const n of parseHand(bar[part]).notes) {
         for (const m of n.pitches) {
           notes.push({ part, start: i * barSec + n.t * secPerWhole, dur: n.dur * secPerWhole, midi: m });
         }
