@@ -178,66 +178,66 @@ class _TopBar extends StatelessWidget {
 
   final int stars;
 
-  static const _margin = 10.0, _height = 58.0;
+  static const _height = 60.0;
 
   /// Space the tabs leave at the top so their first item starts below the bar.
-  static const inset = _margin + _height + 6;
+  static const inset = _height + 8;
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(20);
-    // Floating glass pill: the content behind scrolls under it, blurred.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_margin, _margin, _margin, 0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: radius,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: Container(
-              height: _height,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                borderRadius: radius,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.16),
-                    GameColors.bgGlow.withValues(alpha: 0.10),
-                    GameColors.panel.withValues(alpha: 0.30),
-                  ],
-                ),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/brand/logo.png',
-                    width: 38,
-                    height: 38,
-                    filterQuality: FilterQuality.medium,
-                    semanticLabel: AppLocalizations.of(context).logoLabel,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: GameText(
-                      AppLocalizations.of(context).appTitle,
-                      size: 18,
-                    ),
-                  ),
-                  StarCounter(value: stars),
+    // Edge-to-edge glass bar, mirroring the bottom nav: the content scrolls
+    // under it, blurred; same edge colour and shadow, content capped at 520.
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 20,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            height: _height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  GameColors.bgDeep.withValues(alpha: 0.70),
+                  GameColors.panel.withValues(alpha: 0.45),
                 ],
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: GameColors.panelEdge.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/brand/logo.png',
+                        width: 38,
+                        height: 38,
+                        filterQuality: FilterQuality.medium,
+                        semanticLabel: AppLocalizations.of(context).logoLabel,
+                      ),
+                      const SizedBox(width: 10),
+                      GameText(AppLocalizations.of(context).appTitle, size: 18),
+                      const Spacer(),
+                      StarCounter(value: stars),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
