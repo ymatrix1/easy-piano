@@ -180,3 +180,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** ARB gives typed getters, ICU plurals/placeholders, compile-time key checks and Material widget translations for free. Content stays editable by non-developers in the content pipeline, linted by `content-cli`, and can ship English-first (missing keys warn, not fail).
 - **Alternatives:** Everything in `content/strings` (no type safety, no plurals, Material widgets untranslated); everything in ARB (content authors would edit app code; lessons need an app rebuild per string); `easy_localization`/`slang` packages (extra dependency, no gain over the SDK tool).
 - **Impact:** New deps `flutter_localizations`, `intl`, `shared_preferences`. New UI text must go in `app_en.arb` and all other ARBs (test enforces). Translations are machine-assisted; native review wanted. Content lint prints warnings for untranslated keys.
+
+### D17. Native audio output via WASAPI exclusive (Windows), gated on web latency
+
+- **Status:** proposed
+- **Context:** Browser audio output on the test PC costs 40 ms `outputLatency` on top of a 10 ms buffer, and `latencyHint` tuning changes nothing. `cpal` shared mode is stuck at the 10 ms system period. WASAPI exclusive streams ran at 3 ms periods on all five test devices. See [native-audio-latency.md](research/native-audio-latency.md). D1 sets the gate at 30 ms p95 MIDI to frame.
+- **Decision:** Do not start native audio until the web MIDI p95 is measured on a real keyboard. If web p95 ≤ 30 ms, native audio stays a later improvement. If it is over, add an `audio/` Rust crate that plays the piano through WASAPI exclusive (PCM16, 48 kHz) on Windows with a shared-mode fallback, and CoreAudio/Oboe via `cpal` elsewhere, chosen after per-platform measurement.
+- **Why:** Shared-mode paths (browser, `cpal`) cannot go below 10 ms; exclusive can. The cost is a native sampler, a bridge call for note on/off and per-platform backends, so it should be justified by a measured miss.
+- **Alternatives:** `miniaudio` (same exclusive backend, permissive licence, not yet measured); `flutter_soloud` (smallest change, not yet measured); stay web-only and advise wired or ASIO-class audio devices; Oboe or CoreAudio directly instead of `cpal`.
+- **Impact:** New `audio/` crate and a `PianoSynth` native implementation. Samples decoded to PCM at load. Exclusive mode blocks other apps from the device while held. Needs a Windows loopback test, an Android device and an Apple device before backends are final.
