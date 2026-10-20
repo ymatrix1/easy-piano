@@ -35,7 +35,16 @@ struct Hit {
 #[derive(Debug, Default)]
 struct Analysis {
     hits: BTreeMap<&'static str, Vec<Hit>>,
-    rests: bool,
+    /// Rest duration labels per hand, with the first bar each appears in.
+    rests: BTreeMap<&'static str, BTreeMap<String, usize>>,
+    /// Bars that do not parse (`bar N HAND: error`).
+    errors: Vec<String>,
+}
+
+impl Analysis {
+    fn has_rests(&self) -> bool {
+        self.rests.values().any(|r| !r.is_empty())
+    }
 }
 
 fn analyse(song: &Song) -> Analysis {
@@ -45,7 +54,14 @@ fn analyse(song: &Song) -> Analysis {
         for hand in GRADED {
             let Some(text) = bar.get(hand) else { continue };
             let mut t = Dur::ZERO;
-            for e in parse_bar(text).unwrap_or_default() {
+            let events = match parse_bar(text) {
+                Ok(ev) => ev,
+                Err(e) => {
+                    a.errors.push(format!("bar {} {hand}: {e}", i + 1));
+                    continue;
+                }
+            };
+            for e in events {
                 match &e {
                     Event::Note { pitches, dur, fingers, .. } => a.hits.entry(hand).or_default().push(Hit {
                         bar: i,
@@ -54,7 +70,9 @@ fn analyse(song: &Song) -> Analysis {
                         dur: *dur,
                         fingers: fingers.clone(),
                     }),
-                    Event::Rest { .. } => a.rests = true,
+                    Event::Rest { dur } => {
+                        a.rests.entry(hand).or_default().entry(dur_label(*dur)).or_insert(i);
+                    }
                     Event::Directive { .. } => {}
                 }
                 t = t.add(e.dur());
@@ -110,8 +128,10 @@ fn hands_together(a: &Analysis) -> bool {
 pub struct TaughtSet {
     /// MIDI pitches per graded hand.
     pub pitches: BTreeMap<String, BTreeSet<u8>>,
-    /// Duration labels (`4`, `8`, `2.`).
+    /// Note duration labels (`4`, `8`, `2.`).
     pub durations: BTreeSet<String>,
+    /// Rest duration labels.
+    pub rest_durations: BTreeSet<String>,
     pub times: BTreeSet<String>,
     /// Black-key pitch classes (1 = C#/Db … 10 = A#/Bb).
     pub accidentals: BTreeSet<u8>,
@@ -126,9 +146,14 @@ pub struct TaughtSet {
 }
 
 impl TaughtSet {
-    pub fn from_song(song: &Song) -> TaughtSet {
+    /// Fails with the bars that do not parse (lint reports those too).
+    pub fn from_song(song: &Song) -> Result<TaughtSet, Vec<String>> {
         let a = analyse(song);
-        let mut t = TaughtSet { rests: a.rests, hands_together: hands_together(&a), ..Default::default() };
+        if !a.errors.is_empty() {
+            return Err(a.errors);
+        }
+        let mut t = TaughtSet { rests: a.has_rests(), hands_together: hands_together(&a), ..Default::default() };
+        t.rest_durations = a.rests.values().flat_map(|r| r.keys().cloned()).collect();
         t.times.insert(song.time.clone());
         t.keys.insert(song.key.clone());
         for (hand, hits) in &a.hits {
@@ -141,7 +166,7 @@ impl TaughtSet {
             t.max_interval = t.max_interval.max(max_leap(hand, hits));
             t.polyphony.insert(hand.to_string(), hits.iter().map(|h| h.pitches.len()).max().unwrap_or(0));
         }
-        t
+        Ok(t)
     }
 
     pub fn merge(&mut self, o: &TaughtSet) {
@@ -153,6 +178,7 @@ impl TaughtSet {
             *e = (*e).max(n);
         }
         self.durations.extend(o.durations.iter().cloned());
+        self.rest_durations.extend(o.rest_durations.iter().cloned());
         self.times.extend(o.times.iter().cloned());
         self.accidentals.extend(&o.accidentals);
         self.keys.extend(o.keys.iter().cloned());
@@ -181,6 +207,7 @@ impl TaughtSet {
         json!({
             "pitches": pitches,
             "durations": self.durations,
+            "rest_durations": self.rest_durations,
             "times": self.times,
             "accidentals": accidentals,
             "max_interval": self.max_interval,
@@ -299,7 +326,7 @@ impl Pattern {
                 return false;
             }
         }
-        if self.rest == Some(true) && !a.rests {
+        if self.rest == Some(true) && !a.has_rests() {
             return false;
         }
         if self.chord == Some(true) && !hits.iter().any(|(_, x)| x.pitches.len() > 1) {
@@ -363,8 +390,11 @@ impl NodeSpec {
 
 /// Every way `song` breaks the taught set or the node spec. Empty = pass.
 pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
-    let mut errs = Vec::new();
     let a = analyse(song);
+    if !a.errors.is_empty() {
+        return a.errors;
+    }
+    let mut errs = Vec::new();
     let flats = uses_flats(&song.key) || taught.flats();
 
     if song.time != spec.time {
@@ -435,8 +465,18 @@ pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
     if !extra.is_empty() {
         errs.push(format!("accidentals not taught: {}", extra.join(" ")));
     }
-    if a.rests && !taught.rests {
+    if a.has_rests() && !taught.rests {
         errs.push("rests not taught yet".into());
+    }
+    for (hand, rests) in &a.rests {
+        let extra: Vec<String> = rests
+            .iter()
+            .filter(|(d, _)| taught.rests && !taught.rest_durations.contains(*d))
+            .map(|(d, bar)| format!("{d} (bar {})", bar + 1))
+            .collect();
+        if !extra.is_empty() {
+            errs.push(format!("{hand}: rest durations not taught: {}", extra.join(" ")));
+        }
     }
     if hands_together(&a) && !taught.hands_together {
         errs.push("hands together not taught yet".into());
@@ -469,7 +509,26 @@ mod tests {
     }
 
     fn taught_from(bars: &str) -> TaughtSet {
-        TaughtSet::from_song(&song("4/4", bars))
+        TaughtSet::from_song(&song("4/4", bars)).unwrap()
+    }
+
+    #[test]
+    fn untaught_rest_values_fail() {
+        let t = taught_from(r#"[{"RH":"C4:2 r:2"}]"#);
+        assert_eq!(t.rest_durations, BTreeSet::from(["2".to_string()]));
+        let s = song("4/4", r#"[{"RH":"C4:2 r:2"},{"RH":"C4:2 r:4 r:4"}]"#);
+        let e = check(&s, &t, &spec("RH", "[]"));
+        assert_eq!(e, vec!["RH: rest durations not taught: 4 (bar 2)".to_string()]);
+    }
+
+    #[test]
+    fn broken_bars_are_errors_not_empty_bars() {
+        let s = song("4/4", r#"[{"RH":"C4:4 Q9:4 C4:2"}]"#);
+        let t = taught_from(r#"[{"RH":"C4:1"}]"#);
+        let e = check(&s, &t, &spec("RH", "[]"));
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert!(e[0].starts_with("bar 1 RH:"), "{e:?}");
+        assert!(TaughtSet::from_song(&s).is_err());
     }
 
     #[test]

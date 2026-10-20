@@ -11,12 +11,13 @@ Generated practice songs must teach one node's new skill and use nothing the lea
 
 ## Taught set (derived)
 
-`content specs` walks courses in `content/courses.json` order and nodes in journey order. For each node it collects the `score` of every stage of the node's levels and merges those songs into a running set. Songs with `source: "generated"` never widen it.
+`content specs` walks courses in `content/courses.json` order (lint requires each course to be listed after the courses it `requires`, and `journey` to be `courses/<id>/journey.json`) and nodes in journey order. For each node it collects the `score` of every stage of the node's levels plus every song-slot variant in the node's `songs` (so a `folk_world` learner's song counts too) and merges them into a running set. Songs with `source: "generated"` never widen it; songs that fail to parse are lint errors and are not counted.
 
 | Field | From graded hands (`RH`, `LH`) only |
 |---|---|
 | `pitches` | pitch set per hand |
-| `durations` | duration labels as written: `1`, `2`, `2.`, `4`, `4.`, `8` … |
+| `durations` | note duration labels as written: `1`, `2`, `2.`, `4`, `4.`, `8` … |
+| `rest_durations` | rest duration labels, checked separately from notes |
 | `times` | time signatures |
 | `accidentals` | black-key pitch classes (`F#`/`Gb` count as one) |
 | `max_interval` | largest melodic leap in one hand, semitones (RH top note, LH bottom note) |
@@ -71,7 +72,7 @@ let taught = TaughtSet::from_song(&song);   // or merged over a walk
 let errors: Vec<String> = rubric::check(&song, &taught, &node_spec);  // empty = pass
 ```
 
-`check` reports: wrong meter, bpm or bar count; missing or extra graded hand; pitches per hand, durations, accidentals, meter not in the taught set; leap above `max_interval`; more simultaneous notes than taught; chord span over an octave; chord fingering out of order (RH fingers rise with pitch, LH fall); rests or hands-together not taught; each unmet `required` pattern. Backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`) are ignored.
+`check` reports: bars that do not parse (and nothing else for that song); wrong meter, bpm or bar count; missing or extra graded hand; pitches per hand, durations, accidentals, meter not in the taught set; leap above `max_interval`; more simultaneous notes than taught; chord span over an octave; chord fingering out of order (RH fingers rise with pitch, LH fall); rests, rest values or hands-together not taught; each unmet `required` pattern. Backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`) are ignored.
 
 ## Lint
 
