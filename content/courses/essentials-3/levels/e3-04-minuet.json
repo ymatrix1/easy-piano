@@ -1,0 +1,33 @@
+{
+  "id": "e3-04-minuet",
+  "title": "str:level.e3.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "minuet-in-g",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "minuet-in-g",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "minuet-in-g",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "minuet-in-g",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

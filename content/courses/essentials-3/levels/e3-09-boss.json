@@ -1,0 +1,27 @@
+{
+  "id": "e3-09-boss",
+  "title": "str:level.e3.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "minuet-in-g",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "minuet-in-g",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "minuet-in-g",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

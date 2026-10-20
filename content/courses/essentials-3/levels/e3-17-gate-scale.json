@@ -1,0 +1,14 @@
+{
+  "id": "e3-17-gate-scale",
+  "title": "str:level.e3.17.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "e3-scale-drill",
+      "tempo": 1.2,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

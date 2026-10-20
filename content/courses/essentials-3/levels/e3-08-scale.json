@@ -1,0 +1,31 @@
+{
+  "id": "e3-08-scale",
+  "title": "str:level.e3.08.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "e3-thumb-under"
+    },
+    {
+      "type": "wait",
+      "score": "e3-scale-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e3-scale-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "e3-scale-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

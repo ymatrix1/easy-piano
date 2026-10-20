@@ -1,0 +1,27 @@
+{
+  "id": "e3-07-greensleeves",
+  "title": "str:level.e3.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "greensleeves",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "greensleeves",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "greensleeves",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

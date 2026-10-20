@@ -21,7 +21,7 @@ Each course: 10–25 journey nodes, 30–60 levels, a boss at the end. Typical s
 | **Piano Basics** | none | Sitting and hand shape, finger numbers, RH C position (C–G), first staff reading, quarter/half notes | C4–G4 / – | 60–120 | Ode to Joy, Symphony No. 40 theme (Mozart), Mary Had a Little Lamb |
 | **Essentials I** | Piano Basics | Rhythm (quarter, half, whole, rests), reading notes on treble, LH basic chords and new notes (C3–G3), both hands, RH intervals, coordination, eighth notes | C4–G4 / C3–G3 | 72–104 | When the Saints, Jingle Bells (Twinkle Twinkle and Oh! Susanna need A4: moved to Essentials II) |
 | **Essentials II** | Essentials I | New RH note above G, new LH note, RH F position, shifting positions, coordination in two hands | C4–C5 / C3–A3 | 76–100 | Twinkle Twinkle, Oh! Susanna (Musette in D and Swing Low later; Saints moved to Essentials I) |
-| **Essentials III** | Essentials II | Rhythm review, new LH position, sharps, flats, mixed accidentals, intro to full sheet music, C major scale | C#4–D#5 / C#3–C#4 | 64–120 | Minuet in G (Petzold, attr. Bach), Greensleeves, Amazing Grace |
+| **Essentials III** | Essentials II | Rhythm review, new LH position, sharps, flats, mixed accidentals, intro to full sheet music, C major scale | C4–E5 / G2–D3 | 76–100 | Minuet in G (Petzold, attr. Bach), Greensleeves, Amazing Grace, Auld Lang Syne, Joy to the World |
 
 ## Soloist track (sheet music, sight reading, technique)
 
@@ -96,6 +96,7 @@ Example, Piano Basics node "RH C position, first song":
 |---|---|---|---|---|---|
 | Essentials I | 19 in 12 nodes | rests, intervals, lightly-row, left-hand (+ first LH chords), saints, gate-1, hands-together, eighths, jingle, gate-2, boss | 7 original drills + When the Saints, Jingle Bells, Lightly Row, Go Tell Aunt Rhody, Au Clair de la Lune (PD, our arrangements, ACC/DRUMS/BASS). 2 star gates of 3 songs, `stars_needed: 5` | e1-rests, e1-left-hand, e1-hands-together, e1-eighth-notes | piano-2uhn |
 | Essentials II | 18 in 12 nodes | new-note-a, twinkle, london-bridge, left-hand-a, frere-jacques, gate-1, f-position (+ waltz), shifting, susanna, camptown, gate-2, boss | 5 original drills + Twinkle, London Bridge, Frère Jacques, Oh! Susanna, Camptown Races (PD, our arrangements, ACC/DRUMS/BASS). Gates: 3 songs / 5 stars, 4 songs / 7 stars | e2-reach-a, e2-f-position, e2-shifting | piano-f06f |
+| Essentials III | 17 in 13 nodes | waltz, left-hand-g, sharps, minuet, flats, amazing-grace, auld-lang-syne, gate-1, greensleeves, scale, joy-to-the-world, gate-2, boss | 5 original drills (3/4, LH G position, F♯, B♭, C major scale) + Minuet in G, Amazing Grace, Auld Lang Syne, Greensleeves, Joy to the World (PD, our simplified arrangements, ACC/DRUMS/BASS). Gates: 3 songs / 6 stars each | e3-three-four, e3-lh-g-position, e3-sharps, e3-flats, e3-thumb-under | piano-rrqj |
 
 Reference shape (local scan, stats only): Essentials I 25 nodes / 50 levels with 9 song nodes and 5 star gates (3–4 songs each, 2–5 stars needed); Essentials II 14 / 41, 2 gates (7 stars of 4 songs); Essentials III 19 / 55, 3 gates (5–6 stars). Ours is smaller and grows by adding songs to gates. No accidentals yet in Essentials I and II; F position avoids B♭ until Essentials III (beginner rubric in [song-import.md](../research/song-import.md)).
 

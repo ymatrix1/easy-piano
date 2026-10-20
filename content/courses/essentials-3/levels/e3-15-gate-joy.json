@@ -1,0 +1,14 @@
+{
+  "id": "e3-15-gate-joy",
+  "title": "str:level.e3.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "joy-to-the-world",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

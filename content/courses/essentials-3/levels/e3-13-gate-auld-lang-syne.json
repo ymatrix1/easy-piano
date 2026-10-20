@@ -1,0 +1,20 @@
+{
+  "id": "e3-13-gate-auld-lang-syne",
+  "title": "str:level.e3.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "auld-lang-syne",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "auld-lang-syne",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}
