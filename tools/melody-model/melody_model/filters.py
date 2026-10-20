@@ -27,27 +27,34 @@ BLOCKED_TITLES = re.compile(
 ARRANGED = re.compile(r"\b(arr\.?|arranged|arrangement|version|easy piano|simplified)\b", re.I)
 
 
+def pdmx_flags(row: dict) -> list[str]:
+    """Clean-data risks of a PDMX row. Kept, not dropped (D21): exclude flagged tunes to train a clean model."""
+    flags = []
+    genres = set(row["genres"].split("-")) - {"NA"}
+    original = row["is_original"] == "True"
+    if genres and not genres <= PDMX_GENRES:
+        flags.append("genre")
+    if not genres and not original:
+        flags.append("untagged")
+    if row["composer_name"] == "NA" and not original:
+        flags.append("no-composer")
+    names = " ".join(row[k] for k in ("composer_name", "artist_name") if row[k] != "NA")
+    if names and BLOCKED_NAMES.search(names):
+        flags.append("pop-name")
+    title = " ".join(row[k] for k in ("title", "song_name", "subtitle") if row[k] != "NA")
+    if BLOCKED_TITLES.search(title):
+        flags.append("pop-title")
+    if not original and ARRANGED.search(title):
+        flags.append("arrangement")
+    return flags
+
+
 def pdmx_ok(row: dict) -> tuple[bool, str]:
+    """Hard rejects only: licence conflict, duplicates, length."""
     if row["subset:no_license_conflict"] != "True":
         return False, "pdmx licence conflict"
     if row["subset:deduplicated"] != "True":
         return False, "pdmx duplicate"
-    genres = set(row["genres"].split("-")) - {"NA"}
-    if genres and not genres <= PDMX_GENRES:
-        return False, "pdmx genre"
-    if not genres and row["is_original"] != "True":
-        return False, "pdmx untagged non-original"
-    original = row["is_original"] == "True"
-    if row["composer_name"] == "NA" and not original:
-        return False, "pdmx no composer"
-    names = " ".join(row[k] for k in ("composer_name", "artist_name") if row[k] != "NA")
-    if names and BLOCKED_NAMES.search(names):
-        return False, "pdmx blocked name"
-    title = " ".join(row[k] for k in ("title", "song_name", "subtitle") if row[k] != "NA")
-    if BLOCKED_TITLES.search(title):
-        return False, "pdmx blocked title"
-    if not original and ARRANGED.search(title):
-        return False, "pdmx third-party arrangement"
     try:
         bars = int(float(row["song_length.bars"]))
     except ValueError:

@@ -21,7 +21,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 from .download import RAW, ROOT
-from .filters import dedupe_key, nmd_ok, pdmx_ok, playable, split_of
+from .filters import dedupe_key, nmd_ok, pdmx_flags, pdmx_ok, playable, split_of
 from .labels import plan
 from .notation import Unsupported
 from .tokenizer import MAX_BARS, encode_song
@@ -54,7 +54,8 @@ def jobs_pdmx(limit: int | None):
             ok, why = pdmx_ok(row)
             tune_id = row["mxl"].rsplit("/", 1)[-1].removesuffix(".mxl")
             meta = {"license": row["license"], "title": row["title"], "composer": row["composer_name"],
-                    "n_tracks": row["n_tracks"], "skip": None if ok else why}
+                    "n_tracks": row["n_tracks"], "skip": None if ok else why,
+                    "flags": pdmx_flags(row)}
             if not ok:
                 yield ("pdmx", tune_id, "skip", "", meta)
                 continue
@@ -143,9 +144,13 @@ def main(argv):
                 split = "train" if corpus == "own" else split_of(corpus, tune_id)
                 rec = {"id": f"{corpus}:{tune_id}", "corpus": corpus, "split": split, "license": meta.get("license"),
                        "title": song.get("title") or meta.get("title", ""), "composer": song.get("composer") or meta.get("composer", ""),
-                       "time": song["time"], "key": song["key"], "bars": song["bars"], "plan": plan(song)}
+                       "time": song["time"], "key": song["key"], "bars": song["bars"], "plan": plan(song),
+                       "flags": meta.get("flags", [])}
                 out.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 st["kept"] += 1
+                st["kept clean (no flags)"] += not rec["flags"]
+                for f in rec["flags"]:
+                    st[f"flag {f}"] += 1
                 st[f"split {split}"] += 1
                 st[f"time {song['time']}"] += 1
                 st["bars total"] += len(song["bars"])

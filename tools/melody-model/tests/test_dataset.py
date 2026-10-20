@@ -84,7 +84,10 @@ def pdmx_row(**kw):
     ({"subset:no_license_conflict": "False"}, False),
 ])
 def test_pdmx_screen(kw, ok):
-    assert filters.pdmx_ok(pdmx_row(**kw))[0] is ok
+    """ok == no clean-data flags (D21 keeps flagged tunes, separable)."""
+    row = pdmx_row(**kw)
+    hard_ok = filters.pdmx_ok(row)[0]
+    assert (hard_ok and not filters.pdmx_flags(row)) is ok
 
 
 def test_nmd_named_composer():
