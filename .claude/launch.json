@@ -4,8 +4,26 @@
     {
       "name": "web-spike",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["tools/serve_web.py", "app/build/web", "8765"],
+      "runtimeArgs": [
+        "tools/serve_web.py",
+        "app/build/web",
+        "8765"
+      ],
       "port": 8765
+    },
+    {
+      "name": "magenta-viewer",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8771",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "tools/spikes/magenta"
+      ],
+      "port": 8771
     }
   ]
 }

@@ -53,6 +53,22 @@ Post-hoc rejection is useless: 0 of 600 accepted. Masked sampling meets every ru
 
 All 15 written songs pass `content lint` (bar sums, pitch range, finger counts) except `source_url required unless source is original`, which the `generated` source work in another session removes. Command: copy `content/` plus `out/gen-*.json` to a scratch folder, `cargo run -- lint <scratch>`: 15 errors, all that one message.
 
+### Harder treble level (`--level e3`)
+
+Rules: C4–C5 plus F#4 and Bb4, eighth / quarter / dotted quarter / half, quarter and half rests (never two in a row), max leap a sixth, end on C4; ImprovRNN chords C Am Dm G C F G7 C. One mask fix was needed: with a sixth allowed, a note on C5 could make the forced final C4 unreachable, so from bar 7 on only pitches within a sixth of C4 are allowed.
+
+| Checkpoint | Masked: ms/tune | Masked: rule pass | Mean score | Best score | Plain: ms/tune | Plain: accepted |
+|---|---|---|---|---|---|---|
+| `basic_rnn` | 3322 | 20/20 | 0.530 | 0.705 | 3429 | 0/200 |
+| `melody_rnn` | 1141 | 20/20 | 0.598 | 0.828 | 1492 | 0/200 |
+| `chord_pitches_improv` | 627 | 20/20 | 0.562 | 0.672 | 665 | 0/200 |
+
+The 15 written e3 songs use 25 F#, 18 Bb, 22 rests and 8 dotted quarters, and pass `content lint` apart from the same `source_url` error. Fingering: each bar takes the first five-finger position (C, G, F, D) that covers its notes, else spreads its span over 1–5; good enough to read, not teaching-grade. Rerunning `--level e1` reproduced the e1 table's scores exactly (same seeds); ms/tune varied by up to 0.5 s between runs.
+
+### Viewer
+
+`viewer.html` draws every tune in `out/` on a treble staff (SVG, own renderer: clef, ledger lines, accidentals, dots, flags, rests, fingering), plays it with a WebAudio triangle synth at the song's bpm, filters by level and has a **Show model** toggle. With the toggle off, tunes are shuffled and only show level and bpm; on, each shows checkpoint, seed, score and chords. Run: `node generate.js --level e3`, then the `magenta-viewer` launch config (`python -m http.server 8771 --directory tools/spikes/magenta`) and open `/viewer.html`.
+
 Listening impression (not a test): ImprovRNN tunes follow the chords (bar 1 over C: `C4 E4 G4 G4`), the unconditioned models wander more and lean on C–G leaps. Quality needs the blind listening test.
 
 ## Licenses
@@ -77,6 +93,6 @@ Because no weight license is stated, **no sample outputs are committed**; they s
 
 ## Follow-ups
 
-- Feed 3–5 masked ImprovRNN tunes into the blind listening test (local only) to see if they beat the rules generator; regenerate with `node generate.js --only chord_pitches_improv`.
+- Use the viewer or feed 3–5 masked tunes per model into the blind listening test (local only) to see if they beat the rules generator; regenerate with `node generate.js --only chord_pitches_improv`.
 - Ask Magenta (GitHub issue) for the checkpoint license and training-data provenance; until answered, keep Magenta out of shipped content.
 - If quality wins, consider the same masking idea on a model we train ourselves on CC0/PD melodies, so weights and data are clean.
