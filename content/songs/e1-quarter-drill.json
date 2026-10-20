@@ -1,0 +1,69 @@
+{
+  "id": "e1-quarter-drill",
+  "title": "Clap and Count",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 C4:4@1 D4:2@2",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "E4:4@3 E4:4@3 F4:2@4",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "G4:1@5",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "G4:2@5 E4:2@3",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "F4:4@4 F4:4@4 D4:2@2",
+      "ACC": "B2D3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 B1:4 D2:4"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "D4:2@2 r:4 D4:4@2",
+      "ACC": "B2D3G3:2 B2D3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "G1:4 D2:4 B1:4 D2:4"
+    },
+    {
+      "RH": "C4:1@1",
+      "ACC": "C3E3G3:1",
+      "DRUMS": "C2C#3:1",
+      "BASS": "C2:1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

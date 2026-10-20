@@ -244,4 +244,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get middleCLabel => 'Do';
+
+  @override
+  String gateProgress(int need, int have) {
+    return 'Gana $need estrellas con cualquiera de estas canciones ($have/$need)';
+  }
 }

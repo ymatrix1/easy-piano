@@ -245,4 +245,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get middleCLabel => 'Do';
+
+  @override
+  String gateProgress(int need, int have) {
+    return 'Gagne $need étoiles avec n\'importe lesquels de ces morceaux ($have/$need)';
+  }
 }

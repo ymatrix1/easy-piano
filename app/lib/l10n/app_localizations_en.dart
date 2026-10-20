@@ -241,4 +241,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get middleCLabel => 'C';
+
+  @override
+  String gateProgress(int need, int have) {
+    return 'Earn $need stars from any of these songs ($have/$need)';
+  }
 }

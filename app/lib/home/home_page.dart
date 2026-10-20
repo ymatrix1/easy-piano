@@ -120,9 +120,24 @@ class Progress {
   final Map<String, int> levelStars;
 
   /// A submodule's stars: the lowest of its tasks (0 until all are played).
-  int nodeStars(JourneyNode n) => n.levels.isEmpty
-      ? 0
-      : n.levels.map((l) => levelStars[l] ?? 0).reduce((a, b) => a < b ? a : b);
+  /// A star gate scores its earned stars against `starsNeeded` instead, so
+  /// any mix of its songs can open it.
+  int nodeStars(JourneyNode n) {
+    if (n.levels.isEmpty) return 0;
+    final need = n.starsNeeded;
+    if (need != null) return (3 * gateStars(n) ~/ need).clamp(0, 3);
+    return n.levels
+        .map((l) => levelStars[l] ?? 0)
+        .reduce((a, b) => a < b ? a : b);
+  }
+
+  /// Passed: a gate has its stars, any other node has every task played.
+  bool nodeDone(JourneyNode n) =>
+      n.starsNeeded != null ? gateStars(n) >= n.starsNeeded! : nodeStars(n) > 0;
+
+  /// Stars earned so far across a node's tasks.
+  int gateStars(JourneyNode n) =>
+      n.levels.fold(0, (a, l) => a + (levelStars[l] ?? 0));
 
   int courseStars(CourseDef c) => c.nodes.fold(0, (a, n) => a + nodeStars(n));
 
@@ -135,7 +150,7 @@ class Progress {
     for (final c in repo.courses) {
       if (c.planned) continue;
       for (final n in c.nodes) {
-        if (nodeStars(n) == 0) return (c, n);
+        if (!nodeDone(n)) return (c, n);
       }
     }
     return null;

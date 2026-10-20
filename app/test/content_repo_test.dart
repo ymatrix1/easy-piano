@@ -37,9 +37,31 @@ void main() {
     final repo = ContentRepo.fromFiles(files);
     expect(repo.sections.map((s) => s.id), ['basic', 'main']);
     final planned = repo.courses.where((c) => c.planned).toList();
-    expect(planned.map((c) => c.id), contains('essentials-1'));
+    expect(planned.map((c) => c.id), contains('essentials-2'));
+    final e1 = repo.courses.firstWhere((c) => c.id == 'essentials-1');
+    expect(e1.planned, isFalse);
+    for (final node in e1.nodes) {
+      for (final l in node.levels) {
+        expect(repo.levels[l], isNotNull, reason: l);
+      }
+    }
     expect(planned.every((c) => c.nodes.isEmpty), isTrue);
     expect(repo.courses.first.planned, isFalse);
+  });
+
+  test('pubspec bundles every content folder', () {
+    // Flutter assets are not recursive: a folder missing here 404s on web.
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final root = Directory('../content').absolute;
+    for (final d in root.listSync(recursive: true).whereType<Directory>()) {
+      final rel = d.uri.pathSegments
+          .skip(root.uri.pathSegments.length - 1)
+          .where((s) => s.isNotEmpty)
+          .join('/');
+      if (rel.startsWith('schema')) continue;
+      if (d.listSync().whereType<File>().isEmpty) continue;
+      expect(pubspec, contains('- assets/content/$rel/'), reason: rel);
+    }
   });
 
   test('strings resolve in locale with English fallback', () {

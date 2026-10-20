@@ -1,0 +1,45 @@
+{
+  "id": "e1-lh-drill",
+  "title": "Left Hand Walk",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "LH": "C3:4@5 D3:4@4 E3:4@3 F3:4@2"
+    },
+    {
+      "LH": "G3:2@1 G3:2@1"
+    },
+    {
+      "LH": "G3:4@1 F3:4@2 E3:4@3 D3:4@2"
+    },
+    {
+      "LH": "C3:1@5"
+    },
+    {
+      "LH": "C3:4@5 E3:4@3 G3:2@1"
+    },
+    {
+      "LH": "G3:4@1 E3:4@3 C3:2@5"
+    },
+    {
+      "LH": "D3:4@4 F3:4@2 E3:4@3 D3:4@4"
+    },
+    {
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

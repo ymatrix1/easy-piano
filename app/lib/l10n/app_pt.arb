@@ -69,5 +69,6 @@
   "retry": "Tentar de novo",
   "next": "Próximo",
   "locked": "Bloqueado",
-  "middleCLabel": "Dó"
+  "middleCLabel": "Dó",
+  "gateProgress": "Ganhe {need} estrelas em qualquer uma destas músicas ({have}/{need})"
 }

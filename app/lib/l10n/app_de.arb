@@ -69,5 +69,6 @@
   "retry": "Nochmal",
   "next": "Weiter",
   "locked": "Gesperrt",
-  "middleCLabel": "C"
+  "middleCLabel": "C",
+  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})"
 }

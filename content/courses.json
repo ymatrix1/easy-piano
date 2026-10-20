@@ -1,7 +1,13 @@
 {
   "sections": [
-    { "id": "basic", "title": "str:section.basic" },
-    { "id": "main", "title": "str:section.main" }
+    {
+      "id": "basic",
+      "title": "str:section.basic"
+    },
+    {
+      "id": "main",
+      "title": "str:section.main"
+    }
   ],
   "courses": [
     {
@@ -17,15 +23,19 @@
       "title": "str:course.e1.title",
       "description": "str:course.e1.desc",
       "section": "basic",
-      "requires": ["piano-basics"],
-      "status": "planned"
+      "requires": [
+        "piano-basics"
+      ],
+      "journey": "courses/essentials-1/journey.json"
     },
     {
       "id": "essentials-2",
       "title": "str:course.e2.title",
       "description": "str:course.e2.desc",
       "section": "basic",
-      "requires": ["essentials-1"],
+      "requires": [
+        "essentials-1"
+      ],
       "status": "planned"
     },
     {
@@ -33,7 +43,9 @@
       "title": "str:course.e3.title",
       "description": "str:course.e3.desc",
       "section": "basic",
-      "requires": ["essentials-2"],
+      "requires": [
+        "essentials-2"
+      ],
       "status": "planned"
     }
   ]

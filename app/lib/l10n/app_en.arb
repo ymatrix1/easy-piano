@@ -108,5 +108,16 @@
   "middleCLabel": "C",
   "@middleCLabel": {
     "description": "Letter or solfege name written on middle C of the on-screen keyboard. See docs/specs/i18n.md (note naming)."
+  },
+  "gateProgress": "Earn {need} stars from any of these songs ({have}/{need})",
+  "@gateProgress": {
+    "placeholders": {
+      "need": {
+        "type": "int"
+      },
+      "have": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "id": "e1-17-gate-jingle",
+  "title": "str:level.e1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jingle-bells",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

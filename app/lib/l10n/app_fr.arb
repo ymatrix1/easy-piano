@@ -69,5 +69,6 @@
   "retry": "Réessayer",
   "next": "Suivant",
   "locked": "Verrouillé",
-  "middleCLabel": "Do"
+  "middleCLabel": "Do",
+  "gateProgress": "Gagne {need} étoiles avec n'importe lesquels de ces morceaux ({have}/{need})"
 }
