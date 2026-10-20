@@ -775,7 +775,7 @@ class _PracticeStageState extends State<PracticeStage>
                       : StagePalette.textDim,
                 ),
               ),
-            if (widget.onConnectMidi != null && !widget.micMode && narrow)
+            if (widget.onConnectMidi != null && narrow)
               IconButton(
                 onPressed: widget.onConnectMidi,
                 tooltip:
@@ -790,7 +790,7 @@ class _PracticeStageState extends State<PracticeStage>
                       : StagePalette.done,
                 ),
               )
-            else if (widget.onConnectMidi != null && !widget.micMode) ...[
+            else if (widget.onConnectMidi != null) ...[
               TextButton.icon(
                 onPressed: widget.onConnectMidi,
                 style: TextButton.styleFrom(foregroundColor: StagePalette.text),

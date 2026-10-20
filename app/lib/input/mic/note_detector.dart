@@ -32,6 +32,7 @@ class NoteDetector {
     this.highPitch = 96,
     this.maxPolyphony = 4,
     this.secondNoteRatio = 0.3,
+    this.maxHold = 0.6,
   }) : _fluxN = _pow2(sampleRate * 0.021),
        _pitchN = _pow2(sampleRate * 0.08) {
     _fluxHop = _fluxN ~/ 2;
@@ -48,6 +49,9 @@ class NoteDetector {
 
   /// A further chord note must reach this share of the strongest one's salience.
   final double secondNoteRatio;
+
+  /// Longest a detected note stays "on", in seconds.
+  final double maxHold;
 
   final int _fluxN;
   final int _pitchN;
@@ -357,8 +361,13 @@ class NoteDetector {
     final now = _written / sampleRate;
     final gone = <int>[];
     _active.forEach((p, v) {
-      if (_written - v.$2 < _pitchN * 2) return;
-      if (_level(mag, p, binHz) < v.$1 * 0.12) gone.add(p);
+      final age = _written - v.$2;
+      if (age < _pitchN * 2) return;
+      // A mic can't see the key go up; release on decay, or after
+      // [maxHold] so held-looking keys never pile up on screen.
+      if (age > maxHold * sampleRate || _level(mag, p, binHz) < v.$1 * 0.12) {
+        gone.add(p);
+      }
     });
     for (final p in gone) {
       _active.remove(p);

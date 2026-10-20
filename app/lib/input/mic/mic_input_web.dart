@@ -48,7 +48,8 @@ class _WebMicInput implements MicInput {
   double level = 0;
 
   /// Slow peak follower; input is scaled so quiet mics still reach the
-  /// detector's thresholds (gain capped at 30×).
+  /// detector's thresholds (gain capped at 8×, adapts over ~10 s so it
+  /// doesn't pump between notes). Below the noise gate nothing is analysed.
   double _envelope = 0.01;
 
   @override
@@ -213,9 +214,12 @@ class _WebMicInput implements MicInput {
       if (a > peak) peak = a;
     }
     level = math.min(1, peak * 4);
-    _envelope = math.max(peak, _envelope * 0.995);
-    final gain = math.min(30.0, 0.3 / math.max(_envelope, 0.01));
-    final notes = det.process([for (final s in samples) s * gain]);
+    _envelope = math.max(peak, _envelope * 0.9995);
+    final gain = math.min(8.0, 0.3 / math.max(_envelope, 0.01));
+    final gated = peak < 0.004;
+    final notes = det.process([
+      for (final s in samples) gated ? 0.0 : s * gain,
+    ]);
     if (notes.isEmpty) return;
     final offset = offsetMs ?? 0;
     for (final n in notes) {

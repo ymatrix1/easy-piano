@@ -61,6 +61,19 @@ void main() {
     expect(_run(buf).map((n) => n.pitch).toList(), tune);
   });
 
+  test('a held note is released within maxHold', () {
+    final buf = List<double>.filled((_sr * 2.5).round(), 0);
+    _addNote(buf, 0.3, 60, 2.2);
+    final det = NoteDetector(sampleRate: _sr);
+    final out = <DetectedNote>[];
+    for (var i = 0; i < buf.length; i += 128) {
+      out.addAll(det.process(buf.sublist(i, math.min(i + 128, buf.length))));
+    }
+    final off = out.firstWhere((n) => !n.on);
+    expect(off.pitch, 60);
+    expect(off.time - 0.3, lessThan(0.75));
+  });
+
   test('silence and low noise give nothing', () {
     final rnd = math.Random(1);
     final buf = [

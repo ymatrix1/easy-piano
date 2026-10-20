@@ -234,6 +234,36 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
           dropdownColor: GameColors.panelHi,
           iconEnabledColor: GameColors.cyan,
           style: _body,
+          // Explicit text so the closed/disabled field (during calibration)
+          // stays light instead of Material's dark disabled colour.
+          selectedItemBuilder: (_) => [
+            for (final label in [
+              l.micDefaultDevice,
+              for (final d in _devices) d.label,
+            ])
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: _body.copyWith(
+                    color: _cal == _Cal.running
+                        ? GameColors.textDim
+                        : GameColors.text,
+                  ),
+                ),
+              ),
+          ],
+          disabledHint: Text(
+            _devices
+                    .where((d) => d.id == current)
+                    .map((d) => d.label)
+                    .firstOrNull ??
+                l.micDefaultDevice,
+            overflow: TextOverflow.ellipsis,
+            style: _body.copyWith(color: GameColors.textDim),
+          ),
+          iconDisabledColor: GameColors.textDim,
           items: [
             DropdownMenuItem(value: null, child: Text(l.micDefaultDevice)),
             for (final d in _devices)

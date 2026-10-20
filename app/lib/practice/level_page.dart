@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/mic/mic_input.dart';
+import '../input/merged_input.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
@@ -44,7 +45,8 @@ class _LevelPageState extends State<LevelPage> {
   ResultView? _result;
   final _bestStars = <int, int>{};
   String? _midiLabel;
-  bool _mic = false; // listening through the microphone instead of MIDI
+  bool _mic = false; // listening through the microphone (MIDI still works)
+  late final _merged = MergedInput(widget.midi, micInput);
 
   @override
   void initState() {
@@ -243,7 +245,7 @@ class _LevelPageState extends State<LevelPage> {
       key: ValueKey('$_index-$_run'),
       stage: s,
       songJson: repo.songJson[s.score]!,
-      midi: _mic ? micInput : widget.midi,
+      midi: _mic ? _merged : widget.midi,
       micMode: _mic,
       onMic: _onMicButton,
       failedAttempts: _attempt,
