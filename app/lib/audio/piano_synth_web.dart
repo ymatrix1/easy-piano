@@ -72,6 +72,9 @@ class _WebPianoSynth implements PianoSynth {
     _master ??= ctx.createGain()
       ..gain.value = 0.8
       ..connect(ctx.destination);
+    _buses['piano'] ??= ctx.createGain()
+      ..gain.value = _defaultLevels['piano']!
+      ..connect(_master!);
     // Browsers keep audio suspended until a user gesture; key presses count.
     if (ctx.state == 'suspended') ctx.resume();
     return ctx;
@@ -98,6 +101,7 @@ class _WebPianoSynth implements PianoSynth {
             bytes,
           ); // decodeAudioData detaches the buffer
           _buffers[pitch] = await ctx.decodeAudioData(copy.buffer.toJS).toDart;
+          _nearestCache.clear();
         } catch (_) {
           // A missing sample just leaves a gap; neighbours cover it.
         }
@@ -105,12 +109,16 @@ class _WebPianoSynth implements PianoSynth {
     }
   }
 
+  /// pitch -> nearest decoded sample; cleared whenever [_buffers] grows.
+  final _nearestCache = <int, int?>{};
+
   int? _nearest(int pitch) {
+    if (_nearestCache.containsKey(pitch)) return _nearestCache[pitch];
     int? best;
     for (final s in _buffers.keys) {
       if (best == null || (s - pitch).abs() < (best - pitch).abs()) best = s;
     }
-    return best;
+    return _nearestCache[pitch] = best;
   }
 
   _Voice? _start(int pitch, double when, int velocity, [web.AudioNode? dest]) {

@@ -181,7 +181,16 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Everything in `content/strings` (no type safety, no plurals, Material widgets untranslated); everything in ARB (content authors would edit app code; lessons need an app rebuild per string); `easy_localization`/`slang` packages (extra dependency, no gain over the SDK tool).
 - **Impact:** New deps `flutter_localizations`, `intl`, `shared_preferences`. New UI text must go in `app_en.arb` and all other ARBs (test enforces). Translations are machine-assisted; native review wanted. Content lint prints warnings for untranslated keys.
 
-### D17. Native audio output via WASAPI exclusive (Windows), gated on web latency
+### D17. Generated practice songs: CC0, provenance, rubric, human review
+
+- **Status:** proposed
+- **Context:** Essentials I-III have 54 levels; the reference course size is about 50 / 41 / 55 levels. Hand-writing every practice tune does not scale, so we want generated tunes (rules, PD variations, LLM via an agent skill, Magenta.js). Generated material raises three questions: license, traceability, and whether it only uses what was taught.
+- **Decision:** Generated songs use `source: "generated"`, `license: "CC0-1.0"` and a required `generator` object (`method`, `tool`, `model`, `seed`, `source_song`, `prompt_ref`). Each targets a journey node (`spec_node`) and must pass the rubric (`core/src/rubric.rs`) against that node's taught set and `content/skill-specs/<course>.json`. Every generated song is reviewed by a human in its PR (played or listened to). Generation happens only in the content pipeline (tools, agent skills); the app never generates songs at runtime. Generated songs never widen the taught set.
+- **Why:** CC0 is the simplest license for machine-made material whose copyright status is unclear, and lets anyone reuse it. Provenance lets us rerun, audit or remove a batch by method or model. The rubric turns "only what was taught" into a check CI can run, and human review catches what the rubric cannot (musicality, accidental likeness to a known tune). Offline generation keeps the app deterministic, small and free of model dependencies.
+- **Alternatives:** CC-BY-SA like hand arrangements (attribution for machine output is muddled); no provenance field (cannot audit a model or method later); rubric as a guideline only (drift from the curriculum); runtime generation in the app ("endless practice", but untestable content, model size, and no review).
+- **Impact:** Song format gains optional `generator` and `spec_node` (schema, `content-format.md`); lint runs the rubric; new `content specs` command and `docs/specs/skill-specs.md`. Next: `compose-song` skill, method spike with blind listening test (epic piano-bovj).
+
+### D18. Native audio output via WASAPI exclusive (Windows), gated on web latency
 
 - **Status:** proposed
 - **Context:** Browser audio output on the test PC costs 40 ms `outputLatency` on top of a 10 ms buffer, and `latencyHint` tuning changes nothing. `cpal` shared mode is stuck at the 10 ms system period. WASAPI exclusive streams ran at 3 ms periods on all five test devices. See [native-audio-latency.md](research/native-audio-latency.md). D1 sets the gate at 30 ms p95 MIDI to frame.

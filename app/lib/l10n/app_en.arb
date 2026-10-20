@@ -34,6 +34,13 @@
   },
   "practiceSubtitle": "Train skills outside the course path.",
   "freePlay": "Free play",
+  "noteNames": "C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B",
+  "@noteNames": {
+    "description": "Twelve comma-separated pitch-class names from C, in the UI language (letters or solfege). Used for note readouts."
+  },
+  "freePlayHint": "Play any key. Use a MIDI keyboard or tap the screen.",
+  "octaveDown": "Lower octave",
+  "octaveUp": "Higher octave",
   "freePlayDesc": "Play anything on your MIDI keyboard or the screen.",
   "sightReading": "Sight reading",
   "sightReadingDesc": "Read short random phrases at your level.",

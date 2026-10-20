@@ -23,7 +23,32 @@ pub struct Song {
     /// Critical sections as [first_bar, last_bar_exclusive].
     #[serde(default)]
     pub critical: Vec<[usize; 2]>,
+    /// How a `source: "generated"` song was made (D17).
+    #[serde(default)]
+    pub generator: Option<Generator>,
+    /// Journey node this song targets, `"course/node"`; lint then runs the rubric.
+    #[serde(default)]
+    pub spec_node: Option<String>,
 }
+
+/// Provenance of a generated song (docs/specs/skill-specs.md).
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Generator {
+    /// One of `GENERATOR_METHODS`.
+    pub method: String,
+    /// Program or skill that produced it, e.g. `compose-song`.
+    pub tool: Option<String>,
+    /// Model id when an ML model or LLM was used.
+    pub model: Option<String>,
+    pub seed: Option<u64>,
+    /// Song id the variation started from (`pd-variation`).
+    pub source_song: Option<String>,
+    /// Path or id of the prompt / settings used.
+    pub prompt_ref: Option<String>,
+}
+
+pub const GENERATOR_METHODS: [&str; 5] = ["rules", "pd-variation", "llm", "magenta", "hand"];
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
@@ -118,8 +143,28 @@ impl Song {
         if !ALLOWED_LICENSES.contains(&self.composition_license.as_str()) {
             errs.push(format!("composition_license `{}` not in {:?}", self.composition_license, ALLOWED_LICENSES));
         }
-        if self.source != "original" && self.source_url.as_deref().unwrap_or("").is_empty() {
-            errs.push("source_url required unless source is `original`".into());
+        let generated = self.source == "generated";
+        match (&self.generator, generated) {
+            (None, true) => errs.push("`generator` required when source is `generated`".into()),
+            (Some(_), false) => errs.push("`generator` only allowed when source is `generated`".into()),
+            (Some(g), true) => {
+                if !GENERATOR_METHODS.contains(&g.method.as_str()) {
+                    errs.push(format!("generator.method `{}` not in {:?}", g.method, GENERATOR_METHODS));
+                }
+                if g.method == "pd-variation" && g.source_song.as_deref().unwrap_or("").is_empty() {
+                    errs.push("generator.source_song required for `pd-variation`".into());
+                }
+            }
+            (None, false) => {}
+        }
+        if generated && self.license != "CC0-1.0" {
+            errs.push(format!("generated songs must be CC0-1.0, not `{}`", self.license));
+        }
+        if let Some(n) = self.spec_node.as_deref().filter(|n| n.split_once('/').is_none_or(|(c, k)| c.is_empty() || k.is_empty())) {
+            errs.push(format!("spec_node `{n}` must be `course/node`"));
+        }
+        if !matches!(self.source.as_str(), "original" | "generated") && self.source_url.as_deref().unwrap_or("").is_empty() {
+            errs.push("source_url required unless source is `original` or `generated`".into());
         }
         if !(20.0..=300.0).contains(&self.bpm) {
             errs.push(format!("bpm {} out of 20..300", self.bpm));
@@ -236,6 +281,23 @@ mod tests {
         let errs = Song::from_json(&text).unwrap().validate();
         assert!(errs.iter().any(|e| e.contains("license `All rights reserved`")));
         assert!(errs.iter().any(|e| e.contains("source_url required")));
+    }
+
+    #[test]
+    fn generated_songs_need_provenance_and_cc0() {
+        let base = song(r#"[{"RH":"C4:1"}]"#, "").replace(r#""source":"original""#, r#""source":"generated""#);
+        let errs = Song::from_json(&base).unwrap().validate();
+        assert!(errs.iter().any(|e| e.contains("`generator` required")), "{errs:?}");
+        assert!(errs.iter().any(|e| e.contains("must be CC0-1.0")), "{errs:?}");
+        let ok = base.replace("CC-BY-SA-4.0", "CC0-1.0");
+        let ok = ok.replace(r#""bars""#, r#""generator":{"method":"llm","tool":"compose-song","model":"m","seed":7},"spec_node":"essentials-1/eighths","bars""#);
+        assert_eq!(Song::from_json(&ok).unwrap().validate(), Vec::<String>::new());
+        let bad = ok.replace(r#""method":"llm""#, r#""method":"pd-variation""#).replace("essentials-1/eighths", "eighths");
+        let errs = Song::from_json(&bad).unwrap().validate();
+        assert!(errs.iter().any(|e| e.contains("source_song required")), "{errs:?}");
+        assert!(errs.iter().any(|e| e.contains("must be `course/node`")), "{errs:?}");
+        let stray = song(r#"[{"RH":"C4:1"}]"#, r#","generator":{"method":"hand"}"#);
+        assert!(Song::from_json(&stray).unwrap().validate().iter().any(|e| e.contains("only allowed")));
     }
 
     #[test]

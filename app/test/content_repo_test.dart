@@ -59,7 +59,8 @@ void main() {
           .skip(root.uri.pathSegments.length - 1)
           .where((s) => s.isNotEmpty)
           .join('/');
-      if (rel.startsWith('schema')) continue;
+      // schema: editor help; skill-specs: content pipeline only (D17).
+      if (rel.startsWith('schema') || rel.startsWith('skill-specs')) continue;
       if (d.listSync().whereType<File>().isEmpty) continue;
       expect(pubspec, contains('- assets/content/$rel/'), reason: rel);
     }

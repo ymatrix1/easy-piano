@@ -1,0 +1,113 @@
+{
+  "course": "essentials-2",
+  "nodes": [
+    {
+      "node": "new-note-a",
+      "new_skill": "Reach up to A4 with the fifth finger, outside the five-finger position.",
+      "required": [{ "pitch": "A4", "hand": "RH" }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "twinkle",
+      "new_skill": "Song using the A4 reach and a sixth leap from C.",
+      "required": [{ "pitch": "A4", "hand": "RH" }, { "hands_together": true }],
+      "bars": [8, 12],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "london-bridge",
+      "new_skill": "Song with dotted rhythm and the A4 neighbour note.",
+      "required": [{ "pitch": "A4", "hand": "RH" }, { "rhythm": "4." }],
+      "bars": [8, 8],
+      "bpm": [92, 108],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "left-hand-a",
+      "new_skill": "Left hand reaches A3 above the C position.",
+      "required": [{ "pitch": "A3", "hand": "LH" }],
+      "bars": [8, 8],
+      "bpm": [68, 84],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "frere-jacques",
+      "new_skill": "Round melody with eighths over a steady left hand.",
+      "required": [{ "rhythm": "8" }, { "hands_together": true }],
+      "bars": [8, 8],
+      "bpm": [92, 108],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: the A reach in both hands.",
+      "required": [{ "pitch": "A4", "hand": "RH" }],
+      "bars": [8, 12],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "f-position",
+      "new_skill": "Move the right hand to F position (F4-C5) and first 3/4 waltz feel.",
+      "required": [{ "pitch": "C5", "hand": "RH" }, { "pitch": "F4", "hand": "RH" }],
+      "bars": [8, 8],
+      "bpm": [80, 100],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "shifting",
+      "new_skill": "Shift the hand between C and F positions mid-tune.",
+      "required": [{ "pitch": "C4", "hand": "RH" }, { "pitch": "C5", "hand": "RH" }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "susanna",
+      "new_skill": "Song with eighth-note pickups and position shifts.",
+      "required": [{ "rhythm": "8" }, { "hands_together": true }],
+      "bars": [8, 9],
+      "bpm": [92, 108],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "camptown",
+      "new_skill": "Fast repeated notes and eighths in a lively song.",
+      "required": [{ "rhythm": "8", "min_bar_share": 0.5 }],
+      "bars": [8, 8],
+      "bpm": [96, 112],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: F position, shifts and eighths.",
+      "required": [{ "pitch": "C5", "hand": "RH" }],
+      "bars": [8, 9],
+      "bpm": [80, 104],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course review: the extended range C4-A4 in a full song.",
+      "required": [{ "pitch": "A4", "hand": "RH" }, { "hands_together": true }],
+      "bars": [8, 12],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}
