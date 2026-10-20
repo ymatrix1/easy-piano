@@ -614,6 +614,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Listening'**
   String get micListening;
+
+  /// No description provided for @micDefaultDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Default microphone'**
+  String get micDefaultDevice;
+
+  /// No description provided for @micHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard: {note}'**
+  String micHeard(String note);
+
+  /// No description provided for @micTestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a key: the bar moves and the note shows here.'**
+  String get micTestHint;
+
+  /// No description provided for @micTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off microphone'**
+  String get micTurnOff;
+
+  /// 12 pitch-class names from C, comma-separated, in the locale's note naming.
+  ///
+  /// In en, this message translates to:
+  /// **'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B'**
+  String get micNoteNames;
 }
 
 class _AppLocalizationsDelegate

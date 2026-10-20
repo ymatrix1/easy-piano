@@ -37,5 +37,17 @@ class _UnsupportedMicInput implements MicInput {
   bool preferred = false;
 
   @override
+  Future<List<MicDevice>> devices() async => const [];
+
+  @override
+  String? get deviceId => null;
+
+  @override
+  Future<void> selectDevice(String? id) async {}
+
+  @override
+  double get level => 0;
+
+  @override
   double now() => _watch.elapsedMicroseconds / 1000.0;
 }

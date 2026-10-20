@@ -10,7 +10,7 @@ import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
-import 'mic_calibration.dart';
+import 'mic_setup.dart';
 import 'practice_stage.dart';
 import 'result_screen.dart';
 
@@ -65,88 +65,48 @@ class _LevelPageState extends State<LevelPage> {
     super.dispose();
   }
 
-  /// Mic button: off → explain, ask permission, calibrate once, listen.
-  /// On → recalibrate or go back to MIDI / screen keys.
+  /// Mic button: off → explain, ask permission, set up (device, level,
+  /// calibration), listen. On → the same setup panel, with "turn off".
   Future<void> _onMicButton() async {
     final l = AppLocalizations.of(context);
-    if (_mic) {
-      final choice = await showModalBottomSheet<String>(
-        context: context,
-        builder: (c) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.tune_rounded),
-                title: Text(l.micCalibrate),
-                onTap: () => Navigator.of(c).pop('calibrate'),
+    if (!_mic) {
+      if (!micInput.running) {
+        if (!await showMicExplain(context) || !mounted) return;
+        final ok = await micInput.start();
+        if (!mounted) return;
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                micInput.error == MicError.denied
+                    ? l.micDenied
+                    : l.micUnavailable,
               ),
-              ListTile(
-                leading: const Icon(Icons.piano_rounded),
-                title: Text(l.micUseMidi),
-                onTap: () => Navigator.of(c).pop('off'),
-              ),
-            ],
-          ),
-        ),
-      );
-      if (!mounted) return;
-      if (choice == 'calibrate') {
-        await showMicCalibration(context, micInput);
-        if (mounted) setState(() => _run++);
-      } else if (choice == 'off') {
+            ),
+          );
+          return;
+        }
+      }
+    }
+    final result = await showMicSetup(context, micInput, active: _mic);
+    if (!mounted) return;
+    switch (result) {
+      case MicSetupResult.listen:
+        micInput.preferred = true;
+        setState(() {
+          _mic = true;
+          _run++;
+        });
+      case MicSetupResult.off:
         micInput.stop();
         micInput.preferred = false;
         setState(() {
           _mic = false;
           _run++;
         });
-      }
-      return;
+      case null:
+        if (!_mic) micInput.stop();
     }
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(l.micExplainTitle),
-        content: Text(l.micExplainBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(false),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(c).pop(true),
-            child: Text(l.micAllow),
-          ),
-        ],
-      ),
-    );
-    if (go != true || !mounted) return;
-    final ok = await micInput.start();
-    if (!mounted) return;
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            micInput.error == MicError.denied ? l.micDenied : l.micUnavailable,
-          ),
-        ),
-      );
-      return;
-    }
-    if (micInput.offsetMs == null) {
-      await showMicCalibration(context, micInput);
-      if (!mounted) return;
-      if (micInput.offsetMs == null) {
-        micInput.stop();
-        return;
-      }
-    }
-    micInput.preferred = true;
-    setState(() {
-      _mic = true;
-      _run++;
-    });
   }
 
   /// Connects Web MIDI (the browser may ask for permission the first time).

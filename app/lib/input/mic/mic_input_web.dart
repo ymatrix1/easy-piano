@@ -15,6 +15,7 @@ MicInput createMicInput() => _WebMicInput();
 class _WebMicInput implements MicInput {
   static const _offsetKey = 'easy_piano.mic_offset_ms';
   static const _preferredKey = 'easy_piano.input';
+  static const _deviceKey = 'easy_piano.mic_device';
 
   final _controller = StreamController<NoteEvent>.broadcast();
   final _raw = StreamController<NoteEvent>.broadcast();
@@ -42,6 +43,60 @@ class _WebMicInput implements MicInput {
 
   @override
   bool get running => _node != null;
+
+  @override
+  double level = 0;
+
+  /// Slow peak follower; input is scaled so quiet mics still reach the
+  /// detector's thresholds (gain capped at 30×).
+  double _envelope = 0.01;
+
+  @override
+  String? get deviceId {
+    try {
+      return web.window.localStorage.getItem(_deviceKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> selectDevice(String? id) async {
+    try {
+      id == null
+          ? web.window.localStorage.removeItem(_deviceKey)
+          : web.window.localStorage.setItem(_deviceKey, id);
+    } catch (_) {}
+    if (running) {
+      stop();
+      await start();
+    }
+  }
+
+  @override
+  Future<List<MicDevice>> devices() async {
+    try {
+      final list = await web.window.navigator.mediaDevices
+          .enumerateDevices()
+          .toDart;
+      final out = <MicDevice>[];
+      for (final d in list.toDart) {
+        if (d.kind != 'audioinput' || d.deviceId.isEmpty) continue;
+        if (d.deviceId == 'default' || d.deviceId == 'communications') {
+          continue;
+        }
+        out.add(
+          MicDevice(
+            d.deviceId,
+            d.label.isEmpty ? 'Microphone ${out.length + 1}' : d.label,
+          ),
+        );
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
 
   @override
   double now() => web.window.performance.now();
@@ -94,15 +149,26 @@ class _WebMicInput implements MicInput {
     try {
       // Raw signal: echo cancellation, noise suppression and AGC smear piano
       // attacks and pump the level. The app's own piano is muted instead.
+      final id = deviceId;
       final audio = web.MediaTrackConstraints(
         echoCancellation: false.toJS,
         noiseSuppression: false.toJS,
         autoGainControl: false.toJS,
       );
+      if (id != null) {
+        (audio as JSObject)['deviceId'] = {'exact': id}.jsify();
+      }
       _stream = await devices
           .getUserMedia(web.MediaStreamConstraints(audio: audio))
           .toDart;
     } catch (_) {
+      // A remembered device may be gone; retry with the default once.
+      if (deviceId != null) {
+        try {
+          web.window.localStorage.removeItem(_deviceKey);
+        } catch (_) {}
+        return start();
+      }
       error = MicError.denied;
       return false;
     }
@@ -141,7 +207,15 @@ class _WebMicInput implements MicInput {
     final samples = data.getProperty<JSFloat32Array>('samples'.toJS).toDart;
     _baseFrame ??= frame;
     _clockOffset = math.min(_clockOffset, now() - ctx.currentTime * 1000);
-    final notes = det.process(samples);
+    var peak = 0.0;
+    for (final s in samples) {
+      final a = s.abs();
+      if (a > peak) peak = a;
+    }
+    level = math.min(1, peak * 4);
+    _envelope = math.max(peak, _envelope * 0.995);
+    final gain = math.min(30.0, 0.3 / math.max(_envelope, 0.01));
+    final notes = det.process([for (final s in samples) s * gain]);
     if (notes.isEmpty) return;
     final offset = offsetMs ?? 0;
     for (final n in notes) {
@@ -175,5 +249,6 @@ class _WebMicInput implements MicInput {
     _ctx?.close();
     _ctx = null;
     _detector = null;
+    level = 0;
   }
 }

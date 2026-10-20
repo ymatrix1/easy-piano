@@ -84,5 +84,10 @@
   "micCalibrateBody": "Spiel eine beliebige Taste, sobald der Kreis aufleuchtet.",
   "micCalibrateRetry": "Ich habe nicht genug Töne gehört. Versuch es etwas lauter noch einmal.",
   "micCalibrateDone": "Fertig: {ms} ms Verzögerung",
-  "micListening": "Höre zu"
+  "micListening": "Höre zu",
+  "micDefaultDevice": "Standardmikrofon",
+  "micHeard": "Gehört: {note}",
+  "micTestHint": "Spiel eine Taste: Der Balken bewegt sich und der Ton erscheint hier.",
+  "micTurnOff": "Mikrofon ausschalten",
+  "micNoteNames": "C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H"
 }

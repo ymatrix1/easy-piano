@@ -296,6 +296,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get micListening => 'Escutando';
+
+  @override
+  String get micDefaultDevice => 'Microfone padrão';
+
+  @override
+  String micHeard(String note) {
+    return 'Ouvi: $note';
+  }
+
+  @override
+  String get micTestHint =>
+      'Toque uma tecla: a barra se move e a nota aparece aqui.';
+
+  @override
+  String get micTurnOff => 'Desligar microfone';
+
+  @override
+  String get micNoteNames => 'Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

@@ -84,5 +84,10 @@
   "micCalibrateBody": "Jouez une touche chaque fois que le cercle s'allume.",
   "micCalibrateRetry": "Je n'ai pas entendu assez de notes. Réessayez un peu plus fort.",
   "micCalibrateDone": "Terminé : {ms} ms de délai",
-  "micListening": "Écoute"
+  "micListening": "Écoute",
+  "micDefaultDevice": "Microphone par défaut",
+  "micHeard": "Entendu : {note}",
+  "micTestHint": "Jouez une touche : la barre bouge et la note s'affiche ici.",
+  "micTurnOff": "Couper le microphone",
+  "micNoteNames": "Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si"
 }

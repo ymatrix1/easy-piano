@@ -3,6 +3,13 @@ import 'mic_input_stub.dart'
     if (dart.library.js_interop) 'mic_input_web.dart'
     as impl;
 
+/// An audio input the browser offers.
+class MicDevice {
+  const MicDevice(this.id, this.label);
+  final String id;
+  final String label;
+}
+
 /// Why the microphone could not start.
 enum MicError { unsupported, denied }
 
@@ -29,6 +36,17 @@ abstract class MicInput implements MidiInput {
 
   /// Raw onsets (no offset applied), for the calibration step.
   Stream<NoteEvent> get rawEvents;
+
+  /// Audio inputs; labels appear once permission was granted.
+  Future<List<MicDevice>> devices();
+
+  /// Chosen input id (null = browser default). Setting it while running
+  /// restarts capture on that device. Remembered per device.
+  String? get deviceId;
+  Future<void> selectDevice(String? id);
+
+  /// Input level 0–1 of the last ~50 ms, for the level meter.
+  double get level;
 }
 
 MicInput createMicInput() => impl.createMicInput();

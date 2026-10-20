@@ -298,4 +298,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get micListening => 'Escuchando';
+
+  @override
+  String get micDefaultDevice => 'Micrófono predeterminado';
+
+  @override
+  String micHeard(String note) {
+    return 'Oí: $note';
+  }
+
+  @override
+  String get micTestHint =>
+      'Toca una tecla: la barra se mueve y la nota aparece aquí.';
+
+  @override
+  String get micTurnOff => 'Apagar micrófono';
+
+  @override
+  String get micNoteNames => 'Do,Do♯,Re,Re♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si';
 }

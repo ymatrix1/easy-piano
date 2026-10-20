@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:easy_piano/input/mic/note_detector.dart';
-import 'package:easy_piano/practice/mic_calibration.dart';
+import 'package:easy_piano/practice/mic_setup.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _sr = 48000.0;
