@@ -48,6 +48,20 @@ Without PDMX the clean set is small (~2k tunes, ~15k fragments after phrase cuts
 - PDMX needs our own pop filter before use: composer death year ≤ 1955 or "Traditional", reject titles matching a pop blocklist, and run the similarity checker (`tools/content-cli similar`) against a local pop corpus; drop hits ≥ 0.6.
 - Raw corpora live in git-ignored `data/`; only download scripts and manifests (source URL, licence, hash) are committed.
 
+## Model design (approved by user, 2026-10-20)
+
+How the corpus will be used; recorded here so later step PRs build on it.
+
+| # | Choice | Data consequence |
+|---|---|---|
+| 1 | Compound note tokens (REMI/compound): one step = (pitch, duration, finger[, hand]); spec prefix, `BAR`, `END`. Exact round-trip with song JSON | Converters must yield fingering (from `core/src/arrange.rs` when source has none) |
+| 2 | Two-level generation: bar-level form plan (A A' B A, per-bar cadence stable/open, contour up/down/flat), then notes conditioned on plan + spec | Plan labels derived automatically per tune: bar similarity clustering, last-note scale degree, contour |
+| 3 | Fill-in-the-middle objective on the same decoder: `<prefix> <suffix> <middle>` | Dataset builder emits FIM samples (random bar spans) alongside left-to-right ones |
+| 4 | Constrained search at inference: sample/beam many, score spec coverage, cadence (tonic end), repetition, melody score, similarity (`content-cli similar`, threshold 0.6); rubric is hard gate | Train-set similarity index built from the same corpus |
+| 5 | Later: preference tuning (DPO) on blind ratings from `tools/listening-test/` | Keep generation ids + ratings linkable |
+
+Backbone stays a small decoder-only transformer (5–15M params) for a simple ONNX int8 / onnxruntime-web path.
+
 ## Follow-ups
 
 - User decision: PDMX (filtered) yes/no; Nottingham yes/no (and on which basis).
