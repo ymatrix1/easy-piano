@@ -16,7 +16,7 @@ if DST.exists():
 files = []
 for p in sorted(SRC.rglob("*.json")):
     rel = p.relative_to(SRC)
-    if rel.parts[0] == "schema":
+    if rel.parts[0] in ("schema", "skill-specs"):  # pipeline-only (D17)
         continue
     out = DST / rel
     out.parent.mkdir(parents=True, exist_ok=True)
