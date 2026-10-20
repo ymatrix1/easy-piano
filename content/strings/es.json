@@ -107,7 +107,7 @@
   "node.e3.minuet": "Minueto en Sol",
   "level.e3.04.title": "Minueto en Sol",
   "node.e3.flats": "Bemoles",
-  "level.e3.05.title": "Bemol a fondo",
+  "level.e3.05.title": "Bemol: medio tono abajo",
   "node.e3.amazing-grace": "Amazing Grace",
   "level.e3.06.title": "Amazing Grace",
   "node.e3.greensleeves": "Sostenidos y becuadros: Greensleeves",
@@ -122,10 +122,10 @@
   "level.e3.11.title": "Minueto en Sol, a toda velocidad",
   "level.e3.12.title": "Amazing Grace con las dos manos",
   "level.e3.13.title": "Auld Lang Syne con las dos manos",
-  "node.e3.joy-to-the-world": "Al mundo paz: la escala en una canción",
-  "level.e3.14.title": "Al mundo paz",
+  "node.e3.joy-to-the-world": "Joy to the World: la escala en una canción",
+  "level.e3.14.title": "Joy to the World",
   "node.e3.gate-2": "Paquete de canciones: partitura completa",
-  "level.e3.15.title": "Al mundo paz, a toda velocidad",
+  "level.e3.15.title": "Joy to the World, a toda velocidad",
   "level.e3.16.title": "Greensleeves con las dos manos",
   "level.e3.17.title": "Escala de Do mayor, más rápido"
 }
