@@ -219,9 +219,12 @@ class _TopBar extends StatelessWidget {
             ),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
+                // + the 16 px side padding, so the row lines up with the tab content.
+                constraints: BoxConstraints(
+                  maxWidth: homeMaxWidth(context) + 32,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
                       Image.asset(
@@ -281,7 +284,7 @@ class _NavBar extends StatelessWidget {
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
+          constraints: BoxConstraints(maxWidth: homeMaxWidth(context) + 8),
           child: Row(
             children: [
               for (final (i, (icon, label)) in [
