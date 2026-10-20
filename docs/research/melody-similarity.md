@@ -2,7 +2,7 @@
 
 Checked: 2026-10-20. Bean: piano-9h4q. Status: checker built (`core/src/similarity.rs`, `content similar`).
 
-Sources: project home pages and licence files of the corpora below as known on the checked date (Lakh MIDI: colinraffel.com/projects/lmd; Nottingham: abc.sourceforge.net/NMD and github.com/jukedeck/nottingham-dataset; Essen: esac-data.org and kern.humdrum.org; The Session: github.com/adactio/TheSession-data; Mutopia: mutopiaproject.org; POP909: github.com/music-x-lab/POP909-Dataset; Meertens Tune Collections: liederenbank.nl/mtc). Licence rows marked "verify" were not confirmed against a licence file this session. Calibration: our own `content/songs` (40 songs).
+Sources: our own `content/songs` (40 songs) for calibration; corpus home pages named below from general knowledge. **No licence file of any external corpus was fetched in this work**; every external licence cell below is "not verified" until someone reads the corpus's own licence file and links it here.
 
 ## Question
 
@@ -12,67 +12,76 @@ Generated practice tunes (agent skill, Magenta.js, rules) must not closely copy 
 
 | Step | Choice | Why |
 |---|---|---|
-| Melody | RH part of a song; top note per onset (skyline) for MIDI/ABC/MusicXML | Lead line is what listeners recognise |
-| Token | interval to previous note (±12 clamp) + rhythm class `round(log2(IOI/prev IOI))` in -2..2 | Transposition-invariant; rhythm kept coarse |
-| Measure 1 | interval 6-gram overlap: share of query 6-grams found in the candidate | Fast, catches long verbatim runs |
-| Measure 2 | Smith-Waterman local alignment on intervals (match +4, rhythm agrees +1, mismatch -3, gap -4) normalised by the shorter melody | Finds a copied passage inside a longer tune, tolerates ornaments |
-| Floor | both normalised over at least 16 tokens (`MIN_SPAN`) | A 4-note motif or 10-note scale cannot score 1.0 |
-| Score | max(ngram, alignment), 0..1 | Either signal alone is enough to flag |
+| Melody | RH part of a song, top note per onset. MIDI: the (track, channel) that owns most of the combined skyline; drums dropped | Lead line is what listeners recognise |
+| Token | interval to previous note + rhythm class `round(log2(IOI/prev IOI))` in -2..2 | Transposition-invariant |
+| Interval match | equal modulo 12 | Octave-displaced notes still match |
+| Alignment | Smith-Waterman on intervals: match +4 (+1 if rhythm class agrees), mismatch -6, gap -4 | Finds a copied passage anywhere in either tune; rhythm only breaks ties |
+| Purity | matched intervals / aligned span | Penalises loose alignments |
+| Information | per matched interval: repeat 0.3, step continuing the previous step's direction 0.05, other step 0.5, 3–4 semitones 0.8, wider 1.0 | Scale runs and repeated notes are generic; leaps make a hook recognisable |
+| Score | purity² × min(1, info / 4.0) × min(1, matched / 6) | Exact 7-note phrase with some shape → near 1; short or generic matches stay low |
+| Side signal | share of query interval 6-grams (mod 12) found in candidate | Printed, not scored |
 
-Rhythm only adds a bonus: a copy with changed rhythm still matches on pitch contour, which is what plagiarism cases mostly turn on.
+The score is local: it does not depend on how long either tune is, so a hook copied into a long tune scores the same as on its own.
 
-## Calibration (our PD songs and drills vs each other)
+## Calibration
 
-`cargo run -- similar ../../content/songs --top 1` in `tools/content-cli`, each song against the other 39:
+`cargo test --test similarity_calibration -- --nocapture` in `core/` (fixture test, runs in CI with `cargo test`). Built from the 16 PD songs in `content/songs` with ≥ 16 melody notes (drills excluded):
 
-| Pair | Score | Note |
-|---|---|---|
-| cdefg-drill ~ e1-eighth-drill | 0.56 | same 5-note up/down scale |
-| e3-waltz-drill ~ e2-f-waltz | 0.54 | sibling drills, same pattern |
-| e1-boogie ~ e3-waltz-drill | 0.51 | |
-| au-clair-de-la-lune ~ hot-cross-buns | 0.46 | highest pair of two real PD songs |
-| ode-to-joy ~ cdefg-drill | 0.42 | shared stepwise run |
+- **Positives (80)**, 5 per song: transposed up a fourth; all rhythms replaced; every 5th note an octave up; the song's most distinctive 12-note passage inside 28 invented notes; its most distinctive 8-note hook inside 28 invented notes.
+- **Negatives (248)**: every pair of distinct PD songs (120); 5 generic stepwise lines (scales, five-finger run, broken thirds, repeated-note drill) and 3 invented tunes against every song (128).
 
-Positive controls: Ode to Joy transposed up a tone scores 1.00 against our `ode-to-joy`; an ABC file with its first 4 bars in the reference corpus scores 0.85. Unit test copies (transposed, all rhythms changed) score > 0.9; an invented leapy tune scores < 0.3.
+| threshold | recall | precision | FN | FP |
+|---|---|---|---|---|
+| 0.40 | 1.000 | 0.825 | 0 | 17 |
+| **0.50** | **1.000** | **0.920** | **0** | **7** |
+| 0.55 | 1.000 | 0.920 | 0 | 7 |
+| 0.60 | 0.975 | 0.940 | 2 | 5 |
+| 0.65 | 0.963 | 0.963 | 3 | 3 |
+| 0.70 | 0.963 | 0.975 | 3 | 2 |
+| 0.80 | 0.938 | 0.987 | 5 | 1 |
 
-**Default threshold 0.6** (`DEFAULT_THRESHOLD`): above every unrelated pair in our catalogue (max 0.56), well below real copies (≥ 0.85). Scores 0.45–0.6 deserve a human glance; generic scale runs live there.
+**Default threshold 0.5** (`DEFAULT_THRESHOLD`, pinned by the test: recall ≥ 0.95, FP ≤ 3%). At 0.6 two 8-note hooks (Minuet in G, Go Tell Aunt Rhody) slip under. The 7 "false" positives at 0.5 are mostly real shared fragments, not noise: the repeated-note drill vs Twinkle (0.83), Oh Susanna vs Greensleeves (0.79, an identical 8-note interval run), Mary Had a Little Lamb vs Jingle Bells (0.67, the repeated-E figure), Camptown Races / When the Saints vs Auld Lang Syne (~0.6), and one invented tune vs Amazing Grace (0.56). Treat a flag as "a human listens", not "reject".
+
+On the whole catalogue (`content similar ../../content/songs`), 26 of 40 songs flag at 0.5, 21 at 0.6, 5 at 0.7: drills reuse each other's patterns on purpose, and folk tunes share stock figures. For generated tunes the check should run against PD songs and the reference corpus, and drills should be compared only with each other when looking for accidental duplicates.
+
+Unit tests (`core/src/similarity.rs`): transposed + rhythm-varied Ode to Joy > 0.95; octave-displaced copy > 0.95; 12-note Ode passage inside a 40-note tune > 0.6 both ways, with exact spans; 8-note hook inside invented notes ≥ 0.7, its first 6 notes ≥ 0.5; unrelated leapy tune < 0.4; shared scale run < 0.5. CLI test (`tools/content-cli/src/similar.rs`): Ode to Joy in D vs an ABC reference with its first 4 bars in C exits 1.
 
 ## Corpora
 
 | Corpus | Size, format | Content | Licence | Use |
 |---|---|---|---|---|
-| Our `content/songs` | 40 JSON | PD tunes + own drills | CC-BY-SA / CC0 | Default corpus, in git |
-| Lakh MIDI (LMD) | ~176k MIDI | Mostly copyrighted pop/rock transcriptions | Dataset CC-BY 4.0; underlying songs copyrighted | Best "copyrighted reference": local only, never commit |
-| POP909 | 909 MIDI | Chinese pop piano arrangements | Research release; songs copyrighted (verify terms) | Local only |
-| Nottingham Music Database | ~1,000 ABC | British/US folk dance tunes | Tunes traditional; ABC files have no clear licence (verify) | Local only |
-| Essen Folksong Collection | ~8,000 EsAC/kern | European folk songs | Research use; no open licence stated (verify) | Local only |
-| The Session data dump | ~40k ABC settings | Irish trad tunes | Repository licence to verify (ODbL claimed) | Local only until verified |
-| Meertens Tune Collections | ~18k kern/MIDI | Dutch folk songs | CC BY-NC-SA (verify) | Local only (NC) |
-| Mutopia | ~2,000 LilyPond/MIDI | Classical PD | PD / CC per piece | Could be committed per piece, but not needed |
+| Our `content/songs` | 40 JSON | PD tunes + own drills | CC-BY-SA / CC0 (per file) | Default corpus, in git |
+| Lakh MIDI (colinraffel.com/projects/lmd) | ~176k MIDI | Mostly transcriptions of copyrighted pop/rock | not verified (dataset reported as CC-BY 4.0; underlying songs copyrighted either way) | Best copyrighted reference; local only |
+| POP909 (github.com/music-x-lab/POP909-Dataset) | 909 MIDI | Pop song piano arrangements | not verified; songs copyrighted | Local only |
+| Nottingham Music Database (abc.sourceforge.net/NMD) | ~1,000 ABC | British/US folk dance tunes | not verified; tunes traditional | Local only |
+| Essen Folksong Collection (esac-data.org) | ~8,000 EsAC/kern | European folk songs | not verified | Local only; kern reader needed |
+| The Session data (github.com/adactio/TheSession-data) | ~40k ABC settings | Irish trad tunes | not verified | Local only |
+| Meertens Tune Collections (liederenbank.nl/mtc) | ~18k kern/MIDI | Dutch folk songs | not verified | Local only |
+| Mutopia (mutopiaproject.org) | ~2,000 LilyPond/MIDI | Classical | PD / CC per piece (per-file field, not verified here) | Local; not needed in git |
 
-Rule: **no external corpus goes in git.** The reference corpus is whatever the user drops into `references/melody-corpus/` (git-ignored via `references/`). Recognisable copyrighted melodies (pop hooks, film themes, children's TV songs) are the real risk; Lakh MIDI is the practical way to cover them locally.
+Rule: **no external corpus goes in git.** The reference corpus is whatever the user drops into `references/melody-corpus/` (git-ignored via `references/`). Recognisable copyrighted melodies (pop hooks, film themes, children's TV songs) are the real risk; a Lakh MIDI subset is the practical way to cover them locally.
 
-Supported corpus formats: our song JSON, MIDI (`.mid`, `.midi`, all channels but 10), ABC (`.abc`, multi-tune, key signature, chords), uncompressed MusicXML (`.musicxml`, `.xml`, first part). Not yet: compressed `.mxl`, kern, LilyPond.
+Corpus formats read: song JSON, MIDI (`.mid`, `.midi`), ABC (`.abc`; multi-tune, key signatures, bar-scoped accidentals, chords), uncompressed MusicXML (`.musicxml`, `.xml`, first part). Not yet: `.mxl`, kern, LilyPond.
 
 ## Usage
 
 ```
 cd tools/content-cli
-cargo run -- similar ../../content/songs/new-tune.json            # content/songs + references/melody-corpus
-cargo run -- similar <dir> --corpus <dir> --corpus <dir2> --threshold 0.6 --top 3
+cargo run -- similar ../../content/songs/new-tune.json        # content/songs + references/melody-corpus if present
+cargo run -- similar <song.json|dir>... --corpus <dir> --corpus <dir2> --threshold 0.5 --top 3
 ```
 
-Prints per song `ok`/`SIMILAR`, then top matches: score, ngram, alignment, matched note spans (query ~ candidate). Exits 1 when any song is at or above the threshold. A song is never compared with its own file.
+Per song: `ok`/`SIMILAR`, then top matches with score, purity, info, 6-gram overlap and matched note spans (query ~ candidate). A song is never compared with its own file. Exit codes: 0 clear, 1 a song at or above threshold, 2 usage or input error (unknown flag, bad value, missing path, non-JSON input file, no songs found, missing or empty corpus, unreadable song).
 
 ## Implications
 
-- Generation pipelines (piano-ze9t spike) must run `content similar` on every candidate and reject ≥ 0.6 before a human listens.
-- Our own drills share scale fragments at ~0.5; that is expected and below threshold.
-- Alignment is O(n·m) per pair: fine for hundreds of songs, slow for full Lakh (176k files). Large corpora need an n-gram index prefilter.
+- Generation pipelines (piano-ze9t) run `content similar` on every candidate against PD songs + reference corpus; ≥ 0.5 goes to a human, ≥ 0.7 is rejected outright.
+- Purely stepwise phrases (e.g. the first 8 notes of Ode to Joy alone, score ≈ 0.4) are not flagged by design; longer stepwise copies are.
+- Alignment is O(n·m) per pair, corpus tokens are built once: fine for thousands of tunes, slow for full Lakh.
 
 ## Follow-ups
 
 - n-gram inverted index prefilter for Lakh-scale corpora.
-- `.mxl` (zip) and kern readers if a corpus needs them.
-- Melody-track selection for MIDI (skyline picks accompaniment when it sits above the tune).
-- Wire into `content lint` as a warning once generated songs land (separate bean; lint is owned by another change now).
+- Verify and link each external corpus licence file.
+- `.mxl` (zip) and kern readers.
+- Wire into `content lint` as a warning once generated songs land (lint is changing in parallel).
