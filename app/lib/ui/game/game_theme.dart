@@ -65,3 +65,8 @@ const displayFont = 'Audiowide';
 /// True when the platform asks for reduced motion.
 bool reduceMotion(BuildContext context) =>
     MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
+/// Width of the home column: top bar, tab content and bottom nav share it so
+/// their edges line up. Grows on big screens (60% of the window, 640–1100).
+double homeMaxWidth(BuildContext context) =>
+    (MediaQuery.sizeOf(context).width * 0.6).clamp(640.0, 1100.0);
