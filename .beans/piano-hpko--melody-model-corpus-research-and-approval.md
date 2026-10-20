@@ -10,7 +10,7 @@ updated_at: 2026-10-20T22:16:51Z
 ---
 
 ## Context
-Step 1 of the spec-conditioned browser melody model. Training data must be PD/openly licensed (no pop). Blocked by: none. Parent epic (Generated practice content) not created yet by mg-foundations; link when it exists.
+Step 1 of the spec-conditioned browser melody model. Training data must be PD/openly licensed (no pop). Blocked by: none. Parent epic: piano-bovj (Generated practice content, PR #38, not merged yet; set --parent once on main).
 
 ## Higher Goal
 Original practice tunes at reference-course scale from our own small model whose shipped weights are clean.
