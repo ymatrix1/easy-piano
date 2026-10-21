@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/audio.dart';
 import 'api/notation.dart';
 import 'api/practice.dart';
 
@@ -70,7 +71,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 211552604;
+  int get rustContentHash => -1788639544;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -90,6 +91,7 @@ abstract class RustLibApi extends BaseApi {
     required double tempo,
     required double passRatio,
     required int failedAttempts,
+    required bool training,
   });
 
   PlatformInt64 crateApiPracticePracticeSessionEndUs({
@@ -112,6 +114,14 @@ abstract class RustLibApi extends BaseApi {
     required PracticeSession that,
   });
 
+  List<FeedbackView> crateApiPracticePracticeSessionTakeFeedback({
+    required PracticeSession that,
+  });
+
+  SectionEventView? crateApiPracticePracticeSessionTakeSectionEvent({
+    required PracticeSession that,
+  });
+
   List<TargetView> crateApiPracticePracticeSessionTargets({
     required PracticeSession that,
   });
@@ -120,6 +130,49 @@ abstract class RustLibApi extends BaseApi {
     required PracticeSession that,
     required PlatformInt64 tUs,
   });
+
+  Future<void> crateApiAudioAudioAddSample({
+    required String kind,
+    required int key,
+    required List<int> mp3,
+  });
+
+  void crateApiAudioAudioClick({
+    required double startSec,
+    required bool accent,
+  });
+
+  void crateApiAudioAudioCommit();
+
+  void crateApiAudioAudioDrum({
+    required int gm,
+    required double startSec,
+    required int velocity,
+  });
+
+  void crateApiAudioAudioNote({
+    required String instrument,
+    required String part_,
+    required int pitch,
+    required double startSec,
+    required double durSec,
+    required int velocity,
+  });
+
+  void crateApiAudioAudioNoteOff({required int pitch});
+
+  void crateApiAudioAudioNoteOn({required int pitch, required int velocity});
+
+  double crateApiAudioAudioNowSec();
+
+  void crateApiAudioAudioSetPartLevel({
+    required String part_,
+    required double level,
+  });
+
+  Future<AudioInfo> crateApiAudioAudioStart();
+
+  void crateApiAudioAudioStopAll();
 
   List<String> crateApiPracticeCheckGenerated({
     required String songJson,
@@ -166,6 +219,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required double tempo,
     required double passRatio,
     required int failedAttempts,
+    required bool training,
   }) {
     return handler.executeSync(
       SyncTask(
@@ -178,6 +232,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_f_64(tempo, serializer);
           sse_encode_f_64(passRatio, serializer);
           sse_encode_u_32(failedAttempts, serializer);
+          sse_encode_bool(training, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
         },
         codec: SseCodec(
@@ -194,6 +249,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           tempo,
           passRatio,
           failedAttempts,
+          training,
         ],
         apiImpl: this,
       ),
@@ -211,6 +267,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "tempo",
           "passRatio",
           "failedAttempts",
+          "training",
         ],
       );
 
@@ -347,6 +404,68 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  List<FeedbackView> crateApiPracticePracticeSessionTakeFeedback({
+    required PracticeSession that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_feedback_view,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionTakeFeedbackConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionTakeFeedbackConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_take_feedback",
+        argNames: ["that"],
+      );
+
+  @override
+  SectionEventView? crateApiPracticePracticeSessionTakeSectionEvent({
+    required PracticeSession that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPracticeSession(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_section_event_view,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPracticePracticeSessionTakeSectionEventConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPracticePracticeSessionTakeSectionEventConstMeta =>
+      const TaskConstMeta(
+        debugName: "PracticeSession_take_section_event",
+        argNames: ["that"],
+      );
+
+  @override
   List<TargetView> crateApiPracticePracticeSessionTargets({
     required PracticeSession that,
   }) {
@@ -358,7 +477,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_list_target_view,
@@ -391,7 +510,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_i_64(tUs, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_frame_view,
@@ -411,6 +530,319 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiAudioAudioAddSample({
+    required String kind,
+    required int key,
+    required List<int> mp3,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(kind, serializer);
+          sse_encode_u_8(key, serializer);
+          sse_encode_list_prim_u_8_loose(mp3, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiAudioAudioAddSampleConstMeta,
+        argValues: [kind, key, mp3],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioAddSampleConstMeta =>
+      const TaskConstMeta(
+        debugName: "audio_add_sample",
+        argNames: ["kind", "key", "mp3"],
+      );
+
+  @override
+  void crateApiAudioAudioClick({
+    required double startSec,
+    required bool accent,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_64(startSec, serializer);
+          sse_encode_bool(accent, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioClickConstMeta,
+        argValues: [startSec, accent],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioClickConstMeta => const TaskConstMeta(
+    debugName: "audio_click",
+    argNames: ["startSec", "accent"],
+  );
+
+  @override
+  void crateApiAudioAudioCommit() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioCommitConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioCommitConstMeta =>
+      const TaskConstMeta(debugName: "audio_commit", argNames: []);
+
+  @override
+  void crateApiAudioAudioDrum({
+    required int gm,
+    required double startSec,
+    required int velocity,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_8(gm, serializer);
+          sse_encode_f_64(startSec, serializer);
+          sse_encode_u_8(velocity, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioDrumConstMeta,
+        argValues: [gm, startSec, velocity],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioDrumConstMeta => const TaskConstMeta(
+    debugName: "audio_drum",
+    argNames: ["gm", "startSec", "velocity"],
+  );
+
+  @override
+  void crateApiAudioAudioNote({
+    required String instrument,
+    required String part_,
+    required int pitch,
+    required double startSec,
+    required double durSec,
+    required int velocity,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(instrument, serializer);
+          sse_encode_String(part_, serializer);
+          sse_encode_u_8(pitch, serializer);
+          sse_encode_f_64(startSec, serializer);
+          sse_encode_f_64(durSec, serializer);
+          sse_encode_u_8(velocity, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioNoteConstMeta,
+        argValues: [instrument, part_, pitch, startSec, durSec, velocity],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioNoteConstMeta => const TaskConstMeta(
+    debugName: "audio_note",
+    argNames: [
+      "instrument",
+      "part_",
+      "pitch",
+      "startSec",
+      "durSec",
+      "velocity",
+    ],
+  );
+
+  @override
+  void crateApiAudioAudioNoteOff({required int pitch}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_8(pitch, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioNoteOffConstMeta,
+        argValues: [pitch],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioNoteOffConstMeta =>
+      const TaskConstMeta(debugName: "audio_note_off", argNames: ["pitch"]);
+
+  @override
+  void crateApiAudioAudioNoteOn({required int pitch, required int velocity}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_8(pitch, serializer);
+          sse_encode_u_8(velocity, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioNoteOnConstMeta,
+        argValues: [pitch, velocity],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioNoteOnConstMeta => const TaskConstMeta(
+    debugName: "audio_note_on",
+    argNames: ["pitch", "velocity"],
+  );
+
+  @override
+  double crateApiAudioAudioNowSec() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioNowSecConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioNowSecConstMeta =>
+      const TaskConstMeta(debugName: "audio_now_sec", argNames: []);
+
+  @override
+  void crateApiAudioAudioSetPartLevel({
+    required String part_,
+    required double level,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(part_, serializer);
+          sse_encode_f_64(level, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioSetPartLevelConstMeta,
+        argValues: [part_, level],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioSetPartLevelConstMeta =>
+      const TaskConstMeta(
+        debugName: "audio_set_part_level",
+        argNames: ["part_", "level"],
+      );
+
+  @override
+  Future<AudioInfo> crateApiAudioAudioStart() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 19,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_audio_info,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiAudioAudioStartConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioStartConstMeta =>
+      const TaskConstMeta(debugName: "audio_start", argNames: []);
+
+  @override
+  void crateApiAudioAudioStopAll() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAudioAudioStopAllConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAudioAudioStopAllConstMeta =>
+      const TaskConstMeta(debugName: "audio_stop_all", argNames: []);
+
+  @override
   List<String> crateApiPracticeCheckGenerated({
     required String songJson,
     required String nodeJson,
@@ -421,7 +853,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(songJson, serializer);
           sse_encode_String(nodeJson, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_list_String,
@@ -451,7 +883,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(songJson, serializer);
           sse_encode_String(hand, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_list_note_view,
@@ -478,7 +910,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 23,
             port: port_,
           );
         },
@@ -503,7 +935,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(json, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_song_info,
@@ -526,7 +958,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(token, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_8,
@@ -549,7 +981,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_u_8(midi, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -616,6 +1048,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AudioInfo dco_decode_audio_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return AudioInfo(
+      sampleRate: dco_decode_u_32(arr[0]),
+      latencyMs: dco_decode_f_64(arr[1]),
+    );
+  }
+
+  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
@@ -628,17 +1072,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SectionEventView dco_decode_box_autoadd_section_event_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_section_event_view(raw);
+  }
+
+  @protected
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
   }
 
   @protected
+  FeedbackView dco_decode_feedback_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FeedbackView(
+      kind: dco_decode_u_8(arr[0]),
+      target: dco_decode_u_32(arr[1]),
+      pitch: dco_decode_u_8(arr[2]),
+      timing: dco_decode_i_8(arr[3]),
+      deltaUs: dco_decode_i_64(arr[4]),
+    );
+  }
+
+  @protected
   FrameView dco_decode_frame_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return FrameView(
       playheadBeat: dco_decode_f_64(arr[0]),
       cursor: dco_decode_u_32(arr[1]),
@@ -647,6 +1112,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       wrong: dco_decode_u_32(arr[4]),
       done: dco_decode_bool(arr[5]),
       hintActive: dco_decode_bool(arr[6]),
+      streak: dco_decode_u_32(arr[7]),
     );
   }
 
@@ -657,9 +1123,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int dco_decode_i_8(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<FeedbackView> dco_decode_list_feedback_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_feedback_view).toList();
   }
 
   @protected
@@ -672,6 +1150,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Float64List dco_decode_list_prim_f_64_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Float64List;
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
   }
 
   @protected
@@ -707,6 +1191,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SectionEventView? dco_decode_opt_box_autoadd_section_event_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_section_event_view(raw);
+  }
+
+  @protected
   ResultView dco_decode_result_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -727,6 +1217,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       assists: dco_decode_f_64(arr[11]),
       score: dco_decode_f_64(arr[12]),
       starsExact: dco_decode_f_64(arr[13]),
+    );
+  }
+
+  @protected
+  SectionEventView dco_decode_section_event_view(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return SectionEventView(
+      section: dco_decode_u_32(arr[0]),
+      replay: dco_decode_bool(arr[1]),
+      beat: dco_decode_f_64(arr[2]),
+      tempo: dco_decode_f_64(arr[3]),
+      practice: dco_decode_bool(arr[4]),
+      intro: dco_decode_bool(arr[5]),
+      passed: dco_decode_bool(arr[6]),
     );
   }
 
@@ -842,6 +1349,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AudioInfo sse_decode_audio_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_sampleRate = sse_decode_u_32(deserializer);
+    var var_latencyMs = sse_decode_f_64(deserializer);
+    return AudioInfo(sampleRate: var_sampleRate, latencyMs: var_latencyMs);
+  }
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
@@ -854,9 +1369,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SectionEventView sse_decode_box_autoadd_section_event_view(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_section_event_view(deserializer));
+  }
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FeedbackView sse_decode_feedback_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_kind = sse_decode_u_8(deserializer);
+    var var_target = sse_decode_u_32(deserializer);
+    var var_pitch = sse_decode_u_8(deserializer);
+    var var_timing = sse_decode_i_8(deserializer);
+    var var_deltaUs = sse_decode_i_64(deserializer);
+    return FeedbackView(
+      kind: var_kind,
+      target: var_target,
+      pitch: var_pitch,
+      timing: var_timing,
+      deltaUs: var_deltaUs,
+    );
   }
 
   @protected
@@ -869,6 +1409,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_wrong = sse_decode_u_32(deserializer);
     var var_done = sse_decode_bool(deserializer);
     var var_hintActive = sse_decode_bool(deserializer);
+    var var_streak = sse_decode_u_32(deserializer);
     return FrameView(
       playheadBeat: var_playheadBeat,
       cursor: var_cursor,
@@ -877,6 +1418,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       wrong: var_wrong,
       done: var_done,
       hintActive: var_hintActive,
+      streak: var_streak,
     );
   }
 
@@ -887,6 +1429,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int sse_decode_i_8(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt8();
+  }
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -894,6 +1442,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FeedbackView> sse_decode_list_feedback_view(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FeedbackView>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_feedback_view(deserializer));
     }
     return ans_;
   }
@@ -915,6 +1477,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getFloat64List(len_);
+  }
+
+  @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
   }
 
   @protected
@@ -963,6 +1532,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SectionEventView? sse_decode_opt_box_autoadd_section_event_view(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_section_event_view(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   ResultView sse_decode_result_view(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_passed = sse_decode_bool(deserializer);
@@ -994,6 +1576,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       assists: var_assists,
       score: var_score,
       starsExact: var_starsExact,
+    );
+  }
+
+  @protected
+  SectionEventView sse_decode_section_event_view(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_section = sse_decode_u_32(deserializer);
+    var var_replay = sse_decode_bool(deserializer);
+    var var_beat = sse_decode_f_64(deserializer);
+    var var_tempo = sse_decode_f_64(deserializer);
+    var var_practice = sse_decode_bool(deserializer);
+    var var_intro = sse_decode_bool(deserializer);
+    var var_passed = sse_decode_bool(deserializer);
+    return SectionEventView(
+      section: var_section,
+      replay: var_replay,
+      beat: var_beat,
+      tempo: var_tempo,
+      practice: var_practice,
+      intro: var_intro,
+      passed: var_passed,
     );
   }
 
@@ -1123,6 +1726,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_audio_info(AudioInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.sampleRate, serializer);
+    sse_encode_f_64(self.latencyMs, serializer);
+  }
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
@@ -1135,9 +1745,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_section_event_view(
+    SectionEventView self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_section_event_view(self, serializer);
+  }
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_feedback_view(FeedbackView self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_8(self.kind, serializer);
+    sse_encode_u_32(self.target, serializer);
+    sse_encode_u_8(self.pitch, serializer);
+    sse_encode_i_8(self.timing, serializer);
+    sse_encode_i_64(self.deltaUs, serializer);
   }
 
   @protected
@@ -1150,6 +1779,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.wrong, serializer);
     sse_encode_bool(self.done, serializer);
     sse_encode_bool(self.hintActive, serializer);
+    sse_encode_u_32(self.streak, serializer);
   }
 
   @protected
@@ -1159,11 +1789,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_i_8(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt8(self);
+  }
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_feedback_view(
+    List<FeedbackView> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_feedback_view(item, serializer);
     }
   }
 
@@ -1187,6 +1835,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putFloat64List(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
   }
 
   @protected
@@ -1231,6 +1891,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_section_event_view(
+    SectionEventView? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_section_event_view(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_result_view(ResultView self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self.passed, serializer);
@@ -1247,6 +1920,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.assists, serializer);
     sse_encode_f_64(self.score, serializer);
     sse_encode_f_64(self.starsExact, serializer);
+  }
+
+  @protected
+  void sse_encode_section_event_view(
+    SectionEventView self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.section, serializer);
+    sse_encode_bool(self.replay, serializer);
+    sse_encode_f_64(self.beat, serializer);
+    sse_encode_f_64(self.tempo, serializer);
+    sse_encode_bool(self.practice, serializer);
+    sse_encode_bool(self.intro, serializer);
+    sse_encode_bool(self.passed, serializer);
   }
 
   @protected
@@ -1341,6 +2029,14 @@ class PracticeSessionImpl extends RustOpaque implements PracticeSession {
 
   ResultView result() =>
       RustLib.instance.api.crateApiPracticePracticeSessionResult(that: this);
+
+  /// Feedback since the last call (drains the queue).
+  List<FeedbackView> takeFeedback() => RustLib.instance.api
+      .crateApiPracticePracticeSessionTakeFeedback(that: this);
+
+  /// Training: section outcome from the last tick, if any.
+  SectionEventView? takeSectionEvent() => RustLib.instance.api
+      .crateApiPracticePracticeSessionTakeSectionEvent(that: this);
 
   List<TargetView> targets() =>
       RustLib.instance.api.crateApiPracticePracticeSessionTargets(that: this);

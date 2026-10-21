@@ -70,6 +70,36 @@ Compact, diff-friendly, easy to hand-author. We adopt the same idea with our own
 - Repeated failure → "Practice Mode" (slow tempo, turtle sound).
 - Stars per song (0–3/0–5), star gates unlock nodes, weekly streak with freezes (disabled by flag), practice-time tracking. No XP.
 
+## Play-along error feedback and training mode
+
+Checked 2026-10-21. Sources: decompiled 7.33 engine (`simply_piano_jadx_deobf_33_7/sources`, cited below) and the `app-ss` build (same code in `p587wk/C15362c0.java:87-119`; `assets/GameConfig.json`). Question: what the reference shows on wrong, missed and off-time notes in play-along, and how its slow-down ("turtle") mode triggers and ends. Mechanics and numbers only.
+
+| Mechanic | Reference | Where |
+|---|---|---|
+| Matcher events | Missed note, hit (carries played − expected time), unmatched key | `p623xi/C13633j.java:85-88`, `p619xd/RunnableC13587e.java:70-80` |
+| Miss window | Note expires at its time + 0.43 s | `p623xi/C13633j.java:43,105-111` |
+| Hit colour | Teal `#00CCCC` on every glyph of the note | `p380oj/AbstractC10024o0.java:48,224-233` |
+| Miss colour | Red `#DC1E1E` | `p380oj/AbstractC10024o0.java:51`, `p350nj/C9656m0.java:128` |
+| Wrong key | Nothing visible, no sound, no penalty in normal play | `p350nj/C9656m0.java:118-122` |
+| Early / late | Offset goes to scoring only; no visual difference | `p350nj/C9656m0.java:134-140` |
+| Error sounds | None per note; only section results (turtle win / fail) | `p350nj/EnumC9658n0.java:9-10` |
+| Streak / combo | None found | — |
+| Unit of training | Critical section; its start marker may carry a pass ratio (default 0.7) | `p350nj/C9635c.java:27`, `dj/C3836l.java:453-469` |
+| Section pass | When song time passes the section end: hits / notes ≥ threshold | `p350nj/C9634b0.java:326-330` |
+| Early fail | Misses > (1 − threshold) × notes, before the section ends | `p350nj/C9634b0.java:331` |
+| Threshold | base − 0.1 × ⌊fails / 2⌋ (no floor seen) | `p350nj/C9635c.java:26-33` |
+| On fail | Seek back to the section start, restart its tracker | `p350nj/C9634b0.java:~165-190` |
+| Practice trigger | Every 2nd consecutive fail of the same section (`failsBeforePracticeMode` = 2, remote config) | `p350nj/C9634b0.java:212-218`, `GameConfig.json` |
+| Practice tempo | 0.75 × clock, one step only; miss window 0.75 × 0.43 s | `p350nj/C9640e0.java:32-52` |
+| Practice intro | Badge 0.2 → 2× in 0.8 s, → 1.8× in 0.2 s, hold 1 s (+1.5 s the first time), then shrinks into the top-right corner in 1.0 s; label waits 1.2 s, fades in 0.4 s, holds 0.5 s, fades out 0.2 s; start sound; progress bar hidden | `p350nj/C9634b0.java:68-123` |
+| Practice passed | Fail count +1 (threshold keeps dropping), back to full tempo on the same section, win sound | `p350nj/C9634b0.java:369-376` |
+| Practice failed | Fail sound, practise again (no loop cap) | `p350nj/C9634b0.java:205-209` |
+| Full-tempo pass | Next section, fail count reset | `p350nj/C9634b0.java:378-379` |
+
+Implications: the reference's only per-note feedback is colour. Our keyboard flash and early / late tag are additions ([D31](../DECISIONS.md)). Training mode follows the reference rules ([exercise engine](../specs/exercise-engine.md#training-mode)).
+
+Follow-ups: the reference's wait-for-note practice variant (`p350nj/C9638d0.java`, yellow `#FFCF00`) is not built; our content format has no per-section pass ratio.
+
 ## Videos
 
 377 video stages, fetched from CDN, named `Video_<Course>_<Topic>_localized.mp4`: how to sit, finger numbers, hand position, chord shapes, song walkthroughs. These are the items we replace with animation scenes. Video understanding plan: [video-to-animation](../specs/animations.md#pipeline-from-reference-video).
@@ -85,6 +115,26 @@ Compact, diff-friendly, easy to hand-author. We adopt the same idea with our own
 3. Scrolling staff (not falling notes) is their primary view; we offer both.
 4. Replace videos with scenes; add a real `quiz` stage they lack.
 5. Per-device latency calibration is needed; ship a calibration screen.
+
+## Staff note cover
+
+Checked 2026-10-21, local jadx sources (`references/simply_piano_jadx_deobf_33_7`, git-ignored). Mechanics only.
+
+| What | Reference behaviour | Where |
+|---|---|---|
+| Passed notes | Not faded themselves. Sheet `draw()` grabs the rendered background (band, staff, clefs) with `glReadPixels` once, builds an alpha mask and draws that copy **over** the notes group | `p380oj/C10032s0.java:197-232` |
+| Cover alpha, play-along | 255 from x=0 to clef-images right edge minus 50 px, then linear 1→0 to the header width | same, loop at `:211-222` |
+| Cover alpha, static/wait stage | Linear 1→0 from x=0 to play line minus half a notehead | same, `f32361g` branch `:204-208` |
+| Dim cover | Second copy at max alpha 127, starts transparent, `fadeIn(0.2f)` when a highlight overlay opens | `:226-231`, `p350nj/C9674v0.java:193` |
+| Page slide (wait) | Notes group `moveTo(x - shift, y, 1.0f)`, linear, when the current note passes ~70% of the width | `p350nj/C9674v0.java:417,462` |
+| Play line x | staffAreaLeft 129 + clefImageXDiffFromStaffAreaLeft 30 + rhythmLineXDiffFromClefImageLeft 480 = 639 px on a 1080 px tall layout (scale 1.0 at ≥1080 px height, 0.67 at ≥720, 0.5 below) ≈ 0.27-0.33 of the width | `resources/assets/LevelUIConfig.json`, `p380oj/C10043y.java:83`, `p380oj/EnumC10012i0.java` |
+| Static notes start | 60 px left of the play line (`staticUINotesContainerXDiffFromRhythmLine: -60`) | `LevelUIConfig.json` |
+| Stage intro | Each sheet element starts one screen-height below, `delay(k/(2n))` then `moveTo(y, min(1-(n-1)/(2n), 0.5))` with swingOut(2) `((s+1)q+s)q²+1`, q=t-1; no alpha change | `p380oj/C10032s0.java:173-181,289-308`, `p651ya/C13982m.java:16-19`, `AbstractC13983n.java:53` |
+| Note colour | Hit: `Actions.color(c, 0.2f)`, linear. Partial chord: tween to hit colour 0.2 s then back to ink 0.2 s. Hit colours 0x00CCCC / 0xFFCF00, ink 0x0F0F0F | `p691zi/C14751v.java:20-30`, `p350nj/C9674v0.java:382-397`, `p350nj/C9666r0.java:160-172`, `p380oj/C10032s0.java:52-55` |
+| Right edge | No fade-in found; notes are clipped at the edge | - |
+| Labels | Instruction labels `fadeIn/fadeOut(0.2f)` | `p350nj/C9674v0.java:213,234` |
+
+Implications: our painter repaints the background over the notes with the same alpha profile (see `docs/specs/practice-screen.md`); no assets or code copied.
 
 ## Follow-ups
 

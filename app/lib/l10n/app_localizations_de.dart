@@ -264,6 +264,103 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get early => 'Zu früh';
+
+  @override
+  String get late => 'Zu spät';
+
+  @override
+  String get slowPractice => 'Langsam üben';
+
+  @override
+  String get slowPracticeIntro => 'Üben wir diesen Teil langsamer';
+
+  @override
+  String get sectionTryAgain => 'Versuch diesen Teil noch einmal';
+
+  @override
+  String get sectionFullSpeed => 'Jetzt im vollen Tempo!';
+
+  @override
+  String get micInput => 'Mikrofon';
+
+  @override
+  String get micUseMidi => 'MIDI / Bildschirmtasten nutzen';
+
+  @override
+  String get micExplainTitle => 'Mit dem Mikrofon spielen';
+
+  @override
+  String get micExplainBody =>
+      'Easy Piano hört dein Klavier über das Mikrofon, damit du ohne Kabel spielen kannst. Der Ton wird auf diesem Gerät ausgewertet und nie aufgenommen oder gesendet. Der Klavierklang der App ist beim Zuhören stumm.';
+
+  @override
+  String get micAllow => 'Mikrofon erlauben';
+
+  @override
+  String get cancel => 'Abbrechen';
+
+  @override
+  String get micDenied =>
+      'Der Mikrofonzugriff wurde blockiert. Erlaube ihn in den Website-Einstellungen des Browsers und versuche es erneut.';
+
+  @override
+  String get micUnavailable =>
+      'Mikrofoneingabe ist in diesem Browser nicht verfügbar.';
+
+  @override
+  String get micCalibrate => 'Kalibrieren';
+
+  @override
+  String get micCalibrateTitle => 'Mikrofon kalibrieren';
+
+  @override
+  String get micCalibrateBody =>
+      'Spiel eine beliebige Taste, sobald der Kreis aufleuchtet.';
+
+  @override
+  String get micCalibrateRetry =>
+      'Ich habe nicht genug Töne gehört. Versuch es etwas lauter noch einmal.';
+
+  @override
+  String micCalibrateDone(int ms) {
+    return 'Fertig: $ms ms Verzögerung';
+  }
+
+  @override
+  String get micListening => 'Höre zu';
+
+  @override
+  String get micDefaultDevice => 'Standardmikrofon';
+
+  @override
+  String micHeard(String note) {
+    return 'Gehört: $note';
+  }
+
+  @override
+  String get micTestHint =>
+      'Spiel eine Taste: Der Balken bewegt sich und der Ton erscheint hier.';
+
+  @override
+  String get micTurnOff => 'Ausschalten';
+
+  @override
+  String get micNoteNames => 'C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H';
+
+  @override
+  String get micNotFound =>
+      'Kein Mikrofon gefunden. Schließ eins an oder wähle einen anderen Eingang.';
+
+  @override
+  String get micBusy =>
+      'Das Mikrofon wird von einer anderen App benutzt. Schließ sie und versuch es erneut.';
+
+  @override
+  String get micQuietTip =>
+      'Am besten in einem ruhigen Raum: Sprechen, Tippen oder Musik in der Nähe können als Töne erkannt werden.';
+
+  @override
   String get generatedBadge => 'Generiert';
 
   @override

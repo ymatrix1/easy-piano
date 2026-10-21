@@ -60,6 +60,9 @@ pub struct Settings {
     /// `one_note` drill: passes on notes completed ("N correct of M"), hinted
     /// or not; the hint only costs stars.
     pub drill: bool,
+    /// Play-along training: grade each critical section as it ends and
+    /// replay failed ones, slowing down after repeated failures.
+    pub training: bool,
 }
 
 impl Default for Settings {
@@ -73,6 +76,7 @@ impl Default for Settings {
             hand: HandFilter::Right,
             hint_after_us: WAIT_HINT_AFTER_US,
             drill: false,
+            training: false,
         }
     }
 }
@@ -112,6 +116,67 @@ pub enum ChordState {
     Missed,
 }
 
+/// Training: consecutive failures of one section before it is practised slowly.
+pub const FAILS_BEFORE_PRACTICE: u32 = 2;
+/// Training: tempo factor of practice runs (applied on top of the stage tempo).
+pub const PRACTICE_TEMPO: f64 = 0.75;
+
+/// Training outcome of one critical-section run (play-along with `training`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SectionEvent {
+    /// Passed at full tempo: the song continues into the next section.
+    Passed { section: usize },
+    /// Failed or practised: the engine rewound to `beat` (song beats) and the
+    /// caller must restart its clock there at `tempo`. `practice` is true
+    /// for slow practice runs; `intro` when practice mode just started.
+    Replay {
+        section: usize,
+        beat: f64,
+        tempo: f64,
+        practice: bool,
+        intro: bool,
+        passed: bool,
+    },
+}
+
+/// Play-along: a hit within this distance of its note counts as on time;
+/// further out it is tagged early or late (still a hit).
+pub const ON_TIME_US: i64 = 120_000;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Timing {
+    Early,
+    OnTime,
+    Late,
+}
+
+impl Timing {
+    pub fn of(delta_us: i64) -> Timing {
+        if delta_us < -ON_TIME_US {
+            Timing::Early
+        } else if delta_us > ON_TIME_US {
+            Timing::Late
+        } else {
+            Timing::OnTime
+        }
+    }
+}
+
+/// Play-along feedback the UI animates, in the order it happened.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Feedback {
+    /// A chord was completed; `delta_us` is its first note's timing error.
+    Hit {
+        target: usize,
+        delta_us: i64,
+        timing: Timing,
+    },
+    /// A key that matched no open note.
+    Wrong { pitch: u8, t_us: i64 },
+    /// A note's window closed before it was completed.
+    Missed { target: usize },
+}
+
 /// Notes the student must play at one moment (a single note or a chord).
 #[derive(Debug, Clone)]
 pub struct Target {
@@ -143,6 +208,8 @@ pub struct Frame {
     pub done: bool,
     /// Wait mode: the current target has waited long enough to show the hint.
     pub hint_active: bool,
+    /// Play-along: chords hit in a row; a miss or wrong key resets it.
+    pub streak: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -219,6 +286,16 @@ pub struct Session {
     wait_beat: f64,
     /// Wait mode: when the current target became current.
     current_since_us: i64,
+    /// Play-along: events not yet taken by the UI.
+    feedback: Vec<Feedback>,
+    streak: usize,
+    /// Training: section being played, its consecutive failures, whether the
+    /// current run is a slow practice run, and the lowest tempo used.
+    section: usize,
+    section_fails: u32,
+    practicing: bool,
+    min_tempo: f64,
+    section_event: Option<SectionEvent>,
 }
 
 /// Whether the student plays this (non-accompaniment) note under [hand].
@@ -285,6 +362,13 @@ impl Session {
             now_us: 0,
             wait_beat,
             current_since_us: 0,
+            feedback: Vec::new(),
+            streak: 0,
+            section: 0,
+            section_fails: 0,
+            practicing: false,
+            min_tempo: settings.tempo,
+            section_event: None,
         }
     }
 
@@ -387,6 +471,11 @@ impl Session {
             .min_by_key(|&(_, d)| d);
         let Some((i, _)) = best else {
             self.wrong += 1;
+            self.streak = 0;
+            self.feedback.push(Feedback::Wrong {
+                pitch: e.pitch,
+                t_us: e.t_us,
+            });
             return;
         };
         let target_us = self.target_us(&self.targets[i]);
@@ -395,9 +484,14 @@ impl Session {
         t.deltas_us.push(e.t_us - target_us);
         t.first_us.get_or_insert(e.t_us);
         if t.played.len() == t.pitches.len() {
-            t.state = ChordState::Hit {
-                delta_us: t.first_us.unwrap_or(e.t_us) - target_us,
-            };
+            let delta_us = t.first_us.unwrap_or(e.t_us) - target_us;
+            t.state = ChordState::Hit { delta_us };
+            self.streak += 1;
+            self.feedback.push(Feedback::Hit {
+                target: i,
+                delta_us,
+                timing: Timing::of(delta_us),
+            });
         }
         self.advance_cursor();
     }
@@ -412,6 +506,8 @@ impl Session {
             }
             if self.targets[i].state == ChordState::Pending {
                 self.targets[i].state = ChordState::Missed;
+                self.streak = 0;
+                self.feedback.push(Feedback::Missed { target: i });
             }
         }
         self.advance_cursor();
@@ -457,6 +553,9 @@ impl Session {
             .iter()
             .filter(|t| t.state == ChordState::Missed)
             .count();
+        if self.settings.training && self.settings.mode == Mode::PlayAlong {
+            self.check_section();
+        }
         let hint_active = self.settings.mode == Mode::Wait
             && self.targets.get(self.cursor).is_some_and(|t| t.hinted);
         Frame {
@@ -467,7 +566,129 @@ impl Session {
             wrong: self.wrong,
             done: self.cursor >= self.targets.len(),
             hint_active,
+            streak: self.streak,
         }
+    }
+
+    /// Training: the section outcome decided by the last `tick`, if any.
+    pub fn take_section_event(&mut self) -> Option<SectionEvent> {
+        self.section_event.take()
+    }
+
+    /// Training: whether the current run is a slow practice run.
+    pub fn practicing(&self) -> bool {
+        self.practicing
+    }
+
+    /// Training: threshold for the current section run. Reference: every
+    /// failure, and every passed practice run, lowers it like a failed attempt.
+    fn section_threshold(&self) -> f64 {
+        effective_threshold(
+            self.settings.pass_ratio,
+            self.settings.failed_attempts + self.section_fails,
+        )
+    }
+
+    fn section_targets(&self, section: usize) -> std::ops::Range<usize> {
+        let [a, b] = self.critical[section];
+        let lo = self.targets.iter().position(|t| t.bar >= a);
+        let hi = self.targets.iter().position(|t| t.bar >= b);
+        match lo {
+            Some(lo) => lo..hi.unwrap_or(self.targets.len()).max(lo),
+            None => 0..0,
+        }
+    }
+
+    /// Reference: a section passes when every note is judged and hits / notes
+    /// ≥ threshold, and fails early once misses exceed (1 − threshold) × notes.
+    fn check_section(&mut self) {
+        if self.section >= self.critical.len() {
+            return;
+        }
+        let range = self.section_targets(self.section);
+        let total = range.len();
+        if total == 0 {
+            self.section += 1;
+            return;
+        }
+        let thr = self.section_threshold();
+        let ts = &self.targets[range.clone()];
+        let hits = ts
+            .iter()
+            .filter(|t| matches!(t.state, ChordState::Hit { .. }))
+            .count();
+        let misses = ts.iter().filter(|t| t.state == ChordState::Missed).count();
+        let judged = hits + misses == total;
+        let early_fail = misses as f64 > (1.0 - thr) * total as f64;
+        if !judged && !early_fail {
+            return;
+        }
+        let passed = !early_fail && hits as f64 >= thr * total as f64;
+        let section = self.section;
+        if passed && !self.practicing {
+            self.section += 1;
+            self.section_fails = 0;
+            self.section_event = Some(SectionEvent::Passed { section });
+            return;
+        }
+        // Practice passed → back to full tempo (counts as a failure for the
+        // threshold); failed at full tempo → replay, slowly every Nth time;
+        // practice failed → practise again.
+        let (practice, intro) = if self.practicing {
+            self.section_fails += 1;
+            (!passed, false)
+        } else {
+            self.section_fails += 1;
+            let slow = self.section_fails.is_multiple_of(FAILS_BEFORE_PRACTICE);
+            (slow, slow)
+        };
+        let tempo = if practice {
+            self.settings.tempo * PRACTICE_TEMPO
+        } else {
+            self.settings.tempo
+        };
+        let beat = self.targets[range.start].beat;
+        self.rewind(range.start, tempo);
+        self.practicing = practice;
+        self.section_event = Some(SectionEvent::Replay {
+            section,
+            beat,
+            tempo,
+            practice,
+            intro,
+            passed,
+        });
+    }
+
+    /// Resets targets from `from` on and switches to `tempo`. The clock
+    /// restarts: the caller's next times are song time at the new tempo.
+    fn rewind(&mut self, from: usize, tempo: f64) {
+        let bpm = 60e6 / (self.us_per_beat * self.current_tempo());
+        for t in &mut self.targets[from..] {
+            t.state = ChordState::Pending;
+            t.played.clear();
+            t.first_us = None;
+            t.deltas_us.clear();
+        }
+        self.us_per_beat = 60e6 / (bpm * tempo);
+        self.min_tempo = self.min_tempo.min(tempo);
+        self.cursor = from;
+        self.streak = 0;
+        self.feedback.clear();
+        self.now_us = i64::MIN / 2;
+    }
+
+    fn current_tempo(&self) -> f64 {
+        if self.practicing {
+            self.settings.tempo * PRACTICE_TEMPO
+        } else {
+            self.settings.tempo
+        }
+    }
+
+    /// Drains the play-along feedback queued since the last call.
+    pub fn take_feedback(&mut self) -> Vec<Feedback> {
+        std::mem::take(&mut self.feedback)
     }
 
     /// Final grade. Call when `Frame::done` (PlayAlong: after the last window closes).
@@ -581,7 +802,7 @@ impl Session {
                 };
                 let timing = timing_score(&deltas, self.settings.input == Input::Midi);
                 // Assists: playing slower than full tempo counts as help.
-                let assists = self.settings.tempo.clamp(0.0, 1.0);
+                let assists = self.min_tempo.clamp(0.0, 1.0);
                 let score = song_score(ratio, timing, assists);
                 (hit, timing, assists, score, stars_from_score(score))
             }
@@ -1027,5 +1248,135 @@ mod tests {
         let mut other = song();
         other.bars[0] = longer.bars[1].clone();
         assert!(s.extend(&other).is_err());
+    }
+
+    fn training() -> Session {
+        play_along(Settings {
+            training: true,
+            ..Settings::default()
+        })
+    }
+
+    /// Plays section 0 (C D E F at 0..3 s on the current clock) hitting `n` notes.
+    fn run_section0(s: &mut Session, n: usize, us_per_beat: i64) {
+        for (i, p) in [60, 62, 64, 65].into_iter().enumerate().take(n) {
+            press(s, p, i as i64 * us_per_beat);
+        }
+        s.tick(3 * us_per_beat + 500_000);
+    }
+
+    #[test]
+    fn feedback_reports_timing_wrong_and_missed() {
+        let mut s = play_along(Settings::default());
+        press(&mut s, 60, -200_000); // C 200 ms early
+        press(&mut s, 62, 1_050_000); // D on time
+        press(&mut s, 70, 1_500_000); // wrong key
+        s.tick(2_500_000); // E window closed
+        let f = s.take_feedback();
+        assert_eq!(
+            f,
+            vec![
+                Feedback::Hit {
+                    target: 0,
+                    delta_us: -200_000,
+                    timing: Timing::Early
+                },
+                Feedback::Hit {
+                    target: 1,
+                    delta_us: 50_000,
+                    timing: Timing::OnTime
+                },
+                Feedback::Wrong {
+                    pitch: 70,
+                    t_us: 1_500_000
+                },
+                Feedback::Missed { target: 2 },
+            ]
+        );
+        assert!(s.take_feedback().is_empty());
+        assert_eq!(s.tick(2_500_000).streak, 0);
+    }
+
+    #[test]
+    fn streak_counts_hits_in_a_row() {
+        let mut s = play_along(Settings::default());
+        press(&mut s, 60, 0);
+        press(&mut s, 62, 1_000_000);
+        assert_eq!(s.tick(1_100_000).streak, 2);
+        press(&mut s, 71, 1_200_000);
+        assert_eq!(s.tick(1_300_000).streak, 0);
+    }
+
+    #[test]
+    fn training_passes_section_and_moves_on() {
+        let mut s = training();
+        run_section0(&mut s, 3, 1_000_000); // 3/4 = 0.75 >= 0.7
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Passed { section: 0 })
+        );
+    }
+
+    #[test]
+    fn training_fails_early_and_replays_then_slows_on_second_fail() {
+        let mut s = training();
+        // Two misses > (1 - 0.7) × 4 = 1.2 → early fail before the section ends.
+        s.tick(1_500_000);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Replay {
+                section: 0,
+                beat: 0.0,
+                tempo: 1.0,
+                practice: false,
+                intro: false,
+                passed: false
+            })
+        );
+        assert_eq!(s.targets()[0].state, ChordState::Pending);
+        // Second consecutive failure (threshold now 0.6): practice at 75%.
+        s.tick(1_500_000);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Replay {
+                section: 0,
+                beat: 0.0,
+                tempo: 0.75,
+                practice: true,
+                intro: true,
+                passed: false
+            })
+        );
+        assert!(s.practicing());
+        // Practice run at 75% (1 beat = 1.333 s), all hit → back to full tempo.
+        run_section0(&mut s, 4, 1_333_333);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Replay {
+                section: 0,
+                beat: 0.0,
+                tempo: 1.0,
+                practice: false,
+                intro: false,
+                passed: true
+            })
+        );
+        assert!(!s.practicing());
+        // Threshold dropped to 0.6 after 3 counted failures: 3/4 passes at full speed.
+        run_section0(&mut s, 3, 1_000_000);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Passed { section: 0 })
+        );
+        // Slow runs count as an assist in the score.
+        assert_eq!(s.result().assists, 0.75);
+    }
+
+    #[test]
+    fn training_off_never_rewinds() {
+        let mut s = play_along(Settings::default());
+        s.tick(3_500_000);
+        assert_eq!(s.take_section_event(), None);
+        assert_eq!(s.targets()[0].state, ChordState::Missed);
     }
 }

@@ -41,3 +41,9 @@ web.mkdir(parents=True, exist_ok=True)
 shutil.copy2(ROOT / "tools" / "melody-model" / "web" / "melody.js", web / "melody.js")
 (DST / "index.json").write_text(json.dumps({"files": files}, indent=1) + "\n", encoding="utf-8")
 print(f"synced {len(files)} files to {DST.relative_to(ROOT)}")
+# One bundle of every file, so the web app loads content in one request
+# instead of ~125 sequential fetches (docs/research/web-load-performance.md).
+bundle = {f: (DST / f).read_text(encoding="utf-8") for f in files}
+(DST / "bundle.json").write_text(
+    json.dumps(bundle, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+)

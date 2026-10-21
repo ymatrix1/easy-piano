@@ -1,7 +1,7 @@
 //! Bridge over the core session engine for the practice screen.
 //! Logic stays in `easy_piano_core::session`; this file only adapts types.
 
-use easy_piano_core::session::{ChordState, HandFilter, Input, Mode, NoteEvent, Session, Settings, WAIT_HINT_AFTER_US};
+use easy_piano_core::session::{ChordState, Feedback, SectionEvent, Timing, HandFilter, Input, Mode, NoteEvent, Session, Settings, WAIT_HINT_AFTER_US};
 use easy_piano_core::session::companion_notes;
 use easy_piano_core::song::Song;
 use flutter_rust_bridge::frb;
@@ -26,6 +26,35 @@ pub struct FrameView {
     pub done: bool,
     /// Wait mode: the note has waited long enough to show the hint.
     pub hint_active: bool,
+    /// Play-along: chords hit in a row.
+    pub streak: u32,
+}
+
+/// Play-along feedback event for the error animations.
+pub struct FeedbackView {
+    /// 0 hit, 1 wrong key, 2 missed.
+    pub kind: u8,
+    /// Target index (hit, missed); 0 for wrong keys.
+    pub target: u32,
+    /// Wrong key pitch; 0 otherwise.
+    pub pitch: u8,
+    /// Hit timing: -1 early, 0 on time, 1 late.
+    pub timing: i8,
+    pub delta_us: i64,
+}
+
+/// Training: outcome of one critical-section run.
+pub struct SectionEventView {
+    pub section: u32,
+    /// False: passed at full tempo, the song goes on. True: restart the
+    /// clock at `beat` (song beats) with tempo factor `tempo`.
+    pub replay: bool,
+    pub beat: f64,
+    pub tempo: f64,
+    pub practice: bool,
+    /// Practice mode just started: show the slow-down intro.
+    pub intro: bool,
+    pub passed: bool,
 }
 
 pub struct ResultView {
@@ -121,6 +150,7 @@ impl PracticeSession {
         tempo: f64,
         pass_ratio: f64,
         failed_attempts: u32,
+        training: bool,
     ) -> Result<PracticeSession, String> {
         let song = Song::from_json(&song_json)?;
         let errs = song.validate();
@@ -142,6 +172,7 @@ impl PracticeSession {
             // Reference: hint after 1 s in one-note drills, 4 s in note sequences.
             hint_after_us: if mode == "one_note" { 1_000_000 } else { WAIT_HINT_AFTER_US },
             drill: mode == "one_note",
+            training: training && mode == "play_along",
         };
         Ok(PracticeSession { inner: Session::new(&song, settings) })
     }
@@ -182,6 +213,7 @@ impl PracticeSession {
             wrong: f.wrong as u32,
             done: f.done,
             hint_active: f.hint_active,
+            streak: f.streak as u32,
         }
     }
 
@@ -195,6 +227,61 @@ impl PracticeSession {
             return Err(errs.join("; "));
         }
         self.inner.extend(&song).map(|n| n as u32)
+    }
+
+    /// Training: section outcome from the last tick, if any.
+    #[frb(sync)]
+    pub fn take_section_event(&mut self) -> Option<SectionEventView> {
+        self.inner.take_section_event().map(|e| match e {
+            SectionEvent::Passed { section } => SectionEventView {
+                section: section as u32,
+                replay: false,
+                beat: 0.0,
+                tempo: 1.0,
+                practice: false,
+                intro: false,
+                passed: true,
+            },
+            SectionEvent::Replay { section, beat, tempo, practice, intro, passed } => {
+                SectionEventView { section: section as u32, replay: true, beat, tempo, practice, intro, passed }
+            }
+        })
+    }
+
+    /// Feedback since the last call (drains the queue).
+    #[frb(sync)]
+    pub fn take_feedback(&mut self) -> Vec<FeedbackView> {
+        self.inner
+            .take_feedback()
+            .into_iter()
+            .map(|f| match f {
+                Feedback::Hit { target, delta_us, timing } => FeedbackView {
+                    kind: 0,
+                    target: target as u32,
+                    pitch: 0,
+                    timing: match timing {
+                        Timing::Early => -1,
+                        Timing::OnTime => 0,
+                        Timing::Late => 1,
+                    },
+                    delta_us,
+                },
+                Feedback::Wrong { pitch, .. } => FeedbackView {
+                    kind: 1,
+                    target: 0,
+                    pitch,
+                    timing: 0,
+                    delta_us: 0,
+                },
+                Feedback::Missed { target } => FeedbackView {
+                    kind: 2,
+                    target: target as u32,
+                    pitch: 0,
+                    timing: 0,
+                    delta_us: 0,
+                },
+            })
+            .collect()
     }
 
     #[frb(sync)]

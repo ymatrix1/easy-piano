@@ -22,7 +22,7 @@ env:
 
 jobs:
   rust:
-    name: Rust core + content lint
+    name: Rust core + audio + content lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,6 +34,7 @@ jobs:
         with:
           workspaces: |
             core
+            audio
             tools/content-cli
 
       - name: cargo fmt (core)
@@ -46,6 +47,21 @@ jobs:
 
       - name: cargo test (core)
         working-directory: core
+        run: cargo test
+
+      - name: cargo fmt (audio)
+        working-directory: audio
+        run: cargo fmt --check
+
+      - name: cargo clippy (audio)
+        working-directory: audio
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
+          cargo clippy --all-targets --all-features -- -D warnings
+
+      # Includes the web parity test (renders Ode to Joy, D30).
+      - name: cargo test (audio)
+        working-directory: audio
         run: cargo test
 
       - name: cargo fmt (content-cli)
