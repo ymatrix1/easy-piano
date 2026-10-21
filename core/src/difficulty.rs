@@ -17,7 +17,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Skill names, in the order of `Skills` arrays and model weights.
-pub const SKILLS: [&str; 8] = ["reading", "hand_position", "intervals", "rhythm", "key", "coordination", "texture", "speed"];
+pub const SKILLS: [&str; 8] = [
+    "reading",
+    "hand_position",
+    "intervals",
+    "rhythm",
+    "key",
+    "coordination",
+    "texture",
+    "speed",
+];
 pub type Skills = [f64; 8];
 /// Widest span one hand covers without moving: five white keys, C to G.
 pub const HAND_WINDOW: u8 = 7;
@@ -116,7 +125,11 @@ fn mean(xs: &[(f64, f64)]) -> f64 {
 
 fn line_note(hand: &str, pitches: &[u8]) -> u8 {
     let it = pitches.iter().copied();
-    if hand == "LH" { it.min().unwrap_or(0) } else { it.max().unwrap_or(0) }
+    if hand == "LH" {
+        it.min().unwrap_or(0)
+    } else {
+        it.max().unwrap_or(0)
+    }
 }
 
 fn is_black(p: u8) -> bool {
@@ -126,19 +139,49 @@ fn is_black(p: u8) -> bool {
 fn on_ledger(hand: &str, p: u8) -> bool {
     // Treble staff E4 (64)..F5 (77): C#4 and below, A5 and above need ledgers.
     // Bass staff G2 (43)..A3 (57): E2 and below, C4 and above.
-    if hand == "LH" { p <= 40 || p >= 60 } else { p <= 61 || p >= 81 }
+    if hand == "LH" {
+        p <= 40 || p >= 60
+    } else {
+        p <= 61 || p >= 81
+    }
 }
 
 /// Sharps/flats of a key and the pitch classes of its scale (minor keys add
 /// the raised 7th). `None` for a key name we do not know.
 pub fn key_info(key: &str) -> Option<(u8, BTreeSet<u8>)> {
     const MAJOR: [(&str, u8); 15] = [
-        ("C", 0), ("G", 1), ("D", 2), ("A", 3), ("E", 4), ("B", 5), ("F#", 6), ("C#", 7),
-        ("F", 1), ("Bb", 2), ("Eb", 3), ("Ab", 4), ("Db", 5), ("Gb", 6), ("Cb", 7),
+        ("C", 0),
+        ("G", 1),
+        ("D", 2),
+        ("A", 3),
+        ("E", 4),
+        ("B", 5),
+        ("F#", 6),
+        ("C#", 7),
+        ("F", 1),
+        ("Bb", 2),
+        ("Eb", 3),
+        ("Ab", 4),
+        ("Db", 5),
+        ("Gb", 6),
+        ("Cb", 7),
     ];
     const MINOR: [(&str, u8); 15] = [
-        ("A", 0), ("E", 1), ("B", 2), ("F#", 3), ("C#", 4), ("G#", 5), ("D#", 6), ("A#", 7),
-        ("D", 1), ("G", 2), ("C", 3), ("F", 4), ("Bb", 5), ("Eb", 6), ("Ab", 7),
+        ("A", 0),
+        ("E", 1),
+        ("B", 2),
+        ("F#", 3),
+        ("C#", 4),
+        ("G#", 5),
+        ("D#", 6),
+        ("A#", 7),
+        ("D", 1),
+        ("G", 2),
+        ("C", 3),
+        ("F", 4),
+        ("Bb", 5),
+        ("Eb", 6),
+        ("Ab", 7),
     ];
     let (name, table, steps): (&str, &[(&str, u8)], &[u8]) = match key.strip_suffix('m') {
         Some(t) => (t, &MINOR, &[0, 2, 3, 5, 7, 8, 10, 11]),
@@ -151,16 +194,25 @@ pub fn key_info(key: &str) -> Option<(u8, BTreeSet<u8>)> {
 }
 
 fn hands(song: &Song) -> BTreeMap<&'static str, Hand> {
-    let bar_len = song.time_signature().map_or(1.0, |(n, d)| n as f64 / d as f64);
+    let bar_len = song
+        .time_signature()
+        .map_or(1.0, |(n, d)| n as f64 / d as f64);
     let mut out: BTreeMap<&'static str, Hand> = BTreeMap::new();
     for (i, bar) in song.bars.iter().enumerate() {
         for hand in GRADED {
-            let Some(events) = bar.get(hand).and_then(|t| parse_bar(t).ok()) else { continue };
+            let Some(events) = bar.get(hand).and_then(|t| parse_bar(t).ok()) else {
+                continue;
+            };
             let h = out.entry(hand).or_default();
             let mut t = Dur::ZERO;
             for e in events {
                 match &e {
-                    Event::Note { pitches, dur, .. } => h.hits.push(Hit { bar: i, at: i as f64 * bar_len + t.as_f64(), pitches: pitches.clone(), dur: *dur }),
+                    Event::Note { pitches, dur, .. } => h.hits.push(Hit {
+                        bar: i,
+                        at: i as f64 * bar_len + t.as_f64(),
+                        pitches: pitches.clone(),
+                        dur: *dur,
+                    }),
                     Event::Rest { .. } => h.rests += 1,
                     Event::Directive { name, .. } if name == "tie" => h.ties += 1,
                     Event::Directive { .. } => {}
@@ -179,7 +231,10 @@ fn shifts(hits: &[Hit]) -> usize {
     let mut n = 0;
     let mut win: Option<(u8, u8)> = None;
     for h in hits {
-        let (lo, hi) = (*h.pitches.iter().min().unwrap_or(&0), *h.pitches.iter().max().unwrap_or(&0));
+        let (lo, hi) = (
+            *h.pitches.iter().min().unwrap_or(&0),
+            *h.pitches.iter().max().unwrap_or(&0),
+        );
         win = Some(match win {
             None => (lo, hi),
             Some((a, b)) if b.max(hi) - a.min(lo) <= HAND_WINDOW => (a.min(lo), b.max(hi)),
@@ -201,18 +256,34 @@ pub fn features(song: &Song) -> Features {
     let known = key_info(&song.key);
     let unknown_key = known.is_none();
     let (key_signature, scale) = known.unwrap_or_else(|| key_info("C").expect("C is a key"));
-    let mut f = Features { bars: song.bars.len(), hands: hs.len(), key_signature, unknown_key, fastest: 1.0, ..Default::default() };
+    let mut f = Features {
+        bars: song.bars.len(),
+        hands: hs.len(),
+        key_signature,
+        unknown_key,
+        fastest: 1.0,
+        ..Default::default()
+    };
     let (mut ledger, mut cross, mut shift, mut skips, mut leaps) = (0, 0, 0, 0, 0);
     let (mut dotted, mut sync, mut ties, mut rests, mut tuplets) = (0, 0, 0, 0, 0);
     let (mut out_key, mut black, mut chords) = (0, 0, 0);
     let mut pitches: BTreeSet<u8> = BTreeSet::new();
     let mut durs = BTreeSet::new();
     for (&hand, h) in &hs {
-        let all: Vec<u8> = h.hits.iter().flat_map(|x| x.pitches.iter().copied()).collect();
-        f.range = f.range.max(all.iter().max().unwrap_or(&0) - all.iter().min().unwrap_or(&0));
+        let all: Vec<u8> = h
+            .hits
+            .iter()
+            .flat_map(|x| x.pitches.iter().copied())
+            .collect();
+        f.range = f
+            .range
+            .max(all.iter().max().unwrap_or(&0) - all.iter().min().unwrap_or(&0));
         pitches.extend(&all);
         ledger += all.iter().filter(|&&p| on_ledger(hand, p)).count();
-        cross += all.iter().filter(|&&p| if hand == "LH" { p > 60 } else { p < 60 }).count();
+        cross += all
+            .iter()
+            .filter(|&&p| if hand == "LH" { p > 60 } else { p < 60 })
+            .count();
         out_key += all.iter().filter(|&&p| !scale.contains(&(p % 12))).count();
         black += all.iter().filter(|&&p| is_black(p)).count();
         shift += shifts(&h.hits);
@@ -247,22 +318,32 @@ pub fn features(song: &Song) -> Features {
         at.dedup_by(|a, b| (*a - *b).abs() < EPS);
         f.onsets_per_bar = per_bar(at.len());
         f.lh_notes_per_bar = per_bar(l.hits.len());
-        f.lh_distinct_durations = l.hits.iter().map(|x| dur_label(x.dur)).collect::<BTreeSet<_>>().len();
+        f.lh_distinct_durations = l
+            .hits
+            .iter()
+            .map(|x| dur_label(x.dur))
+            .collect::<BTreeSet<_>>()
+            .len();
     }
     f.distinct_pitches = pitches.len();
     f.distinct_durations = durs.len();
-    (f.ledger_per_bar, f.clef_crossings_per_bar, f.shifts_per_bar) = (per_bar(ledger), per_bar(cross), per_bar(shift));
+    (f.ledger_per_bar, f.clef_crossings_per_bar, f.shifts_per_bar) =
+        (per_bar(ledger), per_bar(cross), per_bar(shift));
     (f.skips_per_bar, f.leaps_per_bar) = (per_bar(skips), per_bar(leaps));
-    (f.dotted_per_bar, f.syncopations_per_bar, f.ties_per_bar) = (per_bar(dotted), per_bar(sync), per_bar(ties));
+    (f.dotted_per_bar, f.syncopations_per_bar, f.ties_per_bar) =
+        (per_bar(dotted), per_bar(sync), per_bar(ties));
     (f.rests_per_bar, f.tuplets_per_bar) = (per_bar(rests), per_bar(tuplets));
-    (f.out_of_key_per_bar, f.black_keys_per_bar, f.chords_per_bar) = (per_bar(out_key), per_bar(black), per_bar(chords));
+    (f.out_of_key_per_bar, f.black_keys_per_bar, f.chords_per_bar) =
+        (per_bar(out_key), per_bar(black), per_bar(chords));
     // `bpm` counts the meter's beat unit (the denominator note), as the session
     // engine plays it: 6/8 at 120 is 120 eighths a minute, 2/2 at 60 is 60 halves.
     let bar_secs = num as f64 * 60.0 / song.bpm.max(1.0);
     let onsets: usize = hs.values().map(|h| h.hits.len()).sum();
     f.notes_per_second = onsets as f64 / (bars as f64 * bar_secs);
     let mut by_bar = vec![0usize; bars];
-    hs.values().flat_map(|h| &h.hits).for_each(|x| by_bar[x.bar.min(bars - 1)] += 1);
+    hs.values()
+        .flat_map(|h| &h.hits)
+        .for_each(|x| by_bar[x.bar.min(bars - 1)] += 1);
     f.peak_notes_per_second = by_bar.iter().max().copied().unwrap_or(0) as f64 / bar_secs;
     let graded = |b: &BTreeMap<String, String>| GRADED.map(|h| b.get(h).cloned());
     f.unique_bars = song.bars.iter().map(graded).collect::<BTreeSet<_>>().len();
@@ -276,9 +357,21 @@ pub fn skills(f: &Features) -> Skills {
     // Shortest note: quarter or longer 0, eighth 0.5, sixteenth 1.
     let fastest = ((1.0 / f.fastest).log2() - 2.0) / 2.0;
     [
-        mean(&[(2.0, cap(f.range as f64, 24.0)), (1.0, cap(f.distinct_pitches as f64, 20.0)), (0.5, cap(f.ledger_per_bar, 4.0)), (1.0, cap(f.clef_crossings_per_bar, 1.0))]),
-        mean(&[(2.0, cap(f.shifts_per_bar, 1.0)), (1.0, cap(f.max_stretch as f64, 12.0))]),
-        mean(&[(1.0, cap(f.skips_per_bar, 4.0)), (1.0, cap(f.leaps_per_bar, 2.0)), (1.0, cap(f.max_leap as f64, 12.0))]),
+        mean(&[
+            (2.0, cap(f.range as f64, 24.0)),
+            (1.0, cap(f.distinct_pitches as f64, 20.0)),
+            (0.5, cap(f.ledger_per_bar, 4.0)),
+            (1.0, cap(f.clef_crossings_per_bar, 1.0)),
+        ]),
+        mean(&[
+            (2.0, cap(f.shifts_per_bar, 1.0)),
+            (1.0, cap(f.max_stretch as f64, 12.0)),
+        ]),
+        mean(&[
+            (1.0, cap(f.skips_per_bar, 4.0)),
+            (1.0, cap(f.leaps_per_bar, 2.0)),
+            (1.0, cap(f.max_leap as f64, 12.0)),
+        ]),
         mean(&[
             (3.0, fastest.clamp(0.0, 1.0)),
             (1.0, cap(f.distinct_durations.saturating_sub(1) as f64, 5.0)),
@@ -288,7 +381,11 @@ pub fn skills(f: &Features) -> Skills {
             (0.5, cap(f.rests_per_bar, 1.0)),
             (1.0, cap(f.tuplets_per_bar, 1.0)),
         ]),
-        mean(&[(1.0, cap(f.key_signature as f64, 4.0)), (2.0, cap(f.out_of_key_per_bar, 1.0)), (1.0, cap(f.black_keys_per_bar, 2.0))]),
+        mean(&[
+            (1.0, cap(f.key_signature as f64, 4.0)),
+            (2.0, cap(f.out_of_key_per_bar, 1.0)),
+            (1.0, cap(f.black_keys_per_bar, 2.0)),
+        ]),
         mean(&[
             (1.0, cap(f.hands.saturating_sub(1) as f64, 1.0)),
             (1.0, cap(f.together_per_bar, 2.0)),
@@ -296,10 +393,17 @@ pub fn skills(f: &Features) -> Skills {
             (1.0, cap(f.lh_notes_per_bar, 4.0)),
             (1.0, cap(f.lh_distinct_durations as f64, 3.0)),
         ]),
-        mean(&[(1.0, cap(f.max_notes_at_once.saturating_sub(1) as f64, 3.0)), (1.0, cap(f.chords_per_bar, 2.0)), (1.0, cap(f.chord_hands as f64, 2.0))]),
+        mean(&[
+            (1.0, cap(f.max_notes_at_once.saturating_sub(1) as f64, 3.0)),
+            (1.0, cap(f.chords_per_bar, 2.0)),
+            (1.0, cap(f.chord_hands as f64, 2.0)),
+        ]),
         // `unique_bars` is reported but not scored: adding a note can make two bars
         // equal and lower it, which would break monotonicity.
-        mean(&[(2.0, cap(f.notes_per_second, 4.0)), (1.0, cap(f.peak_notes_per_second, 6.0))]),
+        mean(&[
+            (2.0, cap(f.notes_per_second, 4.0)),
+            (1.0, cap(f.peak_notes_per_second, 6.0)),
+        ]),
     ]
 }
 
@@ -318,6 +422,7 @@ pub struct Model {
 pub const WEIGHTS_JSON: &str = include_str!("../data/difficulty-weights.json");
 
 impl Model {
+    #[allow(clippy::neg_cmp_op_on_partial_ord)] // `!(w >= 0.0)` also rejects NaN
     pub fn from_json(text: &str) -> Result<Model, String> {
         let m: Model = serde_json::from_str(text).map_err(|e| format!("json: {e}"))?;
         if m.weights.len() != SKILLS.len() || m.weights.iter().any(|w| !(*w >= 0.0)) {
@@ -340,7 +445,11 @@ impl Model {
 
     /// Expected level, 1.0..10.0, non-decreasing in z.
     pub fn level_score(&self, z: f64) -> f64 {
-        1.0 + self.thresholds.iter().map(|t| 1.0 / (1.0 + (t - z).exp())).sum::<f64>()
+        1.0 + self
+            .thresholds
+            .iter()
+            .map(|t| 1.0 / (1.0 + (t - z).exp()))
+            .sum::<f64>()
     }
 
     pub fn level(&self, s: &Skills) -> u8 {
@@ -385,14 +494,39 @@ fn fraction_name(d: f64) -> String {
 /// One plain sentence per skill, from its strongest features.
 fn reason(skill: usize, f: &Features) -> String {
     match skill {
-        0 => format!("range of {} semitones over {} different pitches", f.range, f.distinct_pitches),
-        1 => format!("{:.1} hand-position shifts per bar, widest chord {} semitones", f.shifts_per_bar, f.max_stretch),
-        2 => format!("leaps up to {} semitones, {:.1} skips and {:.1} leaps per bar", f.max_leap, f.skips_per_bar, f.leaps_per_bar),
-        3 => format!("fastest note a {}, {} note values", fraction_name(f.fastest), f.distinct_durations),
-        4 => format!("{} sharps/flats in the key, {:.1} accidentals per bar", f.key_signature, f.out_of_key_per_bar),
-        5 => format!("both hands: {:.1} notes together, {:.1} onsets per bar", f.together_per_bar, f.onsets_per_bar),
-        6 => format!("up to {} notes at once, {:.1} chords per bar", f.max_notes_at_once, f.chords_per_bar),
-        _ => format!("{:.1} notes per second (peak {:.1}), {} different bars", f.notes_per_second, f.peak_notes_per_second, f.unique_bars),
+        0 => format!(
+            "range of {} semitones over {} different pitches",
+            f.range, f.distinct_pitches
+        ),
+        1 => format!(
+            "{:.1} hand-position shifts per bar, widest chord {} semitones",
+            f.shifts_per_bar, f.max_stretch
+        ),
+        2 => format!(
+            "leaps up to {} semitones, {:.1} skips and {:.1} leaps per bar",
+            f.max_leap, f.skips_per_bar, f.leaps_per_bar
+        ),
+        3 => format!(
+            "fastest note a {}, {} note values",
+            fraction_name(f.fastest),
+            f.distinct_durations
+        ),
+        4 => format!(
+            "{} sharps/flats in the key, {:.1} accidentals per bar",
+            f.key_signature, f.out_of_key_per_bar
+        ),
+        5 => format!(
+            "both hands: {:.1} notes together, {:.1} onsets per bar",
+            f.together_per_bar, f.onsets_per_bar
+        ),
+        6 => format!(
+            "up to {} notes at once, {:.1} chords per bar",
+            f.max_notes_at_once, f.chords_per_bar
+        ),
+        _ => format!(
+            "{:.1} notes per second (peak {:.1}), {} different bars",
+            f.notes_per_second, f.peak_notes_per_second, f.unique_bars
+        ),
     }
 }
 
@@ -404,16 +538,38 @@ pub fn evaluate(song: &Song, model: &Model) -> Report {
     let score = model.level_score(model.z(&s));
     let mut bars: Vec<BarScore> = (0..song.bars.len())
         .map(|i| {
-            let one = Song { bars: vec![song.bars[i].clone()], critical: vec![], ..song.clone() };
-            BarScore { bar: i + 1, level_score: round3(model.level_score(model.z(&skills(&features(&one))))) }
+            let one = Song {
+                bars: vec![song.bars[i].clone()],
+                critical: vec![],
+                ..song.clone()
+            };
+            BarScore {
+                bar: i + 1,
+                level_score: round3(model.level_score(model.z(&skills(&features(&one))))),
+            }
         })
         .collect();
-    bars.sort_by(|a, b| b.level_score.total_cmp(&a.level_score).then(a.bar.cmp(&b.bar)));
+    bars.sort_by(|a, b| {
+        b.level_score
+            .total_cmp(&a.level_score)
+            .then(a.bar.cmp(&b.bar))
+    });
     bars.truncate(3);
     let mut order: Vec<usize> = (0..SKILLS.len()).collect();
     order.sort_by(|&a, &b| (model.weights[b] * s[b]).total_cmp(&(model.weights[a] * s[a])));
-    let unknown = f.unknown_key.then(|| format!("key: unknown key `{}`, read as C major", song.key));
-    let reasons = unknown.into_iter().chain(order.iter().filter(|&&k| s[k] >= 0.25 && model.weights[k] > 0.0).take(3).map(|&k| format!("{}: {}", SKILLS[k], reason(k, &f)))).collect();
+    let unknown = f
+        .unknown_key
+        .then(|| format!("key: unknown key `{}`, read as C major", song.key));
+    let reasons = unknown
+        .into_iter()
+        .chain(
+            order
+                .iter()
+                .filter(|&&k| s[k] >= 0.25 && model.weights[k] > 0.0)
+                .take(3)
+                .map(|&k| format!("{}: {}", SKILLS[k], reason(k, &f))),
+        )
+        .collect();
     Report {
         level: score.round().clamp(1.0, 10.0) as u8,
         level_score: round3(score),
@@ -427,7 +583,10 @@ pub fn evaluate(song: &Song, model: &Model) -> Report {
 /// Earliest node (in learning order) whose taught set the song fits, by
 /// `rubric::taught_violations`. Taught sets only grow, so every later node fits too.
 pub fn node_fit<'a>(song: &Song, nodes: &'a [(String, TaughtSet)]) -> Option<&'a str> {
-    nodes.iter().find(|(_, t)| taught_violations(song, t).is_empty()).map(|(k, _)| k.as_str())
+    nodes
+        .iter()
+        .find(|(_, t)| taught_violations(song, t).is_empty())
+        .map(|(k, _)| k.as_str())
 }
 
 /// What a song has beyond a node: the rubric's taught-set violations, then every
@@ -481,12 +640,28 @@ mod tests {
     #[test]
     fn key_signatures() {
         let size = |k| key_info(k).map(|x| x.0);
-        for (k, n) in [("C", 0), ("G", 1), ("F", 1), ("Am", 0), ("Dm", 1), ("Eb", 3), ("C#", 7), ("Cb", 7), ("Db", 5), ("Gb", 6), ("G#m", 5), ("Ebm", 6)] {
+        for (k, n) in [
+            ("C", 0),
+            ("G", 1),
+            ("F", 1),
+            ("Am", 0),
+            ("Dm", 1),
+            ("Eb", 3),
+            ("C#", 7),
+            ("Cb", 7),
+            ("Db", 5),
+            ("Gb", 6),
+            ("G#m", 5),
+            ("Ebm", 6),
+        ] {
             assert_eq!(size(k), Some(n), "{k}");
         }
         assert_eq!(size("G#"), None, "G# major is not a written key");
         assert_eq!(size("H"), None);
-        assert!(key_info("Am").unwrap().1.contains(&8), "G# allowed in A minor");
+        assert!(
+            key_info("Am").unwrap().1.contains(&8),
+            "G# allowed in A minor"
+        );
         assert!(!key_info("C").unwrap().1.contains(&6));
         assert!(key_info("Cb").unwrap().1.contains(&11), "Cb major has Cb");
     }
@@ -497,12 +672,18 @@ mod tests {
         assert!(features(&s).unknown_key);
         let r = evaluate(&s, &Model::builtin());
         assert!(r.reasons[0].contains("unknown key `H`"), "{:?}", r.reasons);
-        assert_eq!(r.level, evaluate(&song("C", 96, TWINKLE), &Model::builtin()).level);
+        assert_eq!(
+            r.level,
+            evaluate(&song("C", 96, TWINKLE), &Model::builtin()).level
+        );
     }
 
     fn meter(time: &str, bpm: u32, bars: &str) -> Song {
         let s = song("C", bpm, bars);
-        Song { time: time.into(), ..s }
+        Song {
+            time: time.into(),
+            ..s
+        }
     }
 
     #[test]
@@ -511,7 +692,11 @@ mod tests {
         let f = features(&meter("3/4", 60, r#"[{"RH":"C4:4 D4:4 E4:4"}]"#));
         assert!((f.notes_per_second - 1.0).abs() < EPS);
         // 6/8 at 120: six eighths a bar, half a second each.
-        let f = features(&meter("6/8", 120, r#"[{"RH":"C4:8 D4:8 E4:8 F4:8 E4:8 D4:8"}]"#));
+        let f = features(&meter(
+            "6/8",
+            120,
+            r#"[{"RH":"C4:8 D4:8 E4:8 F4:8 E4:8 D4:8"}]"#,
+        ));
         assert!((f.notes_per_second - 2.0).abs() < EPS);
         // 2/2 at 60: two halves a bar, one second each.
         let f = features(&meter("2/2", 60, r#"[{"RH":"C4:2 D4:2"}]"#));
@@ -521,28 +706,66 @@ mod tests {
     #[test]
     fn features_of_twinkle() {
         let f = features(&song("C", 96, TWINKLE));
-        assert_eq!((f.range, f.distinct_pitches, f.hands, f.max_leap), (9, 6, 1, 7));
-        assert_eq!((f.fastest, f.distinct_durations, f.unique_bars), (0.25, 2, 4));
+        assert_eq!(
+            (f.range, f.distinct_pitches, f.hands, f.max_leap),
+            (9, 6, 1, 7)
+        );
+        assert_eq!(
+            (f.fastest, f.distinct_durations, f.unique_bars),
+            (0.25, 2, 4)
+        );
         assert_eq!(f.shifts_per_bar, 0.5, "C-G, then D-A, then C again");
-        assert_eq!((f.out_of_key_per_bar, f.black_keys_per_bar, f.key_signature), (0.0, 0.0, 0));
+        assert_eq!(
+            (f.out_of_key_per_bar, f.black_keys_per_bar, f.key_signature),
+            (0.0, 0.0, 0)
+        );
         assert_eq!(f.ledger_per_bar, 0.75, "three C4s on a ledger line");
     }
 
     #[test]
     fn rhythm_features() {
-        let f = features(&song("C", 90, r#"[{"RH":"C4:8 D4:4 E4:8 F4:4. G4:16 G4:16"},{"RH":"r:4 C4:4 {tie} C4:2"}]"#));
+        let f = features(&song(
+            "C",
+            90,
+            r#"[{"RH":"C4:8 D4:4 E4:8 F4:4. G4:16 G4:16"},{"RH":"r:4 C4:4 {tie} C4:2"}]"#,
+        ));
         assert_eq!(f.fastest, 1.0 / 16.0);
-        assert_eq!(f.syncopations_per_bar, 0.5, "D4 on the and of 1 crosses beat 2");
-        assert_eq!((f.dotted_per_bar, f.ties_per_bar, f.rests_per_bar), (0.5, 0.5, 0.5));
-        let t = features(&song("C", 90, r#"[{"RH":"C4:1/12 D4:1/12 E4:1/12 F4:2."}]"#));
+        assert_eq!(
+            f.syncopations_per_bar, 0.5,
+            "D4 on the and of 1 crosses beat 2"
+        );
+        assert_eq!(
+            (f.dotted_per_bar, f.ties_per_bar, f.rests_per_bar),
+            (0.5, 0.5, 0.5)
+        );
+        let t = features(&song(
+            "C",
+            90,
+            r#"[{"RH":"C4:1/12 D4:1/12 E4:1/12 F4:2."}]"#,
+        ));
         assert_eq!(t.tuplets_per_bar, 3.0);
     }
 
     #[test]
     fn coordination_and_texture() {
-        let f = features(&song("C", 90, r#"[{"RH":"E4:4 D4:4 C4:2","LH":"C3E3G3:2 G2:4 G2:4"}]"#));
-        assert_eq!((f.hands, f.together_per_bar, f.onsets_per_bar), (2, 2.0, 4.0));
-        assert_eq!((f.max_notes_at_once, f.chords_per_bar, f.chord_hands, f.max_stretch), (3, 1.0, 1, 7));
+        let f = features(&song(
+            "C",
+            90,
+            r#"[{"RH":"E4:4 D4:4 C4:2","LH":"C3E3G3:2 G2:4 G2:4"}]"#,
+        ));
+        assert_eq!(
+            (f.hands, f.together_per_bar, f.onsets_per_bar),
+            (2, 2.0, 4.0)
+        );
+        assert_eq!(
+            (
+                f.max_notes_at_once,
+                f.chords_per_bar,
+                f.chord_hands,
+                f.max_stretch
+            ),
+            (3, 1.0, 1, 7)
+        );
     }
 
     // Monotonicity: each change adds difficulty and must never lower the level.
@@ -552,8 +775,16 @@ mod tests {
         // Regression: splitting LH onsets into "together" and "independent" let
         // this extra RH note lower coordination.
         let lh = "C3:4 C3:4 C3:4 C3:4";
-        let a = song("C", 96, &format!(r#"[{{"RH":"C4:4 D4:4 E4:2","LH":"{lh}"}}]"#));
-        let b = song("C", 96, &format!(r#"[{{"RH":"C4:4 D4:4 E4:4 F4:4","LH":"{lh}"}}]"#));
+        let a = song(
+            "C",
+            96,
+            &format!(r#"[{{"RH":"C4:4 D4:4 E4:2","LH":"{lh}"}}]"#),
+        );
+        let b = song(
+            "C",
+            96,
+            &format!(r#"[{{"RH":"C4:4 D4:4 E4:4 F4:4","LH":"{lh}"}}]"#),
+        );
         let (sa, sb) = (skills(&features(&a)), skills(&features(&b)));
         assert!(sb[5] >= sa[5], "coordination {} < {}", sb[5], sa[5]);
         // The other skills move too (the half note becomes two quarters), so only
@@ -563,8 +794,17 @@ mod tests {
     #[test]
     fn sixteenths_never_lower_the_level() {
         let base = song("C", 96, TWINKLE);
-        let fast = song("C", 96, &TWINKLE.replacen("C4:4 C4:4 G4:4", "C4:16 D4:16 E4:16 D4:16 C4:4 G4:4", 1));
-        assert!(level(&fast) > level(&base), "{} vs {}", level(&fast), level(&base));
+        let fast = song(
+            "C",
+            96,
+            &TWINKLE.replacen("C4:4 C4:4 G4:4", "C4:16 D4:16 E4:16 D4:16 C4:4 G4:4", 1),
+        );
+        assert!(
+            level(&fast) > level(&base),
+            "{} vs {}",
+            level(&fast),
+            level(&base)
+        );
     }
 
     #[test]
@@ -581,7 +821,10 @@ mod tests {
         let both = song("C", 96, &lh);
         assert!(level(&both) > level(&base));
         let chords = song("C", 96, &TWINKLE.replace(r#""}"#, r#"","LH":"C3E3G3:1"}"#));
-        assert!(level(&chords) > level(&both), "Twinkle with LH chords is harder than Twinkle with LH notes");
+        assert!(
+            level(&chords) > level(&both),
+            "Twinkle with LH chords is harder than Twinkle with LH notes"
+        );
     }
 
     #[test]
@@ -590,7 +833,12 @@ mod tests {
         let fast = song("C", 132, TWINKLE);
         assert!(level(&fast) > level(&slow));
         // Random additions: every one keeps the level the same or higher.
-        let adds = ["C4:8 C4:8 G4:4 G4:4", "C4:4 C4:4 G4:4 G#4:4", "C4:4 C4:4 G4:4 G5:4", "C4:4 C4:4 G4B4:4 G4:4"];
+        let adds = [
+            "C4:8 C4:8 G4:4 G4:4",
+            "C4:4 C4:4 G4:4 G#4:4",
+            "C4:4 C4:4 G4:4 G5:4",
+            "C4:4 C4:4 G4B4:4 G4:4",
+        ];
         let base = level(&slow);
         for a in adds {
             let s = song("C", 72, &TWINKLE.replacen("C4:4 C4:4 G4:4 G4:4", a, 1));
@@ -600,26 +848,50 @@ mod tests {
 
     #[test]
     fn report_has_reasons_and_hardest_bars() {
-        let s = song("C", 96, &TWINKLE.replacen("A4:4 A4:4 G4:2", "A4:16 B4:16 C5:16 B4:16 A4:8 G4:8 G4:2", 1));
+        let s = song(
+            "C",
+            96,
+            &TWINKLE.replacen(
+                "A4:4 A4:4 G4:2",
+                "A4:16 B4:16 C5:16 B4:16 A4:8 G4:8 G4:2",
+                1,
+            ),
+        );
         let r = evaluate(&s, &Model::builtin());
         assert_eq!(r.hardest_bars[0].bar, 2);
         assert_eq!(r.hardest_bars.len(), 3);
         assert!((1..=10).contains(&r.level));
-        assert!(r.reasons.iter().any(|x| x.starts_with("rhythm:") && x.contains("sixteenth")), "{:?}", r.reasons);
+        assert!(
+            r.reasons
+                .iter()
+                .any(|x| x.starts_with("rhythm:") && x.contains("sixteenth")),
+            "{:?}",
+            r.reasons
+        );
     }
 
     #[test]
     fn node_fit_is_the_earliest_node_by_the_rubric() {
-        let five = TaughtSet::from_song(&song("C", 90, r#"[{"RH":"C4:4 D4:4 E4:4 F4:4"},{"RH":"G4:1"}]"#)).unwrap();
+        let five = TaughtSet::from_song(&song(
+            "C",
+            90,
+            r#"[{"RH":"C4:4 D4:4 E4:4 F4:4"},{"RH":"G4:1"}]"#,
+        ))
+        .unwrap();
         let mut six = five.clone();
         six.merge(&TaughtSet::from_song(&song("C", 90, r#"[{"RH":"A4:4 G4:4 C4:2"}]"#)).unwrap());
-        let nodes = vec![("c/five".to_string(), five.clone()), ("c/six".to_string(), six)];
+        let nodes = vec![
+            ("c/five".to_string(), five.clone()),
+            ("c/six".to_string(), six),
+        ];
         let tw = song("C", 96, TWINKLE);
         assert_eq!(node_fit(&tw, &nodes), Some("c/six"));
         assert!(exceeds(&tw, &five, None).iter().any(|e| e.contains("A4")));
         let sharp = song("C", 96, &TWINKLE.replace("F4:4 F4:4", "F#4:4 F#4:4"));
         assert_eq!(node_fit(&sharp, &nodes), None);
         let env = [0.0; 8];
-        assert!(exceeds(&tw, &nodes[1].1, Some(&env)).iter().any(|e| e.starts_with("reading")));
+        assert!(exceeds(&tw, &nodes[1].1, Some(&env))
+            .iter()
+            .any(|e| e.starts_with("reading")));
     }
 }

@@ -1,6 +1,6 @@
 """Raw PDMX metadata counts quoted in docs/research/melody-corpora.md.
 
-    python -m melody_model.pdmx_stats      # reads data/melody/raw/pdmx/PDMX.csv (sha256 pinned in download.py)
+python -m melody_model.pdmx_stats      # reads data/melody/raw/pdmx/PDMX.csv (sha256 pinned in download.py)
 """
 
 from __future__ import annotations
@@ -31,7 +31,12 @@ def main(argv):
                 c["no_license_conflict and deduplicated"] += 1
         else:
             c["license_conflict"] += 1
-    print(json.dumps({"counts": c, "license (all rows)": lic_all, "license (no_license_conflict)": lic_subset}, indent=1))
+    print(
+        json.dumps(
+            {"counts": c, "license (all rows)": lic_all, "license (no_license_conflict)": lic_subset},
+            indent=1,
+        )
+    )
 
 
 if __name__ == "__main__":

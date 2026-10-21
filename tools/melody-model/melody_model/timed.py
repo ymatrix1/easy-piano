@@ -114,7 +114,9 @@ def notes_to_song(notes, beats: list[float], downbeats: list[int], beats_per_bar
         raise Unsupported("no notes")
     starts = sorted(slots)
     bar_len = beats_per_bar * GRID
-    origin = first_bar - ((first_bar - starts[0]) // bar_len + 1) * bar_len if starts[0] < first_bar else first_bar
+    origin = (
+        first_bar - ((first_bar - starts[0]) // bar_len + 1) * bar_len if starts[0] < first_bar else first_bar
+    )
     last = max(b for _, b in slots.values())
     n_bars = (last - origin + bar_len - 1) // bar_len
     line: list[tuple[int, int, int | None]] = []  # (start, end, pitch|None)
@@ -165,7 +167,9 @@ def _pitch(midi: int, names) -> Pitch:
     return Pitch(name[0], name[1:], octave)
 
 
-def performed_song(path: str | Path, track: str | int = 0, key: str | None = None, meter: str = "4/4") -> dict:
+def performed_song(
+    path: str | Path, track: str | int = 0, key: str | None = None, meter: str = "4/4"
+) -> dict:
     """One melody track of a performed MIDI file, tempo estimated from its onsets.
 
     meter: the dataset's stated meter ("2/4", "3/4" or "4/4"); bar 1 starts at the

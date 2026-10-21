@@ -47,13 +47,19 @@ const _instruments = {
 };
 
 /// Virtuosity Drums one-shots (CC0) by General MIDI percussion number.
+/// Several hits per drum play in turn (round robin) so repeated notes don't
+/// sound like a machine gun.
 const _drumFiles = {
-  36: 'kick',
-  38: 'snare',
-  42: 'hihat_closed',
-  46: 'hihat_open',
-  49: 'crash',
+  36: ['kick', 'kick_2', 'kick_3'],
+  38: ['snare', 'snare_2', 'snare_3'],
+  42: ['hihat_closed', 'hihat_closed_2', 'hihat_closed_3'],
+  46: ['hihat_open'],
+  49: ['crash'],
 };
+
+/// A lighter closed hi-hat hit, used below this velocity (off-beat hats).
+const _softHatFile = 'hihat_closed_soft';
+const _softHatBelow = 72;
 
 /// Instrument each score part needs, for [PianoSynth.loadParts].
 const _partInstrument = {
@@ -87,7 +93,9 @@ class _WebPianoSynth implements PianoSynth {
 
   /// instrument -> pitch -> decoded sample.
   final _samples = <String, Map<int, web.AudioBuffer>>{};
-  final _drums = <int, web.AudioBuffer>{};
+  final _drums = <int, List<web.AudioBuffer>>{};
+  final _drumTurn = <int, int>{};
+  web.AudioBuffer? _softHat;
   final _loads = <String, Future<void>>{};
   final _voices = <int, _Voice>{};
   final _scheduled = <_Voice>[];
@@ -141,9 +149,14 @@ class _WebPianoSynth implements PianoSynth {
         web.AudioContext(
           web.AudioContextOptions(latencyHint: 'interactive'.toJS),
         );
+    // Soft clipper on the very end: no look-ahead (no latency), catches the
+    // learner's loud chords that skip the limiter.
+    final clip = ctx.createWaveShaper()
+      ..curve = _softClipCurve()
+      ..connect(ctx.destination);
     final out = _out = ctx.createGain()
       ..gain.value = 1.0
-      ..connect(ctx.destination);
+      ..connect(clip);
     // Brick-wall-ish limiter keeps peaks under about -1 dBFS.
     final limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -3;
@@ -173,6 +186,24 @@ class _WebPianoSynth implements PianoSynth {
     return ctx;
   }
 
+  /// Linear up to 0.7, then a smooth knee that never exceeds 0.98.
+  static JSFloat32Array _softClipCurve() {
+    const n = 2049;
+    final curve = Float32List(n);
+    for (var i = 0; i < n; i++) {
+      final x = i / (n - 1) * 2 - 1;
+      final a = x.abs();
+      final y = a <= 0.7 ? a : 0.7 + 0.28 * _tanh((a - 0.7) / 0.28);
+      curve[i] = x < 0 ? -y : y;
+    }
+    return curve.toJS;
+  }
+
+  static double _tanh(double x) {
+    final e = math.exp(2 * x);
+    return (e - 1) / (e + 1);
+  }
+
   /// Stereo decaying noise, darker as it decays: a plain room/hall tail.
   static web.AudioBuffer _impulseResponse(
     web.BaseAudioContext ctx,
@@ -198,7 +229,8 @@ class _WebPianoSynth implements PianoSynth {
   }
 
   @override
-  Future<void> load() => _loadInstrument('piano');
+  Future<void> load() =>
+      Future.wait([_loadInstrument('piano'), _loadInstrument('click')]);
 
   @override
   Future<void> loadParts(Iterable<String> parts) => Future.wait([
@@ -216,25 +248,73 @@ class _WebPianoSynth implements PianoSynth {
   Future<void> _fetchInstrument(String name) async {
     final watch = Stopwatch()..start();
     final ctx = _context();
-    if (name == 'drums') {
+    if (name == 'click') {
+      // Recorded cross-stick for the metronome (Virtuosity Drums, CC0).
       await Future.wait([
-        for (final MapEntry(key: gm, value: file) in _drumFiles.entries)
-          _decode(ctx, 'assets/band/drums/$file.mp3').then((b) {
-            if (b != null) _drums[gm] = b;
-          }),
+        _decode(ctx, 'assets/band/drums/click.mp3').then((b) => _click = b),
+        _decode(
+          ctx,
+          'assets/band/drums/click_accent.mp3',
+        ).then((b) => _clickAccent = b),
       ]);
       return;
     }
+    if (name == 'drums') {
+      final hits = <int, List<web.AudioBuffer?>>{
+        for (final MapEntry(key: gm, value: files) in _drumFiles.entries)
+          gm: List.filled(files.length, null),
+      };
+      await Future.wait([
+        for (final MapEntry(key: gm, value: files) in _drumFiles.entries)
+          for (var i = 0; i < files.length; i++)
+            _decode(
+              ctx,
+              'assets/band/drums/${files[i]}.mp3',
+            ).then((b) => hits[gm]![i] = b),
+        _decode(
+          ctx,
+          'assets/band/drums/$_softHatFile.mp3',
+        ).then((b) => _softHat = b),
+      ]);
+      hits.forEach((gm, l) {
+        final ok = l.whereType<web.AudioBuffer>().toList();
+        if (ok.isNotEmpty) _drums[gm] = ok;
+      });
+      return;
+    }
     final map = _samples.putIfAbsent(name, () => {});
+    final loop = _instruments[name]!.loop;
     // All files of an instrument in parallel; decoding order doesn't matter.
     await Future.wait([
       for (final (pitch, path) in _instruments[name]!.files)
         _decode(ctx, path).then((b) {
-          if (b != null) map[pitch] = b;
+          if (b == null) return;
+          if (loop != null) _crossfadeLoop(b, loop.$1, loop.$2);
+          map[pitch] = b;
         }),
     ]);
     _nearestCache.clear();
     if (name == 'piano') _loadMs ??= watch.elapsedMilliseconds;
+  }
+
+  /// Blends the end of the loop into the audio just before its start
+  /// (equal-power, 150 ms), so the jump from loop end back to loop start is
+  /// seamless: no click, no level dip.
+  static void _crossfadeLoop(web.AudioBuffer buf, double from, double to) {
+    final rate = buf.sampleRate;
+    final start = (from * rate).round();
+    final end = math.min((to * rate).round(), buf.length);
+    final fade = math.min((0.15 * rate).round(), start);
+    for (var c = 0; c < buf.numberOfChannels; c++) {
+      final data = buf.getChannelData(c).toDart;
+      for (var i = 0; i < fade; i++) {
+        final w = i / fade * math.pi / 2;
+        final tail = end - fade + i;
+        data[tail] =
+            data[tail] * math.cos(w) + data[start - fade + i] * math.sin(w);
+      }
+      buf.copyToChannel(data.toJS, c);
+    }
   }
 
   /// Decodes one bundled MP3; a missing file leaves a gap that neighbours
@@ -362,12 +442,23 @@ class _WebPianoSynth implements PianoSynth {
     _scheduled.add(v);
   }
 
-  final _clicks = <web.OscillatorNode>[];
+  final _clicks = <web.AudioScheduledSourceNode>[];
+  web.AudioBuffer? _click;
+  web.AudioBuffer? _clickAccent;
 
   @override
   void click(double startSec, {bool accent = false}) {
     final ctx = _context();
     final at = _at(startSec);
+    final sample = accent ? _clickAccent : _click;
+    if (sample != null) {
+      final src = ctx.createBufferSource()..buffer = sample;
+      src.connect(_out!);
+      src.start(at);
+      _clicks.add(src);
+      return;
+    }
+    // Fallback until the samples decode: a short beep.
     final osc = ctx.createOscillator()
       ..type = 'square'
       ..frequency.value = accent ? 1600 : 1100;
@@ -434,8 +525,13 @@ class _WebPianoSynth implements PianoSynth {
 
   @override
   void drum(int gmPitch, double startSec, {int velocity = 80}) {
-    final buf = _drums[gmPitch];
-    if (buf == null) return;
+    final hits = _drums[gmPitch];
+    if (hits == null) return;
+    final turn = _drumTurn[gmPitch] = (_drumTurn[gmPitch] ?? -1) + 1;
+    final soft = _softHat;
+    final buf = gmPitch == 42 && velocity < _softHatBelow && soft != null
+        ? soft
+        : hits[turn % hits.length];
     final ctx = _context();
     final at = _at(startSec);
     if (gmPitch == 42 || gmPitch == 46) {
@@ -568,12 +664,96 @@ class _WebPianoSynth implements PianoSynth {
       final buf = await off.startRendering().toDart;
       out[solo ?? 'mix'] = _levels(buf);
     }
+    out['click'] = _levels(await _renderOffline(0.5, (s) => s.click(0.1)));
+    out['clickAccent'] = _levels(
+      await _renderOffline(0.5, (s) => s.click(0.1, accent: true)),
+    );
+    // Headroom of the learner's own keys (no limiter): a loud two-hand chord.
+    out['liveChord'] = _levels(
+      await _renderOffline(3, (synth) {
+        for (final p in [36, 48, 52, 55, 60, 64, 67, 72]) {
+          synth.schedule(p, 0.1, 2, velocity: 127, force: true, part: 'live');
+        }
+      }),
+    );
+    // Loop seams: a held pad note crosses the loop point twice; report the
+    // loudest 10 ms window jump in dB (a click shows as a spike).
+    // C4 is an exact sample, so seams fall at 0.1 + 2.9 s and every 2.4 s.
+    final pad = await _renderOffline(8, (synth) => synth.pad(60, 0.1, 7));
+    out['padBodyJumpDb'] = _maxJumpDb(pad, fromSec: 1, toSec: 2.9);
+    out['padSeamJumpDb'] = math.max(
+      _maxJumpDb(pad, fromSec: 2.95, toSec: 3.06),
+      _maxJumpDb(pad, fromSec: 5.35, toSec: 5.46),
+    );
+    // A click is a sample step much larger than the waveform's usual steps.
+    out['padBodyStep'] = _maxStep(pad, 1, 2.9);
+    out['padSeamStep'] = math.max(
+      _maxStep(pad, 2.99, 3.01),
+      _maxStep(pad, 5.39, 5.41),
+    );
     return out;
+  }
+
+  Future<web.AudioBuffer> _renderOffline(
+    double seconds,
+    void Function(_WebPianoSynth synth) play,
+  ) {
+    const rate = 44100;
+    final off = web.OfflineAudioContext(
+      web.OfflineAudioContextOptions(
+        numberOfChannels: 2,
+        length: (seconds * rate).ceil(),
+        sampleRate: rate,
+      ),
+    );
+    play(_WebPianoSynth(off).._copySamplesFrom(this));
+    return off.startRendering().toDart;
+  }
+
+  /// Largest sample-to-sample step on channel 0 between two times.
+  static double _maxStep(web.AudioBuffer buf, double fromSec, double toSec) {
+    final data = buf.getChannelData(0).toDart;
+    final from = (fromSec * buf.sampleRate).round();
+    final to = math.min(data.length, (toSec * buf.sampleRate).round());
+    var worst = 0.0;
+    for (var i = from + 1; i < to; i++) {
+      worst = math.max(worst, (data[i] - data[i - 1]).abs());
+    }
+    return worst;
+  }
+
+  /// Largest level change between neighbouring 10 ms windows, in dB.
+  static double _maxJumpDb(
+    web.AudioBuffer buf, {
+    required double fromSec,
+    required double toSec,
+  }) {
+    final data = buf.getChannelData(0).toDart;
+    final win = (buf.sampleRate * 0.01).round();
+    double? prev;
+    var worst = 0.0;
+    for (
+      var i = (fromSec * buf.sampleRate).round();
+      i + win < math.min(data.length, (toSec * buf.sampleRate).round());
+      i += win
+    ) {
+      var e = 0.0;
+      for (var k = i; k < i + win; k++) {
+        e += data[k] * data[k];
+      }
+      final db = 10 * math.log(e / win + 1e-12) / math.ln10;
+      if (prev != null) worst = math.max(worst, (db - prev).abs());
+      prev = db;
+    }
+    return worst;
   }
 
   void _copySamplesFrom(_WebPianoSynth other) {
     other._samples.forEach((k, v) => _samples[k] = {...v});
     _drums.addAll(other._drums);
+    _softHat = other._softHat;
+    _click = other._click;
+    _clickAccent = other._clickAccent;
     for (final k in [...other._samples.keys, 'drums']) {
       _loads[k] = Future.value();
     }

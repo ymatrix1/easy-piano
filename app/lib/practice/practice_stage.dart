@@ -832,7 +832,8 @@ class _PracticeStageState extends State<PracticeStage>
                 tooltip: widget.showKeyboard
                     ? AppLocalizations.of(context).hideKeyboard
                     : AppLocalizations.of(context).showKeyboard,
-                onPressed: widget.onToggleKeyboard,
+                // The keyboard is hidden for the whole demo; a toggle then would do nothing.
+                onPressed: _demo ? null : widget.onToggleKeyboard,
                 icon: Icon(
                   widget.showKeyboard ? Icons.piano : Icons.piano_off,
                   color: StagePalette.text,
@@ -965,7 +966,7 @@ class _PracticeStageState extends State<PracticeStage>
                   },
                 ),
               ),
-              if (widget.showKeyboard)
+              if (widget.showKeyboard && !_demo)
                 SizedBox(
                   // Taller on big screens: about a quarter of the height.
                   height: (MediaQuery.sizeOf(context).height * 0.24).clamp(
