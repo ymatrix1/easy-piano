@@ -27,6 +27,8 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted; superseded in part by D21 |
 | [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | proposed |
 | [D21](#d21-train-the-melody-model-on-everything-we-can-flagged-and-style-tagged) | 2026-10-20 | Train on everything we can, flagged and style-tagged; supersedes part of D19 | accepted |
+| [D24](#d24-melody-model-weights-licence-storage-and-training-data-disclosure) | 2026-10-21 | Melody-model weights: licence, storage, disclosure | proposed |
+| [D25](#d25-melody-model-decoding-masks-cover-the-taught-set-the-rubric-covers-patterns-and-fingering) | 2026-10-21 | Melody-model decoding: masks vs rubric | proposed |
 
 ## Accepted
 
@@ -255,3 +257,21 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Shared-mode paths (browser, `cpal`) cannot go below 10 ms; exclusive can. The cost is a native sampler, a bridge call for note on/off and per-platform backends, so it should be justified by a measured miss.
 - **Alternatives:** `miniaudio` (same exclusive backend, permissive licence, not yet measured); `flutter_soloud` (smallest change, not yet measured); stay web-only and advise wired or ASIO-class audio devices; Oboe or CoreAudio directly instead of `cpal`.
 - **Impact:** New `audio/` crate and a `PianoSynth` native implementation. Samples decoded to PCM at load. Exclusive mode blocks other apps from the device while held. Needs a Windows loopback test, an Android device and an Apple device before backends are final.
+
+### D24. Melody-model weights: licence, storage and training-data disclosure
+
+- **Status:** proposed
+- **Context:** Model `melody-model-v1` (PR #47, model card `docs/models/melody-v1.md`) was trained under D21: flagged PDMX tunes (pop, film, game, licence-conflict scores), NMD transcriptions (D18), CC-BY-SA Mutopia pieces and CC-BY dataset terms (PDMX). Whether weights are an adaptation of their training data is unsettled (OQ10).
+- **Decision:** (1) Weights are not committed to git; they are published as a GitHub Release asset (`melody-model-v1`), with sha256 for every file committed in `tools/melody-model/releases/melody-model-v1.json`; code verifies the hash before use. (2) The release and the model card disclose every corpus, the flags, their counts and the known risk. (3) Weights are released under **CC-BY-SA-4.0** with attribution to the training sources (the most restrictive licence among the openly licensed sources), and **no claim** that they are free of third-party rights. (4) Generated tunes stay CC0-1.0 (D17) and ship only after the rubric, the similarity filter (`content similar` < 0.5 against the training set) and human review.
+- **Why:** Keeps the repository small and history clean; checksums make the shipped model auditable; CC-BY-SA is the safe choice if weights are adaptations; full disclosure lets anyone judge the risk the user accepted in D21.
+- **Alternatives:** CC0 or MIT weights (simplest, but wrong if weights are adaptations of CC-BY-SA data); Git LFS (quota, history weight); keep weights private and ship only generated tunes (no browser demo, no reuse); retrain without flagged or CC-BY-SA data before release.
+- **Impact:** A release step (manual, user-confirmed) per model version; the app or demo fetches from the release URL or CI copies the files into the web build, verifying sha256. Known risk: possible memorised copyrighted melodies in the weights; the similarity filter covers generated output, not the weights themselves.
+
+### D25. Melody-model decoding: masks cover the taught set, the rubric covers patterns and fingering
+
+- **Status:** proposed
+- **Context:** D20 says decoding is masked from the node spec. The generator (PR #47) masks the step grammar, taught pitches per hand, the taught maximum leap, taught durations that fit the bar, rest values and chord size. It does not generate fingering and does not force `required` patterns (e.g. "uses F#", "a dotted rhythm"); 30% of candidates miss one.
+- **Decision:** Keep masks for what a single step can decide; leave `required` patterns and finger spans to the rubric gate, which drops failing candidates (both gates fail closed). Fingering is added later by the arranger, not by the model.
+- **Why:** A per-step mask cannot know that a later bar will add a required note; forcing patterns early distorts melodies. Filtering costs only extra samples (16 candidates per node, 70% pass).
+- **Alternatives:** Pattern-aware constrained decoding (force a required pitch or rhythm in the last bars when still missing); a learned fingering head.
+- **Impact:** More samples per node; pass rate reported per run. Follow-up: steer decoding toward missing patterns near the end of a tune.
