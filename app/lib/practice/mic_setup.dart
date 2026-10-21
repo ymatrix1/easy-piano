@@ -180,7 +180,13 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
   Future<void> _pickDevice(String? id) async {
     await _mic.selectDevice(id);
     _listen();
-    if (mounted) setState(() => _heard = null);
+    // Latency is stored per device: a new input needs its own calibration.
+    if (mounted) {
+      setState(() {
+        _heard = null;
+        _cal = _mic.offsetMs != null ? _Cal.done : _Cal.idle;
+      });
+    }
   }
 
   void _calibrate() {

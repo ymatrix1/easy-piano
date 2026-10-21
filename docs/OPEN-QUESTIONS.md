@@ -11,3 +11,4 @@
 | OQ7 | Does Flutter Web + flutter_rust_bridge wasm meet the latency budget? | Phase 0 spike answers |
 | OQ9 | How do we detect a learner's current level (placement) and choose their start node? | Until answered every course and node stays open; star gates score progress but never lock. Draft: [specs/placement.md](specs/placement.md). Bean piano-vg8h |
 | OQ8 | How far do we mirror Simply Piano's course list vs design our own order? | Proposal in [curriculum](specs/curriculum.md) |
+| OQ11 | Accept mic timing logic in Dart instead of Rust `core` (rule 7)? | [D24](DECISIONS.md): onset/chord detection, calibration median and the MIDI/mic echo window run in Dart on web (AudioWorklet → Dart, no per-chunk FFI). Grading stays in `core`. Options: accept for web, or port `NoteDetector` to `core` with the native audio thread. D24 stays proposed until answered |
