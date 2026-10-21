@@ -300,9 +300,11 @@ impl Session {
         let all = group_targets(&song.timeline(), self.settings.hand);
         let n = self.targets.len();
         if all.len() < n
-            || self.targets.iter().zip(&all).any(|(a, b)| {
-                (a.beat - b.beat).abs() > 1e-9 || a.pitches != b.pitches
-            })
+            || self
+                .targets
+                .iter()
+                .zip(&all)
+                .any(|(a, b)| (a.beat - b.beat).abs() > 1e-9 || a.pitches != b.pitches)
         {
             return Err("extended song does not start with the current targets".into());
         }
@@ -1016,7 +1018,9 @@ mod tests {
         longer.bars.push(longer.bars[0].clone());
         assert_eq!(s.extend(&longer).unwrap(), 4);
         assert_eq!(s.targets().len(), first + 4);
-        assert!(s.targets()[..first].iter().all(|t| matches!(t.state, ChordState::Hit { .. })));
+        assert!(s.targets()[..first]
+            .iter()
+            .all(|t| matches!(t.state, ChordState::Hit { .. })));
         let f = s.tick(9_100_000);
         assert!(!f.done && f.cursor as usize == first);
         assert_eq!(f.playhead_beat, s.targets()[first].beat);
