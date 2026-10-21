@@ -53,7 +53,9 @@ def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[Unsupported
     """Like convert_file but collects per-tune errors (always Unsupported) instead of raising."""
     path = Path(path)
     try:
-        parsed = m21.converter.parse(str(path), forceSource=True, quantizePost=path.suffix.lower() in (".mid", ".midi"))
+        parsed = m21.converter.parse(
+            str(path), forceSource=True, quantizePost=path.suffix.lower() in (".mid", ".midi")
+        )
     except Exception as e:  # music21 raises many types on malformed input
         return [], [Unsupported(f"parse error: {type(e).__name__}")]
     scores = list(parsed.scores) if isinstance(parsed, m21.stream.Opus) else [parsed]
@@ -92,7 +94,9 @@ def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int 
     counts = {len(b) for b in per_hand.values()}
     if len(counts) != 1:
         raise Unsupported("hands have different bar counts")
-    bars = [{h: format_hand(per_hand[h][i]) for h in ("RH", "LH") if h in per_hand} for i in range(counts.pop())]
+    bars = [
+        {h: format_hand(per_hand[h][i]) for h in ("RH", "LH") if h in per_hand} for i in range(counts.pop())
+    ]
     md = score.metadata
     return {
         "title": (md.title if md else None) or "",
@@ -130,7 +134,10 @@ def _time_sig(score) -> str:
     main = per_measure[min(per_measure)]
     for ts in per_measure.values():
         # a shorter bar (e.g. 3/8 or 2/4 before a repeat in 6/8) is a short bar, not a meter change
-        if ts.barDuration.quarterLength >= main.barDuration.quarterLength and ts.ratioString != main.ratioString:
+        if (
+            ts.barDuration.quarterLength >= main.barDuration.quarterLength
+            and ts.ratioString != main.ratioString
+        ):
             raise Unsupported(f"time signatures {sorted({t.ratioString for t in per_measure.values()})}")
     t = main.ratioString
     if t not in tk.TIME_SIGS:
@@ -179,7 +186,9 @@ def _hand_bars(part, bar_ql: Fraction) -> list[list[Event]]:
         if pad_left:
             events += _rests(pad_left)
         events += _bar_events(_top_voice(m), n + 1)
-        raw.append((events, sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events), Fraction(0))))
+        raw.append(
+            (events, sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events), Fraction(0)))
+        )
     bars: list[list[Event]] = []
     i = 0
     while i < len(raw):
@@ -246,7 +255,9 @@ def _at_section_end(m, measures, n) -> bool:
     """Short bars before a repeat or double bar (pickup tunes) are padded too."""
     right = m.rightBarline
     nxt = measures[n + 1].leftBarline if n + 1 < len(measures) else None
-    ends = isinstance(right, m21.bar.Repeat) or (right is not None and right.type in ("final", "light-heavy", "double", "heavy-light"))
+    ends = isinstance(right, m21.bar.Repeat) or (
+        right is not None and right.type in ("final", "light-heavy", "double", "heavy-light")
+    )
     return ends or isinstance(nxt, m21.bar.Repeat)
 
 
@@ -323,11 +334,17 @@ def song_to_score(song: dict) -> m21.stream.Score:
                     el = m21.note.Rest(quarterLength=ql)
                 else:
                     names = [p.letter + p.acc.replace("b", "-") + str(p.octave) for p in e.pitches]
-                    el = m21.note.Note(names[0], quarterLength=ql) if len(names) == 1 else m21.chord.Chord(names, quarterLength=ql)
+                    el = (
+                        m21.note.Note(names[0], quarterLength=ql)
+                        if len(names) == 1
+                        else m21.chord.Chord(names, quarterLength=ql)
+                    )
                     for f in e.fingers:  # music21 writes chord fingerings to the notes in this order
                         el.articulations.append(m21.articulations.Fingering(f))
                     if e.tie or tied_in:
-                        el.tie = m21.tie.Tie("continue" if e.tie and tied_in else "start" if e.tie else "stop")
+                        el.tie = m21.tie.Tie(
+                            "continue" if e.tie and tied_in else "start" if e.tie else "stop"
+                        )
                 tied_in = e.tie
                 m.append(el)
             part.append(m)

@@ -68,5 +68,7 @@ def test_abc_multi_tune_file():
     assert twinkle["bars"][:2] == [{"RH": "C4:4 C4:4 G4:4 G4:4"}, {"RH": "A4:4 A4:4 G4:2"}]
     jig = by_title["Pickup Jig"]
     assert (jig["time"], jig["key"]) == ("6/8", "G")
-    assert jig["bars"][0] == {"RH": "r:2 r:8 D4:8"}  # anacrusis padded with leading rests (greedy, longest first)
+    assert jig["bars"][0] == {
+        "RH": "r:2 r:8 D4:8"
+    }  # anacrusis padded with leading rests (greedy, longest first)
     assert jig["bars"][1] == {"RH": "G4:4 A4:8 B4:4 G4:8"}
