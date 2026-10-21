@@ -22,4 +22,30 @@ void main() {
     }
     expect(notes.where((n) => n.leftHand).length, 12);
   });
+
+  test('grand staff leaves a gap between brace, system line and clefs', () {
+    const space = 14.0;
+    final g = StaffPainter.systemLayout(Staves.grand, space);
+    // Brace (x0 = systemX - 1.9 sp, 1.4 sp wide, 0.45 sp stroke) stays
+    // on screen and left of the system line.
+    expect(g.systemX - space * 1.9 - space * 0.225, greaterThan(0));
+    expect(g.systemX - space * 0.5 + space * 0.225, lessThan(g.systemX));
+    expect(g.clefX - g.systemX, closeTo(space, 0.01));
+    expect(g.clefRight, greaterThan(g.clefX + space * 2.7));
+
+    final t = StaffPainter.systemLayout(Staves.treble, space);
+    expect(t.systemX, space * 0.6);
+    expect(t.clefX - t.systemX, closeTo(space, 0.01));
+  });
+
+  test('note cover hides the clef area and clears at the anchor', () {
+    const space = 14.0;
+    final g = StaffPainter.systemLayout(Staves.grand, space);
+    final play = StaffPainter.coverRange(g.clefRight, 104, space, wait: false);
+    expect(play.solid, closeTo(g.clefRight - space, 0.01));
+    expect(play.end, 104); // clear at the play bar
+    final wait = StaffPainter.coverRange(g.clefRight, 96, space, wait: true);
+    expect(wait.solid, 0);
+    expect(wait.end, lessThan(96)); // current note never covered
+  });
 }

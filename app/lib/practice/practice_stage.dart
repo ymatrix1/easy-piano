@@ -152,18 +152,26 @@ class _PracticeStageState extends State<PracticeStage>
 
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
-  static const _waitAnchorBase = 0.10; // page start, as a fraction of the width
   static const _pageTurnAt =
       0.60; // next note past this fraction → slide (reference)
-  static const _playLineBase = 0.12; // play bar right after the clef
+
+  /// Play bar well right of the clefs, as in the reference (rhythm line 480
+  /// design px after the clef on a 1080 px tall layout ≈ 0.28 of the
+  /// width); passed notes ghost under the cover in the gap.
+  static const _playLineBase = 0.28;
+
+  /// Wait-mode page start sits a little left of the play bar (reference:
+  /// static notes 60 design px before the rhythm line).
+  static const _waitAnchorGap = 0.03;
 
   /// Never start notes under the clef: on narrow screens a fraction of the
-  /// width is less than the clef's own width.
+  /// width is less than the clef's own width. The extra 48 px keeps a clear
+  /// gap between clef and play bar on phones.
   static const _clefClearPx = 96.0;
-  double get _waitAnchor =>
-      math.max(_waitAnchorBase, _clefClearPx / _staffWidth);
   double get _playLine =>
-      math.max(_playLineBase, (_clefClearPx + 8) / _staffWidth);
+      math.max(_playLineBase, (_clefClearPx + 48) / _staffWidth);
+  double get _waitAnchor =>
+      math.max(_playLine - _waitAnchorGap, (_clefClearPx + 24) / _staffWidth);
 
   late final PracticeSession _session;
   late final List<StaffNote> _notes;
@@ -191,6 +199,7 @@ class _PracticeStageState extends State<PracticeStage>
   final _feedback = <FeedbackMark>[]; // play-along error animations
   List<int> _targetStates = const [];
   late final Ticker _ticker;
+  late final double _introStartSec; // notes rise in (reference intro)
   late final AnimationController _pageAnim;
   Animation<double>? _pageTween;
   StreamSubscription<NoteEvent>? _sub;
@@ -282,6 +291,7 @@ class _PracticeStageState extends State<PracticeStage>
       (e) => _onNote(e.pitch, e.on, e.timestampMs),
     );
     _ticker = createTicker((_) => _tick())..start();
+    _introStartSec = _nowSec;
   }
 
   List<BackingNote> _companionNotes() => [
@@ -475,6 +485,9 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _tick() {
+    if (_nowSec - _introStartSec < 1.1 || _nowSec < _colorFadeUntil) {
+      _marks.value++;
+    }
     if (_finished || _paused) return;
     if (_demo) {
       final beat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
@@ -590,6 +603,12 @@ class _PracticeStageState extends State<PracticeStage>
     }
   }
 
+  /// Note colour changes (hit, miss, current) tween linearly over this long
+  /// (reference: `Actions.color(c, 0.2f)` on note heads).
+  static const _colorFadeSec = 0.2;
+  final _colorFade = <int, (Color from, Color to, double since)>{};
+  double _colorFadeUntil = 0;
+
   /// Training: a section was judged. On a replay, restart the clock one
   /// count-in before the section at the new tempo (reference: seek back to
   /// the section start; practice runs at 75%).
@@ -701,6 +720,28 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   Color _noteColor(int i) {
+    final to = _targetNoteColor(i);
+    final now = _nowSec;
+    final f = _colorFade[i];
+    if (f == null) {
+      _colorFade[i] = (to, to, -1e9);
+      return to;
+    }
+    final (from, prevTo, since) = f;
+    if (to != prevTo) {
+      _colorFade[i] = (_lerpFade(from, prevTo, since, now), to, now);
+      _colorFadeUntil = now + _colorFadeSec;
+      return _colorFade[i]!.$1;
+    }
+    return _lerpFade(from, to, since, now);
+  }
+
+  static Color _lerpFade(Color from, Color to, double since, double now) {
+    final t = ((now - since) / _colorFadeSec).clamp(0.0, 1.0);
+    return Color.lerp(from, to, t)!;
+  }
+
+  Color _targetNoteColor(int i) {
     final ti = _noteTarget[i];
     switch (_targetStates[ti]) {
       case 1:
@@ -1089,6 +1130,7 @@ class _PracticeStageState extends State<PracticeStage>
                           bursts: _bursts,
                           burstColor: StagePalette.burst,
                           clockSec: () => _nowSec,
+                          introStartSec: _introStartSec,
                           repaintAlso: _marks,
                         ),
                       ),

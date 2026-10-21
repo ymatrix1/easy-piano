@@ -116,6 +116,26 @@ Follow-ups: the reference's wait-for-note practice variant (`p350nj/C9638d0.java
 4. Replace videos with scenes; add a real `quiz` stage they lack.
 5. Per-device latency calibration is needed; ship a calibration screen.
 
+## Staff note cover
+
+Checked 2026-10-21, local jadx sources (`references/simply_piano_jadx_deobf_33_7`, git-ignored). Mechanics only.
+
+| What | Reference behaviour | Where |
+|---|---|---|
+| Passed notes | Not faded themselves. Sheet `draw()` grabs the rendered background (band, staff, clefs) with `glReadPixels` once, builds an alpha mask and draws that copy **over** the notes group | `p380oj/C10032s0.java:197-232` |
+| Cover alpha, play-along | 255 from x=0 to clef-images right edge minus 50 px, then linear 1→0 to the header width | same, loop at `:211-222` |
+| Cover alpha, static/wait stage | Linear 1→0 from x=0 to play line minus half a notehead | same, `f32361g` branch `:204-208` |
+| Dim cover | Second copy at max alpha 127, starts transparent, `fadeIn(0.2f)` when a highlight overlay opens | `:226-231`, `p350nj/C9674v0.java:193` |
+| Page slide (wait) | Notes group `moveTo(x - shift, y, 1.0f)`, linear, when the current note passes ~70% of the width | `p350nj/C9674v0.java:417,462` |
+| Play line x | staffAreaLeft 129 + clefImageXDiffFromStaffAreaLeft 30 + rhythmLineXDiffFromClefImageLeft 480 = 639 px on a 1080 px tall layout (scale 1.0 at ≥1080 px height, 0.67 at ≥720, 0.5 below) ≈ 0.27-0.33 of the width | `resources/assets/LevelUIConfig.json`, `p380oj/C10043y.java:83`, `p380oj/EnumC10012i0.java` |
+| Static notes start | 60 px left of the play line (`staticUINotesContainerXDiffFromRhythmLine: -60`) | `LevelUIConfig.json` |
+| Stage intro | Each sheet element starts one screen-height below, `delay(k/(2n))` then `moveTo(y, min(1-(n-1)/(2n), 0.5))` with swingOut(2) `((s+1)q+s)q²+1`, q=t-1; no alpha change | `p380oj/C10032s0.java:173-181,289-308`, `p651ya/C13982m.java:16-19`, `AbstractC13983n.java:53` |
+| Note colour | Hit: `Actions.color(c, 0.2f)`, linear. Partial chord: tween to hit colour 0.2 s then back to ink 0.2 s. Hit colours 0x00CCCC / 0xFFCF00, ink 0x0F0F0F | `p691zi/C14751v.java:20-30`, `p350nj/C9674v0.java:382-397`, `p350nj/C9666r0.java:160-172`, `p380oj/C10032s0.java:52-55` |
+| Right edge | No fade-in found; notes are clipped at the edge | - |
+| Labels | Instruction labels `fadeIn/fadeOut(0.2f)` | `p350nj/C9674v0.java:213,234` |
+
+Implications: our painter repaints the background over the notes with the same alpha profile (see `docs/specs/practice-screen.md`); no assets or code copied.
+
 ## Follow-ups
 
 - Bean: extract journey/level **statistics** (stage mix per course, bpm ranges, note ranges) into a numeric summary. No content copy.
