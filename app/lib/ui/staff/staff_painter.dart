@@ -239,9 +239,13 @@ class StaffPainter extends CustomPainter {
     return (solid: solid, end: math.max(solid + space, anchorX));
   }
 
-  /// Grand staff band padding beyond the staff lines, in spaces. The G clef
-  /// overhangs its staff by ~1.6 spaces, so the treble band is taller.
-  static const trebleBandPad = 2.0, bassBandPad = 1.0;
+  /// Grand staff band padding beyond the outer staff lines, in spaces. The
+  /// clefs may overhang it, as in the reference.
+  /// Grand staff: spaces between the treble bottom line and the bass top
+  /// line (reference: about 2; 3 leaves room for middle-C ledgers).
+  static const staffGap = 3.0;
+
+  static const trebleBandPad = 0.0, bassBandPad = 0.0;
 
   bool get _hasTreble => staves != Staves.bass;
   bool get _hasBass => staves != Staves.treble;
@@ -260,7 +264,7 @@ class StaffPainter extends CustomPainter {
     };
     final bassTopY = staves == Staves.bass
         ? size.height * 0.5 - space * 2
-        : trebleBottomY + space * 4;
+        : trebleBottomY + space * staffGap;
     return (space: space, trebleBottomY: trebleBottomY, bassTopY: bassTopY);
   }
 
@@ -307,11 +311,7 @@ class StaffPainter extends CustomPainter {
               ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
               : bandColor!;
         if (staves == Staves.grand) {
-          // One band per staff, stage colour between them, each framed by a
-          // stronger border line (reference look).
-          final border = Paint()
-            ..color = staff.withValues(alpha: 0.45)
-            ..strokeWidth = math.max(1.5, space * 0.14);
+          // One band per staff, stage colour between them (reference look).
           for (final (top, bot, padSp) in [
             (staffTop, trebleBottomY, trebleBandPad),
             (bassTopY, staffBottom, bassBandPad),
@@ -323,8 +323,6 @@ class StaffPainter extends CustomPainter {
               bot + space * padSp,
             );
             canvas.drawRect(r, band);
-            canvas.drawLine(r.topLeft, r.topRight, border);
-            canvas.drawLine(r.bottomLeft, r.bottomRight, border);
           }
         } else {
           canvas.drawRect(
@@ -339,20 +337,24 @@ class StaffPainter extends CustomPainter {
         }
       }
 
-      // Staff lines.
+      // Staff lines; on a grand staff each staff's outer lines are heavier.
+      final outer = Paint()
+        ..color = staff
+        ..strokeWidth = ink.strokeWidth * 2;
       for (var i = 0; i < 5; i++) {
+        final p = staves == Staves.grand && (i == 0 || i == 4) ? outer : ink;
         if (_hasTreble) {
           canvas.drawLine(
             Offset(sys.systemX, trebleBottomY - i * space),
             Offset(size.width, trebleBottomY - i * space),
-            ink,
+            p,
           );
         }
         if (_hasBass) {
           canvas.drawLine(
             Offset(sys.systemX, bassTopY + i * space),
             Offset(size.width, bassTopY + i * space),
-            ink,
+            p,
           );
         }
       }
