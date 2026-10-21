@@ -17,14 +17,18 @@ Step 4 of the browser melody model. Dataset: PR #45 (39,615 tunes, tunes.jsonl s
 Original practice tunes at reference-course size from our own small model, in the browser.
 
 ## Acceptance Criteria
-- [ ] train.py: compound decoder transformer (sum of 4 embeddings, cascaded heads kind→pitch→dur→finger), loss after SPEC_END
-- [ ] On-the-fly samples: phrase windows, spelled transposition, FIM, style dropout, plan
-- [ ] Refuses to run without the gate (melody_model.gate)
-- [ ] Logs loss/val loss, tokens/s, time; checkpoints in git-ignored data/
-- [ ] Smoke run measured on the RTX 4070 SUPER; full run with loss curve
-- [ ] Docs: params, data hash, run time, curves
+- [x] train.py: compound decoder transformer (sum of 4 embeddings, cascaded heads kind→pitch→dur→finger), loss after SPEC_END
+- [x] On-the-fly samples: phrase windows, spelled transposition, FIM, style dropout, plan
+- [x] Refuses to run without the gate (melody_model.gate)
+- [x] Logs loss/val loss, tokens/s, time; checkpoints in git-ignored data/
+- [x] Smoke run measured on the RTX 4070 SUPER; full run with loss curve
+- [x] Docs: params, data hash, run time, curves
 
 ## Out of Scope
 ONNX export, browser demo, evaluation (steps 5–6).
 
 ## Summary of Changes
+- model.py (compound GPT, RoPE, cascaded heads, 11.09M params), samples.py (windows, spelled transposition, FIM, style/level/source dropout, patterns, 30% easier variants), difficulty.py, simplify.py, train.py (gate check, token-budget batches, run dir never reused, git sha + command line in config), generate.py (masked decoding, fail-closed rubric and similarity gates), simcorpus.py, release.py (manifest + sha256 verify), curve.py.
+- Run base1: 20k steps, 37 min, best val 0.875 (evidence in tools/melody-model/releases/, curve docs/models/melody-v1-loss.svg). Model card docs/models/melody-v1.md.
+- content-cli: `content check`; schema: generator method melody-model.
+- Decisions D24 (weights licence, proposed) and D25 (masks vs rubric, proposed) on PR #44.
