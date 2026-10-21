@@ -53,17 +53,17 @@ Masks (`gen.mask`, applied by `melody.js` `Grammar`): taught pitches per hand ma
 | `--dart-define=MELODY_MODEL_URL` | `melody/model/` (same origin) | Directory URL or template with `{file}`. Empty string → manifest URL (GitHub Release). |
 | Runtime files | `decoder.int8.onnx`, `heads.int8.onnx`, `vocab.json` (12.5 MB) | Checkpoint and configs are not downloaded. |
 
-The app is cross-origin isolated (COEP `require-corp`, `app/web/_headers`), so a cross-origin model host must send CORS and `Cross-Origin-Resource-Policy: cross-origin`. GitHub Release downloads do not; the release needs a mirror (ROADMAP item) before the deployed app can load a model. Until then the deployed app shows the "Couldn't load" error.
+The app is cross-origin isolated (COEP `require-corp`, `app/web/_headers`), so a cross-origin model host must send CORS and `Cross-Origin-Resource-Policy: cross-origin`. GitHub Release downloads do not, so the deploy workflow downloads the release files (`stage_app_model.py --release`, sha256 against the manifest) into the build and the app loads them from its own origin; the app re-checks sha256 before use.
 
 ## Dev setup
 
 ```
 python tools/sync_content.py
 python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor --wasm-only
-python tools/melody-model/web/stage_app_model.py --from <dir with the .onnx files>
+python tools/melody-model/web/stage_app_model.py --release   # or --from <dir with the .onnx files>
 ```
 
-`stage_app_model.py` checks each file against the manifest (vocab.json from the repo with LF endings). All three outputs are git-ignored. The deploy workflow vendors onnxruntime-web; it does not stage a model.
+`stage_app_model.py` checks each file against the manifest (vocab.json from the repo with LF endings). All three outputs are git-ignored. The deploy workflow runs the same two staging steps.
 
 ## Tests
 

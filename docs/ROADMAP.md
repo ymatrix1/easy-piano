@@ -48,7 +48,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [ ] Polyphonic mic research result
 - [x] Practice mode on web: generated tunes per node, rubric-gated, labelled, no stars (D28, [spec](specs/practice-mode.md))
 - [ ] Practice mode on Android/iOS/desktop (native ONNX runtime)
-- [ ] Publish the `melody-model-v1` release and point `MELODY_MODEL_URL` at a CORS/CORP-friendly mirror
+- [x] Publish the `melody-model-v1` release; deploy serves its files same-origin
 
 ## Phase 5: My songs (D11)
 
