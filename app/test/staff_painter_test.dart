@@ -1,5 +1,10 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:easy_piano/ui/staff/staff_note.dart';
 import 'package:easy_piano/ui/staff/staff_painter.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -38,14 +43,60 @@ void main() {
     expect(t.clefX - t.systemX, closeTo(space, 0.01));
   });
 
-  test('note cover hides the clef area and clears at the anchor', () {
+  test('edge fade is clear at the clefs and opaque before the anchor', () {
     const space = 14.0;
     final g = StaffPainter.systemLayout(Staves.grand, space);
-    final play = StaffPainter.coverRange(g.clefRight, 104, space, wait: false);
-    expect(play.solid, closeTo(g.clefRight - space, 0.01));
-    expect(play.end, 104); // clear at the play bar
-    final wait = StaffPainter.coverRange(g.clefRight, 96, space, wait: true);
-    expect(wait.solid, 0);
-    expect(wait.end, lessThan(96)); // current note never covered
+    final f = StaffPainter.edgeFade(g.clefRight, 104, space);
+    expect(f.clear, g.clefRight); // nothing drawn left of the clef edge
+    expect(f.full, greaterThan(f.clear));
+    expect(f.full, lessThanOrEqualTo(104)); // current note never dimmed
+    // Anchor right next to the clefs: still a valid (non-empty) ramp.
+    final tight = StaffPainter.edgeFade(g.clefRight, g.clefRight + 5, space);
+    expect(tight.full, greaterThan(tight.clear));
+  });
+
+  testWidgets('finger labels fade with their notes and cull behind the clef', (
+    tester,
+  ) async {
+    const size = Size(400, 400);
+    final now = ValueNotifier<double>(3);
+    final painter = StaffPainter(
+      notes: const [
+        StaffNote(64, 0, 1, finger: 5), // x = 80: behind the clef edge
+        StaffNote(64, 1.5, 1, finger: 4), // inside the fade ramp
+        StaffNote(64, 3, 1, finger: 3), // current note, at the anchor
+      ],
+      playheadBeat: now,
+      pixelsPerBeat: 40,
+      lineRatio: 0.5,
+      staves: Staves.treble,
+      playheadColor: const Color(0xFFFF0000),
+      inkColor: const Color(0xFF000000),
+    );
+    final rec = ui.PictureRecorder();
+    painter.paint(Canvas(rec), size);
+    final img = await tester.runAsync(
+      () => rec.endRecording().toImage(size.width.toInt(), size.height.toInt()),
+    );
+    final bytes = (await tester.runAsync(
+      () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+    ))!;
+    // Max alpha in a box around a label.
+    int alphaAround(double cx, double cy) {
+      var m = 0;
+      for (var y = cy.toInt() - 5; y <= cy.toInt() + 5; y++) {
+        for (var x = cx.toInt() - 5; x <= cx.toInt() + 5; x++) {
+          m = math.max(m, bytes.getUint8((y * 400 + x) * 4 + 3));
+        }
+      }
+      return m;
+    }
+
+    const space = 20.0; // height 400 / 11 clamps to 20
+    final cy = 200 + space * 2 - space * 4 - space * 3.6; // staffTop - 3.6 sp
+    expect(alphaAround(80 + space * 0.6, cy), 0);
+    final mid = alphaAround(80 + 60 + space * 0.6, cy);
+    expect(mid, inInclusiveRange(1, 254));
+    expect(alphaAround(200 + space * 0.6, cy), 255);
   });
 }
