@@ -48,7 +48,7 @@ pub struct Generator {
     pub prompt_ref: Option<String>,
 }
 
-pub const GENERATOR_METHODS: [&str; 5] = ["rules", "pd-variation", "llm", "magenta", "hand"];
+pub const GENERATOR_METHODS: [&str; 6] = ["rules", "pd-variation", "llm", "magenta", "hand", "melody-model"];
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
