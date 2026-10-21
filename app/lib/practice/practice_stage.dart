@@ -470,7 +470,9 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _tick() {
-    if (_nowSec - _introStartSec < 1.1) _marks.value++;
+    if (_nowSec - _introStartSec < 1.1 || _nowSec < _colorFadeUntil) {
+      _marks.value++;
+    }
     if (_finished || _paused) return;
     if (_demo) {
       final beat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
@@ -566,7 +568,34 @@ class _PracticeStageState extends State<PracticeStage>
     }
   }
 
+  /// Note colour changes (hit, miss, current) cross-fade over this long.
+  static const _colorFadeSec = 0.3;
+  final _colorFade = <int, (Color from, Color to, double since)>{};
+  double _colorFadeUntil = 0;
+
   Color _noteColor(int i) {
+    final to = _targetNoteColor(i);
+    final now = _nowSec;
+    final f = _colorFade[i];
+    if (f == null) {
+      _colorFade[i] = (to, to, -1e9);
+      return to;
+    }
+    final (from, prevTo, since) = f;
+    if (to != prevTo) {
+      _colorFade[i] = (_lerpFade(from, prevTo, since, now), to, now);
+      _colorFadeUntil = now + _colorFadeSec;
+      return _colorFade[i]!.$1;
+    }
+    return _lerpFade(from, to, since, now);
+  }
+
+  static Color _lerpFade(Color from, Color to, double since, double now) {
+    final t = ((now - since) / _colorFadeSec).clamp(0.0, 1.0);
+    return Color.lerp(from, to, Curves.easeOut.transform(t))!;
+  }
+
+  Color _targetNoteColor(int i) {
     final ti = _noteTarget[i];
     switch (_targetStates[ti]) {
       case 1:
