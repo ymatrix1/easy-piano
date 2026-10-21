@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../src/rust/api/practice.dart' as rust;
 import 'practice_service.dart';
 import 'song_feed.dart';
 
@@ -31,6 +32,7 @@ class StreamSettings {
     required this.durations,
     this.mode = 'wait',
     this.style,
+    this.accompaniment = true,
   });
 
   /// The level: a course node; its taught set bounds every note.
@@ -48,6 +50,9 @@ class StreamSettings {
 
   /// Model style token (`folk`, `jazz`, ...); null lets the model choose.
   final String? style;
+
+  /// Add generated BASS / ACC / DRUMS (core `accompany`) to every chunk.
+  final bool accompaniment;
 }
 
 /// Choices the setup screen offers for a node, from its taught set.
@@ -133,6 +138,17 @@ bool fillsBar(List<String> durs, String time) {
   return ok[cap];
 }
 
+/// Writes backing parts into bars: (song JSON, style, hands played) → bars JSON.
+typedef Accompany = String Function(
+  String songJson,
+  String style,
+  List<String> hands,
+);
+
+/// Default: the Rust core (`accompany::accompany`).
+String coreAccompany(String songJson, String style, List<String> hands) =>
+    rust.accompanyBars(songJson: songJson, style: style, hands: hands);
+
 /// Endless practice: generates the tune in chunks while the learner plays,
 /// each chunk rubric-checked as part of the whole song so far before it is
 /// pushed to the [feed] (D28). Nothing is saved.
@@ -141,6 +157,7 @@ class PracticeStream {
     this.generator,
     this.settings, {
     this.rubric = coreRubric,
+    this.accompany = coreAccompany,
     this.chunkBars = 4,
     this.maxAttempts = 4,
     this.candidates = 4,
@@ -152,6 +169,7 @@ class PracticeStream {
   final TuneGenerator generator;
   final StreamSettings settings;
   final RubricCheck rubric;
+  final Accompany accompany;
   final int chunkBars;
   final int maxAttempts;
   final int candidates;
@@ -285,6 +303,20 @@ class PracticeStream {
     });
   }
 
+  /// The chunk with backing parts, or as it is when accompaniment is off or
+  /// fails (backing is never graded, so the melody alone is still fine).
+  List<Map<String, dynamic>> _withBacking(List<Map<String, dynamic>> chunk) {
+    if (!settings.accompaniment) return chunk;
+    try {
+      final bars = jsonDecode(
+        accompany(_song(chunk), settings.style ?? '', _hands),
+      ) as List;
+      return [for (final b in bars) Map<String, dynamic>.from(b as Map)];
+    } catch (_) {
+      return chunk;
+    }
+  }
+
   Future<bool> _grow() async {
     final sw = Stopwatch()..start();
     final gen = _genSpec();
@@ -305,9 +337,7 @@ class PracticeStream {
             Map<String, dynamic>.from(b as Map),
         ];
         if (rubric(_song(next), _rubricNode).isEmpty) {
-          _bars
-            ..clear()
-            ..addAll(next);
+          _bars.addAll(_withBacking(next.sublist(_bars.length)));
           chunks++;
           chunkMs.add(sw.elapsedMilliseconds);
           return true;

@@ -15,6 +15,8 @@ Endless practice: the model writes music at the learner's level while they play;
 | Generating | "Writing a tune for this lesson…" until the first 4-bar chunk passes the rubric. |
 | Playing | The normal stage UI (`PracticeStage`) in the chosen mode. New 4-bar chunks are appended while the learner plays (one chunk ahead from the start, then whenever fewer than 24 beats are left). A **Generated** badge stays on top; the banner says practice only, no stars. Close leaves at any time. |
 | Stream cannot continue | After a chunk fails every attempt the feed ends; the learner plays to the end and sees "Couldn't write more music with these settings", notes hit, and **Play again**. |
+| Accompaniment | Every chunk gets `BASS`, `ACC` and `DRUMS` from `core::accompany` (play-along plays them; never graded). One C-major chord per bar (I, ii, IV, V, vi) picked by how much of the bar's melody it covers, biased toward I/IV/V and toward the previous chord. Patterns by style and meter (4/4, 3/4, 2/4, 6/8): pop/rock/game get drums and driving bass, jazz a light ride pattern, chords on 2 and 4 and a walking bass, classical an Alberti-style broken chord, the rest half-note chords and root–fifth bass. When the learner plays the left hand the piano `ACC` is dropped and a sustained strings `PAD` holds the chord instead; `BASS` (an octave below the left hand) and drums stay. |
+| Top bar | Endless mode shows notes hit and the current streak instead of a progress bar (there is no end to measure). |
 | No first chunk | "Couldn't make a tune that fits this lesson. Try again." with Retry. |
 | Download/verify fails | "Couldn't load the tune maker…" with Retry. |
 | Native platforms | "Practice tunes only work in the browser for now." No retry. |
@@ -42,6 +44,7 @@ Endless practice: the model writes music at the learner's level while they play;
 | Runtime | `app/web/melody/practice.js` (loaded on demand via `window.epMelodyImport`) | onnxruntime-web 1.30.0 (wasm, up to 4 threads when cross-origin isolated), KV-cached decoder + heads, `melody.js` masked decoding and decoding. |
 | Stream | `PracticeStream` (`practice_stream.dart`) | Builds each chunk's spec from the setup (`bars` 4, `styles` = the picked style, chosen durations, hands, tempo; masks from the taught set; `mask.start` = each hand's last note so the leap rule holds across chunks), picks the first candidate (best mean log p) that passes the gate, pushes the grown song to a `SongFeed`. |
 | Gate | bridge `check_generated` → `core::rubric::check_generated` | Rubric errors for the song so far; empty = append. |
+| Accompaniment | `core/src/accompany.rs`, bridge `accompany_bars` | Adds backing parts to each new chunk (only the new bars); a failure leaves the chunk as it is. The stage schedules the new bars' backing (and metronome) as they arrive. |
 | Session | `Session::extend` (`core/src/session.rs`), bridge `PracticeSession.extend` | Appends targets for the new bars; judged targets keep their state; a wait-mode learner who already finished the old part continues at the first new note. |
 | UI | `StreamSetupPage`, `StreamPracticePage`, `PracticeStage(feed:)` | Setup, states above; the stage extends its session and staff on every push, asks for more through `SongFeed.onDemand`, fixes the wait-mode page scale, and finishes only after the feed ends. |
 
@@ -74,6 +77,7 @@ python tools/melody-model/web/stage_app_model.py --release   # or --from <dir wi
 
 | Test | Covers |
 |---|---|
+| `core` `accompany` tests | Chords follow the melody; every style × meter validates; left hand not doubled; unknown meters pass through. |
 | `core` `extend_appends_targets_and_keeps_state` | Appended targets, kept states, wait cursor moves on, mismatched prefix refused. |
 | `core` `check_generated_round_trips_and_fails_closed` | Taught set serde round trip; pass; untaught pitch fails; non-generated song refused; bad JSON fails. |
 | `content-cli` `pack_has_a_rubric_node_and_gen_spec_for_every_spec` | Pack for the repo content; pack node feeds `check_generated`. |

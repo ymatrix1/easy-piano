@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1788639544;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1021618670;
 
 // Section: executor
 
@@ -485,6 +485,39 @@ fn wire__crate__api__practice__PracticeSession_tick_impl(
                     &mut *api_that_guard,
                     api_t_us,
                 ))?;
+                std::result::Result::Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__practice__accompany_bars_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "accompany_bars",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_song_json = <String>::sse_decode(&mut deserializer);
+            let api_style = <String>::sse_decode(&mut deserializer);
+            let api_hands = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, String>((move || {
+                let output_ok =
+                    crate::api::practice::accompany_bars(api_song_json, api_style, api_hands)?;
                 std::result::Result::Ok(output_ok)
             })())
         },
@@ -1420,9 +1453,9 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        10 => wire__crate__api__audio__audio_add_sample_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__audio__audio_start_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__audio__audio_add_sample_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__audio__audio_start_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1452,20 +1485,21 @@ fn pde_ffi_dispatcher_sync_impl(
         ),
         8 => wire__crate__api__practice__PracticeSession_targets_impl(ptr, rust_vec_len, data_len),
         9 => wire__crate__api__practice__PracticeSession_tick_impl(ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__audio__audio_click_impl(ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__audio__audio_commit_impl(ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__audio__audio_drum_impl(ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__audio__audio_note_impl(ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__audio__audio_note_off_impl(ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__audio__audio_note_on_impl(ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__audio__audio_now_sec_impl(ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__audio__audio_set_part_level_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__audio__audio_stop_all_impl(ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__practice__check_generated_impl(ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__practice__companion_impl(ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__practice__accompany_bars_impl(ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__audio__audio_click_impl(ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__audio__audio_commit_impl(ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__audio__audio_drum_impl(ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__audio__audio_note_impl(ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__audio__audio_note_off_impl(ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__audio__audio_note_on_impl(ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__audio__audio_now_sec_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__audio__audio_set_part_level_impl(ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__audio__audio_stop_all_impl(ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__practice__check_generated_impl(ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__practice__companion_impl(ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

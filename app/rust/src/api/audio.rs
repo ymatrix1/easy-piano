@@ -45,7 +45,14 @@ pub fn audio_commit() {
 
 /// Schedules a pitched note [start_sec] from now on the audio clock.
 #[frb(sync)]
-pub fn audio_note(instrument: String, part: String, pitch: u8, start_sec: f64, dur_sec: f64, velocity: u8) {
+pub fn audio_note(
+    instrument: String,
+    part: String,
+    pitch: u8,
+    start_sec: f64,
+    dur_sec: f64,
+    velocity: u8,
+) {
     #[cfg(not(target_arch = "wasm32"))]
     imp::note(&instrument, &part, pitch, start_sec, dur_sec, velocity);
     #[cfg(target_arch = "wasm32")]

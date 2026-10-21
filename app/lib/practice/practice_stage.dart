@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show setEquals;
@@ -318,35 +319,43 @@ class _PracticeStageState extends State<PracticeStage>
     _initialTargets = all;
   }
 
-  /// Streaming: new bars arrived. Extends the session and, in play-along
-  /// with the metronome on, schedules clicks for the new beats.
+  /// Streaming: new bars arrived. Extends the session and, in play-along,
+  /// schedules the new bars' backing and metronome clicks.
   void _onFeed() {
     if (!mounted || _finished) return;
-    final before = _totalBeats;
+    // Song time where the new bars start: everything before it is scheduled.
+    final before = _scheduledBars * _beatsPerBar;
     try {
       _session.extend(songJson: widget.feed!.json);
     } catch (_) {
       return; // a bad push never stops the stage; the next one may fit
     }
     _addTargets(_session.targets());
-    if (_playAlong && pianoSynth.metronome && !_paused && !_demo) {
-      final now = widget.midi.now();
-      for (var b = before.ceilToDouble(); b < _totalBeats; b++) {
-        pianoSynth.click(
-          (_startMs + b * _msPerBeat - now) / 1000,
-          accent: b % _beatsPerBar == 0,
-        );
+    _scheduledBars = _barCount(widget.feed!.json);
+    if (_playAlong) {
+      // New bars may bring backing parts (endless practice accompaniment).
+      _backing = _companionNotes();
+      if (!_paused && !_demo) {
+        pianoSynth.loadParts({for (final n in _backing) n.part}).then((_) {
+          if (mounted && !_finished && !_paused) _scheduleBacking(before);
+        });
       }
     }
     _marks.value++;
     setState(() {});
   }
 
+  /// Streaming: bars of the song whose backing is already scheduled.
+  late int _scheduledBars = _barCount(widget.songJson);
+
+  static int _barCount(String json) =>
+      ((jsonDecode(json) as Map<String, dynamic>)['bars'] as List).length;
+
   bool get _streaming => widget.feed != null && !widget.feed!.ended;
 
   List<BackingNote> _companionNotes() => [
     for (final n in companion(
-      songJson: widget.songJson,
+      songJson: widget.feed?.json ?? widget.songJson,
       hand: widget.stage.hand,
     ))
       BackingNote(n.pitch, n.beat, n.beats, n.partName),
@@ -917,6 +926,43 @@ class _PracticeStageState extends State<PracticeStage>
     ),
   );
 
+  /// Endless practice has no end to measure against: count hit notes and
+  /// the current streak instead of a progress bar.
+  Widget _pill(double value, bool showCount) {
+    if (widget.feed == null) return _progressPill(value, showCount);
+    final f = _frame;
+    Widget stat(IconData icon, int n) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: StagePalette.text),
+        const SizedBox(width: 4),
+        Text(
+          '$n',
+          style: const TextStyle(
+            color: StagePalette.text,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          stat(Icons.music_note_rounded, f?.hits ?? 0),
+          const SizedBox(width: 14),
+          stat(Icons.local_fire_department_rounded, f?.streak ?? 0),
+        ],
+      ),
+    );
+  }
+
   Widget _topBar() {
     final f = _frame;
     final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
@@ -934,7 +980,7 @@ class _PracticeStageState extends State<PracticeStage>
         final narrow = box.maxWidth < 720;
         final progress = _paused && _playAlong
             ? _tempoSelector()
-            : _progressPill(pillValue, waitPill);
+            : _pill(pillValue, waitPill);
         final row = Row(
           children: [
             // Paused: resume / restart / exit take the pause button's place in
@@ -1114,7 +1160,7 @@ class _PracticeStageState extends State<PracticeStage>
                         : SizedBox(
                             height: 16,
                             width: double.infinity,
-                            child: _progressPill(pillValue, waitPill),
+                            child: _pill(pillValue, waitPill),
                           ),
                   ],
                 )
