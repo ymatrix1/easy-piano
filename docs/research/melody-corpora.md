@@ -2,7 +2,7 @@
 
 Checked: 2026-10-20
 
-Sources: licence files and READMEs fetched from each project (each licence claim links its source in the table); PDMX `PDMX.csv` metadata (Zenodo 15571083, counted locally 2026-10-20); `docs/research/score-formats-and-sources.md`; `.agents/rules/content-and-licensing.md`. Decisions: [D18](../DECISIONS.md) (NMD), [D19](../DECISIONS.md) (corpora), [D20](../DECISIONS.md) (model design).
+Sources: licence files and READMEs fetched from each project (each licence claim links its source in the table); PDMX `PDMX.csv` metadata (Zenodo 15571083; counts reproduced by `python -m melody_model.pdmx_stats`, PR #45, against the pinned file hash, 2026-10-20); `docs/research/score-formats-and-sources.md`; `.agents/rules/content-and-licensing.md`. Decisions: [D18](../DECISIONS.md) (NMD), [D19](../DECISIONS.md) (corpora; superseded in part by D21), [D20](../DECISIONS.md) (model design, proposed), [D21](../DECISIONS.md) (train on everything we can, flagged and style-tagged; it overrides the exclusions in this page where they differ).
 
 Question: which symbolic melody corpora can we train a small model on, given that the trained weights ship in an open-source app and should be clean (no non-commercial or "no ML" terms)? Pop/film/game material was first excluded, then allowed as flagged, style-tagged tunes (D21).
 
@@ -72,6 +72,10 @@ Uploader tags are not proof. Since [D21](../DECISIONS.md) the risk rules below *
 | Similarity check (`content-cli similar`, threshold 0.6) against a local pop corpus in `references/melody-corpus/` | catches copies the metadata hides |
 | **50-tune gate** (below); training refuses to start without the recorded approval | human check of the conversion and screen |
 
+### Chinese music
+
+Included and tagged `STYLE_chinese` (D21). The user first said "i just dont want chinese music", then asked for everything with tags, and on the agent's recommendation to include it tagged said "Chinese music: do your recommendation" (2026-10-20). Detection by metadata (`filters.is_chinese`): Chinese tags, Han script without kana (after repairing PDMX mojibake), Chinese instrument/genre words, known Chinese artists. Generation avoids the style unless asked. POP909 (a Chinese pop corpus) is not added.
+
 ### 50-tune gate
 
 - Sample: `python -m melody_model.sample --corpus pdmx --n 50 --seed 1` from all kept PDMX tunes (flagged included), after the final dataset build.
@@ -100,7 +104,7 @@ Local pop corpus coverage today: **none** (`references/melody-corpus/` does not 
 
 Everything else in the table above stays excluded.
 
-## Model design (approved by user, 2026-10-20; [D20](../DECISIONS.md))
+## Model design (agreed in planning 2026-10-20; [D20](../DECISIONS.md), status proposed until the user confirms it directly)
 
 How the corpus will be used; recorded here so later step PRs build on it.
 
