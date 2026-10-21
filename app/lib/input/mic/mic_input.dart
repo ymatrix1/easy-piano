@@ -68,6 +68,19 @@ abstract class MicInput implements MidiInput {
   /// other notes strictly (score-informed detection). Empty = blind.
   Set<int> get expected;
   set expected(Set<int> pitches);
+
+  /// Whether to use the trained note model when it can load (default on;
+  /// `?mic=dsp` in the URL forces it off for a page load). The DSP detector
+  /// listens until the model is ready and whenever it isn't running.
+  bool get modelEnabled;
+  set modelEnabled(bool value);
+
+  /// True while the trained model, not the DSP detector, produces notes.
+  bool get modelActive;
+
+  /// Mean per-frame model compute time (ms) over the last few seconds;
+  /// null when the model isn't running. A frame is 16 ms of audio.
+  double? get modelFrameMs;
 }
 
 MicInput createMicInput() => impl.createMicInput();

@@ -114,7 +114,10 @@ void main(List<String> args) {
       '${info['condition']}',
       '${info['kind']}',
       // Noise clips have no piano; per-piano and per-variant rows are piano-only.
-      if (piano != null && piano != 'none') ...['piano=$piano', 'variant=${info['variant']}'],
+      if (piano != null && piano != 'none') ...[
+        'piano=$piano',
+        'variant=${info['variant']}',
+      ],
     ]) {
       groups.putIfAbsent('$split:$g', _Score.new)
         ..tp += tp
@@ -147,6 +150,9 @@ void main(List<String> args) {
       'noise',
       'melody',
       'two-hands',
+      'real',
+      'speech',
+      'mixed',
       'piano=salamander',
       'piano=kw',
       'piano=ydp',

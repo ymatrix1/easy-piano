@@ -5,6 +5,10 @@ target/
 *.mp4
 *.mov
 tools/mic-fixtures/
+tools/mic-fixtures-*/
 
 # Melody model corpora (local only, never committed)
 /data/
+
+# onnxruntime-web build, fetched by tools/sync_web_model.py
+app/web/vendor/

@@ -7,12 +7,14 @@ dependencies = [
     "numpy",
     "scipy",
     "soundfile",
-    "sf2utils",  # reads the YDP SoundFont
-    "audioop-lts; python_version >= '3.13'",  # sf2utils needs audioop
+    "sf2utils", # reads the YDP SoundFont
+    "audioop-lts; python_version >= '3.13'", # sf2utils needs audioop
     "onnx",
     "onnxruntime",
     "torch",
     "tqdm",
+    "remotezip>=0.12.6",
+    "mido>=1.3.3",
 ]
 
 [dependency-groups]
@@ -31,3 +33,7 @@ explicit = true
 
 [tool.ruff]
 line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

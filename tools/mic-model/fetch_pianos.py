@@ -34,7 +34,9 @@ def main():
         got = hashlib.sha256(path.read_bytes()).hexdigest()
         if got != sha:
             raise SystemExit(f"{name}: sha256 {got} != pinned {sha}")
-    subprocess.run(["7z", "x", "-y", f"-o{DATA / 'kw'}", str(DATA / "kw.7z")], check=True, capture_output=True)
+    subprocess.run(
+        ["7z", "x", "-y", f"-o{DATA / 'kw'}", str(DATA / "kw.7z")], check=True, capture_output=True
+    )
     with tarfile.open(DATA / "ydp.tar.bz2") as t:
         t.extractall(DATA / "ydp")
     print("ok")

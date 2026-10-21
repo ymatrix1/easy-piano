@@ -22,7 +22,7 @@ from math import gcd
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import resample_poly
+from scipy.signal import butter, resample_poly, sosfiltfilt
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data" / "pianos"
@@ -84,7 +84,10 @@ def extract():
         s = Sf2File(fh)
         seen = {}
         for smp in s.samples:
-            if getattr(smp, "sample_type", None) not in (1, 4):  # mono or left; the right half of a pair is redundant
+            if getattr(smp, "sample_type", None) not in (
+                1,
+                4,
+            ):  # mono or left; the right half of a pair is redundant
                 continue
             try:
                 raw = smp.raw_sample_data
@@ -117,6 +120,21 @@ def load(name, sr):
     return _cache[key]
 
 
+def sharpen(x, pitch, amount, sr):
+    """Stronger bass inharmonicity: partials from the 3rd up are raised by
+    `amount` (0.4-1.2 %) by resampling the high band, as stiff low strings do."""
+    if len(x) < 64:
+        return x
+    f0 = 440 * 2 ** ((pitch - 69) / 12)
+    sos = butter(4, min(3 * f0, sr * 0.4) / (sr / 2), btype="high", output="sos")
+    hi = sosfiltfilt(sos, x)
+    num = round((1 + amount) * 1000)
+    g = gcd(num, 1000)
+    hi2 = resample_poly(hi, 1000 // g, num // g)[: len(x)]
+    hi2 = np.pad(hi2, (0, len(x) - len(hi2)))
+    return (x - hi + hi2).astype(np.float32)
+
+
 def sample_for(piano, pitch, sr, rng, detune_cents=0.0):
     """Nearest sample of `piano`, pitch-shifted by resampling to `pitch` (+ detune)."""
     bank = load(piano, sr)
@@ -126,7 +144,7 @@ def sample_for(piano, pitch, sr, rng, detune_cents=0.0):
     if ratio == 1:
         return x
     # Resample by an exact rational approximation of the ratio.
-    num = int(round(ratio * 1000))
+    num = round(ratio * 1000)
     g = gcd(num, 1000)
     return resample_poly(x, 1000 // g, num // g).astype(np.float32)
 

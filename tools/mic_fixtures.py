@@ -15,11 +15,10 @@ run `python tools/mic-model/pianos.py extract` once first)
 
 import json
 import sys
-from math import gcd
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, lfilter, resample_poly, sosfiltfilt
+from scipy.signal import butter, lfilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "mic-model"))
 import pianos  # noqa: E402
@@ -35,19 +34,6 @@ VARIANTS = ("plain", "plain", "detune", "inharm", "speaker")
 rng = np.random.default_rng(7)
 
 
-def sharpen(x, pitch, amount):
-    """Stronger bass inharmonicity: partials from the 3rd up are raised by
-    `amount` (0.4-1.2 %) by resampling the high band, as stiff low strings do."""
-    f0 = 440 * 2 ** ((pitch - 69) / 12)
-    sos = butter(4, min(3 * f0, SR * 0.4) / (SR / 2), btype="high", output="sos")
-    hi = sosfiltfilt(sos, x)
-    num = int(round((1 + amount) * 1000))
-    g = gcd(num, 1000)
-    hi2 = resample_poly(hi, 1000 // g, num // g)[: len(x)]
-    hi2 = np.pad(hi2, (0, len(x) - len(hi2)))
-    return (x - hi + hi2).astype(np.float32)
-
-
 def render(events, length, piano, variant, vel_jitter=True):
     """events: list of (onset_s, pitch, dur_s)."""
     y = np.zeros(int(length * SR))
@@ -61,7 +47,7 @@ def render(events, length, piano, variant, vel_jitter=True):
         cents = tune + (rng.uniform(-8, 8) if variant == "detune" else 0.0)
         s = pianos.sample_for(piano, p, SR, rng, cents)
         if variant == "inharm" and p <= 60:
-            s = sharpen(s, p, rng.uniform(0.004, 0.012))
+            s = pianos.sharpen(s, p, rng.uniform(0.004, 0.012), SR)
         s = s[: int(dur * SR)].astype(np.float64)
         fade = min(len(s), int(0.03 * SR))
         s[-fade:] *= np.linspace(1, 0, fade)

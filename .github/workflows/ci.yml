@@ -120,6 +120,9 @@ jobs:
       - name: Copy content into app assets
         run: python tools/sync_content.py
 
+      - name: Fetch onnxruntime-web (mic note model)
+        run: python tools/sync_web_model.py
+
       - name: flutter pub get
         working-directory: app
         run: flutter pub get
