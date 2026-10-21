@@ -54,7 +54,7 @@ class _LevelPageState extends State<LevelPage> {
     _connectMidi(quiet: true);
     // A student who picked the mic before gets it back; the browser keeps
     // the permission, so this doesn't prompt again.
-    if (micInput.preferred && micInput.offsetMs != null) {
+    if (micInput.preferred) {
       micInput.start().then((ok) {
         if (mounted && ok) setState(() => _mic = true);
       });

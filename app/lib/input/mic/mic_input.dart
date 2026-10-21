@@ -63,6 +63,11 @@ abstract class MicInput implements MidiInput {
 
   /// Input level 0–1 of the last ~50 ms, for the level meter.
   double get level;
+
+  /// Notes the lesson expects now; the detector judges them leniently and
+  /// other notes strictly (score-informed detection). Empty = blind.
+  Set<int> get expected;
+  set expected(Set<int> pitches);
 }
 
 MicInput createMicInput() => impl.createMicInput();

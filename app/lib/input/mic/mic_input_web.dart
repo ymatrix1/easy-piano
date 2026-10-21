@@ -51,6 +51,17 @@ class _WebMicInput implements MicInput {
   @override
   double level = 0;
 
+  Set<int> _expected = const {};
+
+  @override
+  Set<int> get expected => _expected;
+
+  @override
+  set expected(Set<int> pitches) {
+    _expected = pitches;
+    _detector?.expected = pitches;
+  }
+
   /// Slow peak follower; input is scaled so quiet mics still reach the
   /// detector's thresholds (gain capped at 8×, adapts over ~10 s so it
   /// doesn't pump between notes). Below the noise gate nothing is analysed.
@@ -217,7 +228,8 @@ class _WebMicInput implements MicInput {
       final sink = ctx.createGain()..gain.value = 0;
       node.connect(sink);
       sink.connect(ctx.destination);
-      _detector = NoteDetector(sampleRate: ctx.sampleRate);
+      _detector = NoteDetector(sampleRate: ctx.sampleRate)
+        ..expected = _expected;
       _baseFrame = null;
       _clockOffset = double.infinity;
       node.port.onmessage = _onChunk.toJS;

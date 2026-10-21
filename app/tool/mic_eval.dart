@@ -34,17 +34,32 @@ void main(List<String> args) {
       fluxRatio: arg('ratio', 1.5),
       fluxDelta: arg('delta', 3.0),
     );
-    final found = <DetectedNote>[];
-    for (var i = 0; i < samples.length; i += 128) {
-      final end = i + 128 < samples.length ? i + 128 : samples.length;
-      found.addAll(det.process(samples.sublist(i, end)));
-    }
-    final ons = found.where((n) => n.on).toList();
     final notes = [
       for (final n in info['notes'] as List)
         ((n['t'] as num).toDouble(), n['pitch'] as int),
     ];
+    // --mode=blind: no expected notes. score: the lesson expects the notes
+    // due from 0.3 s ago to 0.6 s ahead (wait-mode cursor). wrong: it
+    // expects a whole tone higher, so every played note is unexpected.
+    final mode = args
+        .firstWhere((a) => a.startsWith('--mode='), orElse: () => '=blind')
+        .split('=')
+        .last;
+    final found = <DetectedNote>[];
+    for (var i = 0; i < samples.length; i += 128) {
+      final end = i + 128 < samples.length ? i + 128 : samples.length;
+      if (mode != 'blind') {
+        final now = i / sr;
+        det.expected = {
+          for (final (t, p) in notes)
+            if (t > now - 0.3 && t <= now + 0.6) mode == 'wrong' ? p + 2 : p,
+        };
+      }
+      found.addAll(det.process(samples.sublist(i, end)));
+    }
+    final ons = found.where((n) => n.on).toList();
     final used = List.filled(notes.length, false);
+    var phantom = 0;
     var tp = 0;
     final errs = <double>[];
     final delays = <double>[];
@@ -66,6 +81,14 @@ void main(List<String> args) {
         delays.add((d.detectedAt - notes[hit].$1) * 1000);
       } else {
         misses.add('+${d.pitch}@${d.time.toStringAsFixed(2)}');
+        // Wrong mode: the lesson expected p+2 and the student played p. A
+        // detected p+2 would pass the step without it being played.
+        if (mode == 'wrong' &&
+            notes.any(
+              (n) => n.$2 + 2 == d.pitch && (n.$1 - d.time).abs() < 0.7,
+            )) {
+          phantom++;
+        }
       }
     }
     for (var i = 0; i < notes.length; i++) {
@@ -81,7 +104,9 @@ void main(List<String> args) {
         ..fp += ons.length - tp
         ..fn += notes.length - tp
         ..errs.addAll(errs)
-        ..delays.addAll(delays);
+        ..delays.addAll(delays)
+        ..phantom += phantom
+        ..expectedNotes += mode == 'wrong' ? notes.length : 0;
     }
   }
   // Held-out clips first: thresholds were tuned on the 'tune' split only.
@@ -111,7 +136,7 @@ void main(List<String> args) {
 }
 
 class _Score {
-  int tp = 0, fp = 0, fn = 0;
+  int tp = 0, fp = 0, fn = 0, phantom = 0, expectedNotes = 0;
   final errs = <double>[];
   final delays = <double>[];
 
@@ -127,7 +152,8 @@ class _Score {
         : l[(l.length * x).floor().clamp(0, l.length - 1)].toStringAsFixed(0);
     return '| $name | ${tp + fn} | ${p.toStringAsFixed(3)} | ${r.toStringAsFixed(3)} '
         '| ${f.toStringAsFixed(3)} | ${mean.toStringAsFixed(1)} / ${q(abs, 0.95)} '
-        '| ${q(dl, 0.5)} / ${q(dl, 0.95)} |';
+        '| ${q(dl, 0.5)} / ${q(dl, 0.95)} |'
+        '${expectedNotes == 0 ? '' : ' phantom $phantom/$expectedNotes |'}';
   }
 }
 

@@ -49,5 +49,8 @@ class _UnsupportedMicInput implements MicInput {
   double get level => 0;
 
   @override
+  Set<int> expected = const {};
+
+  @override
   double now() => _watch.elapsedMicroseconds / 1000.0;
 }

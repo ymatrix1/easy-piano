@@ -74,6 +74,37 @@ void main() {
     expect(off.time - 0.3, lessThan(0.75));
   });
 
+  List<DetectedNote> runExpecting(List<double> buf, Set<int> expected) {
+    final det = NoteDetector(sampleRate: _sr)..expected = expected;
+    final out = <DetectedNote>[];
+    for (var i = 0; i < buf.length; i += 128) {
+      out.addAll(det.process(buf.sublist(i, math.min(i + 128, buf.length))));
+    }
+    return out.where((n) => n.on).toList();
+  }
+
+  test('expected octave doubling is reported (blind mode drops it)', () {
+    final buf = List<double>.filled((_sr * 1.5).round(), 0);
+    _addNote(buf, 0.4, 60, 1.0);
+    _addNote(buf, 0.4, 72, 1.0);
+    final ons = runExpecting(buf, {60, 72});
+    expect(ons.map((n) => n.pitch).toSet(), {60, 72});
+    // Expected notes are checked every ~20 ms: reported well before the
+    // ~100 ms analysis frame of the blind path.
+    expect(ons.map((n) => n.detectedAt - 0.4).reduce(math.max), lessThan(0.1));
+  });
+
+  test('an expected note that is not played never fires', () {
+    final rnd = math.Random(3);
+    final buf = [
+      for (var i = 0; i < _sr * 1.5; i++) (rnd.nextDouble() - 0.5) * 0.004,
+    ];
+    _addNote(buf, 0.4, 60, 1.0); // student plays C4
+    final ons = runExpecting(buf, {62}); // lesson expects D4
+    expect(ons.where((n) => n.pitch == 62), isEmpty);
+    expect(ons.map((n) => n.pitch), contains(60));
+  });
+
   test('silence and low noise give nothing', () {
     final rnd = math.Random(1);
     final buf = [

@@ -428,7 +428,9 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
               Expanded(
                 child: GameButton(
                   label: l.continueButton.toUpperCase(),
-                  onTap: running || _mic.offsetMs == null
+                  // Calibration is optional: onsets are timed to the sample,
+                  // so the default offset (0) is close enough to start.
+                  onTap: running
                       ? null
                       : () => Navigator.of(context).pop(MicSetupResult.listen),
                   tone: GameTone.green,

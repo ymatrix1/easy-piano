@@ -19,7 +19,14 @@ class DetectedNote {
 /// Piano note detector for mic input (docs/specs/input.md, D-mic).
 ///
 /// Pure Dart and clock-free: feed samples, get onsets with sample-accurate
-/// times. Two stages:
+/// times.
+///
+/// Score-informed (docs/research/mic-input.md): the lesson tells the
+/// detector which notes it expects next ([expected]). Expected notes are
+/// checked every ~20 ms on their own partials, so a soft attack in a noisy
+/// room still counts and octave doublings are allowed; any other note needs
+/// a clear broadband onset and must dominate the spectrum. Without expected
+/// notes it transcribes blind, as below. Stages:
 /// 1. Onset: spectral flux on short frames with an adaptive threshold; the
 ///    exact onset sample is refined from a short-block energy envelope.
 /// 2. Pitch: one long frame just after the onset, minus the spectrum just
@@ -61,6 +68,31 @@ class NoteDetector {
 
   /// Longest a detected note stays "on", in seconds.
   final double maxHold;
+
+  /// Notes the lesson expects now (MIDI numbers). Set by the practice
+  /// screen as the cursor moves; empty means blind transcription.
+  Set<int> expected = const {};
+
+  /// Expected-note check: partial energy must rise this many times above
+  /// its minimum over the last ~170 ms…
+  static const _expectRise = 3.0;
+
+  /// …and hold this share of the frame's strongest partial energy.
+  static const _expectShare = 0.12;
+
+  /// With notes expected, an unexpected note must reach this share of the
+  /// strongest candidate (blind mode uses [secondNoteRatio]).
+  static const _unexpectedRatio = 0.6;
+
+  /// Same pitch is not reported twice within this many seconds.
+  static const _repeatGap = 0.15;
+
+  final _expectHistory = <int, List<double>>{};
+  final _lastEmit = <int, int>{};
+  int _nextExpectCheck = 0;
+
+  /// Slow floor of the strongest partial energy: the room's noise level.
+  double _noise = 0;
 
   final int _fluxN;
   final int _pitchN;
@@ -116,6 +148,10 @@ class NoteDetector {
       if (_pending.isNotEmpty &&
           _written >= _pending.first + _guard + _pitchN) {
         _analyse(_pending.removeAt(0), out);
+      }
+      if (expected.isNotEmpty && _written >= _nextExpectCheck) {
+        _nextExpectCheck = _written + _fluxHop * 2;
+        _checkExpected(out);
       }
       if (_written >= _nextDecayCheck) {
         _nextDecayCheck = _written + _fluxHop * 2;
@@ -227,7 +263,6 @@ class NoteDetector {
       if (fresh[k] > peak) peak = fresh[k];
     }
     final at = (_written) / sampleRate;
-    final time = onset / sampleRate;
     // A flux peak inside a ringing note (no real new energy) is not an
     // onset, nor is a release thump (the level falls).
     final afterPeak = after.reduce(math.max);
@@ -243,7 +278,22 @@ class NoteDetector {
 
     final found = <int>[];
     double? first;
-    for (var n = 0; n < maxPolyphony; n++) {
+    var top = 0.0;
+    for (var p = lowPitch; p <= highPitch; p++) {
+      top = math.max(top, _salience(peaks, p));
+    }
+    // Expected notes first, judged leniently and without the octave/fifth
+    // exclusion: the lesson says they are there, so a doubling is real.
+    for (final p in expected) {
+      if (p < lowPitch || p > highPitch) continue;
+      final s = _salience(peaks, p);
+      if (s >= 0.05 && s >= top * 0.2) found.add(p);
+    }
+    for (final p in found) {
+      _removeHarmonics(peaks, p);
+    }
+    final ratio = expected.isEmpty ? secondNoteRatio : _unexpectedRatio;
+    for (var n = found.length; n < maxPolyphony; n++) {
       var bestP = -1;
       var bestS = 0.0;
       for (var p = lowPitch; p <= highPitch; p++) {
@@ -255,21 +305,102 @@ class NoteDetector {
         }
       }
       if (bestP < 0) break;
-      if (first == null) {
-        if (bestS < 0.05) break;
-        first = bestS;
-      } else if (bestS < first * secondNoteRatio) {
-        break;
-      }
+      first ??= expected.isEmpty ? bestS : top;
+      if (bestS < 0.05 || bestS < first * (found.isEmpty ? 0 : ratio)) break;
+      if (expected.isNotEmpty && bestS < top * _unexpectedRatio) break;
       found.add(bestP);
       _removeHarmonics(peaks, bestP);
     }
     for (final p in found) {
-      if (_active.containsKey(p)) {
-        out.add(DetectedNote(p, false, time, at));
+      _emitOn(p, onset, _level(after, p, binHz), at, out);
+    }
+  }
+
+  void _emitOn(
+    int p,
+    int onset,
+    double level,
+    double at,
+    List<DetectedNote> out,
+  ) {
+    final last = _lastEmit[p];
+    if (last != null && (onset - last).abs() < _repeatGap * sampleRate) return;
+    _lastEmit[p] = onset;
+    final time = onset / sampleRate;
+    if (_active.containsKey(p)) out.add(DetectedNote(p, false, time, at));
+    _active[p] = (level, onset);
+    out.add(DetectedNote(p, true, time, at));
+  }
+
+  /// Partial energy of [p] in [mag]: first four partials, weighted.
+  double _partialEnergy(Float64List mag, int p, double binHz) {
+    final f0 = _freq(p);
+    var e = 0.0;
+    for (var h = 1; h <= 4; h++) {
+      final f = _partial(f0, h);
+      if (f > sampleRate / 2 * 0.95) break;
+      e += _peakNear(mag, f, binHz, 0.02) / math.sqrt(h);
+    }
+    return e;
+  }
+
+  /// Whether at least two of [p]'s first four partials are sharp peaks:
+  /// 4× the median magnitude of the surrounding semitone band. Noise and
+  /// broadband thumps are not tonal; piano partials are.
+  bool _tonal(Float64List mag, int p, double binHz) {
+    final f0 = _freq(p);
+    var sharp = 0;
+    for (var h = 1; h <= 4; h++) {
+      final f = _partial(f0, h);
+      if (f > sampleRate / 2 * 0.95) break;
+      final lo = math.max(1, (f * 0.94 / binHz).floor());
+      final hi = math.min(mag.length - 1, (f * 1.06 / binHz).ceil());
+      final band = [for (var k = lo; k <= hi; k++) mag[k]]..sort();
+      final median = band[band.length ~/ 2];
+      if (_peakNear(mag, f, binHz, 0.02) > 4 * median + 1e-9) sharp++;
+    }
+    return sharp >= 2;
+  }
+
+  /// Expected-note path: a note the lesson expects counts as soon as its own
+  /// partials jump up and stand out in the frame, even when the broadband
+  /// onset detector missed a soft attack.
+  void _checkExpected(List<DetectedNote> out) {
+    const pad = 2;
+    final end = _written;
+    final mag = _magnitudes(end - _pitchN, _pitchN, _pitchWin, pad: pad);
+    final binHz = sampleRate / (_pitchN * pad);
+    var strongest = 0.0;
+    for (var p = lowPitch; p <= highPitch; p++) {
+      strongest = math.max(strongest, _partialEnergy(mag, p, binHz));
+    }
+    _noise = _noise == 0 ? strongest : math.min(strongest, _noise * 1.02);
+    _expectHistory.removeWhere((p, _) => !expected.contains(p));
+    for (final p in expected) {
+      if (p < lowPitch || p > highPitch) continue;
+      final e = _partialEnergy(mag, p, binHz);
+      final hist = _expectHistory.putIfAbsent(p, () => []);
+      final warm = hist.length >= 4; // need a baseline before judging a rise
+      final floor = hist.isEmpty ? double.infinity : hist.reduce(math.min);
+      hist.add(e);
+      if (hist.length > 8) hist.removeAt(0);
+      if (!warm || e < 1e-3 || e < strongest * _expectShare) continue;
+      if (e < floor * _expectRise) continue;
+      // Clearly above the room's noise, and a real peak: a note's own
+      // partials beat the semitone neighbours', leakage from a nearby
+      // played note does not.
+      if (e < _noise * 6) continue;
+      if (!_tonal(mag, p, binHz)) continue;
+      if (e <= _partialEnergy(mag, p - 1, binHz) * 1.15 ||
+          e <= _partialEnergy(mag, p + 1, binHz) * 1.15) {
+        continue;
       }
-      _active[p] = (_level(after, p, binHz), onset);
-      out.add(DetectedNote(p, true, time, at));
+      final onset = _refineOnset(end - _pitchN - _fluxHop * 2, end);
+      _emitOn(p, onset, _level(mag, p, binHz), end / sampleRate, out);
+      // Reset so one attack fires once.
+      hist
+        ..clear()
+        ..add(e);
     }
   }
 

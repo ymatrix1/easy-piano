@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
@@ -10,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../audio/backing.dart';
 import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
+import '../input/mic/mic_input.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
@@ -536,6 +538,7 @@ class _PracticeStageState extends State<PracticeStage>
     }
     if (f.hintActive && _hintSinceSec == null) _hintSinceSec = now;
     if (!f.hintActive) _hintSinceSec = null;
+    if (widget.micMode) _updateMicExpected(targets, f.cursor);
     final showKeys = _playAlong || f.hintActive;
     _hint.value = showKeys && f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
@@ -588,6 +591,28 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   /// Target highlighted now: the demo position during pre-listen, else the cursor.
+  /// Tells the mic which notes the lesson expects now (score-informed
+  /// detection, docs/specs/input.md): in wait mode the target at the cursor
+  /// and the next one; in play-along the pending targets from half a beat
+  /// back to 0.6 s ahead.
+  void _updateMicExpected(List<TargetView> targets, int cursor) {
+    final want = <int>{};
+    if (_playAlong) {
+      final beat = _scroll.value;
+      final ahead = 600 / _msPerBeat;
+      for (final t in targets) {
+        if (t.state == 0 && t.beat >= beat - 0.5 && t.beat <= beat + ahead) {
+          want.addAll(t.pitches);
+        }
+      }
+    } else {
+      for (var i = cursor; i < targets.length && i <= cursor + 1; i++) {
+        want.addAll(targets[i].pitches);
+      }
+    }
+    if (!setEquals(want, micInput.expected)) micInput.expected = want;
+  }
+
   int get _activeIndex => _demo ? _demoIndex : (_frame?.cursor ?? 0);
 
   int? _currentNoteIndex() {
@@ -619,6 +644,7 @@ class _PracticeStageState extends State<PracticeStage>
 
   @override
   void dispose() {
+    if (widget.micMode) micInput.expected = const {};
     pianoSynth.stopAll();
     _ticker.dispose();
     _pageAnim.dispose();
