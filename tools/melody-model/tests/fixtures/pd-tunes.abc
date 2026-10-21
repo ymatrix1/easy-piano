@@ -1,0 +1,23 @@
+% Test fixtures written for Easy Piano. Twinkle is traditional (public domain);
+% the other two tunes are made up for these tests. CC0.
+
+X:1
+T:Twinkle Twinkle Little Star
+M:4/4
+L:1/4
+K:C
+C C G G | A A G2 | F F E E | D D C2 |]
+
+X:2
+T:Pickup Jig
+M:6/8
+L:1/8
+K:G
+D | G2A B2G | A2B c2A | B2G A2F | G3 G2 |]
+
+X:3
+T:Triplet Tune
+M:2/4
+L:1/8
+K:C
+(3CDE F2 | G4 |]

@@ -1,0 +1,2 @@
+music21==10.5.0  # BSD-3-Clause; parsing only, not shipped
+pytest==9.1.1
