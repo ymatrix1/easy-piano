@@ -93,12 +93,22 @@ export class Grammar {
     this.lo = midiOf(spec.range_lo);
     this.hi = midiOf(spec.range_hi);
     this.hands = spec.hands === "BOTH" ? ["RH", "LH"] : [spec.hands];
-    const allowed = new Set(spec.durs);
-    this.durIds = V.dur.map((d, i) => (allowed.has(d) ? i : -1)).filter((i) => i >= 0);
+    const ids = (names) => { const set = new Set(names); return V.dur.map((d, i) => (set.has(d) ? i : -1)).filter((i) => i >= 0); };
+    this.durIds = ids(spec.durs);
+    // Optional taught-set masks (practice mode, generate.py Masker): pitches per hand, max leap in
+    // semitones, chord size per hand, rest durations. Pitches match by spelling, so no enharmonic (Fb4 for E4) slips in; no ties and no fingering (the rubric checks the rest).
+    const m = spec.mask;
+    this.mask = m ? {
+      pitches: Object.fromEntries(this.hands.map((h) => [h, new Set(m.pitches[h] || [])])),
+      maxLeap: m.max_leap,
+      poly: Object.fromEntries(this.hands.map((h) => [h, Math.min(MAX_CHORD, (m.poly && m.poly[h]) || 1)])),
+    } : null;
+    this.restIds = m ? ids(m.rest_durs || []) : this.durIds;
+    const all = [...new Set([...this.durIds, ...this.restIds])];
     // fill[r]: r 32nds can be filled exactly with allowed durations
     this.fill = new Array(this.cap + 1).fill(false);
     this.fill[0] = true;
-    for (let r = 1; r <= this.cap; r++) this.fill[r] = this.durIds.some((i) => V.units[i] <= r && this.fill[r - V.units[i]]);
+    for (let r = 1; r <= this.cap; r++) this.fill[r] = all.some((i) => V.units[i] <= r && this.fill[r - V.units[i]]);
     if (!this.fill[this.cap]) throw new Error(`allowed durations cannot fill a ${spec.time} bar`);
     const g = (pre) => V.kind.map((k, i) => (k.startsWith(pre) ? i : -1)).filter((i) => i >= 0);
     this.sec = g("SEC_");
@@ -107,7 +117,7 @@ export class Grammar {
   }
 
   init() {
-    return { phase: "PLAN", plan: 0, maxSec: -1, bar: 0, hand: 0, used: 0, events: 0, last: null, root: null, top: null, chord: 0, fingered: false };
+    return { phase: "PLAN", plan: 0, maxSec: -1, bar: 0, hand: 0, used: 0, events: 0, last: null, root: null, top: null, chord: 0, fingered: false, prev: this.startPrev() };
   }
 
   kinds(st) {
@@ -124,12 +134,14 @@ export class Grammar {
       case "HAND": return [K(this.hands[st.hand])];
       case "IN": {
         const rem = this.cap - st.used, out = [];
-        if (rem > 0 && st.last !== "TIE" && this.durIds.some((i) => V.units[i] <= rem && this.fill[rem - V.units[i]])) out.push(K("REST"));
-        if (rem > 0 && this.durIds.some((i) => V.units[i] <= rem && this.fill[rem - V.units[i]])) out.push(K("NOTE"));
+        const fits = (ids) => ids.some((i) => V.units[i] <= rem && this.fill[rem - V.units[i]]);
+        if (rem > 0 && st.last !== "TIE" && fits(this.restIds)) out.push(K("REST"));
+        if (rem > 0 && fits(this.durIds) && this.notePitches(st).length) out.push(K("NOTE"));
         const inChord = st.last === "NOTE" || st.last === "CHORD";
-        if (inChord && st.chord < MAX_CHORD && this.chordPitches(st).length) out.push(K("CHORD"));
+        const maxChord = this.mask ? this.mask.poly[this.hands[st.hand]] : MAX_CHORD;
+        if (inChord && st.chord < maxChord && this.chordPitches(st).length) out.push(K("CHORD"));
         const lastSlot = st.bar === this.spec.bars && st.hand === this.hands.length - 1 && rem === 0;
-        if (inChord && !lastSlot) out.push(K("TIE"));
+        if (inChord && !lastSlot && !this.mask) out.push(K("TIE"));
         if (rem === 0 && st.events > 0) {
           if (st.hand < this.hands.length - 1) out.push(K(this.hands[st.hand + 1]));
           else out.push(K(st.bar < this.spec.bars ? "BAR" : "END"));
@@ -140,9 +152,28 @@ export class Grammar {
     }
   }
 
+  // Streaming practice: `mask.start` ({hand: pitch name}) is the last note of the previous chunk, so the
+  // leap rule holds across chunk boundaries.
+  startPrev() {
+    const start = (this.spec.mask && this.spec.mask.start) || {};
+    return Object.fromEntries(Object.entries(start).map(([h, p]) => [h, midiOf(p)]));
+  }
+
+  // With a mask: taught pitches of the current hand within max leap of that hand's previous note.
+  notePitches(st) {
+    const out = [], hand = this.hands[st.hand], prev = st.prev[hand];
+    const taught = this.mask && this.mask.pitches[hand];
+    this.V.midi.forEach((m, i) => {
+      if (m === null || m < this.lo || m > this.hi) return;
+      if (taught && (!taught.has(this.V.pitch[i]) || (prev != null && Math.abs(m - prev) > this.mask.maxLeap))) return;
+      out.push(i);
+    });
+    return out;
+  }
+
   chordPitches(st) {
-    const out = [];
-    this.V.midi.forEach((m, i) => { if (m !== null && m > st.top && m <= this.hi && m - st.root <= CHORD_SPAN) out.push(i); });
+    const out = [], taught = this.mask && this.mask.pitches[this.hands[st.hand]];
+    this.V.midi.forEach((m, i) => { if (m !== null && m > st.top && m <= this.hi && m - st.root <= CHORD_SPAN && (!taught || taught.has(this.V.pitch[i]))) out.push(i); });
     return out;
   }
 
@@ -150,16 +181,17 @@ export class Grammar {
   values(st, field, kindName) {
     const V = this.V;
     if (field === "pitch") {
-      if (kindName === "NOTE") return V.midi.map((m, i) => (m !== null && m >= this.lo && m <= this.hi ? i : -1)).filter((i) => i >= 0);
+      if (kindName === "NOTE") return this.notePitches(st);
       if (kindName === "CHORD") return this.chordPitches(st);
       return [0];
     }
     if (field === "dur") {
       if (kindName !== "NOTE" && kindName !== "REST") return [0];
       const rem = this.cap - st.used;
-      return this.durIds.filter((i) => V.units[i] <= rem && this.fill[rem - V.units[i]]);
+      return (kindName === "REST" ? this.restIds : this.durIds).filter((i) => V.units[i] <= rem && this.fill[rem - V.units[i]]);
     }
     if (field === "finger") {
+      if (this.mask) return [0];
       if (kindName === "NOTE") return [0, 1, 2, 3, 4, 5];
       if (kindName === "CHORD") return st.fingered ? [1, 2, 3, 4, 5] : [0];
       return [0];
@@ -181,6 +213,7 @@ export class Grammar {
         if (k === "NOTE") {
           st.used += V.units[s[2]]; st.events++; st.last = "NOTE";
           st.root = st.top = V.midi[s[1]]; st.chord = 1; st.fingered = s[3] !== 0;
+          st.prev[this.hands[st.hand]] = V.midi[s[1]];
         } else if (k === "CHORD") { st.top = V.midi[s[1]]; st.chord++; st.last = "CHORD"; }
         else if (k === "REST") { st.used += V.units[s[2]]; st.events++; st.last = "REST"; }
         else if (k === "TIE") st.last = "TIE";
@@ -242,7 +275,8 @@ export async function generate(V, model, spec, { n = 8, temperature = 1.0, seed 
       for (let b = 0; b < n; b++) {
         const st = states[b];
         if (st.phase === "DONE") continue;
-        if (!allowed[b].length) throw new Error(`no allowed value (field ${f}, phase ${st.phase})`);
+        // dead end (a taught-set mask leaves nothing that fits): drop this candidate, keep the others
+        if (!allowed[b].length) { st.phase = "DONE"; st.dead = true; chosen[b] = PAD.slice(); continue; }
         const row = lg && lg[f].subarray(b * sizes[f], (b + 1) * sizes[f]);
         const [id, lp] = pick(row, allowed[b], temperature, rng);
         chosen[b][f] = id;
@@ -257,7 +291,7 @@ export async function generate(V, model, spec, { n = 8, temperature = 1.0, seed 
     }
     h = await model.next(chosen);
   }
-  states.forEach((st, b) => { cands[b].done = st.phase === "DONE"; cands[b].mean = cands[b].logp / Math.max(1, cands[b].len); });
+  states.forEach((st, b) => { cands[b].done = st.phase === "DONE" && !st.dead; cands[b].mean = cands[b].logp / Math.max(1, cands[b].len); });
   return cands.sort((a, b) => (b.done - a.done) || (b.mean - a.mean));
 }
 

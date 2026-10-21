@@ -217,6 +217,18 @@ impl PracticeSession {
         }
     }
 
+    /// Streaming practice: `song_json` is the session's song with bars
+    /// appended; returns the number of targets added.
+    #[frb(sync)]
+    pub fn extend(&mut self, song_json: String) -> Result<u32, String> {
+        let song = Song::from_json(&song_json)?;
+        let errs = song.validate();
+        if !errs.is_empty() {
+            return Err(errs.join("; "));
+        }
+        self.inner.extend(&song).map(|n| n as u32)
+    }
+
     /// Training: section outcome from the last tick, if any.
     #[frb(sync)]
     pub fn take_section_event(&mut self) -> Option<SectionEventView> {
@@ -297,4 +309,12 @@ impl PracticeSession {
             stars_exact: r.stars_exact,
         }
     }
+}
+
+/// Practice mode rubric gate (D28): errors for a generated tune against one
+/// node of `assets/content/practice.json` (its `practice` object). Empty means
+/// the tune may be shown. Logic in `easy_piano_core::rubric::check_generated`.
+#[frb(sync)]
+pub fn check_generated(song_json: String, node_json: String) -> Vec<String> {
+    easy_piano_core::rubric::check_generated(&song_json, &node_json)
 }

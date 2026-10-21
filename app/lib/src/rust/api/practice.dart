@@ -21,6 +21,17 @@ List<NoteView> companion({required String songJson, required String hand}) =>
 SongInfo inspectSong({required String json}) =>
     RustLib.instance.api.crateApiPracticeInspectSong(json: json);
 
+/// Practice mode rubric gate (D28): errors for a generated tune against one
+/// node of `assets/content/practice.json` (its `practice` object). Empty means
+/// the tune may be shown. Logic in `easy_piano_core::rubric::check_generated`.
+List<String> checkGenerated({
+  required String songJson,
+  required String nodeJson,
+}) => RustLib.instance.api.crateApiPracticeCheckGenerated(
+  songJson: songJson,
+  nodeJson: nodeJson,
+);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PracticeSession>>
 abstract class PracticeSession implements RustOpaqueInterface {
   /// `mode`: "wait" | "play_along" | "one_note"; `input`: "midi" | "mic" | "touch";
@@ -46,6 +57,10 @@ abstract class PracticeSession implements RustOpaqueInterface {
   );
 
   PlatformInt64 endUs();
+
+  /// Streaming practice: `song_json` is the session's song with bars
+  /// appended; returns the number of targets added.
+  int extend({required String songJson});
 
   void onNote({
     required int pitch,
