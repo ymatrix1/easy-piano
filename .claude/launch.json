@@ -30,6 +30,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8770", "--bind", "127.0.0.1", "--directory", "tools/listening-test/out/site"],
       "port": 8770
+    },
+    {
+      "name": "melody-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/melody-model/web/serve.py", "8780"],
+      "port": 8780
     }
   ]
 }
