@@ -18,12 +18,15 @@ attention and MLP work per tune, so the cache is worth its two extra inputs.
 
 int8: onnxruntime dynamic quantization (weights int8 per tensor, activations quantized at run time),
 MatMul / Gemm only; embeddings and LayerNorm stay fp32.
-Also writes vocab.json and meta.json (config, run, step, val loss, sizes) next to the graphs.
+Also writes next to the graphs: vocab.json; parity.json (an Ode to Joy step sequence and its PyTorch logits,
+for the in-browser parity check); meta.json (config, run, step, val loss, sizes, sha256 per file, parity,
+and validation NLL of PyTorch vs ONNX fp32 vs ONNX int8 on held-out tunes).
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -116,14 +119,25 @@ def export(m: CompoundGPT, out: Path) -> dict:
     return {p.name: p.stat().st_size for p in sorted(out.glob("*.onnx"))}
 
 
+_SESSIONS: dict = {}
+
+
+def _session(path: Path):
+    """One onnxruntime CPU session per file and modification time (the NLL check runs hundreds of tunes)."""
+    import onnxruntime as ort
+
+    key = (str(path), path.stat().st_mtime_ns)
+    if key not in _SESSIONS:
+        _SESSIONS[key] = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
+    return _SESSIONS[key]
+
+
 def _ort_logits(out: Path, suffix: str, steps: torch.Tensor, split: int) -> list[torch.Tensor]:
     """Run the ONNX graphs like the browser: prefill steps[:split], then one step per call.
     Returns per-field logits at positions split-1 .. T-2, teacher-forced on steps (as torch_logits)."""
     import numpy as np
-    import onnxruntime as ort
 
-    dec = ort.InferenceSession(str(out / f"decoder{suffix}.onnx"), providers=["CPUExecutionProvider"])
-    heads = ort.InferenceSession(str(out / f"heads{suffix}.onnx"), providers=["CPUExecutionProvider"])
+    dec, heads = (_session(out / f"{name}{suffix}.onnx") for name in ("decoder", "heads"))
     pk_shape = [s if isinstance(s, int) else 0 for s in dec.get_inputs()[1].shape]
     b, t, _ = steps.shape
     pk_shape[1] = b
@@ -165,11 +179,68 @@ def parity(m: CompoundGPT, out: Path, steps: torch.Tensor, split: int) -> dict:
     return res
 
 
+def nll(m: CompoundGPT, out: Path, seqs: list[tuple[torch.Tensor, int]]) -> dict:
+    """Mean per-field NLL (nats/step) over the left-to-right loss positions (after SPEC_END, as in training),
+    for PyTorch and both ONNX variants. Total = sum of the field means, the training loss."""
+    import torch.nn.functional as F2
+
+    sums = {k: [0.0] * 4 for k in ("torch", "fp32", "int8")}
+    count = 0
+    for steps, split in seqs:
+        tgt = steps[0, split:]
+        runs = {"torch": torch_logits(m, steps, split), "fp32": _ort_logits(out, "", steps, split),
+                "int8": _ort_logits(out, ".int8", steps, split)}
+        for k, lg in runs.items():
+            for i in range(4):
+                sums[k][i] += float(F2.cross_entropy(lg[i][0].float(), tgt[:, i], reduction="sum"))
+        count += tgt.shape[0]
+    res = {}
+    for k, v in sums.items():
+        fields = [x / count for x in v]
+        res[k] = {"total": round(sum(fields), 5), "kind": round(fields[0], 5), "pitch": round(fields[1], 5),
+                  "dur": round(fields[2], 5), "finger": round(fields[3], 5)}
+    res["steps"] = count
+    res["tunes"] = len(seqs)
+    return res
+
+
+def eval_seqs(tunes_path: Path, n: int) -> list[tuple[torch.Tensor, int]]:
+    """First n validation tunes (by id), encoded like training without random drops: spec (with level),
+    plan, bars, END. Tunes longer than the context are skipped."""
+    from .difficulty import level_of
+    from .labels import encode_plan
+    from .tokenizer import Unsupported, encode_bars, encode_spec, spec_from_song, step
+
+    tunes = sorted((json.loads(line) for line in open(tunes_path, encoding="utf-8")), key=lambda t: t["id"])
+    out = []
+    for t in tunes:
+        if t["split"] != "valid":
+            continue
+        try:
+            spec = spec_from_song(t)
+            spec.level = level_of(t)
+            head = [step("BOS")] + encode_spec(spec)
+            steps = head + encode_plan(t["plan"]) + encode_bars(t["bars"]) + [step("END")]
+        except Unsupported:
+            continue
+        if len(steps) <= 1024:
+            out.append((torch.tensor([steps]), len(head)))
+        if len(out) == n:
+            break
+    return out
+
+
+def sha256(p: Path) -> str:
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
     ap.add_argument("--runs", type=Path, default=HERE.parent.parent / "data" / "melody" / "runs")
     ap.add_argument("--out", type=Path, default=HERE / "web" / "model")
+    ap.add_argument("--tunes", type=Path, default=HERE.parent.parent / "data" / "melody" / "dataset" / "tunes.jsonl")
+    ap.add_argument("--eval-tunes", type=int, default=200, help="validation tunes for the NLL check (0 = skip)")
     args = ap.parse_args(argv)
     m, blob = load(args.runs / args.run / "ckpt.pt")
     sizes = export(m, args.out)
@@ -178,10 +249,17 @@ def main(argv):
     steps = torch.tensor([encode_song(song)])
     split = next(i for i, s in enumerate(steps[0].tolist()) if s[0] == FIELDS["kind"].index("SPEC_END")) + 1
     par = parity(m, args.out, steps, split)
+    ref = torch_logits(m, steps, split)
+    (args.out / "parity.json").write_text(json.dumps({
+        "steps": steps[0].tolist(), "split": split,
+        "logits": [[[round(v, 4) for v in row] for row in lg[0].tolist()] for lg in ref]}), encoding="utf-8")
+    quality = nll(m, args.out, eval_seqs(args.tunes, args.eval_tunes)) if args.eval_tunes else None
+    files = sorted(p.name for p in args.out.iterdir() if p.suffix in (".onnx", ".json") and p.name != "meta.json")
     meta = {"run": args.run, "step": blob.get("step"), "val_loss": blob.get("val_loss"), "config": blob["config"],
-            "params": m.n_params(), "sizes_mb": {k: round(v / 1e6, 2) for k, v in sizes.items()}, "parity": par}
+            "params": m.n_params(), "sizes_mb": {k: round(v / 1e6, 2) for k, v in sizes.items()},
+            "sha256": {f: sha256(args.out / f) for f in files}, "parity": par, "nll": quality}
     (args.out / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
-    print(json.dumps(meta, indent=1))
+    print(json.dumps({k: v for k, v in meta.items() if k != "sha256"}, indent=1))
 
 
 if __name__ == "__main__":

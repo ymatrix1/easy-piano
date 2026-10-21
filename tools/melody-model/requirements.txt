@@ -2,5 +2,5 @@ music21==10.5.0  # BSD-3-Clause; parsing only, not shipped
 mido==1.3.3  # MIT; timing of performed MIDI (timed.py)
 pytest==9.1.1
 onnx==1.23.2  # Apache-2.0; export only
-onnxruntime==1.31.0  # MIT; int8 quantization and parity test
+onnxruntime==1.30.0  # MIT; int8 quantization and parity test; same version as onnxruntime-web in web/fetch_ort.py
 onnxscript==0.7.2  # MIT; torch.onnx exporter dependency

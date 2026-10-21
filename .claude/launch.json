@@ -4,34 +4,19 @@
     {
       "name": "web-spike",
       "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "tools/serve_web.py",
-        "app/build/web",
-        "8765"
-      ],
+      "runtimeArgs": ["tools/serve_web.py", "app/build/web", "8765"],
       "port": 8765
     },
     {
       "name": "listening-test",
       "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8770",
-        "--bind",
-        "127.0.0.1",
-        "--directory",
-        "tools/listening-test/out/site"
-      ],
+      "runtimeArgs": ["-m", "http.server", "8770", "--bind", "127.0.0.1", "--directory", "tools/listening-test/out/site"],
       "port": 8770
     },
     {
       "name": "melody-web",
       "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "tools/melody-model/web/serve.py",
-        "8780"
-      ],
+      "runtimeArgs": ["tools/melody-model/web/serve.py", "8780"],
       "port": 8780
     }
   ]

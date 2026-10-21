@@ -123,15 +123,19 @@ Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers
 
 ```
 python -m melody_model.export --run base1      # -> tools/melody-model/web/model/ (git-ignored)
-python tools/melody-model/web/serve.py         # http://localhost:8780/
+python tools/melody-model/web/fetch_ort.py     # onnxruntime-web 1.30.0 -> web/vendor/ (git-ignored, sha256-pinned)
+python tools/melody-model/web/serve.py         # http://localhost:8780/ (COOP/COEP: needed for wasm threads)
 ```
 
 - `decoder.onnx`: one decoding call with a KV cache. `x (B,T,4)`, `past_k/past_v (L,B,H,P,hd)` → `h (B,d)` of the last step, `present_k/present_v`. Prefill with the spec prefix and `P = 0`, then one step per call. Chosen over a full-sequence graph, which re-runs the prefix every step (O(n²)).
 - `heads.onnx`: `h, kind, pitch, dur` → four logit vectors. Head *i* reads only earlier fields, so the caller samples kind, reruns for pitch with that kind, and so on.
 - `*.int8.onnx`: onnxruntime dynamic quantization of MatMul/Gemm weights (int8); embeddings and LayerNorm stay fp32. Exported with the TorchScript exporter (opset 17).
-- `meta.json`: run, step, val loss, config, sizes, parity. `vocab.json`: field vocabularies.
-- Parity (`tests/test_export.py`): KV-cache path vs PyTorch full sequence, batch of 2; fp32 max abs logit diff < 1e-4, int8 max prob diff < 0.05.
-- `web/melody.js` (no DOM): `encodeSpec` (= `encode_spec`, durations sorted as `spec_from_song`), `Grammar` masks, `generate`, `decode` (= `tokenizer.decode`). `web/check.mjs` + `tests/test_web.py` check it against Python under Node.
+- `meta.json`: run, step, val loss, config, sizes, sha256 of every other file, parity, validation NLL (PyTorch / ONNX fp32 / ONNX int8 on 200 held-out tunes). `vocab.json`: field vocabularies. `parity.json`: Ode to Joy steps and PyTorch logits for the in-browser parity check.
+- Acceptance for a checkpoint: fp32 max abs logit diff < 1e-4 (KV-cache path = full sequence), int8 validation NLL within 1% of fp32. Max prob diff is reported, not gated: on base1 it is 0.082 for +0.12% NLL ([melody-browser.md](../research/melody-browser.md)).
+- Tests (`tests/test_export.py`): toy model (fp32 < 1e-4, int8 max prob diff < 0.05, NLL fp32 = PyTorch) and the shipped shape with random weights (`slow` marker: 11.09M params, fp32 parity, int8 NLL within 2%).
+- Python onnxruntime and onnxruntime-web are pinned to the same version (1.30.0). The page loads the runtime and wasm only from `vendor/` and checks each model file's sha256 against `meta.json` before creating a session; `?model=<base URL>` loads from another host (needs CORS and CORP headers). `meta.json` itself is not yet pinned.
+- `web/melody.js` (no DOM): `encodeSpec` (= `encode_spec`, durations sorted as `spec_from_song`), `Grammar` masks, `generate`, `decode` (= `tokenizer.decode`). `web/check.mjs` + `tests/test_web.py` check it against Python under Node: spec encoding and decoding are equal; generation (random logits) yields sequences the Python decoder accepts and that satisfy the spec. They do not compare chosen ids with Python (different RNGs, different masks in `generate.py`).
+- With `CI` or `MELODY_REQUIRE_ALL` set, a missing node or onnxruntime fails these tests instead of skipping them.
 
 Masks at each step:
 

@@ -23,12 +23,14 @@
 <body>
 <h1>Melody model demo</h1>
 <p class="muted">Spec-conditioned compound GPT (D20), ONNX in onnxruntime-web, masked decoding. Model files from
-<code>python -m melody_model.export --run &lt;name&gt;</code>; serve with <code>python web/serve.py</code>.</p>
+<code>python -m melody_model.export --run &lt;name&gt;</code>; runtime from <code>python web/fetch_ort.py</code>;
+serve with <code>python web/serve.py</code> (COOP/COEP, needed for threads). <code>?model=&lt;base URL&gt;</code> loads the model from elsewhere.</p>
 
 <fieldset><legend>Model</legend>
   <label>Variant <select id="variant"><option value=".int8">int8</option><option value="">fp32</option></select></label>
   <label>Threads <input id="threads" type="number" value="1" min="1" max="16"></label>
-  <button id="load">Load</button> <span id="loadInfo" class="muted">not loaded</span>
+  <button id="load">Load</button> <button id="parity" disabled>Check parity</button>
+  <span id="loadInfo" class="muted">not loaded</span>
 </fieldset>
 
 <fieldset><legend>Spec</legend>
@@ -58,13 +60,28 @@
 <pre id="out"></pre>
 
 <script type="module">
-import * as ort from "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.wasm.min.mjs";
+// Vendored by web/fetch_ort.py (pinned version and sha256); the wasm comes from vendor/ too, never a CDN.
+import * as ort from "./vendor/ort.wasm.min.mjs";
 import { DURATIONS, decode, durUnits, generate, makeVocab, midiOf } from "./melody.js";
 
 const $ = (id) => document.getElementById(id);
 const TIMES = ["2/4", "3/4", "4/4", "3/8", "6/8", "9/8", "12/8", "2/2"];
 const STYLES = ["classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese"];
 let V = null, model = null, results = [], sel = 0;
+ort.env.wasm.wasmPaths = new URL("vendor/", location.href).href;
+// Model base URL: model/ next to the page, or ?model=<url> (e.g. a release mirror; must send CORS and CORP headers).
+const BASE = new URL(new URLSearchParams(location.search).get("model") || "model/", location.href).href.replace(/\/?$/, "/");
+
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+// Fetch a model file and check it against meta.json's sha256 before anything parses it.
+async function fetchChecked(meta, name) {
+  const want = meta.sha256 && meta.sha256[name];
+  if (!want) throw new Error(`${name}: no sha256 in meta.json`);
+  const buf = await fetch(BASE + name).then((r) => { if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`); return r.arrayBuffer(); });
+  const got = hex(await crypto.subtle.digest("SHA-256", buf));
+  if (got !== want) throw new Error(`${name}: sha256 ${got} != meta.json ${want}`);
+  return new Uint8Array(buf);
+}
 
 // One ORT session pair; keeps the KV cache between calls (melody_model/export.py).
 class OrtModel {
@@ -72,11 +89,9 @@ class OrtModel {
     ort.env.wasm.numThreads = threads;
     const m = new OrtModel();
     const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
-    const [dec, heads, meta] = await Promise.all([
-      ort.InferenceSession.create(`model/decoder${variant}.onnx`, opts),
-      ort.InferenceSession.create(`model/heads${variant}.onnx`, opts),
-      fetch("model/meta.json").then((r) => r.json()),
-    ]);
+    const meta = await fetch(BASE + "meta.json").then((r) => r.json());
+    const [decBytes, headsBytes] = await Promise.all([fetchChecked(meta, `decoder${variant}.onnx`), fetchChecked(meta, `heads${variant}.onnx`)]);
+    const [dec, heads] = await Promise.all([ort.InferenceSession.create(decBytes, opts), ort.InferenceSession.create(headsBytes, opts)]);
     Object.assign(m, { dec, headsSession: heads, meta, c: meta.config });
     return m;
   }
@@ -117,23 +132,47 @@ function readSpec() {
 function resourceBytes() {
   const sum = (re) => performance.getEntriesByType("resource").filter((e) => re.test(e.name))
     .reduce((a, e) => a + (e.transferSize || e.encodedBodySize || 0), 0);
-  return { model: sum(/\.onnx$/), wasm: sum(/\.wasm$/), js: sum(/onnxruntime-web.*\.mjs$/) };
+  return { model: sum(/\.onnx$/), wasm: sum(/\.wasm$/), js: sum(/vendor\/.*\.mjs$/) };
 }
 
 async function load() {
   $("loadInfo").textContent = "loading…";
   const t0 = performance.now();
   try {
-    if (!V) V = makeVocab(await fetch("model/vocab.json").then((r) => r.json()));
     model = await OrtModel.load($("variant").value, +$("threads").value);
+    V = makeVocab(JSON.parse(new TextDecoder().decode(await fetchChecked(model.meta, "vocab.json"))));
   } catch (e) { $("loadInfo").textContent = `load failed: ${e.message}`; throw e; }
   const ms = performance.now() - t0, b = resourceBytes();
   window.loadStats = { ms, bytes: b, meta: model.meta };
   $("loadInfo").textContent = `${model.meta.run} step ${model.meta.step}, loaded in ${ms.toFixed(0)} ms, ` +
     `model ${(b.model / 1e6).toFixed(2)} MB transferred, wasm ${(b.wasm / 1e6).toFixed(2)} MB`;
   $("key").innerHTML = V.kind.filter((k) => k.startsWith("KEY_")).map((k) => `<option>${k.slice(4)}</option>`).join("");
-  for (const id of ["gen", "bench"]) $(id).disabled = false;
+  for (const id of ["gen", "bench", "parity"]) $(id).disabled = false;
 }
+
+// In-browser parity: teacher-force parity.json's steps through this runtime and compare with the PyTorch
+// logits export.py stored (rounded to 1e-4). Same measures as export.parity.
+async function checkParity() {
+  const fx = JSON.parse(new TextDecoder().decode(await fetchChecked(model.meta, "parity.json")));
+  const s = fx.steps, ref = fx.logits;
+  let h = await model.start(s.slice(0, fx.split), 1), maxProb = 0, maxAbs = 0, agree = 0, total = 0;
+  const softmax = (a) => { const m = Math.max(...a), e = a.map((x) => Math.exp(x - m)), z = e.reduce((x, y) => x + y, 0); return e.map((x) => x / z); };
+  const argmax = (a) => a.reduce((bi, x, i) => (x > a[bi] ? i : bi), 0);
+  for (let t = fx.split; t < s.length; t++) {
+    const lg = await model.heads(h, [s[t][0]], [s[t][1]], [s[t][2]]);
+    for (let f = 0; f < 4; f++) {
+      const got = Array.from(lg[f]), want = ref[f][t - fx.split];
+      const pg = softmax(got), pw = softmax(want);
+      for (let i = 0; i < got.length; i++) { maxAbs = Math.max(maxAbs, Math.abs(got[i] - want[i])); maxProb = Math.max(maxProb, Math.abs(pg[i] - pw[i])); }
+      agree += argmax(got) === argmax(want); total++;
+    }
+    if (t < s.length - 1) h = await model.next([s[t]]);
+  }
+  const out = { variant: $("variant").value || "fp32", positions: s.length - fx.split, max_abs: maxAbs, max_prob_diff: maxProb, top1: agree / total };
+  $("loadInfo").textContent += ` | parity: max prob diff ${maxProb.toFixed(4)}, top-1 ${(100 * out.top1).toFixed(1)}%`;
+  return out;
+}
+window.checkParity = checkParity;
 
 async function run(spec, n, temperature, seed) {
   const t0 = performance.now();
@@ -212,6 +251,7 @@ function play() {
 
 setup();
 $("load").onclick = load;
+$("parity").onclick = () => checkParity();
 $("gen").onclick = onGen;
 $("bench").onclick = () => bench();
 $("play").onclick = play;

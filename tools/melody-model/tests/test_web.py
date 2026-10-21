@@ -1,4 +1,9 @@
-"""The browser decoder (web/melody.js) against the Python tokenizer, run through Node (web/check.mjs)."""
+"""The browser decoder (web/melody.js) against the Python tokenizer, run through Node (web/check.mjs).
+
+What this checks: encodeSpec == encode_spec, decode == tokenizer.decode on every song, and that masked generation
+(driven by random logits) only produces sequences the Python decoder accepts with full bars, in range, allowed
+durations and the spec's hands. It does not check that JS and Python pick the same ids: the RNGs differ
+(mulberry32 vs torch), and the Python generator (generate.py) uses node masks, not these spec masks."""
 
 import json
 import shutil
@@ -6,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from conftest import need
 
 from melody_model.notation import DURATIONS, dur_beats, parse_hand
 from melody_model.tokenizer import FIELDS, Spec, decode, encode_song, encode_spec, step
@@ -35,8 +41,7 @@ def _spec(d: dict) -> Spec:
 
 @pytest.fixture(scope="module")
 def node_run(tmp_path_factory):
-    if not NODE:
-        pytest.skip("node not installed")
+    need(NODE is not None, "node")
     tmp = tmp_path_factory.mktemp("web")
     specs = GEN_SPECS + [dict(GEN_SPECS[0], patterns=[p]) for p in PATTERNS]
     songs = []

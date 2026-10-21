@@ -1,0 +1,41 @@
+"""Download onnxruntime-web into web/vendor/ (git-ignored) and check each file's sha256.
+
+    python tools/melody-model/web/fetch_ort.py
+
+The demo imports only these vendored files and points `ort.env.wasm.wasmPaths` at vendor/, so nothing
+executable comes from a CDN at run time. Keep VERSION equal to the onnxruntime pin in requirements.txt
+(the Python parity check and the browser then run the same kernels).
+"""
+
+import hashlib
+import sys
+import urllib.request
+from pathlib import Path
+
+VERSION = "1.30.0"
+URL = f"https://cdn.jsdelivr.net/npm/onnxruntime-web@{VERSION}/dist/"
+FILES = {
+    "ort.wasm.min.mjs": "219e6a1fc8a9938268d18efca3c91d310bd2f4a59bbd13744df5b2b7fc6cee3b",
+    "ort-wasm-simd-threaded.mjs": "e13f7f94fc51b4ca72b12faeb1ee95f4ace6dfbc8939bc718aabdc0a27c4299b",
+    "ort-wasm-simd-threaded.wasm": "3398c10d07d229bd91b364548e130e0e51a8e5704b88c7c083ebbeb78842dee2",
+}
+VENDOR = Path(__file__).resolve().parent / "vendor"
+
+
+def main() -> int:
+    VENDOR.mkdir(exist_ok=True)
+    for name, want in FILES.items():
+        path = VENDOR / name
+        data = path.read_bytes() if path.exists() else urllib.request.urlopen(URL + name, timeout=60).read()
+        got = hashlib.sha256(data).hexdigest()
+        if got != want:
+            print(f"{name}: sha256 {got} != pinned {want}", file=sys.stderr)
+            path.unlink(missing_ok=True)
+            return 1
+        path.write_bytes(data)
+        print(f"{name}: ok ({len(data):,} bytes)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
