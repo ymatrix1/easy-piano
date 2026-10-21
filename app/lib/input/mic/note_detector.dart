@@ -1,0 +1,702 @@
+import 'dart:math' as math;
+import 'dart:typed_data';
+
+/// A note found in microphone audio. [time] is the onset in seconds from the
+/// first sample fed; [detectedAt] is when the detector had enough audio to
+/// report it (onset + analysis window), also in seconds.
+class DetectedNote {
+  const DetectedNote(this.pitch, this.on, this.time, this.detectedAt);
+  final int pitch;
+  final bool on;
+  final double time;
+  final double detectedAt;
+
+  @override
+  String toString() =>
+      'DetectedNote($pitch, ${on ? 'on' : 'off'}, ${time.toStringAsFixed(3)})';
+}
+
+/// Piano note detector for mic input (docs/specs/input.md, D-mic).
+///
+/// Pure Dart and clock-free: feed samples, get onsets with sample-accurate
+/// times.
+///
+/// Score-informed (docs/research/mic-input.md): the lesson tells the
+/// detector which notes it expects next ([expected]). Expected notes are
+/// checked every ~20 ms on their own partials, so a soft attack in a noisy
+/// room still counts and octave doublings are allowed; any other note needs
+/// a clear broadband onset and must dominate the spectrum. Without expected
+/// notes it transcribes blind, as below. Stages:
+/// 1. Onset: spectral flux on short frames with an adaptive threshold; the
+///    exact onset sample is refined from a short-block energy envelope.
+/// 2. Pitch: one long frame just after the onset, minus the spectrum just
+///    before it (so still-ringing notes are ignored), then greedy harmonic
+///    salience picking with harmonic removal; up to [maxPolyphony] notes.
+class NoteDetector {
+  NoteDetector({
+    required this.sampleRate,
+    this.lowPitch = 36,
+    this.highPitch = 96,
+    this.maxPolyphony = 4,
+    this.secondNoteRatio = 0.3,
+    this.maxHold = 0.6,
+    this.fluxGamma = 100,
+    this.fluxRatio = 1.5,
+    this.fluxDelta = 3.0,
+    this.minAttack = 2,
+    this.minSustain = 3,
+    this.tonalRatio = 3,
+    this.subOctave = 0.8,
+  }) : _fluxN = _pow2(sampleRate * 0.021),
+       _pitchN = _pow2(sampleRate * 0.08) {
+    _fluxHop = _fluxN ~/ 2;
+    _ring = Float32List(_ringSize);
+    _fluxWin = _hann(_fluxN);
+    _pitchWin = _hann(_pitchN);
+    _prevFlux = Float64List(_fluxN ~/ 2);
+  }
+
+  final double sampleRate;
+  final int lowPitch;
+  final int highPitch;
+  final int maxPolyphony;
+
+  /// A further chord note must reach this share of the strongest one's salience.
+  final double secondNoteRatio;
+
+  /// Onset threshold: log compression of the flux spectrum, and flux must
+  /// exceed recent median × [fluxRatio] + [fluxDelta].
+  final double fluxGamma;
+  final double fluxRatio;
+  final double fluxDelta;
+
+  /// Piano-note checks ([_isPianoNote]): attack jump, sustain rise and
+  /// partial sharpness.
+  final double minAttack;
+  final double minSustain;
+  final double tonalRatio;
+
+  /// Expected path: reject when the octave or twelfth below holds this
+  /// share of the note's partial energy (a lower voice, not this key).
+  final double subOctave;
+
+  /// Longest a detected note stays "on", in seconds.
+  final double maxHold;
+
+  /// Notes the lesson expects now (MIDI numbers). Set by the practice
+  /// screen as the cursor moves; empty means blind transcription.
+  Set<int> expected = const {};
+
+  /// Expected-note check: partial energy must rise this many times above
+  /// its minimum over the last ~170 ms…
+  static const _expectRise = 3.0;
+
+  /// …and hold this share of the frame's strongest partial energy.
+  static const _expectShare = 0.12;
+
+  /// With notes expected, an unexpected note must reach this share of the
+  /// strongest candidate (blind mode uses [secondNoteRatio]).
+  static const _unexpectedRatio = 0.6;
+
+  /// Same pitch is not reported twice within this many seconds.
+  static const _repeatGap = 0.15;
+
+  final _expectHistory = <int, List<double>>{};
+  final _lastEmit = <int, int>{};
+  int _nextExpectCheck = 0;
+
+  /// Expected-note candidates waiting for the sustain check:
+  /// (pitch, onset sample, level).
+  final _confirming = <(int, int, double)>[];
+
+  /// Sustain check: a short frame (~43 ms) starting 30 ms after the onset.
+  int get _shortN => _pitchN ~/ 2;
+  int get _sustainOffset => (sampleRate * 0.03).round();
+  late final Float64List _shortWin = _hann(_pitchN ~/ 2);
+
+  /// Unexpected notes waiting for the 90 ms "still ringing" check.
+  final _holding = <(int, int, double)>[];
+  int get _holdOffset => (sampleRate * 0.09).round();
+
+  /// No unexpected notes in the first 250 ms (mic start transient).
+  int get _startupMute => (sampleRate * 0.25).round();
+
+  /// Slow floor of the strongest partial energy: the room's noise level.
+  double _noise = 0;
+
+  final int _fluxN;
+  final int _pitchN;
+  late final int _fluxHop;
+
+  static const _ringSize = 1 << 16;
+  late final Float32List _ring;
+  int _written = 0; // total samples fed
+  int _nextFlux = 0; // sample index where the next flux frame ends
+
+  late final Float64List _fluxWin;
+  late final Float64List _pitchWin;
+  late Float64List _prevFlux;
+  final _fluxHistory = <double>[];
+  double _lastFlux = 0;
+  bool _rising = false;
+  int _lastOnset = -1000000000; // not `-1 << 30`: dart2js shifts are unsigned
+
+  /// Onsets waiting for the analysis window to fill: sample index.
+  final _pending = <int>[];
+
+  /// Sounding notes: pitch → (salience at onset, onset sample).
+  final _active = <int, (double, int)>{};
+  int _nextDecayCheck = 0;
+
+  static int _pow2(double n) {
+    var p = 1;
+    while (p < n) {
+      p <<= 1;
+    }
+    return p;
+  }
+
+  static Float64List _hann(int n) => Float64List.fromList([
+    for (var i = 0; i < n; i++) 0.5 - 0.5 * math.cos(2 * math.pi * i / n),
+  ]);
+
+  /// Latency from onset to report, in seconds (analysis window + guard).
+  double get analysisDelay => (_pitchN + _guard) / sampleRate;
+
+  int get _guard => (sampleRate * 0.012).round();
+
+  /// Feeds mono samples in [-1, 1]; returns notes found so far.
+  List<DetectedNote> process(List<double> samples) {
+    final out = <DetectedNote>[];
+    for (final s in samples) {
+      _ring[_written & (_ringSize - 1)] = s;
+      _written++;
+      if (_written >= _nextFlux + _fluxN) {
+        _onFluxFrame(_nextFlux, out);
+        _nextFlux += _fluxHop;
+      }
+      for (var i = 0; i < _confirming.length; i++) {
+        final (p, onset, level) = _confirming[i];
+        if (_written < _readyAt(p, onset, _sustainOffset)) continue;
+        _confirming.removeAt(i--);
+        if (_isPianoNote(p, onset)) {
+          _emitOn(p, onset, level, _written / sampleRate, out);
+        }
+      }
+      for (var i = 0; i < _holding.length; i++) {
+        final (p, onset, level) = _holding[i];
+        if (_written < _readyAt(p, onset, _holdOffset)) continue;
+        _holding.removeAt(i--);
+        if (onset > _startupMute &&
+            _isPianoNote(p, onset, offset: _holdOffset)) {
+          _emitOn(p, onset, level, _written / sampleRate, out);
+        }
+      }
+      if (_pending.isNotEmpty &&
+          _written >= _pending.first + _guard + _pitchN) {
+        _analyse(_pending.removeAt(0), out);
+      }
+      if (expected.isNotEmpty && _written >= _nextExpectCheck) {
+        _nextExpectCheck = _written + _fluxHop * 2;
+        _checkExpected(out);
+      }
+      if (_written >= _nextDecayCheck) {
+        _nextDecayCheck = _written + _fluxHop * 2;
+        _checkDecay(out);
+      }
+    }
+    return out;
+  }
+
+  double _sample(int i) => i < 0 || i >= _written || _written - i > _ringSize
+      ? 0
+      : _ring[i & (_ringSize - 1)];
+
+  Float64List _magnitudes(int start, int n, Float64List win, {int pad = 1}) {
+    final size = n * pad;
+    final re = Float64List(size);
+    final im = Float64List(size);
+    for (var i = 0; i < n; i++) {
+      re[i] = _sample(start + i) * win[i];
+    }
+    _fft(re, im);
+    final mag = Float64List(size ~/ 2);
+    for (var k = 0; k < mag.length; k++) {
+      mag[k] = math.sqrt(re[k] * re[k] + im[k] * im[k]);
+    }
+    return mag;
+  }
+
+  void _onFluxFrame(int start, List<DetectedNote> out) {
+    final mag = _magnitudes(start, _fluxN, _fluxWin);
+    // Log-compressed positive spectral difference above ~60 Hz.
+    final lo = (60 * _fluxN / sampleRate).ceil();
+    var flux = 0.0;
+    for (var k = lo; k < mag.length; k++) {
+      final m = math.log(1 + fluxGamma * mag[k]);
+      final d = m - _prevFlux[k];
+      if (d > 0) flux += d;
+      _prevFlux[k] = m;
+    }
+    _fluxHistory.add(flux);
+    if (_fluxHistory.length > 40) _fluxHistory.removeAt(0);
+    final sorted = [..._fluxHistory]..sort();
+    final median = sorted[sorted.length ~/ 2];
+    final threshold = median * fluxRatio + fluxDelta;
+    // Peak picking: report on the frame where flux stops rising.
+    final end = start + _fluxN;
+    if (flux > threshold && flux > _lastFlux) {
+      _rising = true;
+    } else if (_rising) {
+      _rising = false;
+      if (end - _lastOnset > sampleRate * 0.06) {
+        final onset = _refineOnset(end - _fluxN - _fluxHop * 2, end);
+        _lastOnset = end;
+        _pending.add(onset);
+      }
+    }
+    _lastFlux = flux;
+  }
+
+  /// Finds the attack inside [from, to): the first 2 ms block whose energy
+  /// jumps well above the blocks before it.
+  int _refineOnset(int from, int to) {
+    final block = math.max(16, (sampleRate * 0.002).round());
+    final energies = <double>[];
+    for (var b = from; b + block <= to; b += block) {
+      var e = 0.0;
+      for (var i = b; i < b + block; i++) {
+        final s = _sample(i);
+        e += s * s;
+      }
+      energies.add(e / block);
+    }
+    if (energies.isEmpty) return from;
+    var best = 0;
+    var bestRatio = 0.0;
+    var floor = energies.first;
+    for (var i = 1; i < energies.length; i++) {
+      final ratio = energies[i] / (floor + 1e-9);
+      if (ratio > bestRatio) {
+        bestRatio = ratio;
+        best = i;
+      }
+      floor = math.min(floor * 0.7 + energies[i] * 0.3, energies[i]);
+      floor = math.max(floor, 1e-9);
+    }
+    return from + best * block;
+  }
+
+  /// Chord notes that can't be told from [found]'s own partials or leakage:
+  /// same key, a semitone, an octave, a twelfth, two octaves.
+  static bool _related(int found, int p) {
+    final d = (p - found).abs();
+    return d <= 1 || (p > found && const {12, 19, 24, 28}.contains(d));
+  }
+
+  double _freq(int pitch) => 440 * math.pow(2, (pitch - 69) / 12).toDouble();
+
+  void _analyse(int onset, List<DetectedNote> out) {
+    const pad = 2;
+    final after = _magnitudes(onset + _guard, _pitchN, _pitchWin, pad: pad);
+    final before = _magnitudes(onset - _pitchN, _pitchN, _pitchWin, pad: pad);
+    final fresh = Float64List(after.length);
+    var peak = 0.0;
+    for (var k = 0; k < after.length; k++) {
+      // Keep bins that grew: a new or re-struck note jumps several times
+      // above its decaying tail; a still-ringing note doesn't.
+      final growth = after[k] / (before[k] + 1e-9);
+      fresh[k] = after[k] * ((growth - 1.3) / 1.2).clamp(0.0, 1.0);
+      if (fresh[k] > peak) peak = fresh[k];
+    }
+    final at = (_written) / sampleRate;
+    // A flux peak inside a ringing note (no real new energy) is not an
+    // onset, nor is a release thump (the level falls).
+    final afterPeak = after.reduce(math.max);
+    var sumAfter = 0.0, sumBefore = 0.0;
+    for (var k = 0; k < after.length; k++) {
+      sumAfter += after[k];
+      sumBefore += before[k];
+    }
+    if (peak < 1e-3 || peak < 0.25 * afterPeak) return;
+    if (sumAfter < 0.7 * sumBefore) return;
+    final binHz = sampleRate / (_pitchN * pad);
+    final peaks = _peaks(fresh, binHz, peak);
+
+    final found = <int>[];
+    double? first;
+    var top = 0.0;
+    for (var p = lowPitch; p <= highPitch; p++) {
+      top = math.max(top, _salience(peaks, p));
+    }
+    // Expected notes first, judged leniently and without the octave/fifth
+    // exclusion: the lesson says they are there, so a doubling is real.
+    for (final p in expected) {
+      if (p < lowPitch || p > highPitch) continue;
+      final s = _salience(peaks, p);
+      if (s >= 0.05 && s >= top * 0.2) found.add(p);
+    }
+    for (final p in found) {
+      _removeHarmonics(peaks, p);
+    }
+    final ratio = expected.isEmpty ? secondNoteRatio : _unexpectedRatio;
+    for (var n = found.length; n < maxPolyphony; n++) {
+      var bestP = -1;
+      var bestS = 0.0;
+      for (var p = lowPitch; p <= highPitch; p++) {
+        if (found.any((q) => _related(q, p))) continue;
+        final s = _salience(peaks, p);
+        if (s > bestS) {
+          bestS = s;
+          bestP = p;
+        }
+      }
+      if (bestP < 0) break;
+      first ??= expected.isEmpty ? bestS : top;
+      if (bestS < 0.05 || bestS < first * (found.isEmpty ? 0 : ratio)) break;
+      if (expected.isNotEmpty && bestS < top * _unexpectedRatio) break;
+      found.add(bestP);
+      _removeHarmonics(peaks, bestP);
+    }
+    for (final p in found) {
+      // Blind mode (no lesson, e.g. the setup panel) treats every note as
+      // expected; the strict path is for notes the lesson did not ask for.
+      final isExpected = expected.isEmpty || expected.contains(p);
+      // Unexpected notes face stricter checks (as the reference app does):
+      // sharper partials, and still ringing 90 ms later (a typing click or
+      // knock is gone by then). They are reported after that check.
+      if (!_tonal(fresh, p, binHz, ratio: isExpected ? tonalRatio : 5)) {
+        continue;
+      }
+      if (!_isPianoNote(p, onset)) continue;
+      if (isExpected) {
+        _emitOn(p, onset, _level(after, p, binHz), at, out);
+      } else {
+        _holding.add((p, onset, _level(after, p, binHz)));
+      }
+    }
+  }
+
+  void _emitOn(
+    int p,
+    int onset,
+    double level,
+    double at,
+    List<DetectedNote> out,
+  ) {
+    final last = _lastEmit[p];
+    if (last != null && (onset - last).abs() < _repeatGap * sampleRate) return;
+    _lastEmit[p] = onset;
+    final time = onset / sampleRate;
+    if (_active.containsKey(p)) out.add(DetectedNote(p, false, time, at));
+    _active[p] = (level, onset);
+    out.add(DetectedNote(p, true, time, at));
+  }
+
+  /// Partial energy of [p] in [mag]: first four partials, weighted.
+  double _partialEnergy(Float64List mag, int p, double binHz) {
+    final f0 = _freq(p);
+    var e = 0.0;
+    for (var h = 1; h <= 4; h++) {
+      final f = _partial(f0, h);
+      if (f > sampleRate / 2 * 0.95) break;
+      e += _peakNear(mag, f, binHz, 0.02) / math.sqrt(h);
+    }
+    return e;
+  }
+
+  /// Whether at least two of [p]'s first four partials are sharp peaks:
+  /// 4× the median magnitude of the surrounding semitone band. Noise and
+  /// broadband thumps are not tonal; piano partials are.
+  bool _tonal(
+    Float64List mag,
+    int p,
+    double binHz, {
+    int need = 2,
+    double ratio = 4,
+  }) {
+    final f0 = _freq(p);
+    var sharp = 0;
+    for (var h = 1; h <= 4; h++) {
+      final f = _partial(f0, h);
+      if (f > sampleRate / 2 * 0.95) break;
+      // Surrounding band: ±6 % (a semitone), at least ±5 bins so bass notes
+      // have a background to compare with; the peak's own ±1 bin is left out.
+      final c = (f / binHz).round();
+      final half = math.max(5, (f * 0.06 / binHz).ceil());
+      final band = [
+        for (
+          var k = math.max(1, c - half);
+          k <= math.min(mag.length - 1, c + half);
+          k++
+        )
+          if ((k - c).abs() > 1) mag[k],
+      ]..sort();
+      if (band.isEmpty) continue;
+      final median = band[band.length ~/ 2];
+      if (_peakNear(mag, f, binHz, 0.02) > ratio * median + 1e-9) sharp++;
+    }
+    return sharp >= need;
+  }
+
+  /// What makes a piano note, as opposed to room noise:
+  /// - a sharp attack: some 2 ms block jumps ≥4× above the 20 ms before it
+  ///   (voices and fans swell slowly);
+  /// - it rings: 30–73 ms after the onset its partials are still ≥3× what
+  ///   they were just before it (typing clicks and knocks are gone by then).
+  /// The "pitched" test ([_tonal]) runs on the long frame by the caller:
+  /// the short frame is too coarse to resolve partials.
+  bool _isPianoNote(int p, int onset, {int? offset}) {
+    if (_attackRatio(onset) < minAttack) return false;
+    const pad = 2;
+    // Bass partials need the long frame to be resolved.
+    final n = _sustainFrame(p);
+    final win = n == _pitchN ? _pitchWin : _shortWin;
+    final binHz = sampleRate / (n * pad);
+    final after = _magnitudes(
+      onset + (offset ?? _sustainOffset),
+      n,
+      win,
+      pad: pad,
+    );
+    final before = _magnitudes(onset - n, n, win, pad: pad);
+    final e = _partialEnergy(after, p, binHz);
+    // A re-struck key rings over its own tail: a smaller rise is enough.
+    final rise = _active.containsKey(p) ? 1.5 : minSustain;
+    return e >= rise * _partialEnergy(before, p, binHz) + 1e-6;
+  }
+
+  int _sustainFrame(int p) => p < 52 ? _pitchN : _shortN;
+
+  /// Sample count needed before [_isPianoNote] can judge [p] at [offset].
+  int _readyAt(int p, int onset, int offset) =>
+      onset + offset + _sustainFrame(p);
+
+  /// Largest energy jump of a 2 ms block within ±10 ms of [onset] over the
+  /// mean of the 20 ms before it.
+  double _attackRatio(int onset) {
+    final block = math.max(16, (sampleRate * 0.002).round());
+    double energy(int from) {
+      var e = 0.0;
+      for (var i = from; i < from + block; i++) {
+        final x = _sample(i);
+        e += x * x;
+      }
+      return e / block;
+    }
+
+    var best = 0.0;
+    final span = (sampleRate * 0.01).round();
+    for (var b = onset - span; b <= onset + span; b += block) {
+      var prev = 0.0;
+      for (var k = 1; k <= 10; k++) {
+        prev += energy(b - k * block);
+      }
+      prev /= 10;
+      best = math.max(best, energy(b) / (prev + 1e-9));
+    }
+    return best;
+  }
+
+  /// Expected-note path: a note the lesson expects counts as soon as its own
+  /// partials jump up and stand out in the frame, even when the broadband
+  /// onset detector missed a soft attack.
+  void _checkExpected(List<DetectedNote> out) {
+    const pad = 2;
+    final end = _written;
+    final mag = _magnitudes(end - _pitchN, _pitchN, _pitchWin, pad: pad);
+    final binHz = sampleRate / (_pitchN * pad);
+    var strongest = 0.0;
+    for (var p = lowPitch; p <= highPitch; p++) {
+      strongest = math.max(strongest, _partialEnergy(mag, p, binHz));
+    }
+    _noise = _noise == 0 ? strongest : math.min(strongest, _noise * 1.02);
+    _expectHistory.removeWhere((p, _) => !expected.contains(p));
+    for (final p in expected) {
+      if (p < lowPitch || p > highPitch) continue;
+      final e = _partialEnergy(mag, p, binHz);
+      final hist = _expectHistory.putIfAbsent(p, () => []);
+      final warm = hist.length >= 4; // need a baseline before judging a rise
+      final floor = hist.isEmpty ? double.infinity : hist.reduce(math.min);
+      hist.add(e);
+      if (hist.length > 8) hist.removeAt(0);
+      if (!warm || e < 1e-3 || e < strongest * _expectShare) continue;
+      if (e < floor * _expectRise) continue;
+      // Clearly above the room's noise, and a real peak: a note's own
+      // partials beat the semitone neighbours', leakage from a nearby
+      // played note does not.
+      if (e < _noise * 6) continue;
+      if (!_tonal(mag, p, binHz, ratio: tonalRatio)) continue;
+      // A voice or other harmonic sound an octave (or a twelfth) below also
+      // fills this note's partials; a piano note alone leaves the odd
+      // partials of the lower pitch empty.
+      if (_partialEnergy(mag, p - 12, binHz) >= e * subOctave ||
+          _partialEnergy(mag, p - 19, binHz) >= e * subOctave) {
+        continue;
+      }
+      if (e <= _partialEnergy(mag, p - 1, binHz) * 1.15 ||
+          e <= _partialEnergy(mag, p + 1, binHz) * 1.15) {
+        continue;
+      }
+      final onset = _refineOnset(end - _pitchN - _fluxHop * 2, end);
+      _confirming.add((p, onset, _level(mag, p, binHz)));
+      // Reset so one attack fires once.
+      hist
+        ..clear()
+        ..add(e);
+    }
+  }
+
+  /// Spectral peaks (local maxima above 2% of [peak]) as (Hz, magnitude),
+  /// with parabolic interpolation of the frequency.
+  List<(double, double)> _peaks(Float64List mag, double binHz, double peak) {
+    final out = <(double, double)>[];
+    for (var k = 2; k < mag.length - 1; k++) {
+      final m = mag[k];
+      if (m < peak * 0.02 || m < mag[k - 1] || m <= mag[k + 1]) continue;
+      final a = mag[k - 1], c = mag[k + 1];
+      final den = a - 2 * m + c;
+      final d = den == 0 ? 0.0 : 0.5 * (a - c) / den;
+      out.add(((k + d) * binHz, m / peak));
+    }
+    return out;
+  }
+
+  /// Strongest peak within ±[cents] of [f].
+  static double _near(List<(double, double)> peaks, double f, double cents) {
+    final r = math.pow(2, cents / 1200).toDouble();
+    var m = 0.0;
+    for (final (pf, pm) in peaks) {
+      if (pf >= f / r && pf <= f * r && pm > m) m = pm;
+    }
+    return m;
+  }
+
+  static double _partial(double f0, int h) =>
+      f0 * h * math.sqrt(1 + 0.0004 * h * h); // mild inharmonicity
+
+  /// Weighted harmonic sum over spectral peaks. A candidate whose own
+  /// fundamental (or, for bass notes, second partial) is missing scores zero,
+  /// which rejects sub-octave ghosts; the ±40 cent window keeps semitone
+  /// neighbours apart.
+  double _salience(List<(double, double)> peaks, int p) {
+    final f0 = _freq(p);
+    final nyq = sampleRate / 2;
+    final h1 = _near(peaks, f0, 40);
+    // Bass fundamentals are weak on small mics: accept the 2nd/3rd partial.
+    final anchor = p < 52
+        ? math.max(
+            h1,
+            math.max(
+              _near(peaks, _partial(f0, 2), 45),
+              _near(peaks, _partial(f0, 3), 45),
+            ),
+          )
+        : h1;
+    if (anchor < 0.1) return 0;
+    var s = 0.0;
+    for (var h = 1; h <= 8; h++) {
+      final f = _partial(f0, h);
+      if (f > nyq * 0.95) break;
+      s += _near(peaks, f, 45) / math.pow(h, 0.6);
+    }
+    // Without its own fundamental a bass candidate is likely a sub-octave
+    // ghost of a chord; it only wins when nothing explains the partials better.
+    return h1 < 0.1 ? s * 0.5 : s;
+  }
+
+  /// Takes a found note's partials out of the peak list (half strength: a
+  /// chord note may share one).
+  void _removeHarmonics(List<(double, double)> peaks, int p) {
+    final f0 = _freq(p);
+    for (var i = 0; i < peaks.length; i++) {
+      final (pf, pm) = peaks[i];
+      final h = (pf / f0).round();
+      if (h < 1 || h > 16) continue;
+      final f = _partial(f0, h);
+      if ((1200 * math.log(pf / f) / math.ln2).abs() < 50) {
+        peaks[i] = (pf, h == 1 ? 0 : pm * 0.5);
+      }
+    }
+  }
+
+  /// Fundamental (+ 2nd partial) level used for release detection.
+  double _peakNear(Float64List mag, double f, double binHz, double tol) {
+    final lo = (f * (1 - tol) / binHz).floor();
+    final hi = (f * (1 + tol) / binHz).ceil();
+    var m = 0.0;
+    for (var k = math.max(1, lo); k <= hi && k < mag.length; k++) {
+      if (mag[k] > m) m = mag[k];
+    }
+    return m;
+  }
+
+  double _level(Float64List mag, int p, double binHz) =>
+      _peakNear(mag, _freq(p), binHz, 0.025) +
+      _peakNear(mag, 2 * _freq(p), binHz, 0.025);
+
+  /// Releases notes whose fundamental fell to a fraction of its onset level.
+  void _checkDecay(List<DetectedNote> out) {
+    if (_active.isEmpty) return;
+    const pad = 2;
+    final mag = _magnitudes(_written - _pitchN, _pitchN, _pitchWin, pad: pad);
+    final binHz = sampleRate / (_pitchN * pad);
+    final now = _written / sampleRate;
+    final gone = <int>[];
+    _active.forEach((p, v) {
+      final age = _written - v.$2;
+      if (age < _pitchN * 2) return;
+      // A mic can't see the key go up; release on decay, or after
+      // [maxHold] so held-looking keys never pile up on screen.
+      if (age > maxHold * sampleRate || _level(mag, p, binHz) < v.$1 * 0.12) {
+        gone.add(p);
+      }
+    });
+    for (final p in gone) {
+      _active.remove(p);
+      out.add(DetectedNote(p, false, now, now));
+    }
+  }
+
+  /// In-place iterative radix-2 FFT.
+  static void _fft(Float64List re, Float64List im) {
+    final n = re.length;
+    for (var i = 1, j = 0; i < n; i++) {
+      var bit = n >> 1;
+      for (; j & bit != 0; bit >>= 1) {
+        j ^= bit;
+      }
+      j ^= bit;
+      if (i < j) {
+        var t = re[i];
+        re[i] = re[j];
+        re[j] = t;
+        t = im[i];
+        im[i] = im[j];
+        im[j] = t;
+      }
+    }
+    for (var len = 2; len <= n; len <<= 1) {
+      final ang = -2 * math.pi / len;
+      final wr = math.cos(ang);
+      final wi = math.sin(ang);
+      for (var i = 0; i < n; i += len) {
+        var cr = 1.0;
+        var ci = 0.0;
+        for (var k = 0; k < len ~/ 2; k++) {
+          final a = i + k;
+          final b = a + len ~/ 2;
+          final xr = re[b] * cr - im[b] * ci;
+          final xi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - xr;
+          im[b] = im[a] - xi;
+          re[a] += xr;
+          im[a] += xi;
+          final t = cr * wr - ci * wi;
+          ci = cr * wi + ci * wr;
+          cr = t;
+        }
+      }
+    }
+  }
+}

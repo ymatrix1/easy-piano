@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
@@ -10,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../audio/backing.dart';
 import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
+import '../input/mic/mic_input.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
@@ -66,6 +68,8 @@ class PracticeStage extends StatefulWidget {
     required this.stage,
     required this.songJson,
     required this.midi,
+    this.micMode = false,
+    this.onMic,
     required this.failedAttempts,
     required this.onFinished,
     required this.staves,
@@ -85,6 +89,12 @@ class PracticeStage extends StatefulWidget {
   final StageDef stage;
   final String songJson;
   final MidiInput midi;
+
+  /// Notes come from the microphone: core uses its mic timing window, and
+  /// the app's own piano and backing stay silent so the mic only hears the
+  /// student (docs/specs/input.md).
+  final bool micMode;
+  final VoidCallback? onMic;
   final int failedAttempts;
   final void Function(ResultView result) onFinished;
   final Staves staves;
@@ -235,7 +245,7 @@ class _PracticeStageState extends State<PracticeStage>
     _session = PracticeSession.create(
       songJson: widget.songJson,
       mode: widget.stage.type,
-      input: 'midi',
+      input: widget.micMode ? 'mic' : 'midi',
       hand: widget.stage.hand,
       tempo: widget.tempo,
       passRatio: widget.stage.pass,
@@ -353,6 +363,8 @@ class _PracticeStageState extends State<PracticeStage>
         accent: (b - _leadEndBeat) % _beatsPerBar == 0,
       );
     }
+    // Mic: count-in only; clicks and backing would reach the microphone.
+    if (widget.micMode) return;
     if (pianoSynth.metronome) {
       for (
         var b = math.max(0.0, fromBeat.ceilToDouble());
@@ -424,7 +436,9 @@ class _PracticeStageState extends State<PracticeStage>
   double get _nowSec => widget.midi.now() / 1000;
 
   void _onNote(int pitch, bool on, double timestampMs) {
-    on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
+    if (!widget.micMode) {
+      on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
+    }
     final next = {..._pressed.value};
     on ? next.add(pitch) : next.remove(pitch);
     _pressed.value = next;
@@ -572,6 +586,7 @@ class _PracticeStageState extends State<PracticeStage>
     }
     if (f.hintActive && _hintSinceSec == null) _hintSinceSec = now;
     if (!f.hintActive) _hintSinceSec = null;
+    if (widget.micMode) _updateMicExpected(targets, f.cursor);
     final showKeys = _playAlong || f.hintActive;
     _hint.value = showKeys && f.cursor < targets.length
         ? {...targets[f.cursor].pitches}
@@ -762,6 +777,28 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   /// Target highlighted now: the demo position during pre-listen, else the cursor.
+  /// Tells the mic which notes the lesson expects now (score-informed
+  /// detection, docs/specs/input.md): in wait mode the target at the cursor
+  /// and the next one; in play-along the pending targets from half a beat
+  /// back to 0.6 s ahead.
+  void _updateMicExpected(List<TargetView> targets, int cursor) {
+    final want = <int>{};
+    if (_playAlong) {
+      final beat = _scroll.value;
+      final ahead = 600 / _msPerBeat;
+      for (final t in targets) {
+        if (t.state == 0 && t.beat >= beat - 0.5 && t.beat <= beat + ahead) {
+          want.addAll(t.pitches);
+        }
+      }
+    } else {
+      for (var i = cursor; i < targets.length && i <= cursor + 1; i++) {
+        want.addAll(targets[i].pitches);
+      }
+    }
+    if (!setEquals(want, micInput.expected)) micInput.expected = want;
+  }
+
   int get _activeIndex => _demo ? _demoIndex : (_frame?.cursor ?? 0);
 
   int? _currentNoteIndex() {
@@ -793,6 +830,7 @@ class _PracticeStageState extends State<PracticeStage>
 
   @override
   void dispose() {
+    if (widget.micMode) micInput.expected = const {};
     pianoSynth.stopAll();
     _ticker.dispose();
     _pageAnim.dispose();
@@ -930,6 +968,19 @@ class _PracticeStageState extends State<PracticeStage>
               ],
             ],
             if (_paused) const Spacer() else const SizedBox(width: 8),
+            if (widget.onMic != null)
+              IconButton(
+                onPressed: widget.onMic,
+                tooltip: widget.micMode
+                    ? AppLocalizations.of(context).micListening
+                    : AppLocalizations.of(context).micInput,
+                icon: Icon(
+                  widget.micMode ? Icons.mic_rounded : Icons.mic_none_rounded,
+                  color: widget.micMode
+                      ? StagePalette.done
+                      : StagePalette.textDim,
+                ),
+              ),
             if (widget.onConnectMidi != null && narrow)
               IconButton(
                 onPressed: widget.onConnectMidi,

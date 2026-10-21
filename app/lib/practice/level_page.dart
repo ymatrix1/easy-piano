@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
+import '../input/mic/mic_input.dart';
+import '../input/merged_input.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
+import 'mic_setup.dart';
 import 'practice_stage.dart';
 import 'result_screen.dart';
 
@@ -42,11 +45,71 @@ class _LevelPageState extends State<LevelPage> {
   ResultView? _result;
   final _bestStars = <int, int>{};
   String? _midiLabel;
+  bool _mic = false; // listening through the microphone (MIDI still works)
+  late final _merged = MergedInput(widget.midi, micInput);
 
   @override
   void initState() {
     super.initState();
     _connectMidi(quiet: true);
+    // A student who picked the mic before gets it back; the browser keeps
+    // the permission, so this doesn't prompt again.
+    if (micInput.preferred) {
+      micInput.start().then((ok) {
+        if (mounted && ok) setState(() => _mic = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    micInput.stop();
+    super.dispose();
+  }
+
+  /// Mic button: off → explain, ask permission, set up (device, level,
+  /// calibration), listen. On → the same setup panel, with "turn off".
+  Future<void> _onMicButton() async {
+    final l = AppLocalizations.of(context);
+    if (!_mic) {
+      if (!micInput.running) {
+        if (!await showMicExplain(context) || !mounted) return;
+        final ok = await micInput.start();
+        if (!mounted) return;
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(switch (micInput.error) {
+                MicError.denied => l.micDenied,
+                MicError.notFound => l.micNotFound,
+                MicError.busy => l.micBusy,
+                _ => l.micUnavailable,
+              }),
+            ),
+          );
+          return;
+        }
+      }
+    }
+    final result = await showMicSetup(context, micInput, active: _mic);
+    if (!mounted) return;
+    switch (result) {
+      case MicSetupResult.listen:
+        micInput.preferred = true;
+        setState(() {
+          _mic = true;
+          _run++;
+        });
+      case MicSetupResult.off:
+        micInput.stop();
+        micInput.preferred = false;
+        setState(() {
+          _mic = false;
+          _run++;
+        });
+      case null:
+        if (!_mic) micInput.stop();
+    }
   }
 
   /// Connects Web MIDI (the browser may ask for permission the first time).
@@ -183,7 +246,9 @@ class _LevelPageState extends State<LevelPage> {
       key: ValueKey('$_index-$_run'),
       stage: s,
       songJson: repo.songJson[s.score]!,
-      midi: widget.midi,
+      midi: _mic ? _merged : widget.midi,
+      micMode: _mic,
+      onMic: _onMicButton,
       failedAttempts: _attempt,
       onFinished: _finished,
       staves: stavesForUi(widget.level.ui),
