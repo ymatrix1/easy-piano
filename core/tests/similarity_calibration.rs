@@ -24,11 +24,22 @@ fn songs() -> Vec<Song> {
 }
 
 fn is_drill(id: &str) -> bool {
-    id.ends_with("-drill") || id.starts_with("e1-") || id.starts_with("e2-") || id.starts_with("e3-") || id == "c-finder"
+    id.ends_with("-drill")
+        || id.starts_with("e1-")
+        || id.starts_with("e2-")
+        || id.starts_with("e3-")
+        || id == "c-finder"
 }
 
 fn line(pitches: &[u8], beats: f64) -> Vec<MelodyNote> {
-    pitches.iter().enumerate().map(|(i, &pitch)| MelodyNote { pitch, onset: i as f64 * beats }).collect()
+    pitches
+        .iter()
+        .enumerate()
+        .map(|(i, &pitch)| MelodyNote {
+            pitch,
+            onset: i as f64 * beats,
+        })
+        .collect()
 }
 
 fn filler(len: usize, seed: u32) -> Vec<u8> {
@@ -78,10 +89,24 @@ fn threshold_separates_copies_from_unrelated_tunes() {
     let score = |q: &[MelodyNote], c: &[MelodyNote]| compare("c", &tokens(q), &tokens(c)).score;
     for (k, (id, m)) in pd.iter().enumerate() {
         let k = k as u32 * 10;
-        let shifted = |f: &dyn Fn(usize, &MelodyNote) -> MelodyNote| m.iter().enumerate().map(|(i, n)| f(i, n)).collect::<Vec<_>>();
-        let transposed = shifted(&|_, n| MelodyNote { pitch: n.pitch + 5, onset: n.onset });
-        let rhythm = shifted(&|i, n| MelodyNote { pitch: n.pitch, onset: i as f64 * 0.5 + if i % 2 == 1 { 0.25 } else { 0.0 } });
-        let octave = shifted(&|i, n| MelodyNote { pitch: if i % 5 == 2 { n.pitch + 12 } else { n.pitch }, onset: n.onset });
+        let shifted = |f: &dyn Fn(usize, &MelodyNote) -> MelodyNote| {
+            m.iter()
+                .enumerate()
+                .map(|(i, n)| f(i, n))
+                .collect::<Vec<_>>()
+        };
+        let transposed = shifted(&|_, n| MelodyNote {
+            pitch: n.pitch + 5,
+            onset: n.onset,
+        });
+        let rhythm = shifted(&|i, n| MelodyNote {
+            pitch: n.pitch,
+            onset: i as f64 * 0.5 + if i % 2 == 1 { 0.25 } else { 0.0 },
+        });
+        let octave = shifted(&|i, n| MelodyNote {
+            pitch: if i % 5 == 2 { n.pitch + 12 } else { n.pitch },
+            onset: n.onset,
+        });
         for (kind, q) in [
             ("transposed", transposed),
             ("rhythm", rhythm),
@@ -98,11 +123,30 @@ fn threshold_separates_copies_from_unrelated_tunes() {
         }
     }
     let generic: Vec<(&str, Vec<u8>)> = vec![
-        ("C scale up-down", vec![60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60]),
-        ("five-finger run", vec![60, 62, 64, 65, 67, 65, 64, 62, 60, 62, 64, 65, 67, 65, 64, 62, 60]),
-        ("G scale two octaves", vec![55, 57, 59, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 78, 79]),
-        ("thirds broken", vec![60, 64, 62, 65, 64, 67, 65, 69, 67, 71, 69, 72]),
-        ("repeated-note drill", vec![60, 60, 62, 62, 64, 64, 65, 65, 67, 67, 65, 65, 64, 64, 62, 62, 60]),
+        (
+            "C scale up-down",
+            vec![60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60],
+        ),
+        (
+            "five-finger run",
+            vec![
+                60, 62, 64, 65, 67, 65, 64, 62, 60, 62, 64, 65, 67, 65, 64, 62, 60,
+            ],
+        ),
+        (
+            "G scale two octaves",
+            vec![55, 57, 59, 60, 62, 64, 66, 67, 69, 71, 72, 74, 76, 78, 79],
+        ),
+        (
+            "thirds broken",
+            vec![60, 64, 62, 65, 64, 67, 65, 69, 67, 71, 69, 72],
+        ),
+        (
+            "repeated-note drill",
+            vec![
+                60, 60, 62, 62, 64, 64, 65, 65, 67, 67, 65, 65, 64, 64, 62, 62, 60,
+            ],
+        ),
         ("invented A", filler(24, 101)),
         ("invented B", filler(24, 202)),
         ("invented C", filler(24, 303)),
@@ -119,8 +163,16 @@ fn threshold_separates_copies_from_unrelated_tunes() {
     for t in [0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8] {
         let tp = pos.iter().filter(|(_, s)| *s >= t).count();
         let fp = neg.iter().filter(|(_, s)| *s >= t).count();
-        let precision = if tp + fp == 0 { 1.0 } else { tp as f64 / (tp + fp) as f64 };
-        println!("| {t:.2} | {:.3} | {precision:.3} | {} | {fp} |", tp as f64 / pos.len() as f64, pos.len() - tp);
+        let precision = if tp + fp == 0 {
+            1.0
+        } else {
+            tp as f64 / (tp + fp) as f64
+        };
+        println!(
+            "| {t:.2} | {:.3} | {precision:.3} | {} | {fp} |",
+            tp as f64 / pos.len() as f64,
+            pos.len() - tp
+        );
     }
     let mut misses: Vec<_> = pos.iter().filter(|(_, s)| *s < THRESHOLD).collect();
     misses.sort_by(|a, b| a.1.total_cmp(&b.1));
@@ -132,5 +184,8 @@ fn threshold_separates_copies_from_unrelated_tunes() {
     let recall = pos.iter().filter(|(_, s)| *s >= THRESHOLD).count() as f64 / pos.len() as f64;
     let fp = neg.iter().filter(|(_, s)| *s >= THRESHOLD).count();
     assert!(recall >= 0.95, "recall {recall} at {THRESHOLD}");
-    assert!(fp as f64 <= 0.03 * neg.len() as f64, "{fp} false positives at {THRESHOLD}");
+    assert!(
+        fp as f64 <= 0.03 * neg.len() as f64,
+        "{fp} false positives at {THRESHOLD}"
+    );
 }

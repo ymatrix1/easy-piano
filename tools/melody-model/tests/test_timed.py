@@ -28,7 +28,9 @@ def test_estimate_beats_finds_tempo():
 def test_local_dataset_registry(tmp_path, monkeypatch):
     """A folder of MIDI files registered in local-datasets.json becomes build jobs with its flags."""
     import json
+
     import mido
+
     from melody_model import build
 
     folder = tmp_path / "set" / "album1"
@@ -36,24 +38,44 @@ def test_local_dataset_registry(tmp_path, monkeypatch):
     mf = mido.MidiFile(ticks_per_beat=480)
     tr = mido.MidiTrack()
     mf.tracks.append(tr)
-    for i, p in enumerate([60, 62, 64, 65, 67, 65, 64, 62] * 3):
+    for p in [60, 62, 64, 65, 67, 65, 64, 62] * 3:
         tr.append(mido.Message("note_on", note=p, velocity=80, time=0))
         tr.append(mido.Message("note_off", note=p, velocity=0, time=480))
     mf.save(folder / "tune.mid")
     reg = tmp_path / "local-datasets.json"
-    reg.write_text(json.dumps([{"name": "mine", "path": str(tmp_path / "set"), "source": "test", "license": "CC0",
-                                "flags": ["pop"], "timing": "performed", "group_by": "folder"}]))
+    reg.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "mine",
+                    "path": str(tmp_path / "set"),
+                    "source": "test",
+                    "license": "CC0",
+                    "flags": ["pop"],
+                    "timing": "performed",
+                    "group_by": "folder",
+                }
+            ]
+        )
+    )
     monkeypatch.setattr(build, "LOCAL", reg)
     [entry] = build.load_local()
     [job] = list(build.jobs_local(entry))
-    assert job[0] == "mine" and job[2] == "performed" and job[4]["flags"] == ["pop"] and job[4]["group"] == "album1"
+    assert (
+        job[0] == "mine"
+        and job[2] == "performed"
+        and job[4]["flags"] == ["pop"]
+        and job[4]["group"] == "album1"
+    )
     corpus, _, _, songs, errors = build.work(job)
     assert errors == [] and songs[0]["bars"][0]["RH"] == "C4:4 D4:4 E4:4 F4:4"
 
 
 def test_local_dataset_needs_licence_fields(tmp_path, monkeypatch):
     import json
+
     import pytest
+
     from melody_model import build
 
     reg = tmp_path / "local-datasets.json"

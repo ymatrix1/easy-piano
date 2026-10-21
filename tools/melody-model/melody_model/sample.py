@@ -32,14 +32,29 @@ def main(argv):
     items, rows = [], []
     for i, t in enumerate(picked, 1):
         name = f"{i:02d}.json"
-        song = {"id": f"sample-{i:02d}", "title": t["title"], "bpm": 100, "time": t["time"], "key": t["key"], "bars": t["bars"]}
+        song = {
+            "id": f"sample-{i:02d}",
+            "title": t["title"],
+            "bpm": 100,
+            "time": t["time"],
+            "key": t["key"],
+            "bars": t["bars"],
+        }
         (d / "songs" / name).write_text(json.dumps(song, indent=1, ensure_ascii=False), encoding="utf-8")
         items.append({"path": f"songs/{name}", "method": args.corpus})
         src = t["id"].split(":", 1)[1]
-        rows.append(f"| {i} | {t['title'] or '?'} | {t['composer'] or '?'} | {t['license']} | {t['time']} {t['key']}, {len(t['bars'])} bars | `{src}` |")
+        rows.append(
+            f"| {i} | {t['title'] or '?'} | {t['composer'] or '?'} | {t['license']} | {t['time']} {t['key']}, {len(t['bars'])} bars | `{src}` |"
+        )
     (d / "manifest.json").write_text(json.dumps({"items": items}, indent=1), encoding="utf-8")
-    md = [f"# {args.corpus} sample: {len(picked)} of {len(pool)} kept tunes (seed {args.seed})", "",
-          "| # | Title | Composer | Licence | Shape | Source id |", "|---|---|---|---|---|---|", *rows, ""]
+    md = [
+        f"# {args.corpus} sample: {len(picked)} of {len(pool)} kept tunes (seed {args.seed})",
+        "",
+        "| # | Title | Composer | Licence | Shape | Source id |",
+        "|---|---|---|---|---|---|",
+        *rows,
+        "",
+    ]
     (d / "sample.md").write_text("\n".join(md), encoding="utf-8")
     print(d / "sample.md")
 

@@ -30,13 +30,22 @@ pub struct CourseSong {
 
 /// Course songs (not generated) in learning order, each at its first node, plus
 /// each node's skill envelope (most of each skill seen up to that node).
-pub fn course_songs(walk: &[NodeTaught], songs: &BTreeMap<String, Song>, model: &Model) -> (Vec<CourseSong>, Vec<Skills>) {
+pub fn course_songs(
+    walk: &[NodeTaught],
+    songs: &BTreeMap<String, Song>,
+    model: &Model,
+) -> (Vec<CourseSong>, Vec<Skills>) {
     let n = walk.len().max(2);
     let [lo, hi] = model.course_levels;
     let (mut out, mut envs) = (Vec::<CourseSong>::new(), Vec::new());
     let mut env: Skills = [0.0; 8];
     for (i, w) in walk.iter().enumerate() {
-        for s in w.songs.iter().filter_map(|id| songs.get(id)).filter(|s| s.source != "generated") {
+        for s in w
+            .songs
+            .iter()
+            .filter_map(|id| songs.get(id))
+            .filter(|s| s.source != "generated")
+        {
             if out.iter().any(|c| c.id == s.id) {
                 continue;
             }
@@ -61,7 +70,18 @@ pub fn course_songs(walk: &[NodeTaught], songs: &BTreeMap<String, Song>, model: 
 /// Song metadata a tune row may lack, so `Song` deserializes.
 fn fill_song_fields(v: &mut Value) {
     let Some(o) = v.as_object_mut() else { return };
-    for (k, d) in [("id", json!("tune")), ("title", json!("?")), ("composer", json!("?")), ("arranger", json!("?")), ("source", json!("dataset")), ("license", json!("?")), ("composition_license", json!("?")), ("bpm", json!(100)), ("time", json!("4/4")), ("key", json!("C"))] {
+    for (k, d) in [
+        ("id", json!("tune")),
+        ("title", json!("?")),
+        ("composer", json!("?")),
+        ("arranger", json!("?")),
+        ("source", json!("dataset")),
+        ("license", json!("?")),
+        ("composition_license", json!("?")),
+        ("bpm", json!(100)),
+        ("time", json!("4/4")),
+        ("key", json!("C")),
+    ] {
         if o.get(k).is_none_or(Value::is_null) {
             o.insert(k.into(), d);
         }
@@ -76,8 +96,18 @@ fn fill_song_fields(v: &mut Value) {
 /// out: dataset rows are scored, never published, and keep their own license
 /// values, which this command does not verify (`license_checked: false`).
 fn music_errors(s: &Song) -> Vec<String> {
-    const NOT_MUSIC: [&str; 6] = ["license", "composition_license", "source_url", "`generator`", "generated songs", "generator."];
-    s.validate().into_iter().filter(|e| !NOT_MUSIC.iter().any(|p| e.starts_with(p))).collect()
+    const NOT_MUSIC: [&str; 6] = [
+        "license",
+        "composition_license",
+        "source_url",
+        "`generator`",
+        "generated songs",
+        "generator.",
+    ];
+    s.validate()
+        .into_iter()
+        .filter(|e| !NOT_MUSIC.iter().any(|p| e.starts_with(p)))
+        .collect()
 }
 
 fn round3(x: f64) -> f64 {
@@ -132,11 +162,24 @@ pub fn run(args: &[String]) -> i32 {
             .iter()
             .map(|c| json!({"id": c.id, "node": c.node, "index": c.index, "expected": round3(c.expected), "skills": c.skills.map(round3), "level_score": round3(c.level_score), "level": c.level}))
             .collect();
-        println!("{}", serde_json::to_string_pretty(&json!({"nodes": walk.len(), "songs": rows})).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&json!({"nodes": walk.len(), "songs": rows}))
+                .unwrap_or_default()
+        );
         return 0;
     }
-    let nodes: Vec<(String, TaughtSet)> = walk.iter().map(|w| (format!("{}/{}", w.course, w.node), w.taught.clone())).collect();
-    let target = node.as_ref().map(|k| (k, walk.iter().position(|w| format!("{}/{}", w.course, w.node) == *k)));
+    let nodes: Vec<(String, TaughtSet)> = walk
+        .iter()
+        .map(|w| (format!("{}/{}", w.course, w.node), w.taught.clone()))
+        .collect();
+    let target = node.as_ref().map(|k| {
+        (
+            k,
+            walk.iter()
+                .position(|w| format!("{}/{}", w.course, w.node) == *k),
+        )
+    });
     if let Some((k, None)) = &target {
         eprintln!("error: unknown node `{k}`");
         return 1;
@@ -144,7 +187,10 @@ pub fn run(args: &[String]) -> i32 {
     let mut out = Vec::new();
     let mut code = 0;
     for f in &files {
-        let song = match fs::read_to_string(f).map_err(|e| e.to_string()).and_then(|t| Song::from_json(&t)) {
+        let song = match fs::read_to_string(f)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Song::from_json(&t))
+        {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("error: {f}: {e}");

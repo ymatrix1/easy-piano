@@ -41,7 +41,9 @@ pub fn parse_pitch(token: &str) -> Result<u8, PitchError> {
 
 /// Spells a MIDI note with sharps (`C#4`).
 pub fn pitch_name(midi: u8) -> String {
-    const NAMES: [&str; 12] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const NAMES: [&str; 12] = [
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+    ];
     format!("{}{}", NAMES[(midi % 12) as usize], midi as i32 / 12 - 1)
 }
 
@@ -74,7 +76,10 @@ mod tests {
         assert_eq!(parse_pitch(""), Err(PitchError::Empty));
         assert_eq!(parse_pitch("H4"), Err(PitchError::BadLetter('H')));
         assert!(matches!(parse_pitch("C"), Err(PitchError::BadOctave(_))));
-        assert!(matches!(parse_pitch("G#9"), Err(PitchError::OutOfRange(128))));
+        assert!(matches!(
+            parse_pitch("G#9"),
+            Err(PitchError::OutOfRange(128))
+        ));
     }
 
     #[test]

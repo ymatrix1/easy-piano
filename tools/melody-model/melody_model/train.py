@@ -1,6 +1,6 @@
 """Training entry point (step 4). Refuses to run without the review gate for the current dataset.
 
-    python -m melody_model.train ...
+python -m melody_model.train ...
 """
 
 from __future__ import annotations
