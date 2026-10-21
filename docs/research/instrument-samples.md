@@ -67,6 +67,17 @@ Piano first load (local server, decode included, Chrome in the Claude preview pa
 
 The mix is about 9 dB louder than before (it was very quiet) with peaks held under -3 dBFS by the bus limiter. The balance between parts was kept close to the old one, drums a little more present.
 
+## Polish pass (2026-10-21)
+
+| Check (same probe) | Before | After |
+|---|---|---|
+| Learner's loud 8-note chord, v127, live bus (no limiter) | peak +1.6 dBFS (clips) | -0.7 dBFS (zero-latency soft clipper at the output) |
+| Held pad C4, loop seam level jump (10 ms windows) | 2.13 dB without crossfade | 1.48 dB with 150 ms equal-power crossfade (body of the note: 2.52 dB) |
+| Same, largest sample step at seam vs body | 0.0035 vs 0.0050 | 0.0033 vs 0.0050 |
+| `DRUMS` RMS vs `ACC` | -8.9 dB | -8.2 dB (3 round-robin hits per kick/snare/hat, soft hat layer below velocity 72) |
+
+The seam was already click-free by this measure; the crossfade is a safety margin for other pitches. Drum hits added: 7 files, +54 KB (band now 1.01 MB, total audio 2.92 MB).
+
 ## Implications
 
 - Ship Salamander piano + FluidR3 band + Virtuosity drums; supersede the synth part of D14 (D22, proposed).
