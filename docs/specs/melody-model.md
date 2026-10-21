@@ -88,7 +88,8 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 
 - One JSON line per source tune: `id, corpus, split, license, title, composer, time, key, bars, plan, flags`.
 - `plan`: per bar `(section A–H, STABLE|OPEN, UP|DOWN|FLAT)` (`labels.py`).
-- `flags` (D21): PDMX clean-data risks (`genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset. Train a clean model by dropping flagged tunes.
+- `flags` (D21): PDMX clean-data risks (`genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset.
+- **Default training set = unflagged tunes only** (`flags == []`). Flagged tunes need an explicit `--include-flagged` in the training script, and weights trained with them must not ship unless a decision entry allows it (D21).
 - Filters (`filters.py`): PDMX hard rejects (licence conflict, duplicates, length), NMD named composer, playability (range ≤ 24 semitones per hand, leap ≤ 12, ≤ 16 events/bar, chord size), vocab coverage, transposition-invariant dedupe.
 - Split 90/5/5 by source tune (or by group for local datasets), deterministic.
 - Phrase windows (4/8/16 bars, step 4) and spelled transposition run at training time (`augment.py`).
