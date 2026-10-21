@@ -78,6 +78,10 @@ flutter:
 
   assets:
     - assets/piano/
+    - assets/band/bass/
+    - assets/band/strings/
+    - assets/band/choir/
+    - assets/band/drums/
     - assets/brand/logo.png
     - assets/content/
     - assets/content/courses/piano-basics/

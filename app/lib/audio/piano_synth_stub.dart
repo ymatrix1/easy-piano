@@ -13,6 +13,9 @@ class _SilentSynth implements PianoSynth {
   Future<void> load() async {}
 
   @override
+  Future<void> loadParts(Iterable<String> parts) async {}
+
+  @override
   void noteOn(int pitch, {int velocity = 90}) {}
 
   @override
@@ -48,4 +51,10 @@ class _SilentSynth implements PianoSynth {
 
   @override
   void stopAll() {}
+
+  @override
+  void debugRegisterMixProbe(
+    void Function(PianoSynth synth, double leadSec) schedule,
+    double durSec,
+  ) {}
 }

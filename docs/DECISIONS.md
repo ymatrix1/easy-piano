@@ -170,6 +170,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Pre-rendered backing audio per song (big files, tempo changes need time-stretching, drifts from the audio clock); drum sample kit (download size, sourcing CC0 samples); free-form drum token syntax (`k s h`) (second parser, no MIDI mapping).
 - **Addendum (proposed):** a fourth part, `PAD` (synthesized strings: detuned saws, slow envelope), and one gain bus per part with a default mix and `setPartLevel()`. Same rules: app-played, never graded. Also `CHOIR`: wordless "ooh" voices by formant synthesis (no recorded vocals, so no licensing or size cost).
 - **Impact:** `content-format.md` backing-parts section; schema allows `ACC`/`DRUMS`/`BASS`; `PianoSynth` gains `drum()` and `bass()` (silent stub off web until the native audio engine). Synth drums sound basic; revisit with sampled kits if users find them weak. Our own drum/bass parts added to Ode to Joy and Hot Cross Buns.
+- **Superseded in part by:** [D22](#d22-sampled-instruments-for-piano-and-backing-band-proposed) (proposed) replaces the synthesized sounds; the notation and part rules stay.
 
 ### D15. Web hosting on Cloudflare Pages
 
@@ -236,3 +237,13 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Modern-sounding practice tunes; the user owns the legal call.
 - **Alternatives:** Keep D19 (clean only; style tokens trained on clean data); pop only as a similarity negative set; train on flagged data but ship only weights trained without it.
 - **Impact:** **Known risk:** the weights may memorise copyrighted melodies from flagged tunes (including licence-conflict scores, whose own files say copyrighted), so they may not be clean, and generated tunes may echo them. Mitigations: per-tune provenance and flags allow dropping any corpus or flag and retraining; the similarity filter on every generated tune; [OQ10](OPEN-QUESTIONS.md). The content rule (`.agents/rules/content-and-licensing.md`) is unchanged for shipped content. Counts: `python -m melody_model.build` writes `data/melody/dataset/stats.json`, summarised in `docs/research/melody-dataset.md` (PR #45).
+
+### D22. Sampled instruments for piano and backing band (proposed)
+
+- **Status:** proposed
+- **Context:** Users say play-along sounds like a chiptune. D14 synthesizes `DRUMS`/`BASS`/`PAD`/`CHOIR` (saws, noise) and the FluidR3 piano notes are cut at 3.1 s; no reverb, no dynamics, every app-played note at one velocity on the exact grid. Research: [instrument-samples.md](research/instrument-samples.md).
+- **Decision:** Piano uses Salamander Grand Piano V3 (CC-BY 3.0, 29 MP3s C1–C8, full decay). `BASS`, `PAD`, `CHOIR` use FluidR3_GM electric bass (finger), string ensemble 1 and voice oohs (MIT, looped for long notes). `DRUMS` use one-shots mixed from Virtuosity Drums (CC0). Total audio 2.87 MB, band instruments lazy-loaded per song. Mix: per-part buses (kept, `setPartLevel` now relative to the default mix), reverb send from a generated impulse response, gentle bus compressor and limiter; the learner's own keys bypass the dynamics (no added look-ahead latency). App-played parts get expression in Dart (`app/lib/audio/backing.dart`): metric and phrase velocity, deterministic humanized timing of at most 3–8 ms on companion parts only, legato bass, pedalled `ACC` chords. Grading and song time are untouched (rule 7).
+- **Why:** Real recordings are the only way to stop sounding synthetic; these three sets are the best openly licensed ones we found, and fit 20% of the 15 MB budget. Humanize stays a few ms and seeded, so the band stays locked to the audio clock and plays the same every time.
+- **Alternatives:** Better synthesis (still synthetic, much work); VSCO-2 CE strings (CC0, more work to loop, bigger); Salamander velocity layers (~8 MB more); pre-rendered backing audio per song (D14 reasons); humanize in Rust core (it is playback colour, not timing or grading logic, so it stays next to the synth).
+- **Impact:** New assets `app/assets/piano/` (replaced) and `app/assets/band/` with licence files. CC-BY needs an in-app credit (bean). Native platforms stay silent until the native audio engine (bean). `content-format.md` mix table and `practice-screen.md` updated. Menu SFX and metronome click remain synthesized.
+
