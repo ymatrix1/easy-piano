@@ -56,7 +56,7 @@ jobs:
         run: python tools/sync_content.py
 
       - name: Vendor onnxruntime-web for practice mode (sha256-pinned)
-        run: python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor
+        run: python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor --wasm-only
 
       - name: Build Rust core for web
         working-directory: app

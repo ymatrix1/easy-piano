@@ -59,7 +59,7 @@ The app is cross-origin isolated (COEP `require-corp`, `app/web/_headers`), so a
 
 ```
 python tools/sync_content.py
-python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor
+python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor --wasm-only
 python tools/melody-model/web/stage_app_model.py --from <dir with the .onnx files>
 ```
 
