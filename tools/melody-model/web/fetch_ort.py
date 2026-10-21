@@ -3,7 +3,7 @@
     python tools/melody-model/web/fetch_ort.py
 
 The demo imports only these vendored files and points `ort.env.wasm.wasmPaths` at vendor/, so nothing
-executable comes from a CDN at run time. Keep VERSION equal to the onnxruntime pin in requirements.txt
+executable comes from a CDN at run time. Keep VERSION equal to the onnxruntime pin in pyproject.toml (`export` extra)
 (the Python parity check and the browser then run the same kernels).
 """
 

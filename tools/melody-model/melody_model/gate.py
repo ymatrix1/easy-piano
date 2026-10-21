@@ -27,11 +27,15 @@ def dataset_hash() -> str:
 def require_gate() -> dict:
     """Raise SystemExit unless the current dataset has a recorded approval."""
     if not GATE.exists():
-        raise SystemExit(f"no review gate at {GATE}: sample 50 PDMX tunes (melody_model.sample) and record the user's approval")
+        raise SystemExit(
+            f"no review gate at {GATE}: sample 50 PDMX tunes (melody_model.sample) and record the user's approval"
+        )
     gate = json.loads(GATE.read_text(encoding="utf-8"))
     current = dataset_hash()
     if gate.get("dataset_sha256") != current:
-        raise SystemExit(f"review gate is for dataset {gate.get('dataset_sha256')}, current is {current}: review a new sample")
+        raise SystemExit(
+            f"review gate is for dataset {gate.get('dataset_sha256')}, current is {current}: review a new sample"
+        )
     return gate
 
 
@@ -46,8 +50,21 @@ def main(argv):
     sub.add_parser("check")
     args = ap.parse_args(argv)
     if args.cmd == "approve":
-        GATE.write_text(json.dumps({"corpus": "pdmx", "seed": args.seed, "n": args.n, "dataset_sha256": dataset_hash(),
-                                    "approver_words": args.approver_words, "date": args.date}, indent=1) + "\n", encoding="utf-8")
+        GATE.write_text(
+            json.dumps(
+                {
+                    "corpus": "pdmx",
+                    "seed": args.seed,
+                    "n": args.n,
+                    "dataset_sha256": dataset_hash(),
+                    "approver_words": args.approver_words,
+                    "date": args.date,
+                },
+                indent=1,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         print(f"recorded {GATE}")
     else:
         print(json.dumps(require_gate(), indent=1))

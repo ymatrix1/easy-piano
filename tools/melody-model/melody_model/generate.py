@@ -11,10 +11,12 @@ chord size; no ties, no fingering (the arranger fingers later). Required
 patterns and finger spans are not masked: the rubric filters them (deviation
 recorded in docs/specs/melody-model.md).
 
-Both gates fail closed: candidates are written as song JSON (D17 fields) and must
-(1) get a result from `content check` and pass the rubric, then (2) pass
-`content similar` against our songs and the training-set export
-(`python -m melody_model.simcorpus`). Any tool failure or missing result aborts.
+Candidates are written as song JSON (D17 fields) and must get a result from
+`content check` and pass the rubric. `content similar` then runs against our
+songs and the training-set export (`python -m melody_model.simcorpus`); for now
+it only reports matches (D27, proposed: user, 2026-10-21, "lets not block for
+now and decide later"); `--block-similar` drops them. Both tools fail closed:
+any tool failure or missing result aborts.
 Kept tunes are ranked by mean log-probability with a bonus for ending on the tonic.
 """
 
@@ -54,7 +56,14 @@ def content_cli() -> list[str]:
             if exe.exists():
                 return [str(exe)]
     if shutil.which("cargo"):
-        return ["cargo", "run", "-q", "--manifest-path", str(ROOT / "tools" / "content-cli" / "Cargo.toml"), "--"]
+        return [
+            "cargo",
+            "run",
+            "-q",
+            "--manifest-path",
+            str(ROOT / "tools" / "content-cli" / "Cargo.toml"),
+            "--",
+        ]
     raise SystemExit("content CLI not found: build tools/content-cli or set CONTENT_CLI")
 
 
@@ -109,7 +118,9 @@ class Masker:
         if self.phase == "plan":
             if self.plan_left == 0:
                 return ["PLAN_END"]
-            return [k for k in K if k.startswith(("SEC_", "CAD_", "CON_")[(3 * self.bars - self.plan_left) % 3])]
+            return [
+                k for k in K if k.startswith(("SEC_", "CAD_", "CON_")[(3 * self.bars - self.plan_left) % 3])
+            ]
         if self.phase == "bar":
             return ["BAR"] if self.bar_no < self.bars else ["END"]
         if self.phase == "hand":
@@ -147,7 +158,11 @@ class Masker:
     def durs_for(self, kind: str) -> list[str]:
         """Durations that fit and leave a remainder the taught values can still fill."""
         pool = self.rest_durs if kind == "REST" else self.durs
-        return [d for d in pool if dur_beats(d, 4) <= self.left + 1e-9 and self._fillable(self.left - dur_beats(d, 4))]
+        return [
+            d
+            for d in pool
+            if dur_beats(d, 4) <= self.left + 1e-9 and self._fillable(self.left - dur_beats(d, 4))
+        ]
 
     def _fillable(self, beats: float) -> bool:
         units = round(beats * 8)  # 32nd notes
@@ -189,21 +204,33 @@ class Masker:
             self.chord_n = 0
 
 
-def build_prefix(ns: dict, key: str, bars: int, time: str, styles: list[str], level: int | None,
-                 source: str | None = "own") -> list:
+def build_prefix(
+    ns: dict, key: str, bars: int, time: str, styles: list[str], level: int | None, source: str | None = "own"
+) -> list:
     t, s = ns["taught"], ns["spec"]
     allp = [p for h in ns["taught"]["pitches"].values() for p in h]
     lo = min(allp, key=lambda p: parse_pitch(p).midi)
     hi = max(allp, key=lambda p: parse_pitch(p).midi)
-    spec = tk.Spec(time=time, key=key, bars=bars, range_lo=lo, range_hi=hi,
-                   durs=[d for d in DURATIONS if d in t["durations"]],
-                   hands={"RH": "RH", "LH": "LH", "both": "BOTH"}[s["hands"]],
-                   course=ns["course"] if ns["course"] in tk.COURSES else "none",
-                   patterns=s.get("required", []), styles=styles, level=level, source=source)
+    spec = tk.Spec(
+        time=time,
+        key=key,
+        bars=bars,
+        range_lo=lo,
+        range_hi=hi,
+        durs=[d for d in DURATIONS if d in t["durations"]],
+        hands={"RH": "RH", "LH": "LH", "both": "BOTH"}[s["hands"]],
+        course=ns["course"] if ns["course"] in tk.COURSES else "none",
+        patterns=s.get("required", []),
+        styles=styles,
+        level=level,
+        source=source,
+    )
     return [tk.step("BOS")] + tk.encode_spec(spec)
 
 
-def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, temperature: float, torch, device) -> tuple[list, float]:
+def sample_tune(
+    model, prefix: list, masker: Masker, rng: random.Random, temperature: float, torch, device
+) -> tuple[list, float]:
     steps = list(prefix) + [tk.step("PLAN")]
     logp = 0.0
     n = 0
@@ -223,7 +250,13 @@ def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, tempera
             z = z + model.cond[0](torch.tensor([[kind]], device=device))
             pid = 0  # <none>: training conditions the dur head on the true pitch field, NONE for REST
             if kname in ("NOTE", "CHORD"):
-                pid, lp = _pick(model.heads[1](z)[0, 0].float(), [PID[p] for p in masker.pitches_for(kname)], rng, temperature, torch)
+                pid, lp = _pick(
+                    model.heads[1](z)[0, 0].float(),
+                    [PID[p] for p in masker.pitches_for(kname)],
+                    rng,
+                    temperature,
+                    torch,
+                )
                 logp += lp
                 pitch = tk.PITCHES[pid]
             z = z + model.cond[1](torch.tensor([[pid]], device=device))
@@ -231,7 +264,9 @@ def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, tempera
                 allowed = masker.durs_for(kname)
                 if not allowed:
                     raise RuntimeError("no duration fits")
-                did, lp = _pick(model.heads[2](z)[0, 0].float(), [DID[d] for d in allowed], rng, temperature, torch)
+                did, lp = _pick(
+                    model.heads[2](z)[0, 0].float(), [DID[d] for d in allowed], rng, temperature, torch
+                )
                 logp += lp
                 dur = tk.DURS[did]
         steps.append(tk.step(kname, pitch=pitch, dur=dur))
@@ -264,12 +299,22 @@ def ends_on_tonic(song: dict) -> bool:
 
 
 def to_song(decoded: dict, ns: dict, idx: int, run: str, seed: int, bpm: float) -> dict:
-    return {"id": f"gen-{ns['course']}-{ns['node']}-{seed}-{idx:02d}", "title": f"Generated {ns['node']} {idx}",
-            "composer": "Easy Piano melody model", "arranger": "Easy Piano melody model", "source": "generated",
-            "source_url": None, "license": "CC0-1.0", "composition_license": "CC0-1.0",
-            "generator": {"method": "melody-model", "tool": "tools/melody-model", "model": run, "seed": seed},
-            "spec_node": f"{ns['course']}/{ns['node']}", "bpm": bpm, "time": decoded["time"], "key": decoded["key"],
-            "bars": decoded["bars"]}
+    return {
+        "id": f"gen-{ns['course']}-{ns['node']}-{seed}-{idx:02d}",
+        "title": f"Generated {ns['node']} {idx}",
+        "composer": "Easy Piano melody model",
+        "arranger": "Easy Piano melody model",
+        "source": "generated",
+        "source_url": None,
+        "license": "CC0-1.0",
+        "composition_license": "CC0-1.0",
+        "generator": {"method": "melody-model", "tool": "tools/melody-model", "model": run, "seed": seed},
+        "spec_node": f"{ns['course']}/{ns['node']}",
+        "bpm": bpm,
+        "time": decoded["time"],
+        "key": decoded["key"],
+        "bars": decoded["bars"],
+    }
 
 
 def main(argv):
@@ -284,7 +329,14 @@ def main(argv):
     ap.add_argument("--temperature", type=float, default=0.9)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--keep", type=int, default=4)
-    ap.add_argument("--source", default="own", help="SRC token (the model always saw one in training); 'none' omits it")
+    ap.add_argument(
+        "--source", default="own", help="SRC token (the model always saw one in training); 'none' omits it"
+    )
+    ap.add_argument(
+        "--block-similar",
+        action="store_true",
+        help="drop tunes the similarity check flags (off for now, D27)",
+    )
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
@@ -293,14 +345,18 @@ def main(argv):
 
     from .model import CompoundGPT, Config
 
-    ck = torch.load(ROOT / "data" / "melody" / "runs" / args.run / "ckpt.pt", map_location=args.device, weights_only=False)
+    ck = torch.load(
+        ROOT / "data" / "melody" / "runs" / args.run / "ckpt.pt", map_location=args.device, weights_only=False
+    )
     model = CompoundGPT(Config(**ck["config"])).to(args.device).eval()
     model.load_state_dict(ck["model"])
     if not SIM_CORPUS.is_dir():
         raise SystemExit(f"no similarity corpus at {SIM_CORPUS}: run python -m melody_model.simcorpus")
     cli = content_cli()
     specs_json = ROOT / "data" / "melody" / "specs.json"
-    res = subprocess.run([*cli, "specs", str(CONTENT), "--out", str(specs_json)], capture_output=True, text=True)
+    res = subprocess.run(
+        [*cli, "specs", str(CONTENT), "--out", str(specs_json)], capture_output=True, text=True
+    )
     if res.returncode != 0:
         raise SystemExit(f"content specs failed ({res.returncode}): {res.stderr.strip()[-500:]}")
     ns = node_spec(args.node, specs_json)
@@ -308,14 +364,18 @@ def main(argv):
     time = s.get("time") or ns["taught"]["times"][0]
     bars = args.bars or s["bars"][1]
     level = args.level or level_for(ns["taught"])
-    prefix = build_prefix(ns, args.key, bars, time, args.style, level, None if args.source == "none" else args.source)
+    prefix = build_prefix(
+        ns, args.key, bars, time, args.style, level, None if args.source == "none" else args.source
+    )
     rng = random.Random(args.seed)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     cands = []
     for i in range(args.n):
         try:
-            steps, score = sample_tune(model, prefix, Masker(ns, bars, time), rng, args.temperature, torch, args.device)
+            steps, score = sample_tune(
+                model, prefix, Masker(ns, bars, time), rng, args.temperature, torch, args.device
+            )
             decoded = tk.decode(steps)
         except (RuntimeError, tk.InvalidSequence) as e:
             print(f"candidate {i}: {e}")
@@ -327,13 +387,25 @@ def main(argv):
     errors = rubric_gate(cli, args.node, [c[0] for c in cands])
     passing = [(f, s_, sc) for f, s_, sc in cands if not errors[str(f)]]
     similar = similarity_gate(cli, [f for f, _, _ in passing])
-    kept = [(f, s_, sc + (0.5 if ends_on_tonic(s_) else 0)) for f, s_, sc in passing if not similar[s_["id"]]]
+    kept = [
+        (f, s_, sc + (0.5 if ends_on_tonic(s_) else 0))
+        for f, s_, sc in passing
+        if not (args.block_similar and similar[s_["id"]])
+    ]
     kept.sort(key=lambda x: -x[2])
-    report = {"node": args.node, "run": args.run, "candidates": len(cands), "rubric_pass": len(passing),
-              "similarity_pass": len(kept), "similarity_threshold": SIM_THRESHOLD,
-              "kept": [str(f.name) for f, _, _ in kept[:args.keep]],
-              "errors": {Path(k).name: v for k, v in errors.items() if v},
-              "similar": sorted(i for i, flag in similar.items() if flag)}
+    report = {
+        "node": args.node,
+        "run": args.run,
+        "candidates": len(cands),
+        "rubric_pass": len(passing),
+        "similarity_blocking": args.block_similar,
+        "similarity_threshold": SIM_THRESHOLD,
+        "similar_count": sum(similar.values()),
+        "kept": [str(f.name) for f, _, _ in kept[: args.keep]],
+        "kept_flagged_similar": [f.name for f, s_, _ in kept[: args.keep] if similar[s_["id"]]],
+        "errors": {Path(k).name: v for k, v in errors.items() if v},
+        "similar": sorted(i for i, flag in similar.items() if flag),
+    }
     (out / "report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(json.dumps({k: v for k, v in report.items() if k != "errors"}, indent=1))
 
@@ -342,7 +414,9 @@ def rubric_gate(cli: list[str], node: str, files: list[Path]) -> dict[str, list[
     """Rubric errors per file. Fails closed: any tool error or a file without a result aborts."""
     if not files:
         return {}
-    res = subprocess.run([*cli, "check", str(CONTENT), node, *map(str, files)], capture_output=True, text=True)
+    res = subprocess.run(
+        [*cli, "check", str(CONTENT), node, *map(str, files)], capture_output=True, text=True
+    )
     if res.returncode not in (0, 1):
         raise SystemExit(f"content check failed ({res.returncode}): {res.stderr.strip()[-500:]}")
     try:
@@ -366,8 +440,11 @@ def similarity_gate(cli: list[str], files: list[Path]) -> dict[str, bool]:
     refs = ROOT / "references" / "melody-corpus"
     if refs.is_dir():
         corpora += ["--corpus", str(refs)]
-    res = subprocess.run([*cli, "similar", *map(str, files), *corpora, "--threshold", str(SIM_THRESHOLD)],
-                         capture_output=True, text=True)
+    res = subprocess.run(
+        [*cli, "similar", *map(str, files), *corpora, "--threshold", str(SIM_THRESHOLD)],
+        capture_output=True,
+        text=True,
+    )
     if res.returncode not in (0, 1):
         raise SystemExit(f"content similar failed ({res.returncode}): {res.stderr.strip()[-500:]}")
     out = {m.group(2): m.group(1) == "SIMILAR" for m in map(_SIM_LINE.match, res.stdout.splitlines()) if m}

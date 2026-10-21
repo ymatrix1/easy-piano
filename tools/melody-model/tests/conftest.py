@@ -12,7 +12,3 @@ def need(ok: bool, what: str):
     if REQUIRE_ALL:
         pytest.fail(f"{what} is required (CI / MELODY_REQUIRE_ALL set)")
     pytest.skip(f"{what} not installed")
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers", "slow: real model size (11M params); deselect with -m 'not slow'")

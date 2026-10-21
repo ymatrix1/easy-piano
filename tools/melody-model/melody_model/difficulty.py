@@ -19,8 +19,11 @@ LEVELS = (1, 2, 3, 4, 5)
 
 
 def _hands(song: dict) -> dict[str, list[list[Event]]]:
-    return {h: [parse_hand(b[h]) if h in b else [] for b in song["bars"]] for h in ("RH", "LH")
-            if any(h in b for b in song["bars"])}
+    return {
+        h: [parse_hand(b[h]) if h in b else [] for b in song["bars"]]
+        for h in ("RH", "LH")
+        if any(h in b for b in song["bars"])
+    }
 
 
 def _onsets(bar: list[Event]) -> list[tuple[Fraction, Event]]:
@@ -47,13 +50,17 @@ def patterns_of(song: dict) -> list[dict]:
     if "RH" in hands and "LH" in hands:
         for rb, lb in zip(hands["RH"], hands["LH"]):
             r = {t for t, e in _onsets(rb) if not e.is_rest}
-            l = {t for t, e in _onsets(lb) if not e.is_rest}
-            if r & l:
+            lh = {t for t, e in _onsets(lb) if not e.is_rest}
+            if r & lh:
                 out.append({"hands_together": True})
                 break
     for hand, bars in hands.items():
-        line = [max(p.midi for p in e.pitches) if hand == "RH" else min(p.midi for p in e.pitches)
-                for bar in bars for e in bar if not e.is_rest]
+        line = [
+            max(p.midi for p in e.pitches) if hand == "RH" else min(p.midi for p in e.pitches)
+            for bar in bars
+            for e in bar
+            if not e.is_rest
+        ]
         leaps = [abs(a - b) for a, b in zip(line, line[1:])]
         if leaps and max(leaps) >= 3:
             out.append({"interval_min": interval_number(max(leaps)), "hand": hand})
@@ -99,5 +106,3 @@ def level_of(song: dict) -> int:
     per_bar = len(notes) / max(1, len(song["bars"]) * len(hands))
     score += 0 if per_bar < 4 else 1 if per_bar < 8 else 2
     return 1 if score <= 1 else 2 if score <= 3 else 3 if score <= 6 else 4 if score <= 9 else 5
-
-

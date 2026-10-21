@@ -3,11 +3,12 @@ import json
 from pathlib import Path
 
 import pytest
-import torch
 from conftest import need
 
-from melody_model.model import CompoundGPT, Config
-from melody_model.tokenizer import FIELDS, encode_song
+torch = pytest.importorskip("torch")  # the `train` extra; CI installs neither torch nor the `export` extra
+
+from melody_model.model import CompoundGPT, Config  # noqa: E402
+from melody_model.tokenizer import FIELDS, encode_song  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -33,7 +34,10 @@ def exported(tmp_path_factory):
 
 
 def _steps(*names):
-    songs = [encode_song(json.loads((ROOT / "content" / "songs" / f"{n}.json").read_text(encoding="utf-8"))) for n in names]
+    songs = [
+        encode_song(json.loads((ROOT / "content" / "songs" / f"{n}.json").read_text(encoding="utf-8")))
+        for n in names
+    ]
     t = min(len(s) for s in songs)
     return torch.tensor([s[:t] for s in songs])
 

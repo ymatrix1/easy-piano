@@ -1,0 +1,95 @@
+# cargo run -- lint <main 960ef8c content/ + 30 out/gen-*.json>, 2026-10-21; untranslated-string warnings dropped
+checked 70 songs, 15 scenes, 59 levels, 4 courses, 129 string keys, 4 other locales
+warning: content\songs\e3-scale-drill.json: level 3 but node essentials-3/scale expects about 6 (content level)
+warning: content\songs\joy-to-the-world.json: level 3 but node essentials-3/joy-to-the-world expects about 6 (content level)
+error: content\songs\gen-magenta-e1-basic-rnn-15.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-15.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-15.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-basic-rnn-17.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-17.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-17.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-basic-rnn-2.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-2.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-2.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-basic-rnn-5.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-5.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-5.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-basic-rnn-7.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-7.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-basic-rnn-7.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-chord-pitches-improv-12.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-12.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-12.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-chord-pitches-improv-15.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-15.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-15.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-chord-pitches-improv-16.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-16.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-16.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-chord-pitches-improv-17.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-17.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-17.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-chord-pitches-improv-19.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-19.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-chord-pitches-improv-19.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-melody-rnn-12.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-12.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-12.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-melody-rnn-17.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-17.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-17.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-melody-rnn-4.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-4.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-4.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-melody-rnn-7.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-7.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-7.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e1-melody-rnn-8.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-8.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e1-melody-rnn-8.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-basic-rnn-11.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-11.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-11.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-basic-rnn-12.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-12.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-12.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-basic-rnn-17.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-17.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-17.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-basic-rnn-18.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-18.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-18.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-basic-rnn-5.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-5.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-basic-rnn-5.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-chord-pitches-improv-18.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-18.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-18.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-chord-pitches-improv-19.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-19.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-19.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-chord-pitches-improv-3.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-3.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-3.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-chord-pitches-improv-6.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-6.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-6.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-chord-pitches-improv-7.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-7.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-chord-pitches-improv-7.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-melody-rnn-12.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-12.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-12.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-melody-rnn-17.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-17.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-17.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-melody-rnn-2.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-2.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-2.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-melody-rnn-6.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-6.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-6.json: generated songs must be CC0-1.0, not `NOASSERTION`
+error: content\songs\gen-magenta-e3-melody-rnn-8.json: license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-8.json: composition_license `NOASSERTION` not in ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"]
+error: content\songs\gen-magenta-e3-melody-rnn-8.json: generated songs must be CC0-1.0, not `NOASSERTION`
+90 error(s)

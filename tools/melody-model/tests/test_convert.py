@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from melody_model import convert
-from melody_model.notation import parse_hand
+from melody_model.notation import Unsupported, parse_hand
 
 ROOT = Path(__file__).resolve().parents[3]
 SONGS = sorted((ROOT / "content" / "songs").glob("*.json"))
@@ -60,12 +60,15 @@ def test_midi_round_trip_pitch_and_rhythm(path, tmp_path):
 
 def test_abc_multi_tune_file():
     songs, errors = convert.convert_file_lenient(FIXTURES / "pd-tunes.abc")
-    assert errors == ["duration 1/3 quarters"]  # the triplet tune is rejected, not mangled
+    assert all(isinstance(e, Unsupported) for e in errors)
+    assert [str(e) for e in errors] == ["duration 1/3 quarters"]  # the triplet tune is rejected, not mangled
     by_title = {s["title"]: s for s in songs}
     twinkle = by_title["Twinkle Twinkle Little Star"]
     assert (twinkle["time"], twinkle["key"]) == ("4/4", "C")
     assert twinkle["bars"][:2] == [{"RH": "C4:4 C4:4 G4:4 G4:4"}, {"RH": "A4:4 A4:4 G4:2"}]
     jig = by_title["Pickup Jig"]
     assert (jig["time"], jig["key"]) == ("6/8", "G")
-    assert jig["bars"][0] == {"RH": "r:2 r:8 D4:8"}  # anacrusis padded with leading rests (greedy, longest first)
+    assert jig["bars"][0] == {
+        "RH": "r:2 r:8 D4:8"
+    }  # anacrusis padded with leading rests (greedy, longest first)
     assert jig["bars"][1] == {"RH": "G4:4 A4:8 B4:4 G4:8"}

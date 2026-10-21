@@ -18,8 +18,10 @@ from statistics import median
 
 from .notation import Event, Pitch, dur_beats, format_hand, parse_hand
 
-_DUR_QL = sorted(((Fraction(dur_beats(d, 4)).limit_denominator(64), d)
-                  for d in ("1", "2.", "2", "4.", "4", "8.", "8")), reverse=True)
+_DUR_QL = sorted(
+    ((Fraction(dur_beats(d, 4)).limit_denominator(64), d) for d in ("1", "2.", "2", "4.", "4", "8.", "8")),
+    reverse=True,
+)
 
 
 def _split(ql: Fraction, pitches: list[Pitch]) -> list[Event]:
@@ -79,7 +81,9 @@ def simplify(song: dict, rng: random.Random) -> dict:
         if keep_lh and b.get("LH"):
             lh = parse_hand(b["LH"])
             first = next((e for e in lh if not e.is_rest), None)
-            bar["LH"] = format_hand(_split(bar_ql, [min(first.pitches, key=lambda p: p.midi)] if first else []))
+            bar["LH"] = format_hand(
+                _split(bar_ql, [min(first.pitches, key=lambda p: p.midi)] if first else [])
+            )
         bars.append(bar)
     _fix_ties(bars)
     return {**song, "bars": bars}

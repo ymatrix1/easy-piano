@@ -40,7 +40,12 @@ def reletter(plan: list) -> list:
 
 def _window(tune: dict, rng: random.Random) -> dict:
     a, b = rng.choice(windows(len(tune["bars"])))
-    return {"time": tune["time"], "key": tune["key"], "bars": tune["bars"][a:b], "plan": reletter(tune["plan"][a:b])}
+    return {
+        "time": tune["time"],
+        "key": tune["key"],
+        "bars": tune["bars"][a:b],
+        "plan": reletter(tune["plan"][a:b]),
+    }
 
 
 def _transpose(song: dict, rng: random.Random) -> dict:
@@ -54,9 +59,15 @@ def _transpose(song: dict, rng: random.Random) -> dict:
     return song
 
 
-def make_sample(tune: dict, rng: random.Random, ctx: int = 1024, fim_p: float = FIM_P,
-                style_drop_p: float = STYLE_DROP_P, transpose: bool = True,
-                simplify_p: float = SIMPLIFY_P) -> tuple[list[Step], int]:
+def make_sample(
+    tune: dict,
+    rng: random.Random,
+    ctx: int = 1024,
+    fim_p: float = FIM_P,
+    style_drop_p: float = STYLE_DROP_P,
+    transpose: bool = True,
+    simplify_p: float = SIMPLIFY_P,
+) -> tuple[list[Step], int]:
     for _ in range(8):
         song = _window(tune, rng)
         if rng.random() < simplify_p:
@@ -65,7 +76,11 @@ def make_sample(tune: dict, rng: random.Random, ctx: int = 1024, fim_p: float = 
             song = _transpose(song, rng)
         spec = tk.spec_from_song(song)
         spec.styles = [] if rng.random() < style_drop_p else list(tune.get("styles", []))
-        spec.source = None if rng.random() < SOURCE_DROP_P else (tune["corpus"] if tune["corpus"] in SOURCES else "local")
+        spec.source = (
+            None
+            if rng.random() < SOURCE_DROP_P
+            else (tune["corpus"] if tune["corpus"] in SOURCES else "local")
+        )
         spec.level = None if rng.random() < LEVEL_DROP_P else level_of(song)
         spec.patterns = pick_patterns(patterns_of(song), rng)
         head = [tk.step("BOS")] + tk.encode_spec(spec)
@@ -75,8 +90,14 @@ def make_sample(tune: dict, rng: random.Random, ctx: int = 1024, fim_p: float = 
         if n >= 3 and rng.random() < fim_p:
             k = rng.randint(1, min(MAX_FIM_BARS, n - 2))
             i = rng.randint(1, n - 1 - k)
-            pre, mid, suf = song["bars"][:i], song["bars"][i:i + k], song["bars"][i + k:]
-            body = [tk.step("FIM_PRE")] + tk.encode_bars(pre) + [tk.step("FIM_SUF")] + tk.encode_bars(suf) + [tk.step("FIM_MID")]
+            pre, mid, suf = song["bars"][:i], song["bars"][i : i + k], song["bars"][i + k :]
+            body = (
+                [tk.step("FIM_PRE")]
+                + tk.encode_bars(pre)
+                + [tk.step("FIM_SUF")]
+                + tk.encode_bars(suf)
+                + [tk.step("FIM_MID")]
+            )
             loss_from = len(head) + len(body)
             steps = head + body + tk.encode_bars(mid) + [tk.step("END")]
         else:

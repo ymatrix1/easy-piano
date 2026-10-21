@@ -49,6 +49,8 @@ content/
 }
 ```
 
+`bpm` counts the time signature's beat unit (its denominator note): `6/8` at 120 plays 120 eighths a minute, `2/2` at 60 plays 60 halves (session engine, [difficulty](difficulty.md)).
+
 ### Generated songs (optional fields)
 
 Songs made by a generator ([D17](../DECISIONS.md), [skill-specs](skill-specs.md)) use `"source": "generated"`, `"license": "CC0-1.0"` and a `generator` object:
@@ -88,16 +90,16 @@ Each bar's hand string must sum to the time signature (lint error otherwise). Di
 
 A bar may hold an `ACC` part next to `RH` / `LH`: our own accompaniment (chords, bass) in the same notation. It is played by the app in play-along and never graded; bar lengths are linted like any hand.
 
-A bar may also hold a backing band ([D14](../DECISIONS.md)), same notation, also app-played and never graded:
+A bar may also hold a backing band ([D14](../DECISIONS.md), sounds per [D22](../DECISIONS.md)), same notation, also app-played and never graded:
 
 | Part | Sound | Pitches |
 |---|---|---|
-| `DRUMS` | Synthesized kit (no sample files) | General MIDI percussion numbers written as note names: kick 36 `C2`, snare 38 `D2`, closed hi-hat 42 `F#2`, open hi-hat 46 `A#2`, crash 49 `C#3`. Lint rejects any other pitch. Length matters only for bar sums. |
-| `BASS` | Synthesized bass voice | Normal pitches (21–108), e.g. `C2:4 G2:4`. |
-| `PAD` | Synthesized strings pad (3 detuned saws, slow attack/release) | Normal pitches; long chords, e.g. `G3C4E4:1`. Keep it off the melody's notes. |
-| `CHOIR` | Synthesized wordless "ooh" voices (2 detuned saws, vibrato, /u/ formant filters) | Normal pitches; sustained lines above the melody, e.g. `C5E5:1`; use `r:1` where it rests. |
+| `DRUMS` | Sampled kit (Virtuosity Drums, CC0) | General MIDI percussion numbers written as note names: kick 36 `C2`, snare 38 `D2`, closed hi-hat 42 `F#2`, open hi-hat 46 `A#2`, crash 49 `C#3`. Lint rejects any other pitch. Length matters only for bar sums. |
+| `BASS` | Sampled electric bass (FluidR3, C1–C4) | Normal pitches (21–108), e.g. `C2:4 G2:4`. |
+| `PAD` | Sampled string ensemble (FluidR3, C3–C6, looped, slow attack/release) | Normal pitches; long chords, e.g. `G3C4E4:1`. Keep it off the melody's notes. |
+| `CHOIR` | Sampled wordless "ooh" voices (FluidR3, C3–C6, looped) | Normal pitches; sustained lines above the melody, e.g. `C5E5:1`; use `r:1` where it rests. |
 
-Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument. Each part plays through its own gain bus (default mix: piano 4.0, `ACC` 3.0, `DRUMS` 0.17, `BASS` 0.07, `PAD` 0.06, `CHOIR` 0.32; the piano samples peak near -21 dBFS. Measured on Ode to Joy play-along, mean RMS vs `ACC`: bass -4.7 dB, drums -11.1, choir -14.3, pad -15.4); `PianoSynth.setPartLevel(part, level)` changes it, ready for a per-part mute/volume UI.
+Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument. Each part plays through its own gain bus into a reverb send, a gentle bus compressor and a limiter (default mix: piano 1.0, `ACC` 1.0, `DRUMS` 0.19, `BASS` 1.1, `PAD` 0.37, `CHOIR` 0.67; the learner's live keys 1.0, bypassing the dynamics). Measured on Ode to Joy play-along, RMS vs `ACC`: bass -5.2 dB, drums -8.9, choir -14.0, pad -15.0; mix peak -3.5 dBFS ([instrument-samples.md](../research/instrument-samples.md)). App-played notes get metric/phrase velocity and a few ms of seeded humanize (`app/lib/audio/backing.dart`); graded parts never do. `PianoSynth.setPartLevel(part, level)` scales it (1 = default), ready for a per-part mute/volume UI.
 
 ## Journey and levels (implemented)
 

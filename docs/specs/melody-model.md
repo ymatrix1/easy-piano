@@ -20,12 +20,13 @@ Output: `{title, composer, time, key, bars: [{RH, LH}]}` in the [content format]
 | Parts | more than two (and not `melody_only`) → rejected |
 | Voices | in a multi-voice bar, the voice with the highest mean pitch |
 | Chords | pitches low to high; fingering kept only when stored per note |
-| Ties | merged inside a bar when the chain sums to one duration; otherwise kept as the content grammar's `{tie}` token after the note (also across barlines); a tie into a different pitch is dropped |
+| Ties | merged inside a bar when the chain sums to one duration; otherwise kept as the content grammar's `{tie}` token after the note (also across barlines); a tie into a different pitch is rejected; a dangling tie on the last note is dropped |
 | Pickups | opening and section-end short bars padded with rests; strain end + next pickup written as two short measures are joined |
 | Meter | one meter; a shorter bar (3/8 or 2/4 in 6/8) is a short bar; any other change → rejected |
-| Key | one `(sharps, mode)`; a same-signature mode change (C → Am) is a key change → rejected; with no stated mode, music21 analysis must reach correlation ≥ 0.6, else rejected |
+| Key | one signature size and one stated mode (a bare signature agrees with a `Key` of the same sharps); a same-signature mode change (C → Am) is a key change → rejected; with no stated mode, music21 analysis must reach correlation ≥ 0.6, else rejected |
 | Durations | `1 1. 2 2. 2.. 4 4. 4.. 8 8. 16 16. 32`; tuplets and others → rejected |
-| Failures | parser exceptions → `Unsupported("parse error: …")`, never a crash |
+| Failures | parser exceptions → `Unsupported("parse error: …")`, never a crash; `convert_file_lenient` returns `Unsupported` objects |
+| Files with several scores | an Opus of movements is not one tune → rejected (`N scores in one file`), except multi-tune ABC files, which the builder splits per tune first |
 
 Rejected tunes raise `Unsupported` and are counted by the dataset builder.
 
@@ -78,7 +79,7 @@ Round trip: `decode(encode_song(song))` returns `time`, `key` and RH/LH bars exa
 
 ## Checks
 
-`cd tools/melody-model && python -m pytest` (venv: `pip install -r requirements.txt`).
+`cd tools/melody-model && uv sync && uv run pytest` (training deps: `uv sync --extra train`).
 
 ## Dataset (`melody_model/build.py`, step 3)
 
@@ -95,7 +96,7 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 - Flagged tunes **are** used in training (D21; user, 2026-10-20: "no i want to use the flagged tunes"). Known risk: weights may memorise copyrighted melodies. Flags and provenance let any corpus or flag be dropped and the model retrained.
 - **Chinese music** is included and tagged `STYLE_chinese` (user, 2026-10-20, on the agent's recommendation; earlier "i just dont want chinese music"), detected by metadata (`filters.is_chinese`: Chinese tags, Han script without kana after repairing PDMX mojibake, Chinese instrument/genre words, known Chinese artists). Generation avoids it unless asked.
 - Provenance per tune: `source_url`, `sha256` (source file, or the tune's ABC text for NMD), `license`, `composition_license`, `arranger`, `flags`.
-- Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are truncated and counted.
+- Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are cut at the last phrase end (stable cadence on a 4-bar boundary) in bars 32–64, or rejected when there is none; both counted.
 - PDMX downloads are checked against pinned sha256 (`download.PDMX_SHA256`).
 - Review gate: `melody_model.train` refuses to run until `python -m melody_model.gate approve …` records the user's approval of a 50-tune sample for the current `tunes.jsonl` hash.
 - Filters (`filters.py`): PDMX hard rejects (duplicates, length), NMD named composer, playability (range ≤ 24 semitones per hand, leap ≤ 12, ≤ 16 events/bar, chord size), vocab coverage, transposition-invariant dedupe.
@@ -123,6 +124,7 @@ Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers
 ## Browser export (`melody_model/export.py`, `web/`, step 5)
 
 ```
+uv sync --extra train --extra export          # torch + onnx/onnxruntime 1.30.0
 python -m melody_model.export --run base1      # -> tools/melody-model/web/model/ (git-ignored)
 python tools/melody-model/web/fetch_ort.py     # onnxruntime-web 1.30.0 -> web/vendor/ (git-ignored, sha256-pinned)
 python tools/melody-model/web/serve.py         # http://localhost:8780/ (COOP/COEP: needed for wasm threads)
@@ -161,7 +163,7 @@ python -m melody_model.generate --run base1 --node essentials-1/rests -n 16 --ke
 - Masked decoding at every step: grammar (plan triples per bar, `PLAN_END`, `BAR`, hands in order, events, `END`), taught pitches per hand, no leap over the taught interval, taught durations that still fit the bar, chord size ≤ taught polyphony with rising chord notes; no ties, no fingering (the arranger fingers later).
 - Candidates become song JSON with D17 fields (`source: generated`, `license: CC0-1.0`, `generator.method: melody-model`, `spec_node`). Two gates, both **fail closed** (a tool error, missing output or a candidate without a result aborts the run):
   1. Rubric: `content check <content> <course/node> <files>` (`core/src/rubric.rs`); also proves each file parses as a `Song`.
-  2. Similarity: `content similar <files> --corpus content/songs --corpus data/melody/similarity-corpus [--corpus references/melody-corpus] --threshold 0.5`. The corpus is every dataset tune exported by `python -m melody_model.simcorpus` (39,615 songs; one check of a node's candidates takes ~3 min on this machine).
+  2. Similarity: `content similar <files> --corpus content/songs --corpus data/melody/similarity-corpus [--corpus references/melody-corpus] --threshold 0.5`. **Report-only for now** (D27, proposed; user, 2026-10-21: "lets not block for now and decide later"): flagged ids go to `report.json` (`similar`, `kept_flagged_similar`); `--block-similar` drops them. At this corpus size the 0.5 threshold flags every simple tune (short low-information fragments score 1.00), so it needs calibration before it can block. The corpus is every dataset tune exported by `python -m melody_model.simcorpus` (39,615 songs; one check of a node's candidates takes ~3 min on this machine).
 - Kept tunes are ranked by mean log-probability plus a bonus for ending on the tonic. Sampling must reach `END` (no truncated candidates); the duration head is conditioned on the pitch field exactly as in training (`<none>` for rests).
 - `report.json` per run: candidates, rubric passes, similarity passes, kept files, rubric errors, ids rejected as similar.
 - The content CLI is found via `$CONTENT_CLI`, a built `tools/content-cli/target/{release,debug}/content`, or `cargo run`.

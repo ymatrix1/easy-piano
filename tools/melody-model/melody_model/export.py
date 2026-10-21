@@ -103,18 +103,52 @@ def export(m: CompoundGPT, out: Path) -> dict:
     past = torch.zeros(c.layers, 2, c.heads, 5, hd)
     with torch.no_grad():
         torch.onnx.export(
-            StepDecoder(m).eval(), (x, past, past), out / "decoder.onnx", dynamo=False, opset_version=OPSET,
-            input_names=["x", "past_k", "past_v"], output_names=["h", "present_k", "present_v"],
-            dynamic_axes={"x": {0: "B", 1: "T"}, "past_k": {1: "B", 3: "P"}, "past_v": {1: "B", 3: "P"},
-                          "h": {0: "B"}, "present_k": {1: "B", 3: "PT"}, "present_v": {1: "B", 3: "PT"}})
+            StepDecoder(m).eval(),
+            (x, past, past),
+            out / "decoder.onnx",
+            dynamo=False,
+            opset_version=OPSET,
+            input_names=["x", "past_k", "past_v"],
+            output_names=["h", "present_k", "present_v"],
+            dynamic_axes={
+                "x": {0: "B", 1: "T"},
+                "past_k": {1: "B", 3: "P"},
+                "past_v": {1: "B", 3: "P"},
+                "h": {0: "B"},
+                "present_k": {1: "B", 3: "PT"},
+                "present_v": {1: "B", 3: "PT"},
+            },
+        )
         ids = torch.zeros(2, dtype=torch.long)
         torch.onnx.export(
-            Heads(m).eval(), (torch.zeros(2, c.d), ids, ids, ids), out / "heads.onnx", dynamo=False, opset_version=OPSET,
-            input_names=["h", "kind", "pitch", "dur"], output_names=["kind_logits", "pitch_logits", "dur_logits", "finger_logits"],
-            dynamic_axes={n: {0: "B"} for n in ("h", "kind", "pitch", "dur", "kind_logits", "pitch_logits", "dur_logits", "finger_logits")})
+            Heads(m).eval(),
+            (torch.zeros(2, c.d), ids, ids, ids),
+            out / "heads.onnx",
+            dynamo=False,
+            opset_version=OPSET,
+            input_names=["h", "kind", "pitch", "dur"],
+            output_names=["kind_logits", "pitch_logits", "dur_logits", "finger_logits"],
+            dynamic_axes={
+                n: {0: "B"}
+                for n in (
+                    "h",
+                    "kind",
+                    "pitch",
+                    "dur",
+                    "kind_logits",
+                    "pitch_logits",
+                    "dur_logits",
+                    "finger_logits",
+                )
+            },
+        )
     for name in ("decoder", "heads"):
-        quantize_dynamic(out / f"{name}.onnx", out / f"{name}.int8.onnx", weight_type=QuantType.QInt8,
-                         op_types_to_quantize=["MatMul", "Gemm"])
+        quantize_dynamic(
+            out / f"{name}.onnx",
+            out / f"{name}.int8.onnx",
+            weight_type=QuantType.QInt8,
+            op_types_to_quantize=["MatMul", "Gemm"],
+        )
     (out / "vocab.json").write_text(vocab_json(), encoding="utf-8")
     return {p.name: p.stat().st_size for p in sorted(out.glob("*.onnx"))}
 
@@ -162,7 +196,7 @@ def torch_logits(m: CompoundGPT, steps: torch.Tensor, split: int) -> list[torch.
     with torch.no_grad():
         h = m.hidden(steps[:, :-1])
         lg = m.heads_logits(h, steps[:, 1:])
-    return [x[:, split - 1:] for x in lg]
+    return [x[:, split - 1 :] for x in lg]
 
 
 def parity(m: CompoundGPT, out: Path, steps: torch.Tensor, split: int) -> dict:
@@ -174,7 +208,9 @@ def parity(m: CompoundGPT, out: Path, steps: torch.Tensor, split: int) -> dict:
         res[label] = {
             "max_abs": max(float((g - r).abs().max()) for g, r in zip(got, ref)),
             "top1": min(float((g.argmax(-1) == r.argmax(-1)).float().mean()) for g, r in zip(got, ref)),
-            "max_prob_diff": max(float((g.softmax(-1) - r.softmax(-1)).abs().max()) for g, r in zip(got, ref)),
+            "max_prob_diff": max(
+                float((g.softmax(-1) - r.softmax(-1)).abs().max()) for g, r in zip(got, ref)
+            ),
         }
     return res
 
@@ -188,8 +224,11 @@ def nll(m: CompoundGPT, out: Path, seqs: list[tuple[torch.Tensor, int]]) -> dict
     count = 0
     for steps, split in seqs:
         tgt = steps[0, split:]
-        runs = {"torch": torch_logits(m, steps, split), "fp32": _ort_logits(out, "", steps, split),
-                "int8": _ort_logits(out, ".int8", steps, split)}
+        runs = {
+            "torch": torch_logits(m, steps, split),
+            "fp32": _ort_logits(out, "", steps, split),
+            "int8": _ort_logits(out, ".int8", steps, split),
+        }
         for k, lg in runs.items():
             for i in range(4):
                 sums[k][i] += float(F2.cross_entropy(lg[i][0].float(), tgt[:, i], reduction="sum"))
@@ -197,8 +236,13 @@ def nll(m: CompoundGPT, out: Path, seqs: list[tuple[torch.Tensor, int]]) -> dict
     res = {}
     for k, v in sums.items():
         fields = [x / count for x in v]
-        res[k] = {"total": round(sum(fields), 5), "kind": round(fields[0], 5), "pitch": round(fields[1], 5),
-                  "dur": round(fields[2], 5), "finger": round(fields[3], 5)}
+        res[k] = {
+            "total": round(sum(fields), 5),
+            "kind": round(fields[0], 5),
+            "pitch": round(fields[1], 5),
+            "dur": round(fields[2], 5),
+            "finger": round(fields[3], 5),
+        }
     res["steps"] = count
     res["tunes"] = len(seqs)
     return res
@@ -239,25 +283,49 @@ def main(argv):
     ap.add_argument("--run", required=True)
     ap.add_argument("--runs", type=Path, default=HERE.parent.parent / "data" / "melody" / "runs")
     ap.add_argument("--out", type=Path, default=HERE / "web" / "model")
-    ap.add_argument("--tunes", type=Path, default=HERE.parent.parent / "data" / "melody" / "dataset" / "tunes.jsonl")
-    ap.add_argument("--eval-tunes", type=int, default=200, help="validation tunes for the NLL check (0 = skip)")
+    ap.add_argument(
+        "--tunes", type=Path, default=HERE.parent.parent / "data" / "melody" / "dataset" / "tunes.jsonl"
+    )
+    ap.add_argument(
+        "--eval-tunes", type=int, default=200, help="validation tunes for the NLL check (0 = skip)"
+    )
     args = ap.parse_args(argv)
     m, blob = load(args.runs / args.run / "ckpt.pt")
     sizes = export(m, args.out)
     from .tokenizer import FIELDS, encode_song
-    song = json.loads((HERE.parent.parent / "content" / "songs" / "ode-to-joy.json").read_text(encoding="utf-8"))
+
+    song = json.loads(
+        (HERE.parent.parent / "content" / "songs" / "ode-to-joy.json").read_text(encoding="utf-8")
+    )
     steps = torch.tensor([encode_song(song)])
     split = next(i for i, s in enumerate(steps[0].tolist()) if s[0] == FIELDS["kind"].index("SPEC_END")) + 1
     par = parity(m, args.out, steps, split)
     ref = torch_logits(m, steps, split)
-    (args.out / "parity.json").write_text(json.dumps({
-        "steps": steps[0].tolist(), "split": split,
-        "logits": [[[round(v, 4) for v in row] for row in lg[0].tolist()] for lg in ref]}), encoding="utf-8")
+    (args.out / "parity.json").write_text(
+        json.dumps(
+            {
+                "steps": steps[0].tolist(),
+                "split": split,
+                "logits": [[[round(v, 4) for v in row] for row in lg[0].tolist()] for lg in ref],
+            }
+        ),
+        encoding="utf-8",
+    )
     quality = nll(m, args.out, eval_seqs(args.tunes, args.eval_tunes)) if args.eval_tunes else None
-    files = sorted(p.name for p in args.out.iterdir() if p.suffix in (".onnx", ".json") and p.name != "meta.json")
-    meta = {"run": args.run, "step": blob.get("step"), "val_loss": blob.get("val_loss"), "config": blob["config"],
-            "params": m.n_params(), "sizes_mb": {k: round(v / 1e6, 2) for k, v in sizes.items()},
-            "sha256": {f: sha256(args.out / f) for f in files}, "parity": par, "nll": quality}
+    files = sorted(
+        p.name for p in args.out.iterdir() if p.suffix in (".onnx", ".json") and p.name != "meta.json"
+    )
+    meta = {
+        "run": args.run,
+        "step": blob.get("step"),
+        "val_loss": blob.get("val_loss"),
+        "config": blob["config"],
+        "params": m.n_params(),
+        "sizes_mb": {k: round(v / 1e6, 2) for k, v in sizes.items()},
+        "sha256": {f: sha256(args.out / f) for f in files},
+        "parity": par,
+        "nll": quality,
+    }
     (args.out / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in meta.items() if k != "sha256"}, indent=1))
 
