@@ -187,6 +187,7 @@ class _PracticeStageState extends State<PracticeStage>
   final _bursts = <HitBurst>[];
   List<int> _targetStates = const [];
   late final Ticker _ticker;
+  late final double _introStartSec; // notes rise in (reference intro)
   late final AnimationController _pageAnim;
   Animation<double>? _pageTween;
   StreamSubscription<NoteEvent>? _sub;
@@ -275,6 +276,7 @@ class _PracticeStageState extends State<PracticeStage>
       (e) => _onNote(e.pitch, e.on, e.timestampMs),
     );
     _ticker = createTicker((_) => _tick())..start();
+    _introStartSec = _nowSec;
   }
 
   List<BackingNote> _companionNotes() => [
@@ -468,6 +470,7 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _tick() {
+    if (_nowSec - _introStartSec < 1.1) _marks.value++;
     if (_finished || _paused) return;
     if (_demo) {
       final beat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
@@ -942,6 +945,7 @@ class _PracticeStageState extends State<PracticeStage>
                           bursts: _bursts,
                           burstColor: StagePalette.burst,
                           clockSec: () => _nowSec,
+                          introStartSec: _introStartSec,
                           repaintAlso: _marks,
                         ),
                       ),

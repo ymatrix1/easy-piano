@@ -68,6 +68,7 @@ class StaffPainter extends CustomPainter {
     this.beatsPerBar,
     this.dimmed = false,
     this.waitBeamOpacity,
+    this.introStartSec,
     this.beatPulse,
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
@@ -114,6 +115,26 @@ class StaffPainter extends CustomPainter {
 
   /// Current time in seconds for animating [bursts].
   final double Function()? clockSec;
+
+  /// [clockSec] time the stage opened. Visible notes then rise from below
+  /// the staff, staggered, with an overshoot ease and a fade in (reference
+  /// stage intro). Null: no intro.
+  final double? introStartSec;
+
+  /// Intro animation for the [k]th of [n] visible notes, [elapsed] seconds
+  /// after the stage opened: delay k/(2n), duration min(1-(n-1)/(2n), 0.5),
+  /// swingOut(2) ease. Returns rise (1 = fully below, 0 = in place; may go
+  /// negative on overshoot) and alpha.
+  static ({double rise, double alpha}) introAt(double elapsed, int k, int n) {
+    if (n <= 0) return (rise: 0, alpha: 1);
+    final step = 1 / (2 * n);
+    final dur = math.min(1 - (n - 1) * step, 0.5);
+    final p = ((elapsed - k * step) / dur).clamp(0.0, 1.0);
+    const s = 2.0;
+    final q = p - 1;
+    final eased = ((s + 1) * q + s) * q * q + 1;
+    return (rise: 1 - eased, alpha: p);
+  }
 
   /// Draws bar lines every this many beats when set.
   final double? beatsPerBar;
@@ -194,7 +215,7 @@ class StaffPainter extends CustomPainter {
     double space,
   ) {
     final grand = staves == Staves.grand;
-    final systemX = grand ? space * 1.6 : 0.0;
+    final systemX = grand ? space * 2.2 : 0.0;
     final clefX = grand ? systemX + space * 1.0 : space * 0.8;
     // Clef glyphs are ~2.7 spaces wide; keep ~0.7 space clear after them.
     return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
@@ -217,6 +238,10 @@ class StaffPainter extends CustomPainter {
     final solid = math.max(0.0, clefRight - space);
     return (solid: solid, end: math.max(solid + space, anchorX));
   }
+
+  /// Grand staff band padding beyond the staff lines, in spaces. The G clef
+  /// overhangs its staff by ~1.6 spaces, so the treble band is taller.
+  static const trebleBandPad = 2.0, bassBandPad = 1.0;
 
   bool get _hasTreble => staves != Staves.bass;
   bool get _hasBass => staves != Staves.treble;
@@ -284,19 +309,18 @@ class StaffPainter extends CustomPainter {
         if (staves == Staves.grand) {
           // One band per staff, stage colour between them, each framed by a
           // stronger border line (reference look).
-          final pad = space * 0.6;
           final border = Paint()
-            ..color = staff
-            ..strokeWidth = math.max(2.0, space * 0.2);
-          for (final (top, bot) in [
-            (staffTop, trebleBottomY),
-            (bassTopY, staffBottom),
+            ..color = staff.withValues(alpha: 0.45)
+            ..strokeWidth = math.max(1.5, space * 0.14);
+          for (final (top, bot, padSp) in [
+            (staffTop, trebleBottomY, trebleBandPad),
+            (bassTopY, staffBottom, bassBandPad),
           ]) {
             final r = Rect.fromLTRB(
               sys.systemX,
-              top - pad,
+              top - space * padSp,
               size.width,
-              bot + pad,
+              bot + space * padSp,
             );
             canvas.drawRect(r, band);
             canvas.drawLine(r.topLeft, r.topRight, border);
@@ -358,11 +382,11 @@ class StaffPainter extends CustomPainter {
           Offset(sys.systemX, staffBottom),
           ink,
         );
-        final x0 = sys.systemX - space * 1.25,
-            top = staffTop,
-            bot = staffBottom,
+        final x0 = sys.systemX - space * 1.9,
+            top = staffTop - space * trebleBandPad,
+            bot = staffBottom + space * bassBandPad,
             mid = (top + bot) / 2,
-            w = space * 0.9;
+            w = space * 1.4;
         final brace = Path()
           ..moveTo(x0 + w, top)
           ..cubicTo(
@@ -384,9 +408,9 @@ class StaffPainter extends CustomPainter {
         canvas.drawPath(
           brace,
           Paint()
-            ..color = staff
+            ..color = staff.withValues(alpha: 0.4)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = space * 0.35
+            ..strokeWidth = space * 0.45
             ..strokeCap = StrokeCap.round,
         );
       }
@@ -475,12 +499,32 @@ class StaffPainter extends CustomPainter {
     final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final current = currentIndex?.call();
     double? lastX;
-    for (var i = _lowerBound(firstBeat); i < notes.length; i++) {
+    final introT = introStartSec == null || clockSec == null
+        ? null
+        : clockSec!() - introStartSec!;
+    final introOn = introT != null && introT < 1.0;
+    final first = _lowerBound(firstBeat);
+    var introN = 0;
+    if (introOn) {
+      for (var i = first; i < notes.length && notes[i].beat <= lastBeat; i++) {
+        introN++;
+      }
+    }
+    for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       final x = anchorX + (n.beat - now) * pixelsPerBeat;
       lastX = x;
       if (x + space * 2 < 0) continue; // off screen; the cover hides the rest
+      final intro = introOn ? introAt(introT, i - first, introN) : null;
+      if (intro != null) {
+        if (intro.alpha <= 0) continue;
+        canvas.saveLayer(
+          null,
+          Paint()..color = Color.fromRGBO(0, 0, 0, intro.alpha),
+        );
+        canvas.translate(0, intro.rise * size.height);
+      }
       final onBass = _onBass(n);
       final step = diatonicStep(n.pitch);
       final y = _noteY(n.pitch, onBass, l);
@@ -555,6 +599,7 @@ class StaffPainter extends CustomPainter {
           color,
         );
       }
+      if (intro != null) canvas.restore();
     }
 
     // Cover: a copy of the background laid over the notes, opaque at the
@@ -760,5 +805,6 @@ class StaffPainter extends CustomPainter {
       old.beatsPerBar != beatsPerBar ||
       old.staves != staves ||
       old.lineRatio != lineRatio ||
+      old.introStartSec != introStartSec ||
       old.pixelsPerBeat != pixelsPerBeat;
 }
