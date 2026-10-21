@@ -49,6 +49,8 @@ content/
 }
 ```
 
+`bpm` counts the time signature's beat unit (its denominator note): `6/8` at 120 plays 120 eighths a minute, `2/2` at 60 plays 60 halves (session engine, [difficulty](difficulty.md)).
+
 ### Generated songs (optional fields)
 
 Songs made by a generator ([D17](../DECISIONS.md), [skill-specs](skill-specs.md)) use `"source": "generated"`, `"license": "CC0-1.0"` and a `generator` object:

@@ -1,6 +1,6 @@
 # Input
 
-Status: draft ([D5](../DECISIONS.md), mic: [D26](../DECISIONS.md)).
+Status: draft ([D5](../DECISIONS.md), mic: [D27](../DECISIONS.md)).
 
 | Source | Phase | Path |
 |---|---|---|

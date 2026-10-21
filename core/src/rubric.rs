@@ -395,13 +395,8 @@ pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
         return a.errors;
     }
     let mut errs = Vec::new();
-    let flats = uses_flats(&song.key) || taught.flats();
-
     if song.time != spec.time {
         errs.push(format!("time {} but node wants {}", song.time, spec.time));
-    }
-    if !taught.times.contains(&song.time) {
-        errs.push(format!("time {} not taught yet", song.time));
     }
     if !(spec.bpm[0]..=spec.bpm[1]).contains(&song.bpm) {
         errs.push(format!("bpm {} outside {:?}", song.bpm, spec.bpm));
@@ -422,7 +417,32 @@ pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
             _ => {}
         }
     }
+    errs.extend(taught_errors(song, &a, taught));
+    for p in &spec.required {
+        if !p.holds(&a, song.bars.len()) {
+            errs.push(format!("missing required pattern {}", p.describe()));
+        }
+    }
+    errs
+}
 
+/// The part of `check` that compares a song with a taught set only (no node
+/// spec). Empty means a learner who reached that set has seen everything in it.
+/// `difficulty::node_fit` uses this, so the two never disagree.
+pub fn taught_violations(song: &Song, taught: &TaughtSet) -> Vec<String> {
+    let a = analyse(song);
+    if !a.errors.is_empty() {
+        return a.errors;
+    }
+    taught_errors(song, &a, taught)
+}
+
+fn taught_errors(song: &Song, a: &Analysis, taught: &TaughtSet) -> Vec<String> {
+    let mut errs = Vec::new();
+    let flats = uses_flats(&song.key) || taught.flats();
+    if !taught.times.contains(&song.time) {
+        errs.push(format!("time {} not taught yet", song.time));
+    }
     for (hand, hits) in &a.hits {
         let allowed = taught.pitches.get(*hand);
         let extra: BTreeSet<u8> =
@@ -478,13 +498,8 @@ pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
             errs.push(format!("{hand}: rest durations not taught: {}", extra.join(" ")));
         }
     }
-    if hands_together(&a) && !taught.hands_together {
+    if hands_together(a) && !taught.hands_together {
         errs.push("hands together not taught yet".into());
-    }
-    for p in &spec.required {
-        if !p.holds(&a, song.bars.len()) {
-            errs.push(format!("missing required pattern {}", p.describe()));
-        }
     }
     errs
 }
