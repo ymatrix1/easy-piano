@@ -74,6 +74,45 @@ def jobs_mutopia():
                {"license": e["license"], "title": e["title"], "composer": e["composer"]})
 
 
+LOCAL = ROOT / "data" / "melody" / "local-datasets.json"
+LOCAL_FIELDS = ("name", "path", "source", "license", "flags")
+
+
+def load_local() -> list[dict]:
+    """Local MIDI datasets registered in data/melody/local-datasets.json (git-ignored).
+
+    Each entry: name, path (folder of .mid, searched recursively), source,
+    license, flags (list, e.g. ["pop"]); optional timing ("score" = tempo-mapped,
+    quantized by music21; "performed" = tempo estimated from onsets), track
+    (name or index of the melody track, default 0), group_by ("file" or
+    "folder": split unit, default "file").
+    Example: tools/melody-model/local-datasets.example.json.
+    """
+    if not LOCAL.exists():
+        return []
+    entries = json.loads(LOCAL.read_text(encoding="utf-8"))
+    for e in entries:
+        missing = [f for f in LOCAL_FIELDS if f not in e]
+        if missing:
+            raise SystemExit(f"{LOCAL}: dataset {e.get('name')!r} lacks {missing}")
+        if e["name"] in ("own", "nottingham", "mutopia", "pdmx"):
+            raise SystemExit(f"{LOCAL}: name {e['name']!r} is reserved")
+    return entries
+
+
+def jobs_local(entry: dict):
+    root = Path(entry["path"])
+    if not root.is_absolute():
+        root = ROOT / root
+    kind = "performed" if entry.get("timing") == "performed" else "mid"
+    for f in sorted(root.rglob("*.mid")) + sorted(root.rglob("*.midi")):
+        rel = f.relative_to(root)
+        group = str(rel.parent) if entry.get("group_by") == "folder" else str(rel)
+        yield (entry["name"], str(rel.with_suffix("")), kind, str(f),
+               {"license": entry["license"], "source": entry["source"], "flags": list(entry["flags"]),
+                "group": group, "track": entry.get("track", 0)})
+
+
 def work(job):
     """Convert one source item; returns (job meta, [songs], [errors])."""
     corpus, tune_id, kind, src, meta = job
@@ -82,6 +121,9 @@ def work(job):
     try:
         import music21 as m21
         from .convert import convert_score
+        if kind == "performed":
+            from .timed import performed_song
+            return corpus, tune_id, meta, [performed_song(src, meta.get("track", 0))], []
         if kind == "json":
             s = json.loads(Path(src).read_text(encoding="utf-8"))
             songs = [{"title": s["title"], "composer": s.get("composer", ""), "time": s["time"], "key": s["key"],
@@ -107,13 +149,16 @@ def _reason(msg: str) -> str:
 
 def main(argv):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--corpora", nargs="+", default=["own", "nottingham", "mutopia", "pdmx"])
+    ap.add_argument("--corpora", nargs="+", default=["own", "nottingham", "mutopia", "pdmx"],
+                    help="built-in corpora and/or names from data/melody/local-datasets.json (local ones are opt-in)")
     ap.add_argument("--limit", type=int, default=None, help="max PDMX candidates (smoke runs)")
     ap.add_argument("--jobs", type=int, default=28)
     args = ap.parse_args(argv)
 
     gens = {"own": jobs_own, "nottingham": jobs_nottingham, "mutopia": jobs_mutopia,
             "pdmx": lambda: jobs_pdmx(args.limit)}
+    for entry in load_local():
+        gens[entry["name"]] = lambda e=entry: jobs_local(e)
     jobs = [j for c in args.corpora for j in gens[c]()]
     OUT.mkdir(parents=True, exist_ok=True)
     stats = collections.defaultdict(lambda: collections.Counter())
@@ -141,7 +186,7 @@ def main(argv):
                     st["reject: duplicate"] += 1
                     continue
                 seen[key] = f"{corpus}:{tune_id}"
-                split = "train" if corpus == "own" else split_of(corpus, tune_id)
+                split = "train" if corpus == "own" else split_of(corpus, meta.get("group", tune_id))
                 rec = {"id": f"{corpus}:{tune_id}", "corpus": corpus, "split": split, "license": meta.get("license"),
                        "title": song.get("title") or meta.get("title", ""), "composer": song.get("composer") or meta.get("composer", ""),
                        "time": song["time"], "key": song["key"], "bars": song["bars"], "plan": plan(song),

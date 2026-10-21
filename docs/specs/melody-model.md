@@ -44,3 +44,22 @@ Round trip: `decode(encode_song(song))` returns the song's `time`, `key` and RH/
 ## Checks
 
 `cd tools/melody-model && python -m pytest` (venv: `pip install -r requirements.txt`).
+
+## Dataset (`melody_model/build.py`, step 3)
+
+```
+python -m melody_model.download nottingham pdmx mutopia   # into data/melody/raw (git-ignored)
+python -m melody_model.build                               # -> data/melody/dataset/tunes.jsonl + stats.json
+python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate bean piano-qpyc)
+```
+
+- One JSON line per source tune: `id, corpus, split, license, title, composer, time, key, bars, plan, flags`.
+- `plan`: per bar `(section A–H, STABLE|OPEN, UP|DOWN|FLAT)` (`labels.py`).
+- `flags` (D21): PDMX clean-data risks (`genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset. Train a clean model by dropping flagged tunes.
+- Filters (`filters.py`): PDMX hard rejects (licence conflict, duplicates, length), NMD named composer, playability (range ≤ 24 semitones per hand, leap ≤ 12, ≤ 16 events/bar, chord size), vocab coverage, transposition-invariant dedupe.
+- Split 90/5/5 by source tune (or by group for local datasets), deterministic.
+- Phrase windows (4/8/16 bars, step 4) and spelled transposition run at training time (`augment.py`).
+
+### Local MIDI datasets
+
+Any folder of `.mid` files can be plugged in without code changes: add an entry to `data/melody/local-datasets.json` (git-ignored; template `tools/melody-model/local-datasets.example.json`) with `name`, `path`, `source`, `license`, `flags`, and optionally `timing` (`score`: tempo-mapped, quantized by music21; `performed`: tempo estimated from onsets, `timed.py`), `track` and `group_by` (`file`/`folder`). Local datasets are opt-in: `python -m melody_model.build --corpora own nottingham mutopia pdmx <name>`. None are registered by default.
