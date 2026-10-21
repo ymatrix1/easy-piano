@@ -4,7 +4,7 @@ Checked: 2026-10-20
 
 Sources: licence files and READMEs fetched from each project (each licence claim links its source in the table); PDMX `PDMX.csv` metadata (Zenodo 15571083, counted locally 2026-10-20); `docs/research/score-formats-and-sources.md`; `.agents/rules/content-and-licensing.md`. Decisions: [D18](../DECISIONS.md) (NMD), [D19](../DECISIONS.md) (corpora), [D20](../DECISIONS.md) (model design).
 
-Question: which symbolic melody corpora can we train a small model on, given that the trained weights ship in an open-source app and should be clean (no non-commercial or "no ML" terms)? Pop/film/game material was first excluded, then allowed as flagged tunes; Chinese music is excluded (D21).
+Question: which symbolic melody corpora can we train a small model on, given that the trained weights ship in an open-source app and should be clean (no non-commercial or "no ML" terms)? Pop/film/game material was first excluded, then allowed as flagged, style-tagged tunes (D21).
 
 ## Criteria
 
@@ -27,7 +27,7 @@ A corpus is **use** only when all hold:
 | [The Session data](https://github.com/adactio/TheSession-data) | ~50k tune settings | ABC / JSON | traditional Irish | ODbL **plus a "Prohibition on LLM Use" clause** ([LICENSE.md](https://github.com/adactio/TheSession-data/blob/main/LICENSE.md)) | Forbidden in spirit (our model is a transformer LM over tokens) | **exclude** |
 | music21 bundled corpus (Bach chorales etc.) | ~370 chorales + misc | MusicXML / kern | PD | per set; origin and licence **not verified** per set ([corpus folder](https://github.com/cuthbertLab/music21/tree/master/music21/corpus)); Bach chorale encodings are commonly traced to CCARH/Humdrum (unverified) | Unknown | **exclude** until each set's licence is verified |
 | IMSLP | huge | mostly PDF scans; some MusicXML | per work | per file; many scans of copyrighted editions | Needs OMR; licence per file | **exclude for now** (cost, mixed licences) |
-| Lakh MIDI, Wikifonia, MuseScore non-PD | – (not checked) | MIDI / MusicXML | copyrighted pop | – | – | **not added** for now (D21). POP909 stays out: user, 2026-10-20, "i just dont want chinese music". Lakh only allowed as local negative corpus for similarity check (PR #34), never for training |
+| Lakh MIDI, Wikifonia, MuseScore non-PD | – (not checked) | MIDI / MusicXML | copyrighted pop | – | – | **not added** for now (D21). Lakh only allowed as local negative corpus for similarity check (PR #34), never for training |
 | Our own songs (`content/songs/`) | 40 | song JSON | PD tunes, our arrangements | ours (project licence) | Allowed | **use** (small, but exact target format and level labels) |
 
 ## Additional candidates (checked 2026-10-20, not yet approved)
@@ -59,11 +59,11 @@ Without PDMX the clean set is small (est. ~2k tunes, ~15k fragments after phrase
 
 ## PDMX screen
 
-Uploader tags are not proof. Since [D21](../DECISIONS.md) the risk rules below **flag** a tune instead of dropping it, and flagged tunes are used in training (user, 2026-10-20). Hard rejects: licence conflict, duplicates, length. Rules as implemented in `tools/melody-model/melody_model/filters.py`:
+Uploader tags are not proof. Since [D21](../DECISIONS.md) the risk rules below **flag** a tune instead of dropping it, and flagged tunes are used in training (user, 2026-10-20). Hard rejects: duplicates, length. Licence conflicts are flagged `licence-conflict` (user, 2026-10-20). Rules as implemented in `tools/melody-model/melody_model/filters.py`:
 
 | Rule | Why |
 |---|---|
-| `subset:no_license_conflict` and `subset:deduplicated` | public and internal licence agree |
+| `subset:deduplicated` (reject); `subset:no_license_conflict` false → flag `licence-conflict` | public and internal licence disagree |
 | Genre tags outside classical, folk, religious, world: flag `genre`; no genre and not `is_original`: flag `untagged` | pop/rock/soundtrack/game uploads mostly carry those tags |
 | **Composer missing** (161,919 of 222,856 in the subset, counted): flag `no-composer`, unless `is_original` | no composer = no way to check the composition's PD status |
 | Composer present: death-year / US-publication check via a composer table: **not implemented yet** (follow-up) | jurisdiction rule above |

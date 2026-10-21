@@ -14,6 +14,6 @@ The app is open source; its content must be clean. See [D6](../../docs/DECISIONS
 
 ## Note: melody-model training data ([D21](../../docs/DECISIONS.md))
 
-- The practice-tune model may be **trained** on flagged pop, film and game melodies (PDMX), never on Chinese music. This is a training-data exception only.
+- The practice-tune model may be **trained** on flagged material, including pop, film and game melodies and PDMX licence-conflict scores, with style tags. This is a training-data exception only.
 - No copyrighted melody, audio or arrangement is ever committed or shipped as content. Raw corpora stay in git-ignored `data/`.
 - Every generated tune passes the similarity filter (`content-cli similar`, PR #34) before it is used as content.

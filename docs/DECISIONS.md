@@ -26,7 +26,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D18](#d18-nottingham-music-database-minus-ashover-in-the-melody-model-training-set) | 2026-10-20 | NMD (minus Ashover) in melody-model training | accepted |
 | [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted; superseded in part by D21 |
 | [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | proposed |
-| [D21](#d21-pop-film-and-game-music-in-melody-model-training-flagged-no-chinese-music) | 2026-10-20 | Pop/film/game in training (flagged), no Chinese music; supersedes part of D19 | accepted |
+| [D21](#d21-train-the-melody-model-on-everything-we-can-flagged-and-style-tagged) | 2026-10-20 | Train on everything we can, flagged and style-tagged; supersedes part of D19 | accepted |
 
 ## Accepted
 
@@ -210,7 +210,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 ### D19. Approved training corpora for the melody model
 
-- **Status:** accepted; **superseded in part by [D21](#d21-pop-film-and-game-music-in-melody-model-training-flagged-no-chinese-music)** (the pop/film/game exclusion and the PDMX screen as hard rejects)
+- **Status:** accepted; **superseded in part by [D21](#d21-train-the-melody-model-on-everything-we-can-flagged-and-style-tagged)** (the pop/film/game exclusion and the PDMX screen as hard rejects)
 - **Decided by:** user, 2026-10-20 (PR #37)
 - **Context:** Model weights ship in the open-source app, so training data must be clean. Licence review: [melody-corpora.md](research/melody-corpora.md).
 - **Decision:** Train only on OpenScore Lieder (composer death-year checked), Mutopia (PD / CC-BY / CC-BY-SA pieces, attribution kept), our own songs, PDMX `no_license_conflict` after the pop screen and a 50-tune sample approved by the user, and NMD per D18. Excluded: Essen (CCARH licence), Meertens (NC), The Session (no-LLM clause), music21 sets of unverified origin, IMSLP, all pop/film/game material. PD rule: public domain in both the EU/UK/Brazil life+70 regime (composer died ≤ 1955) and the US (published before 1931), or traditional.
@@ -227,12 +227,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Magenta.js MusicVAE (pretrained on non-clean data); rules-only generator (dull); a large model behind a server (breaks local-first, D8).
 - **Impact:** Steps: corpora, converters + tokenizer, dataset, training on the user's GPU, ONNX + browser demo, evaluation.
 
-### D21. Pop, film and game music in melody-model training (flagged); no Chinese music
+### D21. Train the melody model on everything we can, flagged and style-tagged
 
 - **Status:** accepted
-- **Decided by:** user, 2026-10-20: "please include pop, film and game music in training"; "no i want to use the flagged tunes"; "i just dont want chinese music"
+- **Decided by:** user, 2026-10-20: "please include pop, film and game music in training"; "no i want to use the flagged tunes"; "can we create the model with everything we can but with tags and groups, genres"; licence-conflict scores "Include, flagged"; Chinese music: earlier "i just dont want chinese music", then "Chinese music: do your recommendation" (include, tagged)
 - **Context:** D19 excluded pop/film/game material. The user wants modern styles in the model and accepted the risk after being told the weights ship in the open-source app.
-- **Decision:** Supersedes D19's exclusion of pop, film and game material. PDMX screen rules (genre, untagged, no composer, pop name/title, third-party arrangement) no longer drop tunes; each tune keeps `flags` in the dataset, and **flagged tunes are used in training**. **No Chinese music**: a hard reject in every corpus, by metadata (Chinese tags, Han script without kana, Chinese instrument/genre words, known Chinese artists), counted in the dataset stats; POP909 stays out. Hard rejects also stay for PDMX licence conflicts and duplicates. This covers **training data only**: no copyrighted melody, audio or arrangement is ever committed or shipped as content, and every generated tune passes the similarity filter (`content-cli similar` < 0.6 against the training set and a local pop corpus, PR #34) before use.
+- **Decision:** Supersedes D19's exclusion of pop, film and game material. PDMX screen rules (licence conflict, genre, untagged, no composer, pop name/title, third-party arrangement) no longer drop tunes; each tune keeps `flags`, and **flagged tunes are used in training**. Every tune carries **style tokens** (classical, folk, religious, world, children, pop, rock, soundtrack, game, jazz, electronic, chinese) from corpus and metadata, so generation picks the style. **Chinese music is included, tagged `STYLE_chinese`**, and generation avoids it unless asked. Hard rejects stay only for duplicates and length; corpora whose own licence forbids this use (Essen, Meertens, The Session) stay out unless the user decides otherwise. This covers **training data only**: no copyrighted melody, audio or arrangement is ever committed or shipped as content, and every generated tune passes the similarity filter (`content-cli similar` < 0.6 against the training set and a local pop corpus, PR #34) before use.
 - **Why:** Modern-sounding practice tunes; the user owns the legal call.
 - **Alternatives:** Keep D19 (clean only; style tokens trained on clean data); pop only as a similarity negative set; train on flagged data but ship only weights trained without it.
-- **Impact:** **Known risk:** the weights may memorise copyrighted melodies from flagged tunes, so they may not be clean, and generated tunes may echo them. Mitigations: per-tune provenance and flags allow dropping any corpus or flag and retraining; the similarity filter on every generated tune; [OQ10](OPEN-QUESTIONS.md). The content rule (`.agents/rules/content-and-licensing.md`) is unchanged for shipped content. Counts: `python -m melody_model.build` writes `data/melody/dataset/stats.json`, summarised in `docs/research/melody-dataset.md` (PR #45).
+- **Impact:** **Known risk:** the weights may memorise copyrighted melodies from flagged tunes (including licence-conflict scores, whose own files say copyrighted), so they may not be clean, and generated tunes may echo them. Mitigations: per-tune provenance and flags allow dropping any corpus or flag and retraining; the similarity filter on every generated tune; [OQ10](OPEN-QUESTIONS.md). The content rule (`.agents/rules/content-and-licensing.md`) is unchanged for shipped content. Counts: `python -m melody_model.build` writes `data/melody/dataset/stats.json`, summarised in `docs/research/melody-dataset.md` (PR #45).
