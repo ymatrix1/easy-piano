@@ -90,6 +90,7 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 - `plan`: per bar `(section A–H, STABLE|OPEN, UP|DOWN|FLAT)` (`labels.py`).
 - `flags` (D21): PDMX clean-data risks (`genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset.
 - Flagged tunes **are** used in training (D21; user, 2026-10-20: "no i want to use the flagged tunes"). Known risk: weights may memorise copyrighted melodies. Flags and provenance let any corpus or flag be dropped and the model retrained.
+- **No Chinese music** (user rule, 2026-10-20): hard reject in every corpus by metadata (`filters.is_chinese`): Chinese tags, Han script without kana (after repairing PDMX mojibake), Chinese instrument/genre words, known Chinese artists. Errs toward excluding; counted as `reject: chinese music (user rule)`. Local datasets must not register Chinese music.
 - Provenance per tune: `source_url`, `sha256` (source file, or the tune's ABC text for NMD), `license`, `composition_license`, `arranger`, `flags`.
 - Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are truncated and counted.
 - PDMX downloads are checked against pinned sha256 (`download.PDMX_SHA256`).

@@ -27,7 +27,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 from .download import NMD_URL, RAW, ROOT
-from .filters import dedupe_key, nmd_ok, pdmx_flags, pdmx_ok, playable, split_of
+from .filters import dedupe_key, is_chinese, nmd_ok, pdmx_flags, pdmx_ok, playable, split_of
 from .labels import plan
 from .notation import Unsupported
 from .tokenizer import MAX_BARS, encode_song
@@ -225,6 +225,9 @@ def main(argv):
             for e in errors:
                 st["reject: " + e] += 1
             for song in songs:
+                if is_chinese([song.get("title", ""), song.get("composer", ""), meta.get("title", ""), meta.get("composer", ""), tune_id]):
+                    st["reject: chinese music (user rule)"] += 1  # same rule for every corpus, by metadata
+                    continue
                 if len(song["bars"]) > MAX_BARS:
                     st[f"truncated to {MAX_BARS} bars"] += 1
                     song["bars"] = song["bars"][:MAX_BARS]

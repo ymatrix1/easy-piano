@@ -161,3 +161,24 @@ def test_hand_bars_joins_strain_end_and_pickup():
         p2.append(m)
     bars = convert._hand_bars(p2, Fraction(3))
     assert len(bars) == 2 and [e.dur for e in bars[0]] == ["4.", "4", "8"]
+
+
+@pytest.mark.parametrize("texts,tags,expected", [
+    (["Teresa Teng - The Moon Represents My Heart"], "", True),
+    (["March of the Volunteers 义勇军进行曲"], "", True),
+    (["Erhu Improvisation no 1"], "", True),
+    (["Morning Waltz"], "waltz-piano-violin-taiwan-original", True),
+    (["Some tune"], "pianocover-cpop", True),
+    (["Seiken Densetsu 3 - 聖剣伝説３ ラスボス"], "", False),  # Japanese (kana present)
+    (["The Nutcracker 12c. Chinese Dance"], "", False),
+    (["China - Jacob French"], "", False),
+    (["Ode to Joy", "Beethoven"], "classical", False),
+    (["Catching Wasps", "Gregor Aichinger"], "marching-band", False),
+])
+def test_is_chinese(texts, tags, expected):
+    assert filters.is_chinese(texts, tags) is expected
+
+
+def test_is_chinese_repairs_mojibake():
+    garbled = "义勇军进行曲".encode("utf-8").decode("latin-1")
+    assert filters.is_chinese([garbled])

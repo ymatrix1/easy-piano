@@ -55,6 +55,9 @@ def pdmx_ok(row: dict) -> tuple[bool, str]:
         return False, "pdmx licence conflict"
     if row["subset:deduplicated"] != "True":
         return False, "pdmx duplicate"
+    if is_chinese([row.get(k, "") for k in ("title", "song_name", "subtitle", "composer_name", "artist_name")],
+                  " ".join(row.get(k, "") for k in ("tags", "genres", "groups"))):
+        return False, "chinese music (user rule)"
     try:
         bars = int(float(row["song_length.bars"]))
     except ValueError:
@@ -127,3 +130,37 @@ def split_of(corpus: str, tune_id: str) -> str:
     """Deterministic 90/5/5 split by source tune, so variants never cross splits."""
     h = int(hashlib.sha1(f"{corpus}:{tune_id}".encode()).hexdigest(), 16) % 100
     return "train" if h < 90 else ("valid" if h < 95 else "test")
+
+
+# --- Chinese music (user rule, 2026-10-20: "i just dont want chinese music") --------------
+HAN = re.compile("[㐀-䶿一-鿿豈-﫿]")
+KANA = re.compile("[぀-ヿ]")  # Japanese titles mix kanji with kana; Japanese music is allowed
+CHINESE_TAGS = re.compile(r"\b(chinese\w*|china|c-?pop|mandopop|cantopop|mandarin|cantonese|guzheng|erhu|pipa|dizi|guqin|"
+                          r"taiwan\w*|hong ?kong|xinjiang|uyghur|qing ?dynasty)\b", re.I)
+CHINESE_WORDS = re.compile(r"\b(erhu|guzheng|pipa|dizi|guqin|c-?pop|mandopop|cantopop)\b", re.I)
+CHINESE_NAMES = re.compile(r"\b(jay chou|teresa teng|michael wong|wu bai|xian xinghai|abing|tan dun|faye wong|eason chan|"
+                           r"jj lin|g\.?e\.?m\.?|joker xue|hua chenyu|leslie cheung|jacky cheung|andy lau|mayday|"
+                           r"david tao|jolin tsai|stefanie sun|wang leehom|lin junjie|zhou jielun|deng lijun)\b", re.I)
+
+
+def _demojibake(text: str) -> str:
+    """PDMX.csv holds some UTF-8 text decoded as Latin-1; undo that when it round-trips."""
+    try:
+        return text.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+
+
+def is_chinese(texts: list[str], tags: str = "") -> bool:
+    """Chinese music by metadata: Chinese tags, Han script without kana, instrument/genre words, artist names.
+
+    Errs toward excluding (a Western piece tagged "china" is dropped too); generic
+    "China"/"Chinese" in a title alone does not count (Tchaikovsky's Chinese Dance,
+    the American hymn tune "China").
+    """
+    text = " ".join(_demojibake(t) for t in texts if t and t != "NA")
+    if HAN.search(text) and not KANA.search(text):
+        return True
+    if CHINESE_WORDS.search(text) or CHINESE_NAMES.search(text):
+        return True
+    return bool(tags and CHINESE_TAGS.search(_demojibake(tags).replace("-", " ")))
