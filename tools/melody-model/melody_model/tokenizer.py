@@ -207,7 +207,7 @@ _PREFIX_KINDS = ("PAD", "BOS", "PAT", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI"
 _PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_", "LEVEL_")
 
 
-def decode(steps: list[Step]) -> dict:
+def decode(steps: list[Step], require_end: bool = True) -> dict:
     """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH.
 
     Raises InvalidSequence on anything encode_song cannot produce: out-of-range
@@ -279,17 +279,22 @@ def decode(steps: list[Step]) -> dict:
                 bad(f"step {i}: TIE must follow a note and carry no fields")
             events[-1].tie = True
         elif kind == "END":
+            ended = True
             break
         elif kind in _PREFIX_KINDS or kind.startswith(_PREFIX_GROUPS):
             if bars:
                 bad(f"step {i}: {kind} after the first BAR")
         else:
             bad(f"step {i}: unexpected {kind}")
+    else:
+        ended = False
     flush()
     if time is None or key is None:
         bad("no TIME or KEY")
     if not bars or any(not b for b in bars):
         bad("no bars, or an empty bar")
+    if require_end and not ended:
+        bad("no END (truncated sequence)")
     return {"time": time, "key": key, "bars": bars}
 
 

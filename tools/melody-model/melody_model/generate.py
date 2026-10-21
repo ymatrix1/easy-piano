@@ -6,24 +6,31 @@ Spec from the node: taught set from `content specs` (pitches per hand, durations
 rest durations, accidentals, max interval, polyphony, times) and the node's
 skill spec (bars, bpm, hands, time, required patterns). Masks enforce at every
 step: step grammar (plan triples, BAR, hands, events, END), taught pitches per
-hand, max leap, taught durations that fit the bar, chord size; no ties, no
-fingering (the arranger fingers later). Candidates are written as song JSON
-(D17 fields), checked with `content check`, and ranked by mean log-probability
-with a bonus for ending on the tonic. Similarity (`content similar`) runs on the kept ones.
+hand, max leap, taught durations that fit the bar (and leave a fillable rest),
+chord size; no ties, no fingering (the arranger fingers later). Required
+patterns and finger spans are not masked: the rubric filters them (deviation
+recorded in docs/specs/melody-model.md).
+
+Both gates fail closed: candidates are written as song JSON (D17 fields) and must
+(1) get a result from `content check` and pass the rubric, then (2) pass
+`content similar` against our songs and the training-set export
+(`python -m melody_model.simcorpus`). Any tool failure or missing result aborts.
+Kept tunes are ranked by mean log-probability with a bonus for ending on the tonic.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import math
+import os
 import random
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 from . import tokenizer as tk
-from .difficulty import interval_number
 from .download import ROOT
 from .labels import tonic_pc
 from .notation import DURATIONS, dur_beats, parse_hand, parse_pitch
@@ -33,9 +40,22 @@ KID = {k: i for i, k in enumerate(K)}
 PID = {p: i for i, p in enumerate(tk.PITCHES)}
 DID = {d: i for i, d in enumerate(tk.DURS)}
 CONTENT = ROOT / "content"
-CLI = ROOT / "tools" / "content-cli" / "target" / "debug" / "content.exe"
-# skill-spec interval numbers -> largest leap in semitones (rubric.interval_semitones)
-INTERVAL_SEMITONES = {2: 2, 3: 4, 4: 5, 5: 7, 6: 9, 7: 11, 8: 12}
+SIM_CORPUS = ROOT / "data" / "melody" / "similarity-corpus"
+SIM_THRESHOLD = 0.5  # content similar's default
+
+
+def content_cli() -> list[str]:
+    """The content CLI: $CONTENT_CLI, a built binary, or `cargo run` as a fallback."""
+    if os.environ.get("CONTENT_CLI"):
+        return [os.environ["CONTENT_CLI"]]
+    for profile in ("release", "debug"):
+        for name in ("content.exe", "content"):
+            exe = ROOT / "tools" / "content-cli" / "target" / profile / name
+            if exe.exists():
+                return [str(exe)]
+    if shutil.which("cargo"):
+        return ["cargo", "run", "-q", "--manifest-path", str(ROOT / "tools" / "content-cli" / "Cargo.toml"), "--"]
+    raise SystemExit("content CLI not found: build tools/content-cli or set CONTENT_CLI")
 
 
 def node_spec(node: str, specs_json: Path) -> dict:
@@ -72,7 +92,7 @@ class Masker:
         self.pitches = {h: [p for p in t["pitches"].get(h, [])] for h in self.hands}
         self.durs = [d for d in DURATIONS if d in t["durations"]]
         self.rest_durs = [d for d in DURATIONS if d in t.get("rest_durations", [])] if t["rests"] else []
-        self.max_leap = INTERVAL_SEMITONES.get(t["max_interval"], 12)
+        self.max_leap = t["max_interval"]  # semitones (taught set, docs/specs/skill-specs.md)
         self.poly = {h: t["polyphony"].get(h, 1) for h in self.hands}
         num, den = (int(x) for x in time.split("/"))
         self.bar_beats = num * 4 / den  # in quarters
@@ -105,8 +125,12 @@ class Masker:
         else:
             out.append("BAR" if self.bar_no < self.bars else "END")
         hand = self.hands[self.hand_i]
-        if self.chord_n and self.chord_n < self.poly[hand]:
+        if self.chord_n and self.chord_n < self.poly[hand] and self.pitches_for("CHORD"):
             out.append("CHORD")
+        if "NOTE" in out and not self.pitches_for("NOTE"):
+            out.remove("NOTE")
+        if "REST" in out and not self.durs_for("REST"):
+            out.remove("REST")
         return out
 
     def pitches_for(self, kind: str) -> list[str]:
@@ -118,12 +142,20 @@ class Masker:
         prev = self.prev[hand]
         if prev is None:
             return ps
-        near = [p for p in ps if abs(parse_pitch(p).midi - prev) <= self.max_leap]
-        return near or [min(ps, key=lambda p: abs(parse_pitch(p).midi - prev))]  # never a leap the level has not taught
+        return [p for p in ps if abs(parse_pitch(p).midi - prev) <= self.max_leap]  # empty: NOTE is masked
 
     def durs_for(self, kind: str) -> list[str]:
+        """Durations that fit and leave a remainder the taught values can still fill."""
         pool = self.rest_durs if kind == "REST" else self.durs
-        return [d for d in pool if dur_beats(d, 4) <= self.left + 1e-9]
+        return [d for d in pool if dur_beats(d, 4) <= self.left + 1e-9 and self._fillable(self.left - dur_beats(d, 4))]
+
+    def _fillable(self, beats: float) -> bool:
+        units = round(beats * 8)  # 32nd notes
+        sizes = {round(dur_beats(d, 4) * 8) for d in self.durs + self.rest_durs}
+        ok = [True] + [False] * units
+        for u in range(1, units + 1):
+            ok[u] = any(sz <= u and ok[u - sz] for sz in sizes)
+        return ok[units]
 
     def advance(self, kind: str, pitch: str, dur: str):
         if self.phase == "plan":
@@ -157,7 +189,8 @@ class Masker:
             self.chord_n = 0
 
 
-def build_prefix(ns: dict, key: str, bars: int, time: str, styles: list[str], level: int | None) -> list:
+def build_prefix(ns: dict, key: str, bars: int, time: str, styles: list[str], level: int | None,
+                 source: str | None = "own") -> list:
     t, s = ns["taught"], ns["spec"]
     allp = [p for h in ns["taught"]["pitches"].values() for p in h]
     lo = min(allp, key=lambda p: parse_pitch(p).midi)
@@ -166,7 +199,7 @@ def build_prefix(ns: dict, key: str, bars: int, time: str, styles: list[str], le
                    durs=[d for d in DURATIONS if d in t["durations"]],
                    hands={"RH": "RH", "LH": "LH", "both": "BOTH"}[s["hands"]],
                    course=ns["course"] if ns["course"] in tk.COURSES else "none",
-                   patterns=s.get("required", []), styles=styles, level=level)
+                   patterns=s.get("required", []), styles=styles, level=level, source=source)
     return [tk.step("BOS")] + tk.encode_spec(spec)
 
 
@@ -179,6 +212,8 @@ def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, tempera
         with torch.no_grad():
             h = model.hidden(x)[:, -1:]
             kinds = masker.kinds()
+            if not kinds:
+                raise RuntimeError("dead end: nothing the level allows fits here")
             z = h
             lg = model.heads[0](z)[0, 0].float()
             kind, lp = _pick(lg, [KID[k] for k in kinds], rng, temperature, torch)
@@ -186,11 +221,12 @@ def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, tempera
             kname = K[kind]
             pitch = dur = tk.NONE
             z = z + model.cond[0](torch.tensor([[kind]], device=device))
+            pid = 0  # <none>: training conditions the dur head on the true pitch field, NONE for REST
             if kname in ("NOTE", "CHORD"):
                 pid, lp = _pick(model.heads[1](z)[0, 0].float(), [PID[p] for p in masker.pitches_for(kname)], rng, temperature, torch)
                 logp += lp
                 pitch = tk.PITCHES[pid]
-                z = z + model.cond[1](torch.tensor([[pid]], device=device))
+            z = z + model.cond[1](torch.tensor([[pid]], device=device))
             if kname in ("NOTE", "REST"):
                 allowed = masker.durs_for(kname)
                 if not allowed:
@@ -201,8 +237,10 @@ def sample_tune(model, prefix: list, masker: Masker, rng: random.Random, tempera
         steps.append(tk.step(kname, pitch=pitch, dur=dur))
         n += 1
         masker.advance(kname, pitch, dur)
-        if kname == "END" or len(steps) >= model.c.ctx:
+        if kname == "END":
             return steps, logp / max(1, n)
+        if len(steps) >= model.c.ctx:
+            raise RuntimeError("context full before END")
 
 
 def _pick(logits, allowed: list[int], rng: random.Random, temperature: float, torch) -> tuple[int, float]:
@@ -246,6 +284,7 @@ def main(argv):
     ap.add_argument("--temperature", type=float, default=0.9)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--keep", type=int, default=4)
+    ap.add_argument("--source", default="own", help="SRC token (the model always saw one in training); 'none' omits it")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
@@ -257,14 +296,19 @@ def main(argv):
     ck = torch.load(ROOT / "data" / "melody" / "runs" / args.run / "ckpt.pt", map_location=args.device, weights_only=False)
     model = CompoundGPT(Config(**ck["config"])).to(args.device).eval()
     model.load_state_dict(ck["model"])
+    if not SIM_CORPUS.is_dir():
+        raise SystemExit(f"no similarity corpus at {SIM_CORPUS}: run python -m melody_model.simcorpus")
+    cli = content_cli()
     specs_json = ROOT / "data" / "melody" / "specs.json"
-    subprocess.run([str(CLI), "specs", str(CONTENT), "--out", str(specs_json)], check=False, capture_output=True)
+    res = subprocess.run([*cli, "specs", str(CONTENT), "--out", str(specs_json)], capture_output=True, text=True)
+    if res.returncode != 0:
+        raise SystemExit(f"content specs failed ({res.returncode}): {res.stderr.strip()[-500:]}")
     ns = node_spec(args.node, specs_json)
     s = ns["spec"]
     time = s.get("time") or ns["taught"]["times"][0]
     bars = args.bars or s["bars"][1]
     level = args.level or level_for(ns["taught"])
-    prefix = build_prefix(ns, args.key, bars, time, args.style, level)
+    prefix = build_prefix(ns, args.key, bars, time, args.style, level, None if args.source == "none" else args.source)
     rng = random.Random(args.seed)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -280,15 +324,58 @@ def main(argv):
         f = out / f"{song['id']}.json"
         f.write_text(json.dumps(song, indent=1), encoding="utf-8")
         cands.append((f, song, score))
-    res = subprocess.run([str(CLI), "check", str(CONTENT), args.node, *map(str, (c[0] for c in cands))], capture_output=True, text=True)
-    errors = json.loads(res.stdout or "{}")
-    passing = [(f, s_, sc + (0.5 if ends_on_tonic(s_) else 0)) for f, s_, sc in cands if not errors.get(str(f))]
-    passing.sort(key=lambda x: -x[2])
+    errors = rubric_gate(cli, args.node, [c[0] for c in cands])
+    passing = [(f, s_, sc) for f, s_, sc in cands if not errors[str(f)]]
+    similar = similarity_gate(cli, [f for f, _, _ in passing])
+    kept = [(f, s_, sc + (0.5 if ends_on_tonic(s_) else 0)) for f, s_, sc in passing if not similar[s_["id"]]]
+    kept.sort(key=lambda x: -x[2])
     report = {"node": args.node, "run": args.run, "candidates": len(cands), "rubric_pass": len(passing),
-              "kept": [str(f.name) for f, _, _ in passing[:args.keep]],
-              "errors": {Path(k).name: v for k, v in errors.items() if v}}
+              "similarity_pass": len(kept), "similarity_threshold": SIM_THRESHOLD,
+              "kept": [str(f.name) for f, _, _ in kept[:args.keep]],
+              "errors": {Path(k).name: v for k, v in errors.items() if v},
+              "similar": sorted(i for i, flag in similar.items() if flag)}
     (out / "report.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(json.dumps({k: v for k, v in report.items() if k != "errors"}, indent=1))
+
+
+def rubric_gate(cli: list[str], node: str, files: list[Path]) -> dict[str, list[str]]:
+    """Rubric errors per file. Fails closed: any tool error or a file without a result aborts."""
+    if not files:
+        return {}
+    res = subprocess.run([*cli, "check", str(CONTENT), node, *map(str, files)], capture_output=True, text=True)
+    if res.returncode not in (0, 1):
+        raise SystemExit(f"content check failed ({res.returncode}): {res.stderr.strip()[-500:]}")
+    try:
+        errors = json.loads(res.stdout)
+    except json.JSONDecodeError:
+        raise SystemExit(f"content check printed no JSON: {res.stdout[:200]!r}") from None
+    missing = [str(f) for f in files if str(f) not in errors]
+    if missing:
+        raise SystemExit(f"content check gave no result for {len(missing)} files, e.g. {missing[0]}")
+    return errors
+
+
+_SIM_LINE = re.compile(r"^(SIMILAR|ok) (\S+) \(")
+
+
+def similarity_gate(cli: list[str], files: list[Path]) -> dict[str, bool]:
+    """song id -> too similar to a known melody. Fails closed like rubric_gate."""
+    if not files:
+        return {}
+    corpora = ["--corpus", str(CONTENT / "songs"), "--corpus", str(SIM_CORPUS)]
+    refs = ROOT / "references" / "melody-corpus"
+    if refs.is_dir():
+        corpora += ["--corpus", str(refs)]
+    res = subprocess.run([*cli, "similar", *map(str, files), *corpora, "--threshold", str(SIM_THRESHOLD)],
+                         capture_output=True, text=True)
+    if res.returncode not in (0, 1):
+        raise SystemExit(f"content similar failed ({res.returncode}): {res.stderr.strip()[-500:]}")
+    out = {m.group(2): m.group(1) == "SIMILAR" for m in map(_SIM_LINE.match, res.stdout.splitlines()) if m}
+    ids = [json.loads(f.read_text(encoding="utf-8"))["id"] for f in files]
+    missing = [i for i in ids if i not in out]
+    if missing:
+        raise SystemExit(f"content similar gave no result for {len(missing)} songs, e.g. {missing[0]}")
+    return out
 
 
 if __name__ == "__main__":

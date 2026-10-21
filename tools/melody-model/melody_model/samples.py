@@ -23,6 +23,7 @@ STYLE_DROP_P = 0.2
 MAX_FIM_BARS = 4
 SIMPLIFY_P = 0.3  # share of samples that are an easier variant
 LEVEL_DROP_P = 0.2
+SOURCE_DROP_P = 0.5  # generation may omit SRC; base1 was trained without this dropout
 SHIFTS = list(range(-6, 12))
 
 
@@ -64,7 +65,7 @@ def make_sample(tune: dict, rng: random.Random, ctx: int = 1024, fim_p: float = 
             song = _transpose(song, rng)
         spec = tk.spec_from_song(song)
         spec.styles = [] if rng.random() < style_drop_p else list(tune.get("styles", []))
-        spec.source = tune["corpus"] if tune["corpus"] in SOURCES else "local"
+        spec.source = None if rng.random() < SOURCE_DROP_P else (tune["corpus"] if tune["corpus"] in SOURCES else "local")
         spec.level = None if rng.random() < LEVEL_DROP_P else level_of(song)
         spec.patterns = pick_patterns(patterns_of(song), rng)
         head = [tk.step("BOS")] + tk.encode_spec(spec)

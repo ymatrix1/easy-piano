@@ -106,6 +106,15 @@ class TrainStream(_Iterable):
                 yield collate(b, _torch)
 
 
+def git_state() -> dict:
+    import subprocess
+    def run(*a):
+        r = subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else None
+    return {"sha": run("rev-parse", "HEAD"), "branch": run("rev-parse", "--abbrev-ref", "HEAD"),
+            "dirty": bool(run("status", "--porcelain", "--untracked-files=no"))}
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", required=True)
@@ -162,8 +171,11 @@ def main(argv):
         return args.lr * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * p)))
 
     run = RUNS / args.name
+    if run.exists() and any(run.iterdir()):
+        raise SystemExit(f"{run} exists: pick a new --name (runs are never overwritten or mixed)")
     run.mkdir(parents=True, exist_ok=True)
-    meta = {"args": vars(args), "model": cfg.to_dict(), "params": model.n_params(),
+    meta = {"args": vars(args), "argv": ["python", "-m", "melody_model.train", *argv], "git": git_state(),
+            "model": cfg.to_dict(), "params": model.n_params(),
             "dataset_sha256": dataset_hash(), "vocab_sha256": hashlib.sha256(vocab_json().encode()).hexdigest(),
             "gate": gate, "train_tunes": len(train_tunes), "valid_tunes": len(valid_tunes),
             "torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)}

@@ -109,13 +109,14 @@ Any folder of `.mid` files can be plugged in without code changes: add an entry 
 ## Training (`melody_model/train.py`, step 4)
 
 ```
-python -m melody_model.train --name base --steps 20000      # refuses to run without the review gate
+python -m melody_model.train --name base1 --steps 20000 --workers 8   # refuses without the review gate or an existing run dir
 ```
 
 - Model (`model.py`): compound decoder, sum of four field embeddings, pre-norm blocks with RoPE attention, cascaded heads kind → pitch → dur → finger (teacher-forced in training). Default 6 layers, d 384, 6 heads, ctx 1,024: 11.09M params.
 - Samples (`samples.py`), drawn on the fly from `tunes.jsonl` train split: phrase window (whole tune or 4/8/16 bars), plan relettered from A, random spelled transposition (−6…+11), 30% easier variant (`simplify.py`: RH-first, coarser rhythm grid, range folded to one octave), spec computed from the result plus `LEVEL_1…5` (`difficulty.level_of`, dropped 20%), 0–3 patterns it satisfies (`difficulty.patterns_of`), styles (dropped 20%), source. 25% FIM (1–4 middle bars). Loss: plan and bars after `SPEC_END` (left to right), middle bars after `FIM_MID` (FIM).
 - Batches by token budget (32,768 padded tokens; similar-length samples grouped). AdamW (0.9, 0.95), weight decay 0.1, lr 3e-4, 500 warm-up steps, cosine to 10%, bf16, grad clip 1.0.
-- Output in git-ignored `data/melody/runs/<name>/`: `config.json` (args, params, dataset and vocab sha256, gate), `log.jsonl`, `ckpt.pt` (best validation loss), `summary.json`.
+- Output in git-ignored `data/melody/runs/<name>/`: `config.json` (args, command line, git sha/branch/dirty, params, dataset and vocab sha256, gate), `log.jsonl`, `ckpt.pt` (best validation loss), `summary.json`. An existing run directory is never reused.
+- Source tokens are dropped in 50% of samples (from runs after `base1`), so generation may omit `SRC`; `base1` always saw one, so generation passes `--source own` by default.
 
 Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers → 1,087 steps, 19.4M tokens, ~160k tokens/s, 3.8 GB peak, validation loss 2.17 → 1.40 (kind 0.35, pitch 0.79, dur 0.25, finger 0.003; fingering is almost always absent in the data).
 
@@ -158,7 +159,15 @@ python -m melody_model.generate --run base1 --node essentials-1/rests -n 16 --ke
 
 - Spec from the node: taught set (`content specs`: pitches per hand, durations, rest durations, accidentals, max interval, polyphony, times) and its skill spec (bars, bpm, hands, time, `required`). Level from the taught set (same scale as training), styles optional.
 - Masked decoding at every step: grammar (plan triples per bar, `PLAN_END`, `BAR`, hands in order, events, `END`), taught pitches per hand, no leap over the taught interval, taught durations that still fit the bar, chord size ≤ taught polyphony with rising chord notes; no ties, no fingering (the arranger fingers later).
-- Candidates become song JSON with D17 fields (`source: generated`, `license: CC0-1.0`, `generator.method: melody-model`, `spec_node`), are checked with `content check <content> <course/node> <files>` (the rubric, `core/src/rubric.rs`), and ranked by mean log-probability plus a bonus for ending on the tonic. Required patterns are not forced by masks; the rubric drops candidates that miss them.
-- `report.json` per run: candidates, rubric passes, kept files, errors.
+- Candidates become song JSON with D17 fields (`source: generated`, `license: CC0-1.0`, `generator.method: melody-model`, `spec_node`). Two gates, both **fail closed** (a tool error, missing output or a candidate without a result aborts the run):
+  1. Rubric: `content check <content> <course/node> <files>` (`core/src/rubric.rs`); also proves each file parses as a `Song`.
+  2. Similarity: `content similar <files> --corpus content/songs --corpus data/melody/similarity-corpus [--corpus references/melody-corpus] --threshold 0.5`. The corpus is every dataset tune exported by `python -m melody_model.simcorpus` (39,615 songs; one check of a node's candidates takes ~3 min on this machine).
+- Kept tunes are ranked by mean log-probability plus a bonus for ending on the tonic. Sampling must reach `END` (no truncated candidates); the duration head is conditioned on the pitch field exactly as in training (`<none>` for rests).
+- `report.json` per run: candidates, rubric passes, similarity passes, kept files, rubric errors, ids rejected as similar.
+- The content CLI is found via `$CONTENT_CLI`, a built `tools/content-cli/target/{release,debug}/content`, or `cargo run`.
+
+**Deviation from D20 (masked decoding):** finger spans are not masked (no fingering is generated; the arranger adds it) and `required` patterns are not forced (a mask cannot know early that a later bar will add the required note). Both are left to the rubric gate; candidates that miss a pattern are dropped. Proposed decision: D25 (PR #44).
 
 First try (2-minute smoke checkpoint, essentials-1/rests, 8 candidates): 5 passed the rubric; the 3 failures missed the required rest (and one leap, from a mask fallback since fixed).
+
+Full run `base1` (2026-10-21, RTX 4070 SUPER): 20,000 steps, 356.9M tokens, 2,211 s (~37 min), peak 3.8 GB, best validation loss 0.875 (kind 0.273, pitch 0.446, dur 0.154 at step 19,500; train ~0.91, no overfitting). Evidence: `tools/melody-model/releases/melody-model-v1.train-summary.json`, `…train-log.jsonl`, loss curve `docs/models/melody-v1-loss.svg`. Generation before the gates were made fail-closed, 16 candidates per node, 10 lesson nodes from Piano Basics to Essentials III, GPU: **108 / 155 decoded candidates passed the rubric (70%)**, from 14/16 (c-d-e, f-and-g) and 15/15 (hands-together) down to 6/16 (shifting). All remaining failures are unmet `required` patterns (a required pitch 26, F# 6, rhythm share 6, rest 4, dotted rhythm 4, interval 3); taught-set rules (pitches, durations, leaps, chords) always pass. Follow-up: steer decoding toward unmet required patterns near the end of the tune.

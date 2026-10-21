@@ -667,6 +667,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn check_songs_reports_each_file_and_fails_closed() {
+        let content = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content");
+        let dir = std::env::temp_dir().join(format!("content-check-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let good = content.join("songs/cdefg-drill.json").to_string_lossy().into_owned();
+        let bad = dir.join("bad.json");
+        fs::write(&bad, "{not json").unwrap();
+        let bad = bad.to_string_lossy().into_owned();
+        assert_eq!(check_songs(&content, "piano-basics/f-and-g", std::slice::from_ref(&good)), 0);
+        assert_eq!(check_songs(&content, "piano-basics/f-and-g", &[good.clone(), bad]), 1, "an unparsable song fails");
+        assert_eq!(check_songs(&content, "no-such/node", &[good]), 2, "unknown node is an error, not a pass");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
     fn missing_locale_strings_warn_but_do_not_fail() {
         let dir = std::env::temp_dir().join(format!("content-lint-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
