@@ -186,6 +186,20 @@ class StaffPainter extends CustomPainter {
     return lo;
   }
 
+  /// Horizontal system layout in staff spaces. A grand staff starts with a
+  /// brace just left of the system line and the clefs one space after it;
+  /// a single staff has no brace or line, so its clef sits near the edge.
+  static ({double systemX, double clefX, double clefRight}) systemLayout(
+    Staves staves,
+    double space,
+  ) {
+    final grand = staves == Staves.grand;
+    final systemX = grand ? space * 1.6 : 0.0;
+    final clefX = grand ? systemX + space * 1.0 : space * 0.8;
+    // Clef glyphs are ~2.7 spaces wide; keep ~0.7 space clear after them.
+    return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
+  }
+
   bool get _hasTreble => staves != Staves.bass;
   bool get _hasBass => staves != Staves.treble;
 
@@ -239,6 +253,7 @@ class StaffPainter extends CustomPainter {
       ..strokeWidth = math.max(1.2, space * 0.09);
     final staffTop = _hasTreble ? trebleBottomY - space * 4 : bassTopY;
     final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
+    final sys = systemLayout(staves, space);
 
     if (bandColor != null) {
       canvas.drawRect(
@@ -259,14 +274,14 @@ class StaffPainter extends CustomPainter {
     for (var i = 0; i < 5; i++) {
       if (_hasTreble) {
         canvas.drawLine(
-          Offset(0, trebleBottomY - i * space),
+          Offset(sys.systemX, trebleBottomY - i * space),
           Offset(size.width, trebleBottomY - i * space),
           ink,
         );
       }
       if (_hasBass) {
         canvas.drawLine(
-          Offset(0, bassTopY + i * space),
+          Offset(sys.systemX, bassTopY + i * space),
           Offset(size.width, bassTopY + i * space),
           ink,
         );
@@ -278,7 +293,7 @@ class StaffPainter extends CustomPainter {
         canvas,
         Smufl.gClef,
         glyphSize,
-        Offset(space * 0.8, trebleBottomY - space),
+        Offset(sys.clefX, trebleBottomY - space),
         staff,
       );
     }
@@ -287,14 +302,19 @@ class StaffPainter extends CustomPainter {
         canvas,
         Smufl.fClef,
         glyphSize,
-        Offset(space * 0.8, bassTopY + space),
+        Offset(sys.clefX, bassTopY + space),
         staff,
       );
     }
-    final clefRight = space * 4.2;
+    final clefRight = sys.clefRight;
     if (staves == Staves.grand) {
-      // Brace joining the staves.
-      final x0 = space * 0.25,
+      // System line, then the brace just left of it.
+      canvas.drawLine(
+        Offset(sys.systemX, staffTop),
+        Offset(sys.systemX, staffBottom),
+        ink,
+      );
+      final x0 = sys.systemX - space * 1.25,
           top = staffTop,
           bot = staffBottom,
           mid = (top + bot) / 2,

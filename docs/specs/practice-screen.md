@@ -24,6 +24,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 ## Play-along stages
 
 - Clef and **play bar stay fixed** just after the clef (≈ 12% of the width); the **notes scroll** right to left (reference code: the notes container moves with song time, the rhythm line never moves). The bar's glow **pulses on every beat**.
+- Grand staff system start: brace just left of the system line (line at 1.6 staff spaces), clefs 1 space after the line, notes hidden left of 3.4 spaces past the clef. A single staff has no brace or line; its clef sits 0.8 space from the edge.
 - The top progress bar advances with song time.
 - **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. A metronome toggle in the top bar (play-along only, default on, remembered per device) clicks every beat (a recorded cross-stick, accented on beat 1; [D22](../DECISIONS.md)), with or without a companion; off keeps only the count-in. Toggling mid-song reschedules from the current beat. A count-in of whole bars, at least 2.5 s long, clicks before the start while the first note scrolls in from the right. Pause stops the sound; resume reschedules from the current beat.
 - Finger numbers above notes; hit notes turn **cyan**, missed notes **red**.

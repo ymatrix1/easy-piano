@@ -22,4 +22,19 @@ void main() {
     }
     expect(notes.where((n) => n.leftHand).length, 12);
   });
+
+  test('grand staff leaves a gap between brace, system line and clefs', () {
+    const space = 14.0;
+    final g = StaffPainter.systemLayout(Staves.grand, space);
+    // Brace (x0 = systemX - 1.25 sp, 0.9 sp wide, 0.35 sp stroke) stays
+    // on screen and left of the system line.
+    expect(g.systemX - space * 1.25 - space * 0.175, greaterThan(0));
+    expect(g.systemX - space * 0.35 + space * 0.175, lessThan(g.systemX));
+    expect(g.clefX - g.systemX, closeTo(space, 0.01));
+    expect(g.clefRight, greaterThan(g.clefX + space * 2.7));
+
+    final t = StaffPainter.systemLayout(Staves.treble, space);
+    expect(t.systemX, 0);
+    expect(t.clefX, space * 0.8);
+  });
 }
