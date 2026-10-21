@@ -24,6 +24,9 @@ Method: `window.loadModel()` timed with `performance.now()` from the click to bo
 | int8 | 1 | 12.48 MB | 1,225 ms (first load, incl. wasm compile) | 419 | 2,528 | 316 |
 | int8 | 4 | 12.48 MB | 545 ms | 333 | 2,032 | 254 |
 | fp32 | 1 | 44.72 MB | 449 ms | 574 | 2,037 | 255 |
+| int8, base1 final (2026-10-21) | 1 | 12.48 MB | 307 ms | 208 | 1,186 | 148 |
+
+The last row is a rerun on the final checkpoint in a fresh tab; same machine and method. Its lower times against the first row show run-to-run variance (tab focus, warm caches), not a model change: the graphs are identical.
 
 Also downloaded once: onnxruntime-web wasm 3.07 MB, JS 0.03 MB.
 
@@ -38,9 +41,13 @@ Parity (`melody_model/export.py`, Ode to Joy, teacher-forced through the KV-cach
 |---|---|---|---|
 | smoke3 (step 1,087) | 9.5e-6 | 0.020 | 97.9% |
 | base1 (step 6,000, val loss 1.02) | 1.5e-5 | 0.020 | 100% |
+| base1 final (step 20,000, val loss 0.875) | 1.5e-5 | 0.082 | 100% |
 
 Sample (base1 step 6,000, int8, spec above with durations 2/4/8, best of 8 by mean log p), RH per bar:
 `A4:4 A4:4 A4:4 E4:4 | D4:4 E4:4 C4:2 | G4:4 G4:8 A4:8 G4:4 E4:4 | D4:4 E4:4 D4:2 | C4:4 C4:4 C4:4 C4:4 | G4:4 G4:4 A4:2 | G4:4 G4:8 A4:8 G4:4 E4:4 | D4:4 E4:4 C4:2`. All 8 candidates finished; every bar is full by construction.
+
+Sample (base1 final, step 20,000, same spec with durations 2/4, best of 8), RH per bar:
+`G4:4 G4:4 G4:4 C4:4 | F4:4 D4:4 E4:2 | G4:4 G4:4 G4:4 C4:4 | A4:4 G4:4 B4:2 | G4:4 G4:4 G4:4 C4:4 | F4:4 D4:4 E4:2 | G4:4 G4:4 G4:4 C4:4 | A4:4 G4:4 G4:2`: AABA'-like phrase repeats.
 
 ## Findings
 
@@ -59,4 +66,3 @@ Sample (base1 step 6,000, int8, spec above with durations 2/4/8, best of 8 by me
 - Fold the kind head into the decoder graph and run pitch/dur/finger heads in JS (or one fused call) to cut per-step calls from up to 5 to 1–2.
 - Measure on a mid-range Android phone and iOS Safari (WebAssembly SIMD, no threads without isolation).
 - Port the rubric gate (`core/src/rubric.rs`) ranking into the demo once the Flutter path is chosen.
-- Re-run the sample with the final `base1` checkpoint.
