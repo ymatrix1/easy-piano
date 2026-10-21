@@ -1,0 +1,9 @@
+# Web Audio reference (D22 + polish), same fixture, OfflineAudioContext 44.1 kHz,
+# whole-render RMS and sample peak in dBFS, measured 2026-10-21 via ?mixprobe.
+# part,rms_db,peak_db
+ACC,-21.40,-4.76
+BASS,-26.59,-13.68
+DRUMS,-29.62,-10.42
+PAD,-36.42,-21.79
+CHOIR,-35.39,-17.91
+mix,-19.84,-3.34

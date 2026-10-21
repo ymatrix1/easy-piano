@@ -26,7 +26,7 @@ Status: accepted ([D1](DECISIONS.md), [D2](DECISIONS.md)). Nothing built yet.
 |---|---|---|
 | `app/` | Dart/Flutter | UI, navigation, rendering, persistence |
 | `core/` | Rust | Pure logic: notation, grading, session state machine. No I/O. 100% unit-tested |
-| `audio/` | Rust | Audio out (cpal/oboe), synth, mic capture, pitch detection |
+| `audio/` | Rust | One engine for every platform ([D30](DECISIONS.md)): sampler, mix and effects (stage 1, renders to buffers, CI parity test vs web); audio out (cpal/oboe, web AudioWorklet), mic capture and pitch detection to come |
 | `content/` | JSON + text | Courses, journeys, levels, songs, scenes, strings |
 | `tools/content-cli/` | Rust | `lint`, `preview`, `import-midi`, `import-musicxml`, `stats` |
 | `docs/` | Markdown | This planning set |
