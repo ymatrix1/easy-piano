@@ -74,5 +74,11 @@
   "next": "Suivant",
   "locked": "Verrouillé",
   "middleCLabel": "Do",
-  "gateProgress": "Gagne {need} étoiles avec n'importe lesquels de ces morceaux ({have}/{need})"
+  "gateProgress": "Gagne {need} étoiles avec n'importe lesquels de ces morceaux ({have}/{need})",
+  "early": "En avance",
+  "late": "En retard",
+  "slowPractice": "Pratique lente",
+  "slowPracticeIntro": "Travaillons ce passage plus lentement",
+  "sectionTryAgain": "Réessaie ce passage",
+  "sectionFullSpeed": "Maintenant à pleine vitesse !"
 }

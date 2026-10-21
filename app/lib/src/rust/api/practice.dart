@@ -33,6 +33,7 @@ abstract class PracticeSession implements RustOpaqueInterface {
     required double tempo,
     required double passRatio,
     required int failedAttempts,
+    required bool training,
   }) => RustLib.instance.api.crateApiPracticePracticeSessionCreate(
     songJson: songJson,
     mode: mode,
@@ -41,6 +42,7 @@ abstract class PracticeSession implements RustOpaqueInterface {
     tempo: tempo,
     passRatio: passRatio,
     failedAttempts: failedAttempts,
+    training: training,
   );
 
   PlatformInt64 endUs();
@@ -53,9 +55,58 @@ abstract class PracticeSession implements RustOpaqueInterface {
 
   ResultView result();
 
+  /// Feedback since the last call (drains the queue).
+  List<FeedbackView> takeFeedback();
+
+  /// Training: section outcome from the last tick, if any.
+  SectionEventView? takeSectionEvent();
+
   List<TargetView> targets();
 
   FrameView tick({required PlatformInt64 tUs});
+}
+
+/// Play-along feedback event for the error animations.
+class FeedbackView {
+  /// 0 hit, 1 wrong key, 2 missed.
+  final int kind;
+
+  /// Target index (hit, missed); 0 for wrong keys.
+  final int target;
+
+  /// Wrong key pitch; 0 otherwise.
+  final int pitch;
+
+  /// Hit timing: -1 early, 0 on time, 1 late.
+  final int timing;
+  final PlatformInt64 deltaUs;
+
+  const FeedbackView({
+    required this.kind,
+    required this.target,
+    required this.pitch,
+    required this.timing,
+    required this.deltaUs,
+  });
+
+  @override
+  int get hashCode =>
+      kind.hashCode ^
+      target.hashCode ^
+      pitch.hashCode ^
+      timing.hashCode ^
+      deltaUs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FeedbackView &&
+          runtimeType == other.runtimeType &&
+          kind == other.kind &&
+          target == other.target &&
+          pitch == other.pitch &&
+          timing == other.timing &&
+          deltaUs == other.deltaUs;
 }
 
 class FrameView {
@@ -69,6 +120,9 @@ class FrameView {
   /// Wait mode: the note has waited long enough to show the hint.
   final bool hintActive;
 
+  /// Play-along: chords hit in a row.
+  final int streak;
+
   const FrameView({
     required this.playheadBeat,
     required this.cursor,
@@ -77,6 +131,7 @@ class FrameView {
     required this.wrong,
     required this.done,
     required this.hintActive,
+    required this.streak,
   });
 
   @override
@@ -87,7 +142,8 @@ class FrameView {
       misses.hashCode ^
       wrong.hashCode ^
       done.hashCode ^
-      hintActive.hashCode;
+      hintActive.hashCode ^
+      streak.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -100,7 +156,8 @@ class FrameView {
           misses == other.misses &&
           wrong == other.wrong &&
           done == other.done &&
-          hintActive == other.hintActive;
+          hintActive == other.hintActive &&
+          streak == other.streak;
 }
 
 /// A note the app plays (companion hand, accompaniment, pre-listen).
@@ -210,6 +267,55 @@ class ResultView {
           assists == other.assists &&
           score == other.score &&
           starsExact == other.starsExact;
+}
+
+/// Training: outcome of one critical-section run.
+class SectionEventView {
+  final int section;
+
+  /// False: passed at full tempo, the song goes on. True: restart the
+  /// clock at `beat` (song beats) with tempo factor `tempo`.
+  final bool replay;
+  final double beat;
+  final double tempo;
+  final bool practice;
+
+  /// Practice mode just started: show the slow-down intro.
+  final bool intro;
+  final bool passed;
+
+  const SectionEventView({
+    required this.section,
+    required this.replay,
+    required this.beat,
+    required this.tempo,
+    required this.practice,
+    required this.intro,
+    required this.passed,
+  });
+
+  @override
+  int get hashCode =>
+      section.hashCode ^
+      replay.hashCode ^
+      beat.hashCode ^
+      tempo.hashCode ^
+      practice.hashCode ^
+      intro.hashCode ^
+      passed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SectionEventView &&
+          runtimeType == other.runtimeType &&
+          section == other.section &&
+          replay == other.replay &&
+          beat == other.beat &&
+          tempo == other.tempo &&
+          practice == other.practice &&
+          intro == other.intro &&
+          passed == other.passed;
 }
 
 class SongInfo {

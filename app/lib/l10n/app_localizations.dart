@@ -554,6 +554,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earn {need} stars from any of these songs ({have}/{need})'**
   String gateProgress(int need, int have);
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Early'**
+  String get early;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get late;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Slow practice'**
+  String get slowPractice;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s practise this part slower'**
+  String get slowPracticeIntro;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Try this part again'**
+  String get sectionTryAgain;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Now at full speed!'**
+  String get sectionFullSpeed;
 }
 
 class _AppLocalizationsDelegate

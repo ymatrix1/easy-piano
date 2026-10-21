@@ -260,6 +260,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Ganhe $need estrelas em qualquer uma destas músicas ($have/$need)';
   }
+
+  @override
+  String get early => 'Adiantado';
+
+  @override
+  String get late => 'Atrasado';
+
+  @override
+  String get slowPractice => 'Prática lenta';
+
+  @override
+  String get slowPracticeIntro => 'Vamos praticar esta parte mais devagar';
+
+  @override
+  String get sectionTryAgain => 'Tente esta parte de novo';
+
+  @override
+  String get sectionFullSpeed => 'Agora na velocidade normal!';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
