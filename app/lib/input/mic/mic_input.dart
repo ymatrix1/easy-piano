@@ -1,5 +1,5 @@
 import '../note_event.dart';
-import 'mic_input_stub.dart'
+import 'mic_input_native.dart'
     if (dart.library.js_interop) 'mic_input_web.dart'
     as impl;
 

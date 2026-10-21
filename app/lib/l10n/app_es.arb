@@ -102,5 +102,8 @@
   "micNoteNames": "Do,Do♯,Re,Re♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si",
   "micNotFound": "No se encontró ningún micrófono. Conecta uno o elige otra entrada.",
   "micBusy": "Otra app está usando el micrófono. Ciérrala e inténtalo de nuevo.",
+  "midiUnavailableApp": "La entrada MIDI no está disponible en este dispositivo.",
+  "micUnavailableApp": "La entrada por micrófono no está disponible en este dispositivo.",
+  "micDeniedApp": "Se bloqueó el acceso al micrófono. Permítelo en los ajustes del sistema de la app e inténtalo de nuevo.",
   "micQuietTip": "Funciona mejor en silencio: hablar, teclear o música cerca pueden oírse como notas."
 }

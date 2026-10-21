@@ -358,6 +358,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le microphone est utilisé par une autre app. Fermez-la et réessayez.';
 
   @override
+  String get midiUnavailableApp =>
+      'L\'entrée MIDI n\'est pas disponible sur cet appareil.';
+
+  @override
+  String get micUnavailableApp =>
+      'L\'entrée microphone n\'est pas disponible sur cet appareil.';
+
+  @override
+  String get micDeniedApp =>
+      'L\'accès au microphone est bloqué. Autorisez-le dans les réglages système de l\'application, puis réessayez.';
+
+  @override
   String get micQuietTip =>
       'Idéal dans une pièce calme : voix, frappe au clavier ou musique proches peuvent être prises pour des notes.';
 }

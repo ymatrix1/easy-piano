@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../audio/piano_synth.dart';
@@ -62,7 +63,13 @@ class _FreePlayPageState extends State<FreePlayPage> {
     if (!quiet && _midiLabel == null) {
       final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? l.midiNotFound : l.midiUnavailable)),
+        SnackBar(
+          content: Text(
+            ok
+                ? l.midiNotFound
+                : (kIsWeb ? l.midiUnavailable : l.midiUnavailableApp),
+          ),
+        ),
       );
     }
   }

@@ -342,3 +342,11 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Reference only (colour); cross or shake at the play bar; error buzz; combo counter.
 - **Impact:** UI in `app/lib/practice/play_feedback.dart`; events from `core` (`Feedback`, `Timing`, `ON_TIME_US`). Bean piano-uv0e.
 
+### D32. Android MIDI and mic through a platform channel, detector stays in Dart (proposed)
+
+- **Status:** proposed
+- **Context:** Native builds used stub inputs; web has Web MIDI and a getUserMedia + Dart `NoteDetector` mic path (D29). The phone is the main target. The plan named `android.media.midi` and Oboe.
+- **Decision:** A small Kotlin side (`MidiBridge`, `MicBridge`, registered in `MainActivity`) behind Flutter channels `dev.easypiano/*`, no new pub plugin. MIDI: `MidiManager` opens every device with an output port (USB, and BLE devices the system has paired), hot-plug via a device callback, note on/off parsed in Kotlin. Mic: `AudioRecord` (float PCM, 44.1 kHz mono, `UNPROCESSED` source when supported, optional preferred device) streams 1024-frame chunks to Dart; the same `NoteDetector`, gain staging and calibration as web run there. `RECORD_AUDIO` is requested when the student turns the mic on. Events carry `System.nanoTime` ms; Dart reads the same clock through one sync call, so MIDI, mic and `now()` agree. iOS and desktop have no channel and report "unsupported".
+- **Why:** One detector for web and Android, unit-tested in Dart; no dependency to vet or keep up with Flutter; the channel needs little code. The audio-clock rule (rule 7) is kept as far as the web path does: events are stamped on a monotonic clock, grading stays in `core`.
+- **Alternatives:** `flutter_midi_command` / `record` plugins (more platforms, but extra dependencies and their own timestamps); Oboe/cpal input in the Rust engine (lower latency, but detector would need porting or an FFI audio stream); detector in Rust `core`.
+- **Impact:** `app/android/.../MidiBridge.kt`, `MicBridge.kt`, `AndroidManifest.xml`; `app/lib/input/native_bridge.dart`, `midi_input_native.dart`, `mic/mic_input_native.dart` replace the stubs; strings `midiUnavailableApp`, `micUnavailableApp`, `micDeniedApp`. AudioRecord adds buffering latency (not measured yet); the calibration step absorbs a constant offset. Bean piano-0h6i.
