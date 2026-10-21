@@ -330,4 +330,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get micNoteNames => 'Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si';
+
+  @override
+  String get micNotFound =>
+      'Aucun microphone trouvé. Branchez-en un ou choisissez une autre entrée.';
+
+  @override
+  String get micBusy =>
+      'Le microphone est utilisé par une autre app. Fermez-la et réessayez.';
 }

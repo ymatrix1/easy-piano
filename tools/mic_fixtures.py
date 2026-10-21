@@ -93,6 +93,12 @@ CHORDS = [
     [60, 64, 67], [55, 59, 62], [53, 57, 60], [57, 60, 64], [48, 52, 55],
     [60, 64], [60, 67], [62, 65], [64, 67], [48, 60], [43, 59, 62], [41, 57, 60],
 ]
+# Octave and fifth doublings: the detector does not report a note that is an
+# octave/twelfth of one already found (docs/research/mic-input.md), so these
+# show that limit in the score instead of hiding it.
+DOUBLED = [
+    [60, 72], [55, 67], [48, 55, 60], [60, 67, 72], [53, 60, 65], [43, 55, 62],
+]
 # Melodies: public-domain tunes (Ode to Joy, Twinkle Twinkle), our own timing.
 ODE = [64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62]
 TWINKLE = [60, 60, 67, 67, 69, 69, 67, 65, 65, 64, 64, 62, 62, 60]
@@ -108,6 +114,10 @@ def main():
         name = "chord_" + "-".join(map(str, c))
         ev = [(0.4 + rng.uniform(0, 0.02), p, 1.5) for p in c]
         clips.append((name, ev, 2.0, "chord"))
+    for c in DOUBLED:
+        name = "doubled_" + "-".join(map(str, c))
+        ev = [(0.4 + rng.uniform(0, 0.02), p, 1.5) for p in c]
+        clips.append((name, ev, 2.0, "doubled"))
     for name, tune, beat in (("ode", ODE, 0.45), ("twinkle", TWINKLE, 0.5)):
         ev = [(0.4 + i * beat, p, beat * 1.6) for i, p in enumerate(tune)]
         clips.append((f"melody_{name}", ev, 0.8 + len(tune) * beat, "melody"))
@@ -121,6 +131,9 @@ def main():
             fname = f"{cond}__{name}.wav"
             write_wav(OUT / fname, room(render(ev, length), cond))
             truth[fname] = {
+                # Held-out test set: every third clip in list order (spans
+                # every kind), fixed by position and never used for tuning.
+                "split": "test" if clips.index((name, ev, length, kind)) % 3 == 2 else "tune",
                 "condition": cond,
                 "kind": kind,
                 "notes": [{"t": round(t, 4), "pitch": p} for t, p, _ in sorted(ev)],

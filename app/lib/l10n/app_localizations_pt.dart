@@ -327,6 +327,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get micNoteNames => 'Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si';
+
+  @override
+  String get micNotFound =>
+      'Nenhum microfone encontrado. Conecte um ou escolha outra entrada.';
+
+  @override
+  String get micBusy =>
+      'O microfone está em uso por outro app. Feche-o e tente de novo.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

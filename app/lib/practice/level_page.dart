@@ -79,11 +79,12 @@ class _LevelPageState extends State<LevelPage> {
         if (!ok) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                micInput.error == MicError.denied
-                    ? l.micDenied
-                    : l.micUnavailable,
-              ),
+              content: Text(switch (micInput.error) {
+                MicError.denied => l.micDenied,
+                MicError.notFound => l.micNotFound,
+                MicError.busy => l.micBusy,
+                _ => l.micUnavailable,
+              }),
             ),
           );
           return;

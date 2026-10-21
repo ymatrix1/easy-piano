@@ -93,5 +93,7 @@
   "micHeard": "Entendu : {note}",
   "micTestHint": "Jouez une touche : la barre bouge et la note s'affiche ici.",
   "micTurnOff": "Couper",
-  "micNoteNames": "Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si"
+  "micNoteNames": "Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si",
+  "micNotFound": "Aucun microphone trouvé. Branchez-en un ou choisissez une autre entrée.",
+  "micBusy": "Le microphone est utilisé par une autre app. Fermez-la et réessayez."
 }

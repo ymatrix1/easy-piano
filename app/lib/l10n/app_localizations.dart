@@ -668,6 +668,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B'**
   String get micNoteNames;
+
+  /// No description provided for @micNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone found. Plug one in or pick another input.'**
+  String get micNotFound;
+
+  /// No description provided for @micBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone is in use by another app. Close it and try again.'**
+  String get micBusy;
 }
 
 class _AppLocalizationsDelegate

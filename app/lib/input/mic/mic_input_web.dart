@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:web/web.dart' as web;
 
 import '../note_event.dart';
+import 'mic_clock.dart';
 import 'mic_input.dart';
 import 'note_detector.dart';
 
@@ -25,9 +26,12 @@ class _WebMicInput implements MicInput {
   NoteDetector? _detector;
   int? _baseFrame;
 
-  /// performance.now() minus context time (ms); the smallest value seen is
-  /// the one with the least message delay.
+  /// performance.now() minus context time (ms); see [nextClockOffset].
   double _clockOffset = double.infinity;
+
+  /// Bumped by every start/stop; a start that awaited across a newer
+  /// start/stop drops what it opened instead of leaving a live track.
+  int _generation = 0;
 
   @override
   MicError? error;
@@ -102,10 +106,14 @@ class _WebMicInput implements MicInput {
   @override
   double now() => web.window.performance.now();
 
+  String get _offsetKeyForDevice => '$_offsetKey:${deviceId ?? 'default'}';
+
   @override
   double? get offsetMs {
     try {
-      return double.tryParse(web.window.localStorage.getItem(_offsetKey) ?? '');
+      return double.tryParse(
+        web.window.localStorage.getItem(_offsetKeyForDevice) ?? '',
+      );
     } catch (_) {
       return null;
     }
@@ -115,8 +123,8 @@ class _WebMicInput implements MicInput {
   set offsetMs(double? value) {
     try {
       value == null
-          ? web.window.localStorage.removeItem(_offsetKey)
-          : web.window.localStorage.setItem(_offsetKey, '$value');
+          ? web.window.localStorage.removeItem(_offsetKeyForDevice)
+          : web.window.localStorage.setItem(_offsetKeyForDevice, '$value');
     } catch (_) {}
   }
 
@@ -139,6 +147,7 @@ class _WebMicInput implements MicInput {
   @override
   Future<bool> start() async {
     if (running) return true;
+    final gen = ++_generation;
     error = null;
     final devices = (web.window.navigator as JSObject).has('mediaDevices')
         ? web.window.navigator.mediaDevices
@@ -159,18 +168,37 @@ class _WebMicInput implements MicInput {
       if (id != null) {
         (audio as JSObject)['deviceId'] = {'exact': id}.jsify();
       }
-      _stream = await devices
+      final stream = await devices
           .getUserMedia(web.MediaStreamConstraints(audio: audio))
           .toDart;
-    } catch (_) {
-      // A remembered device may be gone; retry with the default once.
-      if (deviceId != null) {
+      if (gen != _generation) {
+        _stopTracks(stream);
+        return false;
+      }
+      _stream = stream;
+    } catch (e) {
+      if (gen != _generation) return false;
+      // dart2js and dart2wasm both surface the DOMException name in
+      // toString() ("NotAllowedError: ..."); avoids JS interop type checks.
+      final text = '$e';
+      final name = const [
+        'NotAllowedError',
+        'SecurityError',
+        'NotFoundError',
+        'OverconstrainedError',
+        'NotReadableError',
+        'AbortError',
+      ].firstWhere(text.contains, orElse: () => '');
+      final err = micErrorFor(name);
+      // Only a missing remembered device falls back to the default input.
+      if (err == MicError.notFound && deviceId != null) {
         try {
           web.window.localStorage.removeItem(_deviceKey);
         } catch (_) {}
+        _generation--; // the retry is this same start
         return start();
       }
-      error = MicError.denied;
+      error = err;
       return false;
     }
     try {
@@ -179,6 +207,10 @@ class _WebMicInput implements MicInput {
       );
       _ctx = ctx;
       await ctx.audioWorklet.addModule('mic_worklet.js').toDart;
+      if (gen != _generation) {
+        ctx.close();
+        return false;
+      }
       final node = web.AudioWorkletNode(ctx, 'mic-capture');
       ctx.createMediaStreamSource(_stream!).connect(node);
       // Keep the node pulled by the graph; it outputs silence.
@@ -192,6 +224,7 @@ class _WebMicInput implements MicInput {
       _node = node;
       await ctx.resume().toDart;
     } catch (_) {
+      if (gen != _generation) return false;
       stop();
       error = MicError.unsupported;
       return false;
@@ -207,7 +240,7 @@ class _WebMicInput implements MicInput {
     final frame = (data.getProperty<JSNumber>('frame'.toJS)).toDartInt;
     final samples = data.getProperty<JSFloat32Array>('samples'.toJS).toDart;
     _baseFrame ??= frame;
-    _clockOffset = math.min(_clockOffset, now() - ctx.currentTime * 1000);
+    _clockOffset = nextClockOffset(_clockOffset, now(), ctx.currentTime);
     var peak = 0.0;
     for (final s in samples) {
       final a = s.abs();
@@ -223,8 +256,12 @@ class _WebMicInput implements MicInput {
     if (notes.isEmpty) return;
     final offset = offsetMs ?? 0;
     for (final n in notes) {
-      final ctxMs = (_baseFrame! / ctx.sampleRate + n.time) * 1000;
-      final t = ctxMs + _clockOffset;
+      final t = onsetToPerfMs(
+        baseFrame: _baseFrame!,
+        sampleRate: ctx.sampleRate,
+        onsetSec: n.time,
+        clockOffsetMs: _clockOffset,
+      );
       final raw = NoteEvent(
         pitch: n.pitch,
         velocity: 80,
@@ -243,12 +280,16 @@ class _WebMicInput implements MicInput {
     }
   }
 
+  static void _stopTracks(web.MediaStream s) =>
+      s.getTracks().toDart.forEach((t) => t.stop());
+
   @override
   void stop() {
+    _generation++;
     _node?.port.onmessage = null;
     _node?.disconnect();
     _node = null;
-    _stream?.getTracks().toDart.forEach((t) => t.stop());
+    if (_stream != null) _stopTracks(_stream!);
     _stream = null;
     _ctx?.close();
     _ctx = null;

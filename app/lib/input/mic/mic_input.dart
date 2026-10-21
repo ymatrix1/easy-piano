@@ -11,7 +11,22 @@ class MicDevice {
 }
 
 /// Why the microphone could not start.
-enum MicError { unsupported, denied }
+enum MicError {
+  /// No getUserMedia / AudioWorklet in this browser.
+  unsupported,
+
+  /// The student or the browser blocked access (NotAllowedError,
+  /// SecurityError).
+  denied,
+
+  /// No input, or the chosen one is gone (NotFoundError,
+  /// OverconstrainedError).
+  notFound,
+
+  /// The device exists but can't be opened, often another app holds it
+  /// (NotReadableError, AbortError).
+  busy,
+}
 
 /// Microphone note input. Emits the same [NoteEvent]s as MIDI, with
 /// timestamps on the `performance.now()` clock already shifted by the
@@ -26,7 +41,8 @@ abstract class MicInput implements MidiInput {
   bool get running;
 
   /// Latency offset subtracted from every onset, in ms; null until the
-  /// student calibrates. Remembered per device.
+  /// student calibrates this input. Stored per input device (each mic or
+  /// interface has its own latency) on this browser.
   double? get offsetMs;
   set offsetMs(double? value);
 
@@ -53,3 +69,11 @@ MicInput createMicInput() => impl.createMicInput();
 
 /// The app's one microphone input (one capture graph per page).
 final MicInput micInput = createMicInput();
+
+/// Maps a getUserMedia DOMException name to the error shown to the student.
+MicError micErrorFor(String domExceptionName) => switch (domExceptionName) {
+  'NotAllowedError' || 'SecurityError' => MicError.denied,
+  'NotFoundError' || 'OverconstrainedError' => MicError.notFound,
+  'NotReadableError' || 'AbortError' => MicError.busy,
+  _ => MicError.unsupported,
+};

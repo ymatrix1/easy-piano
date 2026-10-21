@@ -93,5 +93,7 @@
   "micHeard": "Gehört: {note}",
   "micTestHint": "Spiel eine Taste: Der Balken bewegt sich und der Ton erscheint hier.",
   "micTurnOff": "Ausschalten",
-  "micNoteNames": "C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H"
+  "micNoteNames": "C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H",
+  "micNotFound": "Kein Mikrofon gefunden. Schließ eins an oder wähle einen anderen Eingang.",
+  "micBusy": "Das Mikrofon wird von einer anderen App benutzt. Schließ sie und versuch es erneut."
 }

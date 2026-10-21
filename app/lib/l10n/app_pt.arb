@@ -93,5 +93,7 @@
   "micHeard": "Ouvi: {note}",
   "micTestHint": "Toque uma tecla: a barra se move e a nota aparece aqui.",
   "micTurnOff": "Desligar",
-  "micNoteNames": "Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si"
+  "micNoteNames": "Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si",
+  "micNotFound": "Nenhum microfone encontrado. Conecte um ou escolha outra entrada.",
+  "micBusy": "O microfone está em uso por outro app. Feche-o e tente de novo."
 }

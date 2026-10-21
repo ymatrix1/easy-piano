@@ -74,8 +74,9 @@ void main(List<String> args) {
       }
     }
     if (verbose && misses.isNotEmpty) print('${entry.key}: $misses');
+    final split = info['split'] ?? 'tune';
     for (final g in ['all', '${info['condition']}', '${info['kind']}']) {
-      groups.putIfAbsent(g, _Score.new)
+      groups.putIfAbsent('$split:$g', _Score.new)
         ..tp += tp
         ..fp += ons.length - tp
         ..fn += notes.length - tp
@@ -83,22 +84,29 @@ void main(List<String> args) {
         ..delays.addAll(delays);
     }
   }
-  print(
-    '| Group | Notes | P | R | F1 | Onset error mean / p95 (ms) | Report delay p50 / p95 (ms) |',
-  );
-  print('|---|---|---|---|---|---|---|');
-  for (final g in [
-    'all',
-    'clean',
-    'room',
-    'noisy',
-    'single',
-    'chord',
-    'melody',
-    'two-hands',
-  ]) {
-    final s = groups[g];
-    if (s != null) print(s.row(g));
+  // Held-out clips first: thresholds were tuned on the 'tune' split only.
+  for (final split in ['test', 'tune']) {
+    print('');
+    print('$split set${split == 'test' ? ' (held out)' : ''}:');
+    print(
+      '| Group | Notes | P | R | F1 | Onset error mean / p95 (ms) '
+      '| Computed report delay p50 / p95 (ms) |',
+    );
+    print('|---|---|---|---|---|---|---|');
+    for (final g in [
+      'all',
+      'clean',
+      'room',
+      'noisy',
+      'single',
+      'chord',
+      'doubled',
+      'melody',
+      'two-hands',
+    ]) {
+      final s = groups['$split:$g'];
+      if (s != null) print(s.row(g));
+    }
   }
 }
 
