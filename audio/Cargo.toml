@@ -10,10 +10,17 @@ default = ["decode"]
 # MP3 decoding for native builds and tests. Web hands the engine PCM decoded
 # by the browser instead (D30), so it can build without this.
 decode = ["dep:symphonia"]
+# Platform audio output (WASAPI/CoreAudio/AAudio via cpal) for native builds.
+output = ["dep:cpal"]
 
 [dependencies]
+cpal = { version = "0.15", optional = true }
 rustfft = "6"
 symphonia = { version = "0.5", default-features = false, features = ["mp3"], optional = true }
 
 [profile.test]
 opt-level = 3
+
+[[example]]
+name = "play_ode"
+required-features = ["decode", "output"]
