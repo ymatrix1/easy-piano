@@ -11,9 +11,9 @@
    "bytes": 759915,
    "sha256": "60a684f85f58fb066c80ee36c5271ed6992ad16da780cec0b2f299f7e25ca518"
   },
-  "melody-base1.ckpt.pt": {
-   "bytes": 44393603,
-   "sha256": "5d8a3a8943c71443b71b845b0de37ebdd54929fe9296b5e0ee221cc52e62a42d"
+  "vocab.json": {
+   "bytes": 4476,
+   "sha256": "e12cdd2799756610692e87d975804b8f2343fcb666bfa5f43d91eef855152674"
   },
   "meta.json": {
    "bytes": 565,
@@ -23,9 +23,13 @@
    "bytes": 1030,
    "sha256": "1d23009a27e20241dabfd87e34d850624ef945cd2291a8f18f92fe3b352392e4"
   },
-  "vocab.json": {
-   "bytes": 4476,
-   "sha256": "e12cdd2799756610692e87d975804b8f2343fcb666bfa5f43d91eef855152674"
+  "melody-base1.safetensors": {
+   "bytes": 44377224,
+   "sha256": "e0013ee05c5d0c71aa5a6bc673b53e3a33b0c238d09cc9afdb391012a9574fe9"
+  },
+  "melody-base1.config.json": {
+   "bytes": 577,
+   "sha256": "db96c37b4b0051105fe44f8d7ead763b057eb67c42b3de3cf344ff60b4ed6132"
   }
  },
  "training": {
@@ -94,5 +98,8 @@
     "max_prob_diff": 0.08188897371292114
    }
   }
- }
+ },
+ "not_published": [
+  "melody-base1.ckpt.pt (pickle with run metadata; melody-base1.safetensors holds the same weights)"
+ ]
 }

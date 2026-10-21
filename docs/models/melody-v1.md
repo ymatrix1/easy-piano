@@ -14,8 +14,8 @@ Generate short original practice tunes for an Easy Piano course node, conditione
 | Parameters | 11,092,620 |
 | Context | 1,024 compound steps |
 | Vocab | kind 186, pitch 190, dur 14, finger 6 (`tools/melody-model/vocab.json`, sha256 `e12cdd27…`) |
-| Release files | `decoder.int8.onnx` 11.7 MB, `heads.int8.onnx` 0.8 MB, `vocab.json`, `meta.json`, `train-config.json`; PyTorch checkpoint `melody-base1.ckpt.pt` 44.4 MB |
-| Where | GitHub Release `melody-model-v1` on ymatrix1/easy-piano, **not** in git. Sizes and sha256: `tools/melody-model/releases/melody-model-v1.json`. `python -m melody_model.release fetch --out <dir>` downloads and verifies; a hash mismatch deletes the file and fails |
+| Release files | `decoder.int8.onnx` 11.7 MB, `heads.int8.onnx` 0.8 MB (browser), `melody-base1.safetensors` 44.4 MB fp32 + `melody-base1.config.json` (PyTorch, for fine-tuning or re-export), `vocab.json`, `meta.json`, `train-config.json` |
+| Where | GitHub Release [`melody-model-v1`](https://github.com/ymatrix1/easy-piano/releases/tag/melody-model-v1), **not** in git. Sizes and sha256: `tools/melody-model/releases/melody-model-v1.json`. `python -m melody_model.release fetch --out <dir>` downloads and verifies; `python -m melody_model.weights check <dir>/melody-base1.safetensors` loads the PyTorch model (no pickle). The training checkpoint `ckpt.pt` is not published: it is a pickle with run metadata |
 
 ## Training
 
@@ -44,7 +44,7 @@ Not used: Essen, Meertens and The Session (their licences forbid this use), POP9
 
 ## Licence
 
-Weights: proposed in D24, not decided yet. Generated tunes: CC0-1.0 (D17).
+Weights: CC-BY-SA-4.0, decision D24 (accepted 2026-10-21). Generated tunes: CC0-1.0 (D17).
 
 ## Evaluation
 

@@ -10,7 +10,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Heavy; CI does not install this. `uv sync --extra train` (CUDA wheels: see PyTorch index docs).
-train = ["torch>=2.4"]
+train = ["torch>=2.4", "safetensors==0.6.2"]
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "ruff"]
