@@ -17,8 +17,13 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def batch(n=4, seed=0):
     s = json.loads((ROOT / "content" / "songs" / "ode-to-joy.json").read_text(encoding="utf-8"))
-    t = {"corpus": "own", "time": s["time"], "key": s["key"], "styles": ["children"],
-         "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]]}
+    t = {
+        "corpus": "own",
+        "time": s["time"],
+        "key": s["key"],
+        "styles": ["children"],
+        "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]],
+    }
     t["plan"] = plan(t)
     rng = random.Random(seed)
     return collate([make_sample(t, rng) for _ in range(n)], torch)

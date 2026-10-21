@@ -20,12 +20,13 @@ Output: `{title, composer, time, key, bars: [{RH, LH}]}` in the [content format]
 | Parts | more than two (and not `melody_only`) → rejected |
 | Voices | in a multi-voice bar, the voice with the highest mean pitch |
 | Chords | pitches low to high; fingering kept only when stored per note |
-| Ties | merged inside a bar when the chain sums to one duration; otherwise kept as the content grammar's `{tie}` token after the note (also across barlines); a tie into a different pitch is dropped |
+| Ties | merged inside a bar when the chain sums to one duration; otherwise kept as the content grammar's `{tie}` token after the note (also across barlines); a tie into a different pitch is rejected; a dangling tie on the last note is dropped |
 | Pickups | opening and section-end short bars padded with rests; strain end + next pickup written as two short measures are joined |
 | Meter | one meter; a shorter bar (3/8 or 2/4 in 6/8) is a short bar; any other change → rejected |
-| Key | one `(sharps, mode)`; a same-signature mode change (C → Am) is a key change → rejected; with no stated mode, music21 analysis must reach correlation ≥ 0.6, else rejected |
+| Key | one signature size and one stated mode (a bare signature agrees with a `Key` of the same sharps); a same-signature mode change (C → Am) is a key change → rejected; with no stated mode, music21 analysis must reach correlation ≥ 0.6, else rejected |
 | Durations | `1 1. 2 2. 2.. 4 4. 4.. 8 8. 16 16. 32`; tuplets and others → rejected |
-| Failures | parser exceptions → `Unsupported("parse error: …")`, never a crash |
+| Failures | parser exceptions → `Unsupported("parse error: …")`, never a crash; `convert_file_lenient` returns `Unsupported` objects |
+| Files with several scores | an Opus of movements is not one tune → rejected (`N scores in one file`), except multi-tune ABC files, which the builder splits per tune first |
 
 Rejected tunes raise `Unsupported` and are counted by the dataset builder.
 
@@ -78,7 +79,7 @@ Round trip: `decode(encode_song(song))` returns `time`, `key` and RH/LH bars exa
 
 ## Checks
 
-`cd tools/melody-model && python -m pytest` (venv: `pip install -r requirements.txt`).
+`cd tools/melody-model && uv sync && uv run pytest` (training deps: `uv sync --extra train`).
 
 ## Dataset (`melody_model/build.py`, step 3)
 
@@ -95,7 +96,7 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 - Flagged tunes **are** used in training (D21; user, 2026-10-20: "no i want to use the flagged tunes"). Known risk: weights may memorise copyrighted melodies. Flags and provenance let any corpus or flag be dropped and the model retrained.
 - **Chinese music** is included and tagged `STYLE_chinese` (user, 2026-10-20, on the agent's recommendation; earlier "i just dont want chinese music"), detected by metadata (`filters.is_chinese`: Chinese tags, Han script without kana after repairing PDMX mojibake, Chinese instrument/genre words, known Chinese artists). Generation avoids it unless asked.
 - Provenance per tune: `source_url`, `sha256` (source file, or the tune's ABC text for NMD), `license`, `composition_license`, `arranger`, `flags`.
-- Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are truncated and counted.
+- Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are cut at the last phrase end (stable cadence on a 4-bar boundary) in bars 32–64, or rejected when there is none; both counted.
 - PDMX downloads are checked against pinned sha256 (`download.PDMX_SHA256`).
 - Review gate: `melody_model.train` refuses to run until `python -m melody_model.gate approve …` records the user's approval of a 50-tune sample for the current `tunes.jsonl` hash.
 - Filters (`filters.py`): PDMX hard rejects (duplicates, length), NMD named composer, playability (range ≤ 24 semitones per hand, leap ≤ 12, ≤ 16 events/bar, chord size), vocab coverage, transposition-invariant dedupe.

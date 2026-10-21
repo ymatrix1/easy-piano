@@ -51,8 +51,11 @@ def test_transposition_changes_key_and_stays_in_vocab():
 
 
 def test_reletter():
-    assert samples.reletter([("C", "OPEN", "UP"), ("A", "OPEN", "UP"), ("C", "STABLE", "FLAT")]) == \
-        [("A", "OPEN", "UP"), ("B", "OPEN", "UP"), ("A", "STABLE", "FLAT")]
+    assert samples.reletter([("C", "OPEN", "UP"), ("A", "OPEN", "UP"), ("C", "STABLE", "FLAT")]) == [
+        ("A", "OPEN", "UP"),
+        ("B", "OPEN", "UP"),
+        ("A", "STABLE", "FLAT"),
+    ]
 
 
 def test_samples_fit_context():

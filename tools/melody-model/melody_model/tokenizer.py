@@ -15,21 +15,56 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
-from .notation import ACCIDENTALS, DURATIONS, LETTERS, OCTAVES, Event, Pitch, Unsupported, format_hand, parse_hand
+from .notation import (
+    ACCIDENTALS,
+    DURATIONS,
+    LETTERS,
+    OCTAVES,
+    Event,
+    Pitch,
+    Unsupported,
+    format_hand,
+    parse_hand,
+)
 
 NONE = "<none>"
 
 TIME_SIGS = ("2/4", "3/4", "4/4", "3/8", "6/8", "9/8", "12/8", "2/2")
 _TONICS = ("C", "G", "D", "A", "E", "B", "F#", "C#", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb")
-KEYS = tuple(_TONICS) + tuple(t + "m" for t in ("A", "E", "B", "F#", "C#", "G#", "D#", "A#", "D", "G", "C", "F", "Bb", "Eb", "Ab"))
+KEYS = tuple(_TONICS) + tuple(
+    t + "m" for t in ("A", "E", "B", "F#", "C#", "G#", "D#", "A#", "D", "G", "C", "F", "Bb", "Eb", "Ab")
+)
 MAX_BARS = 64
 COURSES = ("none", "piano-basics", "essentials-1", "essentials-2", "essentials-3")
 HANDS = ("RH", "LH", "BOTH")
-STYLES = ("classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese")
+STYLES = (
+    "classical",
+    "folk",
+    "religious",
+    "world",
+    "children",
+    "pop",
+    "rock",
+    "soundtrack",
+    "game",
+    "jazz",
+    "electronic",
+    "chinese",
+)
 SOURCES = ("own", "nottingham", "mutopia", "pdmx", "local")
 # Required-pattern keys of docs/specs/skill-specs.md (content/skill-specs/*.json); a test checks every
 # pattern there encodes. Values ride in the pitch/dur fields or in the kind itself.
-PATTERN_KEYS = ("rhythm", "interval_min", "accidental", "pitch", "hand", "min_bar_share", "rest", "chord", "hands_together")
+PATTERN_KEYS = (
+    "rhythm",
+    "interval_min",
+    "accidental",
+    "pitch",
+    "hand",
+    "min_bar_share",
+    "rest",
+    "chord",
+    "hands_together",
+)
 INTERVAL_NUMBERS = range(2, 9)  # second .. octave
 SHARES = (25, 50, 75, 100)  # min_bar_share, rounded up to a quarter
 SECTIONS = tuple("ABCDEFGH")
@@ -45,14 +80,24 @@ KINDS = (
     + tuple(f"STYLE_{x}" for x in STYLES)
     + tuple(f"SRC_{x}" for x in SOURCES)
     + tuple(f"LEVEL_{n}" for n in range(1, 6))
-    + ("PAT", "PAT_rhythm", "PAT_accidental", "PAT_pitch", "PAT_hand_RH", "PAT_hand_LH", "PAT_rest", "PAT_chord", "PAT_hands_together")
+    + (
+        "PAT",
+        "PAT_rhythm",
+        "PAT_accidental",
+        "PAT_pitch",
+        "PAT_hand_RH",
+        "PAT_hand_LH",
+        "PAT_rest",
+        "PAT_chord",
+        "PAT_hands_together",
+    )
     + tuple(f"PAT_interval_min_{n}" for n in INTERVAL_NUMBERS)
     + tuple(f"PAT_share_{x}" for x in SHARES)
     + ("PLAN", "PLAN_END", "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT")
     + tuple(f"SEC_{s}" for s in SECTIONS)
     + ("FIM_PRE", "FIM_SUF", "FIM_MID")
 )
-PITCHES = (NONE,) + tuple(f"{l}{a}{o}" for o in OCTAVES for l in LETTERS for a in ACCIDENTALS)
+PITCHES = (NONE,) + tuple(f"{letter}{a}{o}" for o in OCTAVES for letter in LETTERS for a in ACCIDENTALS)
 DURS = (NONE,) + DURATIONS
 FINGERS = (NONE, "1", "2", "3", "4", "5")
 
@@ -113,8 +158,15 @@ def spec_from_song(song: dict) -> Spec:
     lo = min(pitches, key=lambda p: p.midi)
     hi = max(pitches, key=lambda p: p.midi)
     hands = "BOTH" if has_rh and has_lh else ("LH" if has_lh else "RH")
-    return Spec(song["time"], song["key"], len(song["bars"]), lo.name, hi.name,
-                sorted(durs, key=DURATIONS.index), hands)
+    return Spec(
+        song["time"],
+        song["key"],
+        len(song["bars"]),
+        lo.name,
+        hi.name,
+        sorted(durs, key=DURATIONS.index),
+        hands,
+    )
 
 
 def encode_spec(spec: Spec) -> list[Step]:
@@ -126,9 +178,14 @@ def encode_spec(spec: Spec) -> list[Step]:
         out.append(step(f"SRC_{spec.source}"))
     if spec.level:
         out.append(step(f"LEVEL_{spec.level}"))
-    out += [step(f"COURSE_{spec.course}"), step(f"TIME_{spec.time}"),
-           step(f"KEY_{spec.key}"), step(f"BARS_{spec.bars}"),
-           step("RANGE_LO", pitch=spec.range_lo), step("RANGE_HI", pitch=spec.range_hi)]
+    out += [
+        step(f"COURSE_{spec.course}"),
+        step(f"TIME_{spec.time}"),
+        step(f"KEY_{spec.key}"),
+        step(f"BARS_{spec.bars}"),
+        step("RANGE_LO", pitch=spec.range_lo),
+        step("RANGE_HI", pitch=spec.range_hi),
+    ]
     out += [step("DUR_ALLOW", dur=d) for d in spec.durs]
     out.append(step(f"HANDS_{spec.hands}"))
     for pattern in spec.patterns or []:
@@ -175,7 +232,9 @@ def encode_events(events: list[Event]) -> list[Step]:
             continue
         for i, p in enumerate(e.pitches):
             f = str(e.fingers[i]) if e.fingers else NONE
-            out.append(step("NOTE" if i == 0 else "CHORD", pitch=p.name, dur=e.dur if i == 0 else NONE, finger=f))
+            out.append(
+                step("NOTE" if i == 0 else "CHORD", pitch=p.name, dur=e.dur if i == 0 else NONE, finger=f)
+            )
         if e.tie:
             out.append(step("TIE"))
     return out
@@ -202,8 +261,26 @@ class InvalidSequence(ValueError):
     """Steps that do not form a valid song (model output is decoded through this)."""
 
 
-_PREFIX_KINDS = ("PAD", "BOS", "PAT", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW", "PLAN", "PLAN_END",
-                 "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT", "FIM_PRE", "FIM_SUF", "FIM_MID")
+_PREFIX_KINDS = (
+    "PAD",
+    "BOS",
+    "PAT",
+    "SPEC",
+    "SPEC_END",
+    "RANGE_LO",
+    "RANGE_HI",
+    "DUR_ALLOW",
+    "PLAN",
+    "PLAN_END",
+    "CAD_STABLE",
+    "CAD_OPEN",
+    "CON_UP",
+    "CON_DOWN",
+    "CON_FLAT",
+    "FIM_PRE",
+    "FIM_SUF",
+    "FIM_MID",
+)
 _PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_", "LEVEL_")
 
 
@@ -275,7 +352,13 @@ def decode(steps: list[Step], require_end: bool = True) -> dict:
             f = [int(finger)] if finger != NONE else []
             events.append(Event(p, dur, f))
         elif kind == "TIE":
-            if events is None or not events or events[-1].is_rest or events[-1].tie or (pitch, dur, finger) != (NONE, NONE, NONE):
+            if (
+                events is None
+                or not events
+                or events[-1].is_rest
+                or events[-1].tie
+                or (pitch, dur, finger) != (NONE, NONE, NONE)
+            ):
                 bad(f"step {i}: TIE must follow a note and carry no fields")
             events[-1].tie = True
         elif kind == "END":
@@ -300,6 +383,7 @@ def decode(steps: list[Step], require_end: bool = True) -> dict:
 
 def _pitch(name: str) -> Pitch:
     from .notation import parse_pitch
+
     return parse_pitch(name)
 
 

@@ -16,7 +16,6 @@ import math
 import random
 import sys
 import time
-from pathlib import Path
 
 from .build import OUT
 from .download import ROOT
@@ -51,7 +50,7 @@ def collate(batch, torch):
         s = torch.tensor(steps, dtype=torch.long)
         n = len(steps) - 1
         x[i, :n], y[i, :n] = s[:-1], s[1:]
-        mask[i, max(loss_from - 1, 0):n] = True  # target index j+1 >= loss_from
+        mask[i, max(loss_from - 1, 0) : n] = True  # target index j+1 >= loss_from
     return x, y, mask
 
 
@@ -108,11 +107,16 @@ class TrainStream(_Iterable):
 
 def git_state() -> dict:
     import subprocess
+
     def run(*a):
         r = subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True)
         return r.stdout.strip() if r.returncode == 0 else None
-    return {"sha": run("rev-parse", "HEAD"), "branch": run("rev-parse", "--abbrev-ref", "HEAD"),
-            "dirty": bool(run("status", "--porcelain", "--untracked-files=no"))}
+
+    return {
+        "sha": run("rev-parse", "HEAD"),
+        "branch": run("rev-parse", "--abbrev-ref", "HEAD"),
+        "dirty": bool(run("status", "--porcelain", "--untracked-files=no")),
+    }
 
 
 def main(argv):
@@ -151,18 +155,30 @@ def main(argv):
     train_tunes = load_tunes("train", args.limit_tunes)
     valid_tunes = load_tunes("valid", args.limit_tunes)
 
-    loader = iter(DataLoader(make_stream(train_tunes, args.seed, args.ctx, args.batch), batch_size=None, num_workers=args.workers, persistent_workers=args.workers > 0,
-                             prefetch_factor=4 if args.workers else None, pin_memory=True))
+    loader = iter(
+        DataLoader(
+            make_stream(train_tunes, args.seed, args.ctx, args.batch),
+            batch_size=None,
+            num_workers=args.workers,
+            persistent_workers=args.workers > 0,
+            prefetch_factor=4 if args.workers else None,
+            pin_memory=True,
+        )
+    )
     vstream = sample_stream(valid_tunes, 12345, args.ctx)
     val_items = sorted((next(vstream) for _ in range(args.val_samples)), key=lambda it: len(it[0]))
-    val_batches = [collate(val_items[i:i + 32], torch) for i in range(0, len(val_items), 32)]
+    val_batches = [collate(val_items[i : i + 32], torch) for i in range(0, len(val_items), 32)]
 
     cfg = Config(layers=args.layers, d=args.d, heads=args.heads, ctx=args.ctx, dropout=args.dropout)
     model = CompoundGPT(cfg).to(dev)
     decay = [p for n, p in model.named_parameters() if p.dim() >= 2]
     no_decay = [p for n, p in model.named_parameters() if p.dim() < 2]
-    opt = torch.optim.AdamW([{"params": decay, "weight_decay": 0.1}, {"params": no_decay, "weight_decay": 0.0}],
-                            lr=args.lr, betas=(0.9, 0.95), fused=True)
+    opt = torch.optim.AdamW(
+        [{"params": decay, "weight_decay": 0.1}, {"params": no_decay, "weight_decay": 0.0}],
+        lr=args.lr,
+        betas=(0.9, 0.95),
+        fused=True,
+    )
 
     def lr_at(step):
         if step < args.warmup:
@@ -174,13 +190,25 @@ def main(argv):
     if run.exists() and any(run.iterdir()):
         raise SystemExit(f"{run} exists: pick a new --name (runs are never overwritten or mixed)")
     run.mkdir(parents=True, exist_ok=True)
-    meta = {"args": vars(args), "argv": ["python", "-m", "melody_model.train", *argv], "git": git_state(),
-            "model": cfg.to_dict(), "params": model.n_params(),
-            "dataset_sha256": dataset_hash(), "vocab_sha256": hashlib.sha256(vocab_json().encode()).hexdigest(),
-            "gate": gate, "train_tunes": len(train_tunes), "valid_tunes": len(valid_tunes),
-            "torch": torch.__version__, "gpu": torch.cuda.get_device_name(0)}
+    meta = {
+        "args": vars(args),
+        "argv": ["python", "-m", "melody_model.train", *argv],
+        "git": git_state(),
+        "model": cfg.to_dict(),
+        "params": model.n_params(),
+        "dataset_sha256": dataset_hash(),
+        "vocab_sha256": hashlib.sha256(vocab_json().encode()).hexdigest(),
+        "gate": gate,
+        "train_tunes": len(train_tunes),
+        "valid_tunes": len(valid_tunes),
+        "torch": torch.__version__,
+        "gpu": torch.cuda.get_device_name(0),
+    }
     (run / "config.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
-    print(f"params {meta['params']:,}  train tunes {len(train_tunes)}  valid tunes {len(valid_tunes)}", flush=True)
+    print(
+        f"params {meta['params']:,}  train tunes {len(train_tunes)}  valid tunes {len(valid_tunes)}",
+        flush=True,
+    )
 
     @torch.no_grad()
     def evaluate():
@@ -220,27 +248,54 @@ def main(argv):
         if step % args.log_every == 0:
             rate = tok_n / (time.time() - tok_t)
             tok_t, tok_n = time.time(), 0
-            rec = {"step": step, "loss": loss.item(), **{f"loss_{f}": p.item() for f, p in zip(FIELD_NAMES, parts)},
-                   "lr": lr_at(step), "tok_per_s": round(rate), "tokens": tokens, "elapsed_s": round(elapsed, 1)}
+            rec = {
+                "step": step,
+                "loss": loss.item(),
+                **{f"loss_{f}": p.item() for f, p in zip(FIELD_NAMES, parts)},
+                "lr": lr_at(step),
+                "tok_per_s": round(rate),
+                "tokens": tokens,
+                "elapsed_s": round(elapsed, 1),
+            }
             log.write(json.dumps(rec) + "\n")
             log.flush()
             print(f"step {step} loss {loss.item():.3f} {rate:,.0f} tok/s {elapsed:.0f}s", flush=True)
         stop = args.minutes is not None and elapsed > args.minutes * 60
         if step % args.val_every == 0 or stop or step == args.steps:
             vl, vparts = evaluate()
-            rec = {"step": step, "val_loss": vl, **{f"val_loss_{f}": p for f, p in zip(FIELD_NAMES, vparts)},
-                   "elapsed_s": round(time.time() - t0, 1)}
+            rec = {
+                "step": step,
+                "val_loss": vl,
+                **{f"val_loss_{f}": p for f, p in zip(FIELD_NAMES, vparts)},
+                "elapsed_s": round(time.time() - t0, 1),
+            }
             log.write(json.dumps(rec) + "\n")
             log.flush()
-            print(f"  val {vl:.3f} ({', '.join(f'{f} {p:.3f}' for f, p in zip(FIELD_NAMES, vparts))})", flush=True)
+            print(
+                f"  val {vl:.3f} ({', '.join(f'{f} {p:.3f}' for f, p in zip(FIELD_NAMES, vparts))})",
+                flush=True,
+            )
             if vl < best:
                 best = vl
-                torch.save({"model": model.state_dict(), "config": cfg.to_dict(), "step": step, "val_loss": vl, "meta": meta},
-                           run / "ckpt.pt")
+                torch.save(
+                    {
+                        "model": model.state_dict(),
+                        "config": cfg.to_dict(),
+                        "step": step,
+                        "val_loss": vl,
+                        "meta": meta,
+                    },
+                    run / "ckpt.pt",
+                )
         if stop:
             break
-    summary = {"steps": step, "best_val_loss": best, "tokens": tokens, "elapsed_s": round(time.time() - t0, 1),
-               "peak_mem_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2)}
+    summary = {
+        "steps": step,
+        "best_val_loss": best,
+        "tokens": tokens,
+        "elapsed_s": round(time.time() - t0, 1),
+        "peak_mem_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2),
+    }
     (run / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     print(json.dumps(summary), flush=True)
 
