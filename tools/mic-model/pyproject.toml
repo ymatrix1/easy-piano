@@ -1,0 +1,33 @@
+[project]
+name = "mic-model"
+version = "0.0.0"
+description = "Piano-note detection model for mic input: synthetic data, training, ONNX export, eval (tooling)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "soundfile",
+    "sf2utils",  # reads the YDP SoundFont
+    "audioop-lts; python_version >= '3.13'",  # sf2utils needs audioop
+    "onnx",
+    "onnxruntime",
+    "torch",
+    "tqdm",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.ruff]
+line-length = 110

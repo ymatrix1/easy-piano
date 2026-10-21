@@ -1,56 +1,68 @@
 """Renders the mic-detector fixture set (docs/research/mic-input.md).
 
-Clips are built from the app's own piano samples
-(app/assets/piano: Salamander Grand V3, CC-BY 3.0), never from other
-recordings.
+Clips are built from license-clean piano sample sets only (tools/mic-model/
+pianos.py: Salamander Grand V3 CC-BY 3.0 = app/assets/piano, FreePats Upright
+KW CC0, FreePats YDP Grand CC-BY 3.0), never from other recordings. Each clip
+gets a `piano` and a `variant` (plain / detune / inharm / speaker) in
+truth.json.
 Each clip is degraded like a phone/laptop mic in a room: band-pass, a short
 synthetic reverb and background noise. Output (WAV + truth.json) goes to
 tools/mic-fixtures/ which is git-ignored; rerun to regenerate.
 
-Usage: python tools/mic_fixtures.py   (needs numpy, scipy, ffmpeg on PATH)
+Usage: python tools/mic_fixtures.py   (needs numpy, scipy, ffmpeg on PATH;
+run `python tools/mic-model/pianos.py extract` once first)
 """
 
 import json
-import subprocess
 import sys
+from math import gcd
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, lfilter, resample
+from scipy.signal import butter, lfilter, resample_poly, sosfiltfilt
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "mic-model"))
+import pianos  # noqa: E402
 
 SR = 24000
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "app" / "assets" / "piano"
 OUT = ROOT / "tools" / "mic-fixtures"
-NAMES = {0: "C", 3: "Eb", 6: "Gb", 9: "A"}
+PIANOS = pianos.PIANOS
+# One variant per clip, cycled so every piano sees all of them. `plain` is
+# twice as common; the cycle (5) is coprime with the test-split stride (3).
+VARIANTS = ("plain", "plain", "detune", "inharm", "speaker")
 rng = np.random.default_rng(7)
-_cache = {}
 
 
-def sample_for(pitch):
-    """Nearest sample (every 3 semitones), pitch-shifted by resampling."""
-    base = min((p for p in range(36, 97) if p % 12 in NAMES), key=lambda p: abs(p - pitch))
-    if base not in _cache:
-        name = f"{NAMES[base % 12]}{base // 12 - 1}.mp3"
-        raw = subprocess.run(
-            ["ffmpeg", "-v", "quiet", "-i", str(SAMPLES / name), "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
-            capture_output=True, check=True,
-        ).stdout
-        _cache[base] = np.frombuffer(raw, dtype=np.float32).copy()
-    x = _cache[base]
-    ratio = 2 ** ((pitch - base) / 12)
-    return resample(x, int(len(x) / ratio)) if ratio != 1 else x
+def sharpen(x, pitch, amount):
+    """Stronger bass inharmonicity: partials from the 3rd up are raised by
+    `amount` (0.4-1.2 %) by resampling the high band, as stiff low strings do."""
+    f0 = 440 * 2 ** ((pitch - 69) / 12)
+    sos = butter(4, min(3 * f0, SR * 0.4) / (SR / 2), btype="high", output="sos")
+    hi = sosfiltfilt(sos, x)
+    num = int(round((1 + amount) * 1000))
+    g = gcd(num, 1000)
+    hi2 = resample_poly(hi, 1000 // g, num // g)[: len(x)]
+    hi2 = np.pad(hi2, (0, len(x) - len(hi2)))
+    return (x - hi + hi2).astype(np.float32)
 
 
-def render(events, length, vel_jitter=True):
+def render(events, length, piano, variant, vel_jitter=True):
     """events: list of (onset_s, pitch, dur_s)."""
     y = np.zeros(int(length * SR))
+    # A detuned piano is off by one amount overall, plus a little per note.
+    tune = rng.uniform(-30, 30) if variant == "detune" else 0.0
     for t, p, dur in events:
         # A re-struck key cuts its own previous note (same string).
         later = [t2 for t2, p2, _ in events if p2 == p and t2 > t]
         if later:
             dur = min(dur, min(later) - t - 0.06)
-        s = sample_for(p)[: int(dur * SR)].astype(np.float64)
+        cents = tune + (rng.uniform(-8, 8) if variant == "detune" else 0.0)
+        s = pianos.sample_for(piano, p, SR, rng, cents)
+        if variant == "inharm" and p <= 60:
+            s = sharpen(s, p, rng.uniform(0.004, 0.012))
+        s = s[: int(dur * SR)].astype(np.float64)
         fade = min(len(s), int(0.03 * SR))
         s[-fade:] *= np.linspace(1, 0, fade)
         g = rng.uniform(0.5, 1.0) if vel_jitter else 1.0
@@ -60,9 +72,14 @@ def render(events, length, vel_jitter=True):
     return y
 
 
-def room(y, condition):
-    b, a = butter(2, [120 / (SR / 2), 7000 / (SR / 2)], btype="band")
-    y = lfilter(b, a, y)
+def room(y, condition, variant="plain"):
+    if variant == "speaker":
+        # Digital piano / laptop speaker heard by a mic: no bass or air, a bit of clipping.
+        b, a = butter(3, [250 / (SR / 2), 5500 / (SR / 2)], btype="band")
+        y = np.tanh(2.0 * lfilter(b, a, y) / (np.max(np.abs(y)) + 1e-9))
+    else:
+        b, a = butter(2, [120 / (SR / 2), 7000 / (SR / 2)], btype="band")
+        y = lfilter(b, a, y)
     if condition in ("room", "noisy"):
         ir_len = int(0.35 * SR)
         ir = rng.standard_normal(ir_len) * np.exp(-np.arange(ir_len) / (0.07 * SR))
@@ -180,18 +197,24 @@ def main():
         clips.append((f"noise_{kind}", [], 8.0, "noise"))
 
     for cond in ("clean", "room", "noisy"):
-        for name, ev, length, kind in clips:
-            fname = f"{cond}__{name}.wav"
-            y = render(ev, length) if ev else noise_clip(name[6:], length)
-            write_wav(OUT / fname, room(y, cond))
-            truth[fname] = {
-                # Held-out test set: every third clip in list order (spans
-                # every kind), fixed by position and never used for tuning.
-                "split": "test" if clips.index((name, ev, length, kind)) % 3 == 2 else "tune",
-                "condition": cond,
-                "kind": kind,
-                "notes": [{"t": round(t, 4), "pitch": p} for t, p, _ in sorted(ev)],
-            }
+        for i, (name, ev, length, kind) in enumerate(clips):
+            variant = VARIANTS[i % len(VARIANTS)]
+            # Held-out test set: every third clip in list order (spans every
+            # kind), fixed by position and never used for tuning.
+            split = "test" if i % 3 == 2 else "tune"
+            # Noise clips have no piano; render them once.
+            for piano in (PIANOS if ev else ("none",)):
+                fname = f"{piano}__{cond}__{name}.wav"
+                y = render(ev, length, piano, variant) if ev else noise_clip(name[6:], length)
+                write_wav(OUT / fname, room(y, cond, variant if ev else "plain"))
+                truth[fname] = {
+                    "split": split,
+                    "condition": cond,
+                    "kind": kind,
+                    "piano": piano,
+                    "variant": variant if ev else "plain",
+                    "notes": [{"t": round(t, 4), "pitch": p} for t, p, _ in sorted(ev)],
+                }
     (OUT / "truth.json").write_text(json.dumps(truth, indent=1))
     print(f"wrote {len(truth)} clips to {OUT}", file=sys.stderr)
 
