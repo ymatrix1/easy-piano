@@ -1,6 +1,6 @@
 # Mic input: detector accuracy and latency
 
-Checked: 2026-10-20, re-scored 2026-10-21, score-informed redesign 2026-10-22. Bean: piano-mlyf. Decision: [D29](../DECISIONS.md). Code: `app/lib/input/mic/`, `app/web/mic_worklet.js`, `app/tool/mic_eval.dart`, `tools/mic_fixtures.py`.
+Checked: 2026-10-20, re-scored 2026-10-21, score-informed redesign 2026-10-22, noise rejection 2026-10-23. Bean: piano-mlyf. Decision: [D29](../DECISIONS.md). Code: `app/lib/input/mic/`, `app/web/mic_worklet.js`, `app/tool/mic_eval.dart`, `tools/mic_fixtures.py`.
 
 Sources: app piano samples (`app/assets/piano`): Salamander Grand Piano V3 by Alexander Holm, CC-BY 3.0, used for the current scores; the first run (2026-10-20) used the app's earlier midi-js-soundfonts set (FluidR3_GM renders, MIT). Fixtures are generated locally and never committed. Methods: Klapuri, "Multiple fundamental frequency estimation by summing harmonic amplitudes" (ISMIR 2006) for the salience/removal idea; Bello et al., "A tutorial on onset detection in music signals" (2005) for spectral flux; [song-import.md](song-import.md) for Basic Pitch.
 
@@ -40,6 +40,13 @@ Checked 2026-10-22 in the local, git-ignored teardown (`references/`), for mecha
 
 The onset path also judges expected notes leniently (20 % of the top salience, no octave/fifth exclusion); unexpected notes there need 60 % of the top. Expected notes are reported ~20–110 ms after the onset instead of ~110 ms.
 
+**Piano-note checks** (2026-10-23, after a student reported typing and background noise being heard as notes). A candidate must look like a struck piano string, not room noise:
+- **Rings:** 30 ms after the onset its partials are still ≥3× what they were before it (short ~43 ms frame; long frame below E3, whose partials the short one can't resolve; 1.5× for a re-struck key). Clicks and knocks are gone by then. This is the check that removes most noise.
+- **Pitched:** at least two of its first four partials are sharp peaks, ≥3× the median of a semitone band of at least ±5 bins (≥5× for unexpected notes).
+- **Not a lower voice:** an expected note is rejected when the octave or twelfth below holds ≥80 % of its partial energy (a voice an octave down fills the same partials).
+- **Unexpected notes** (when the lesson expects others) are also checked again 90 ms after the onset and only then reported, with no unexpected notes in the first 250 ms. This mirrors the reference app's holdback: an unexpected sound that has stopped by then never reaches the game.
+- A 2 ms attack jump ≥2× is required; a stricter attack test (≥4×) removed no extra noise and cost melody recall.
+
 **Fixtures** (`python tools/mic_fixtures.py`, output git-ignored, ~17 MB): 52 clips × 3 conditions = 156 WAVs, 24 kHz mono, 357 truth notes. Every third clip in list order (all kinds, all conditions) is the **held-out test set**; only the rest (**tune**) may be used to pick thresholds.
 
 | Kind | Clips | Content |
@@ -49,6 +56,7 @@ The onset path also judges expected notes leniently (20 % of the top salience, n
 | doubled | 6 | octave and fifth doublings (C4+C5, C3–G3–C4, C4–G4–C5, …) |
 | melody | 2 | Ode to Joy, Twinkle Twinkle (PD), legato with repeated notes |
 | two-hands | 1 | Ode to Joy melody over held bass |
+| noise | 4 | no notes, 8 s each: computer-keyboard typing (3–8 ms bright bursts), chatter (voiced buzz with gliding 100–250 Hz pitch through two formants, syllable-rate envelope), fan + 50 Hz mains hum, desk/door knocks. Every detection is a false note; in score mode the lesson waits for C–E–G the whole time |
 
 Conditions: **clean** band-pass 120 Hz–7 kHz, 50 dB SNR; **room** + synthetic room tail (70 ms decay, direct-to-reverb +3 dB), 35 dB SNR; **noisy** same with 20 dB SNR. Notes come from the app's own piano samples (Salamander Grand, natural decay), pitch-shifted ≤1.5 semitones, random velocity 0.5–1.
 
@@ -58,35 +66,52 @@ Conditions: **clean** band-pass 120 Hz–7 kHz, 50 dB SNR; **room** + synthetic 
 
 ### Score-informed (the app's mode), held-out set
 
-`dart run tool/mic_eval.dart --mode=score`. The lesson expects the notes due from 0.3 s ago to 0.6 s ahead, as the wait-mode cursor does.
+`dart run tool/mic_eval.dart --mode=score`, 2026-10-23 with the piano-note checks. The lesson expects the notes due from 0.3 s ago to 0.6 s ahead, as the wait-mode cursor does. P on the `all` and condition rows now includes false notes from the noise clips.
 
 | Group | Notes | P | R | F1 | Onset error mean / p95 (ms) | Computed report delay p50 / p95 (ms) |
 |---|---|---|---|---|---|---|
-| all | 120 | 0.926 | 0.942 | 0.934 | 13.3 / 23 | 85 / 112 |
-| clean | 40 | 0.974 | 0.950 | 0.962 | 12.9 / 25 | 81 / 110 |
-| room | 40 | 0.923 | 0.900 | 0.911 | 14.0 / 32 | 86 / 112 |
-| noisy | 40 | 0.886 | 0.975 | 0.929 | 12.9 / 23 | 87 / 112 |
-| single | 30 | 0.833 | 1.000 | 0.909 | 12.3 / 15 | 69 / 112 |
-| chord | 33 | 1.000 | 0.879 | 0.935 | 9.3 / 18 | 103 / 116 |
-| doubled | 15 | 0.933 | 0.933 | 0.933 | 10.0 / 18 | 95 / 108 |
-| melody | 42 | 0.952 | 0.952 | 0.952 | 18.0 / 43 | 73 / 103 |
+| all | 120 | 0.815 | 0.917 | 0.863 | 12.8 / 23 | 87 / 112 |
+| clean | 40 | 0.844 | 0.950 | 0.894 | 12.1 / 23 | 87 / 110 |
+| room | 40 | 0.766 | 0.900 | 0.828 | 12.4 / 19 | 88 / 116 |
+| noisy | 40 | 0.837 | 0.900 | 0.867 | 13.9 / 25 | 88 / 112 |
+| single | 30 | 1.000 | 1.000 | 1.000 | 12.3 / 15 | 86 / 110 |
+| chord | 33 | 1.000 | 0.818 | 0.900 | 9.9 / 19 | 87 / 114 |
+| doubled | 15 | 1.000 | 0.933 | 0.966 | 11.1 / 25 | 94 / 116 |
+| noise | 0 | false notes: 24 in 24 s = 60.0/min | | | | |
+| melody | 42 | 0.975 | 0.929 | 0.951 | 15.7 / 25 | 87 / 116 |
+
+Tune split (includes the typing, hum and knock clips; the held-out noise clip is chatter):
+
+| Group | Notes | P | R | F1 | Onset error mean / p95 (ms) | Computed report delay p50 / p95 (ms) |
+|---|---|---|---|---|---|---|
+| all | 237 | 0.881 | 0.937 | 0.908 | 12.5 / 19 | 91 / 113 |
+| clean | 79 | 0.905 | 0.962 | 0.933 | 12.1 / 17 | 91 / 113 |
+| room | 79 | 0.843 | 0.949 | 0.893 | 12.8 / 23 | 92 / 113 |
+| noisy | 79 | 0.899 | 0.899 | 0.899 | 12.5 / 19 | 89 / 112 |
+| single | 63 | 0.925 | 0.984 | 0.954 | 13.2 / 16 | 87 / 112 |
+| chord | 60 | 1.000 | 0.967 | 0.983 | 10.7 / 16 | 102 / 112 |
+| doubled | 33 | 1.000 | 0.909 | 0.952 | 8.4 / 15 | 107 / 112 |
+| noise | 0 | false notes: 25 in 72 s = 20.8/min | | | | |
+| melody | 45 | 1.000 | 0.867 | 0.929 | 14.7 / 22 | 87 / 113 |
+| two-hands | 36 | 1.000 | 0.917 | 0.957 | 15.2 / 31 | 107 / 128 |
+
+**Noise.** Before the piano-note checks the same detector reported 457–575 false notes per minute on these clips (score and blind modes), matching the student's report. Now: ~21/min on the tune split (typing, hum, knocks) and 60/min on held-out chatter. **Expected-pitch phantoms on noise** (a C/E/G reported while the lesson waits for it, which would pass the step): 7 in 72 s, all from chatter. Steady talking near the mic can still pass a step occasionally; the setup panel asks for a quiet room, as the reference app does.
 
 ### Wrong notes, held-out set
 
-`--mode=wrong`: the lesson expects a whole tone above what is played, so every played note goes through the strict path. **Phantom** = an expected (unplayed) note reported, which would pass a step the student did not play.
+`--mode=wrong`: the lesson expects a whole tone above what is played, so every played note goes through the strict path. **Phantom** = an expected (unplayed) note reported.
 
 | Group | Notes | P | R | F1 | Onset error mean / p95 (ms) | Computed report delay p50 / p95 (ms) |
 |---|---|---|---|---|---|---|
-| all | 120 | 0.895 | 0.783 | 0.836 | 13.0 / 23 | 110 / 121 | phantom 0/120 |
-| clean | 40 | 0.944 | 0.850 | 0.895 | 12.4 / 23 | 110 / 121 | phantom 0/40 |
-| room | 40 | 0.914 | 0.800 | 0.853 | 13.9 / 25 | 110 / 123 | phantom 0/40 |
-| noisy | 40 | 0.824 | 0.700 | 0.757 | 12.9 / 19 | 110 / 116 | phantom 0/40 |
-| single | 30 | 0.711 | 0.900 | 0.794 | 12.2 / 15 | 110 / 112 | phantom 0/30 |
-| chord | 33 | 1.000 | 0.606 | 0.755 | 8.9 / 18 | 109 / 116 | phantom 0/33 |
-| doubled | 15 | 1.000 | 0.533 | 0.696 | 8.5 / 15 | 105 / 112 | phantom 0/15 |
-| melody | 42 | 1.000 | 0.929 | 0.963 | 16.6 / 25 | 112 / 123 | phantom 0/42 |
-
-Phantom passes: 0/120 held-out, 5/237 on the tune split (wrong mode, all conditions).
+| all | 120 | 0.767 | 0.742 | 0.754 | 12.6 / 19 | 145 / 188 | phantom 0/120 |
+| clean | 40 | 0.805 | 0.825 | 0.815 | 12.3 / 23 | 145 / 186 | phantom 0/40 |
+| room | 40 | 0.725 | 0.725 | 0.725 | 12.5 / 19 | 145 / 188 | phantom 0/40 |
+| noisy | 40 | 0.771 | 0.675 | 0.720 | 12.9 / 19 | 146 / 188 | phantom 0/40 |
+| single | 30 | 0.933 | 0.933 | 0.933 | 12.4 / 15 | 145 / 188 | phantom 0/30 |
+| chord | 33 | 1.000 | 0.545 | 0.706 | 8.5 / 16 | 145 / 186 | phantom 0/33 |
+| doubled | 15 | 1.000 | 0.400 | 0.571 | 7.5 / 13 | 140 / 146 | phantom 0/15 |
+| noise | 0 | false notes: 24 in 24 s = 60.0/min | | | | |
+| melody | 42 | 0.974 | 0.881 | 0.925 | 15.5 / 23 | 147 / 156 | phantom 0/42 |
 
 ### Blind transcription (no expected notes)
 

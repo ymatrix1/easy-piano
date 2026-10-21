@@ -95,5 +95,6 @@
   "micTurnOff": "Desligar",
   "micNoteNames": "Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si",
   "micNotFound": "Nenhum microfone encontrado. Conecte um ou escolha outra entrada.",
-  "micBusy": "O microfone está em uso por outro app. Feche-o e tente de novo."
+  "micBusy": "O microfone está em uso por outro app. Feche-o e tente de novo.",
+  "micQuietTip": "Funciona melhor em silêncio: conversa, digitação ou música por perto podem soar como notas."
 }

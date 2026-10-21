@@ -105,6 +105,20 @@ void main() {
     expect(ons.map((n) => n.pitch), contains(60));
   });
 
+  test('typing clicks are not notes, even while a lesson waits', () {
+    final rnd = math.Random(5);
+    final buf = List<double>.filled((_sr * 3).round(), 0);
+    // 4 ms bright noise bursts every ~150 ms, like a computer keyboard.
+    for (var t = 0.3; t < 2.8; t += 0.12 + rnd.nextDouble() * 0.08) {
+      final i = (t * _sr).round();
+      for (var k = 0; k < _sr * 0.004; k++) {
+        buf[i + k] +=
+            (rnd.nextDouble() - 0.5) * 0.8 * math.exp(-k / (_sr * 0.0015));
+      }
+    }
+    expect(runExpecting(buf, {60, 64, 67}), isEmpty);
+  });
+
   test('silence and low noise give nothing', () {
     final rnd = math.Random(1);
     final buf = [

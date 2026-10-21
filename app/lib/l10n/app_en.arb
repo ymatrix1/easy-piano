@@ -164,5 +164,6 @@
     "description": "12 pitch-class names from C, comma-separated, in the locale's note naming."
   },
   "micNotFound": "No microphone found. Plug one in or pick another input.",
-  "micBusy": "The microphone is in use by another app. Close it and try again."
+  "micBusy": "The microphone is in use by another app. Close it and try again.",
+  "micQuietTip": "Best in a quiet room: talking, typing or music nearby can be heard as notes."
 }

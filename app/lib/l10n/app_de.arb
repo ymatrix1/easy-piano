@@ -95,5 +95,6 @@
   "micTurnOff": "Ausschalten",
   "micNoteNames": "C,Cis,D,Dis,E,F,Fis,G,Gis,A,B,H",
   "micNotFound": "Kein Mikrofon gefunden. Schließ eins an oder wähle einen anderen Eingang.",
-  "micBusy": "Das Mikrofon wird von einer anderen App benutzt. Schließ sie und versuch es erneut."
+  "micBusy": "Das Mikrofon wird von einer anderen App benutzt. Schließ sie und versuch es erneut.",
+  "micQuietTip": "Am besten in einem ruhigen Raum: Sprechen, Tippen oder Musik in der Nähe können als Töne erkannt werden."
 }

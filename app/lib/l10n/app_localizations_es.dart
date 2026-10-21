@@ -337,4 +337,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get micBusy =>
       'Otra app está usando el micrófono. Ciérrala e inténtalo de nuevo.';
+
+  @override
+  String get micQuietTip =>
+      'Funciona mejor en silencio: hablar, teclear o música cerca pueden oírse como notas.';
 }

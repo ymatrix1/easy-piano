@@ -33,6 +33,10 @@ void main(List<String> args) {
       fluxGamma: arg('gamma', 100),
       fluxRatio: arg('ratio', 1.5),
       fluxDelta: arg('delta', 3.0),
+      minAttack: arg('attack', 2),
+      minSustain: arg('sustain', 3),
+      tonalRatio: arg('tonal', 3),
+      subOctave: arg('sub', 0.8),
     );
     final notes = [
       for (final n in info['notes'] as List)
@@ -50,10 +54,16 @@ void main(List<String> args) {
       final end = i + 128 < samples.length ? i + 128 : samples.length;
       if (mode != 'blind') {
         final now = i / sr;
-        det.expected = {
-          for (final (t, p) in notes)
-            if (t > now - 0.3 && t <= now + 0.6) mode == 'wrong' ? p + 2 : p,
-        };
+        det.expected = notes.isEmpty
+            // Noise-only clip: the lesson is waiting for a C major chord
+            // the whole time; any detection is false, a C/E/G one would pass
+            // the step without playing.
+            ? const {60, 64, 67}
+            : {
+                for (final (t, p) in notes)
+                  if (t > now - 0.3 && t <= now + 0.6)
+                    mode == 'wrong' ? p + 2 : p,
+              };
       }
       found.addAll(det.process(samples.sublist(i, end)));
     }
@@ -106,6 +116,7 @@ void main(List<String> args) {
         ..errs.addAll(errs)
         ..delays.addAll(delays)
         ..phantom += phantom
+        ..seconds += notes.isEmpty ? samples.length / sr : 0
         ..expectedNotes += mode == 'wrong' ? notes.length : 0;
     }
   }
@@ -126,6 +137,7 @@ void main(List<String> args) {
       'single',
       'chord',
       'doubled',
+      'noise',
       'melody',
       'two-hands',
     ]) {
@@ -137,10 +149,16 @@ void main(List<String> args) {
 
 class _Score {
   int tp = 0, fp = 0, fn = 0, phantom = 0, expectedNotes = 0;
+  double seconds = 0; // noise-only audio, for false notes per minute
   final errs = <double>[];
   final delays = <double>[];
 
   String row(String name) {
+    if (tp + fn == 0 && seconds > 0) {
+      final perMin = fp / seconds * 60;
+      return '| $name | 0 | false notes: $fp in ${seconds.toStringAsFixed(0)} s '
+          '= ${perMin.toStringAsFixed(1)}/min | | | | |';
+    }
     final p = tp / (tp + fp == 0 ? 1 : tp + fp);
     final r = tp / (tp + fn == 0 ? 1 : tp + fn);
     final f = p + r == 0 ? 0 : 2 * p * r / (p + r);

@@ -680,6 +680,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The microphone is in use by another app. Close it and try again.'**
   String get micBusy;
+
+  /// No description provided for @micQuietTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Best in a quiet room: talking, typing or music nearby can be heard as notes.'**
+  String get micQuietTip;
 }
 
 class _AppLocalizationsDelegate

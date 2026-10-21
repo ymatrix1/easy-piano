@@ -335,6 +335,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get micBusy =>
       'O microfone está em uso por outro app. Feche-o e tente de novo.';
+
+  @override
+  String get micQuietTip =>
+      'Funciona melhor em silêncio: conversa, digitação ou música por perto podem soar como notas.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

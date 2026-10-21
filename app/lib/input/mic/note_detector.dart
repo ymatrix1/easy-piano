@@ -43,6 +43,10 @@ class NoteDetector {
     this.fluxGamma = 100,
     this.fluxRatio = 1.5,
     this.fluxDelta = 3.0,
+    this.minAttack = 2,
+    this.minSustain = 3,
+    this.tonalRatio = 3,
+    this.subOctave = 0.8,
   }) : _fluxN = _pow2(sampleRate * 0.021),
        _pitchN = _pow2(sampleRate * 0.08) {
     _fluxHop = _fluxN ~/ 2;
@@ -65,6 +69,16 @@ class NoteDetector {
   final double fluxGamma;
   final double fluxRatio;
   final double fluxDelta;
+
+  /// Piano-note checks ([_isPianoNote]): attack jump, sustain rise and
+  /// partial sharpness.
+  final double minAttack;
+  final double minSustain;
+  final double tonalRatio;
+
+  /// Expected path: reject when the octave or twelfth below holds this
+  /// share of the note's partial energy (a lower voice, not this key).
+  final double subOctave;
 
   /// Longest a detected note stays "on", in seconds.
   final double maxHold;
@@ -90,6 +104,22 @@ class NoteDetector {
   final _expectHistory = <int, List<double>>{};
   final _lastEmit = <int, int>{};
   int _nextExpectCheck = 0;
+
+  /// Expected-note candidates waiting for the sustain check:
+  /// (pitch, onset sample, level).
+  final _confirming = <(int, int, double)>[];
+
+  /// Sustain check: a short frame (~43 ms) starting 30 ms after the onset.
+  int get _shortN => _pitchN ~/ 2;
+  int get _sustainOffset => (sampleRate * 0.03).round();
+  late final Float64List _shortWin = _hann(_pitchN ~/ 2);
+
+  /// Unexpected notes waiting for the 90 ms "still ringing" check.
+  final _holding = <(int, int, double)>[];
+  int get _holdOffset => (sampleRate * 0.09).round();
+
+  /// No unexpected notes in the first 250 ms (mic start transient).
+  int get _startupMute => (sampleRate * 0.25).round();
 
   /// Slow floor of the strongest partial energy: the room's noise level.
   double _noise = 0;
@@ -144,6 +174,23 @@ class NoteDetector {
       if (_written >= _nextFlux + _fluxN) {
         _onFluxFrame(_nextFlux, out);
         _nextFlux += _fluxHop;
+      }
+      for (var i = 0; i < _confirming.length; i++) {
+        final (p, onset, level) = _confirming[i];
+        if (_written < _readyAt(p, onset, _sustainOffset)) continue;
+        _confirming.removeAt(i--);
+        if (_isPianoNote(p, onset)) {
+          _emitOn(p, onset, level, _written / sampleRate, out);
+        }
+      }
+      for (var i = 0; i < _holding.length; i++) {
+        final (p, onset, level) = _holding[i];
+        if (_written < _readyAt(p, onset, _holdOffset)) continue;
+        _holding.removeAt(i--);
+        if (onset > _startupMute &&
+            _isPianoNote(p, onset, offset: _holdOffset)) {
+          _emitOn(p, onset, level, _written / sampleRate, out);
+        }
       }
       if (_pending.isNotEmpty &&
           _written >= _pending.first + _guard + _pitchN) {
@@ -312,7 +359,21 @@ class NoteDetector {
       _removeHarmonics(peaks, bestP);
     }
     for (final p in found) {
-      _emitOn(p, onset, _level(after, p, binHz), at, out);
+      // Blind mode (no lesson, e.g. the setup panel) treats every note as
+      // expected; the strict path is for notes the lesson did not ask for.
+      final isExpected = expected.isEmpty || expected.contains(p);
+      // Unexpected notes face stricter checks (as the reference app does):
+      // sharper partials, and still ringing 90 ms later (a typing click or
+      // knock is gone by then). They are reported after that check.
+      if (!_tonal(fresh, p, binHz, ratio: isExpected ? tonalRatio : 5)) {
+        continue;
+      }
+      if (!_isPianoNote(p, onset)) continue;
+      if (isExpected) {
+        _emitOn(p, onset, _level(after, p, binHz), at, out);
+      } else {
+        _holding.add((p, onset, _level(after, p, binHz)));
+      }
     }
   }
 
@@ -347,19 +408,94 @@ class NoteDetector {
   /// Whether at least two of [p]'s first four partials are sharp peaks:
   /// 4× the median magnitude of the surrounding semitone band. Noise and
   /// broadband thumps are not tonal; piano partials are.
-  bool _tonal(Float64List mag, int p, double binHz) {
+  bool _tonal(
+    Float64List mag,
+    int p,
+    double binHz, {
+    int need = 2,
+    double ratio = 4,
+  }) {
     final f0 = _freq(p);
     var sharp = 0;
     for (var h = 1; h <= 4; h++) {
       final f = _partial(f0, h);
       if (f > sampleRate / 2 * 0.95) break;
-      final lo = math.max(1, (f * 0.94 / binHz).floor());
-      final hi = math.min(mag.length - 1, (f * 1.06 / binHz).ceil());
-      final band = [for (var k = lo; k <= hi; k++) mag[k]]..sort();
+      // Surrounding band: ±6 % (a semitone), at least ±5 bins so bass notes
+      // have a background to compare with; the peak's own ±1 bin is left out.
+      final c = (f / binHz).round();
+      final half = math.max(5, (f * 0.06 / binHz).ceil());
+      final band = [
+        for (
+          var k = math.max(1, c - half);
+          k <= math.min(mag.length - 1, c + half);
+          k++
+        )
+          if ((k - c).abs() > 1) mag[k],
+      ]..sort();
+      if (band.isEmpty) continue;
       final median = band[band.length ~/ 2];
-      if (_peakNear(mag, f, binHz, 0.02) > 4 * median + 1e-9) sharp++;
+      if (_peakNear(mag, f, binHz, 0.02) > ratio * median + 1e-9) sharp++;
     }
-    return sharp >= 2;
+    return sharp >= need;
+  }
+
+  /// What makes a piano note, as opposed to room noise:
+  /// - a sharp attack: some 2 ms block jumps ≥4× above the 20 ms before it
+  ///   (voices and fans swell slowly);
+  /// - it rings: 30–73 ms after the onset its partials are still ≥3× what
+  ///   they were just before it (typing clicks and knocks are gone by then).
+  /// The "pitched" test ([_tonal]) runs on the long frame by the caller:
+  /// the short frame is too coarse to resolve partials.
+  bool _isPianoNote(int p, int onset, {int? offset}) {
+    if (_attackRatio(onset) < minAttack) return false;
+    const pad = 2;
+    // Bass partials need the long frame to be resolved.
+    final n = _sustainFrame(p);
+    final win = n == _pitchN ? _pitchWin : _shortWin;
+    final binHz = sampleRate / (n * pad);
+    final after = _magnitudes(
+      onset + (offset ?? _sustainOffset),
+      n,
+      win,
+      pad: pad,
+    );
+    final before = _magnitudes(onset - n, n, win, pad: pad);
+    final e = _partialEnergy(after, p, binHz);
+    // A re-struck key rings over its own tail: a smaller rise is enough.
+    final rise = _active.containsKey(p) ? 1.5 : minSustain;
+    return e >= rise * _partialEnergy(before, p, binHz) + 1e-6;
+  }
+
+  int _sustainFrame(int p) => p < 52 ? _pitchN : _shortN;
+
+  /// Sample count needed before [_isPianoNote] can judge [p] at [offset].
+  int _readyAt(int p, int onset, int offset) =>
+      onset + offset + _sustainFrame(p);
+
+  /// Largest energy jump of a 2 ms block within ±10 ms of [onset] over the
+  /// mean of the 20 ms before it.
+  double _attackRatio(int onset) {
+    final block = math.max(16, (sampleRate * 0.002).round());
+    double energy(int from) {
+      var e = 0.0;
+      for (var i = from; i < from + block; i++) {
+        final x = _sample(i);
+        e += x * x;
+      }
+      return e / block;
+    }
+
+    var best = 0.0;
+    final span = (sampleRate * 0.01).round();
+    for (var b = onset - span; b <= onset + span; b += block) {
+      var prev = 0.0;
+      for (var k = 1; k <= 10; k++) {
+        prev += energy(b - k * block);
+      }
+      prev /= 10;
+      best = math.max(best, energy(b) / (prev + 1e-9));
+    }
+    return best;
   }
 
   /// Expected-note path: a note the lesson expects counts as soon as its own
@@ -390,13 +526,20 @@ class NoteDetector {
       // partials beat the semitone neighbours', leakage from a nearby
       // played note does not.
       if (e < _noise * 6) continue;
-      if (!_tonal(mag, p, binHz)) continue;
+      if (!_tonal(mag, p, binHz, ratio: tonalRatio)) continue;
+      // A voice or other harmonic sound an octave (or a twelfth) below also
+      // fills this note's partials; a piano note alone leaves the odd
+      // partials of the lower pitch empty.
+      if (_partialEnergy(mag, p - 12, binHz) >= e * subOctave ||
+          _partialEnergy(mag, p - 19, binHz) >= e * subOctave) {
+        continue;
+      }
       if (e <= _partialEnergy(mag, p - 1, binHz) * 1.15 ||
           e <= _partialEnergy(mag, p + 1, binHz) * 1.15) {
         continue;
       }
       final onset = _refineOnset(end - _pitchN - _fluxHop * 2, end);
-      _emitOn(p, onset, _level(mag, p, binHz), end / sampleRate, out);
+      _confirming.add((p, onset, _level(mag, p, binHz)));
       // Reset so one attack fires once.
       hist
         ..clear()

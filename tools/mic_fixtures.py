@@ -104,6 +104,53 @@ ODE = [64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62]
 TWINKLE = [60, 60, 67, 67, 69, 69, 67, 65, 65, 64, 64, 62, 62, 60]
 
 
+NOISES = ("typing", "chatter", "hum", "knock")
+
+
+def noise_clip(kind, length):
+    """Non-piano room sounds, peak-normalised like the note clips."""
+    n = int(length * SR)
+    y = np.zeros(n)
+    t = np.arange(n) / SR
+    if kind == "typing":
+        # 6-9 key clicks per second: 3-8 ms bursts, bright, fast decay.
+        tt = 0.2
+        while tt < length - 0.05:
+            i = int(tt * SR)
+            k = int(rng.uniform(0.003, 0.008) * SR)
+            burst = rng.standard_normal(k) * np.exp(-np.arange(k) / (0.0015 * SR))
+            burst = lfilter(*butter(2, 1500 / (SR / 2), btype="high"), burst)
+            y[i : i + k] += burst * rng.uniform(0.4, 1.0)
+            tt += rng.uniform(0.08, 0.2)
+    elif kind == "chatter":
+        # Voiced buzz with a gliding pitch (100-250 Hz) through two moving
+        # formants, syllable-rate amplitude modulation: speech-like.
+        f0 = 150 + 60 * np.sin(2 * np.pi * 0.7 * t) + 30 * np.sin(2 * np.pi * 2.3 * t)
+        phase = 2 * np.pi * np.cumsum(f0) / SR
+        src = np.sign(np.sin(phase)) * 0.5 + 0.1 * rng.standard_normal(n)
+        out = np.zeros(n)
+        for fc in (500, 1500):
+            b, a = butter(2, [fc * 0.7 / (SR / 2), fc * 1.3 / (SR / 2)], btype="band")
+            out += lfilter(b, a, src)
+        env = np.clip(np.sin(2 * np.pi * 4 * t + rng.uniform(0, 6)), 0, None) ** 0.5
+        y = out * env
+    elif kind == "hum":
+        # Fan broadband + 50 Hz mains with harmonics, slowly wavering.
+        y = lfilter(*butter(1, 800 / (SR / 2)), rng.standard_normal(n)) * 0.5
+        for h in range(1, 6):
+            y += np.sin(2 * np.pi * 50 * h * t) / h * (1 + 0.2 * np.sin(2 * np.pi * 0.3 * t))
+    elif kind == "knock":
+        # Low thumps (door, desk): 2 per second, 60-200 Hz damped.
+        tt = 0.3
+        while tt < length - 0.2:
+            i = int(tt * SR)
+            k = int(0.15 * SR)
+            f = rng.uniform(60, 200)
+            y[i : i + k] += np.sin(2 * np.pi * f * np.arange(k) / SR) * np.exp(-np.arange(k) / (0.03 * SR))
+            tt += rng.uniform(0.35, 0.7)
+    return y / (np.max(np.abs(y)) + 1e-9) * 0.5
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     truth = {}
@@ -126,10 +173,17 @@ def main():
     ev += [(0.4 + i * 2.0, b, 2.2) for i, b in enumerate([48, 43, 48, 43])]
     clips.append(("hands_ode", ev, 8.8, "two-hands"))
 
+    # Noise only (no notes): every detection is a false note. Synthetic
+    # stand-ins for a room: computer-keyboard typing, chatter-like voiced
+    # noise, fan/mains hum, door knocks.
+    for kind in NOISES:
+        clips.append((f"noise_{kind}", [], 8.0, "noise"))
+
     for cond in ("clean", "room", "noisy"):
         for name, ev, length, kind in clips:
             fname = f"{cond}__{name}.wav"
-            write_wav(OUT / fname, room(render(ev, length), cond))
+            y = render(ev, length) if ev else noise_clip(name[6:], length)
+            write_wav(OUT / fname, room(y, cond))
             truth[fname] = {
                 # Held-out test set: every third clip in list order (spans
                 # every kind), fixed by position and never used for tuning.

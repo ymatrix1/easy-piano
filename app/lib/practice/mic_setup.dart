@@ -335,6 +335,12 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
               color: _heard == null ? GameColors.textDim : GameColors.cyan,
             ),
           ),
+          const SizedBox(height: 6),
+          Text(
+            l.micQuietTip,
+            textAlign: TextAlign.center,
+            style: _body.copyWith(color: GameColors.textDim, fontSize: 14),
+          ),
           const SizedBox(height: 18),
           GameText(l.micCalibrateTitle, size: 16, upper: true),
           const SizedBox(height: 8),
