@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Melody model demo</title>
+<style>
+  :root { --bg: #fafafa; --fg: #1a1a1a; --muted: #666; --line: #ddd; --accent: #2a6df4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161616; --fg: #eee; --muted: #999; --line: #333; --accent: #6b9cff; } }
+  body { background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; margin: 0 auto; max-width: 960px; padding: 16px; }
+  fieldset { border: 1px solid var(--line); margin: 0 0 12px; }
+  label { display: inline-block; margin: 2px 12px 2px 0; }
+  input[type=text], input[type=number], select { width: 6em; }
+  textarea { width: 100%; height: 3em; font: 12px monospace; }
+  button { margin-right: 8px; padding: 4px 12px; }
+  pre { background: var(--bg); border: 1px solid var(--line); padding: 8px; overflow-x: auto; font-size: 12px; }
+  .muted { color: var(--muted); }
+  table { border-collapse: collapse; font-size: 12px; }
+  td, th { border: 1px solid var(--line); padding: 2px 6px; text-align: left; }
+  tr.sel { outline: 2px solid var(--accent); }
+</style>
+</head>
+<body>
+<h1>Melody model demo</h1>
+<p class="muted">Spec-conditioned compound GPT (D20), ONNX in onnxruntime-web, masked decoding. Model files from
+<code>python -m melody_model.export --run &lt;name&gt;</code>; runtime from <code>python web/fetch_ort.py</code>;
+serve with <code>python web/serve.py</code> (COOP/COEP, needed for threads). <code>?model=&lt;base URL&gt;</code> loads the model from elsewhere;
+<code>?backend=wasm|webgpu</code> picks the runtime (default WASM: faster for this model on the measured desktop;
+WebGPU falls back to WASM when no adapter or session is available).</p>
+
+<fieldset><legend>Model</legend>
+  <label>Variant <select id="variant"><option value="auto">auto</option><option value=".int8">int8</option><option value="">fp32</option></select></label>
+  <label>Threads <input id="threads" type="number" value="1" min="1" max="16"></label>
+  <button id="load">Load</button> <button id="parity" disabled>Check parity</button>
+  <span id="loadInfo" class="muted">not loaded</span>
+</fieldset>
+
+<fieldset><legend>Spec</legend>
+  <label>Time <select id="time"></select></label>
+  <label>Key <select id="key"></select></label>
+  <label>Bars <input id="bars" type="number" value="8" min="1" max="64"></label>
+  <label>Range <input id="lo" type="text" value="C4"> – <input id="hi" type="text" value="G4"></label>
+  <label>Hands <select id="hands"><option>RH</option><option>LH</option><option>BOTH</option></select></label>
+  <label>Level <select id="level"><option value="">–</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+  <div>Durations: <span id="durs"></span></div>
+  <div>Styles: <span id="styles"></span></div>
+  <label style="display:block">Patterns (JSON list of skill-spec <code>required</code> objects)
+    <textarea id="patterns">[]</textarea></label>
+</fieldset>
+
+<fieldset><legend>Sampling</legend>
+  <label>Candidates <input id="n" type="number" value="8" min="1" max="32"></label>
+  <label>Temperature <input id="temp" type="number" value="1.0" step="0.1" min="0.1"></label>
+  <label>Seed <input id="seed" type="number" value="1"></label>
+  <button id="gen" disabled>Generate</button>
+  <button id="play" disabled>Play</button>
+  <button id="bench" disabled>Benchmark</button>
+  <span id="genInfo" class="muted"></span>
+</fieldset>
+
+<table id="cands"></table>
+<pre id="out"></pre>
+
+<script type="module">
+import { DURATIONS, decode, durUnits, generate, makeVocab, midiOf } from "./melody.js";
+
+const $ = (id) => document.getElementById(id);
+const TIMES = ["2/4", "3/4", "4/4", "3/8", "6/8", "9/8", "12/8", "2/2"];
+const STYLES = ["classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese"];
+let V = null, model = null, results = [], sel = 0, ort = null;
+const PARAMS = new URLSearchParams(location.search);
+// Model base URL: model/ next to the page, or ?model=<url> (e.g. a release mirror; must send CORS and CORP headers).
+const BASE = new URL(PARAMS.get("model") || "model/", location.href).href.replace(/\/?$/, "/");
+// Default variant per backend (docs/research/melody-browser.md): int8 on WASM; fp32 on WebGPU, whose EP has no
+// kernels for the int8 graph's DynamicQuantizeLinear / MatMulInteger and would split it across GPU and CPU.
+const AUTO_VARIANT = { wasm: ".int8", webgpu: "" };
+
+// Runtime bundles are vendored by web/fetch_ort.py (pinned version and sha256), wasm from vendor/ too, never a CDN.
+async function importOrt(backend) {
+  const lib = await import(backend === "webgpu" ? "./vendor/ort.webgpu.min.mjs" : "./vendor/ort.wasm.min.mjs");
+  lib.env.wasm.wasmPaths = new URL("vendor/", location.href).href;
+  if (PARAMS.get("verbose")) lib.env.logLevel = "verbose";
+  return lib;
+}
+
+async function webgpuAvailable() {
+  try { return !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch { return false; }
+}
+
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+// Fetch a model file and check it against meta.json's sha256 before anything parses it.
+async function fetchChecked(meta, name) {
+  const want = meta.sha256 && meta.sha256[name];
+  if (!want) throw new Error(`${name}: no sha256 in meta.json`);
+  const buf = await fetch(BASE + name).then((r) => { if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`); return r.arrayBuffer(); });
+  const got = hex(await crypto.subtle.digest("SHA-256", buf));
+  if (got !== want) throw new Error(`${name}: sha256 ${got} != meta.json ${want}`);
+  return new Uint8Array(buf);
+}
+
+// One ORT session pair; keeps the KV cache between calls (melody_model/export.py).
+// On WebGPU the KV cache and h stay in GPU buffers between calls; only the logits come back to the CPU.
+class OrtModel {
+  static async load(backend, variant, threads) {
+    ort.env.wasm.numThreads = threads;
+    const m = new OrtModel();
+    const base = { executionProviders: [backend], graphOptimizationLevel: "all" };
+    const decOpts = backend === "webgpu"
+      ? { ...base, preferredOutputLocation: { h: "gpu-buffer", present_k: "gpu-buffer", present_v: "gpu-buffer" } } : base;
+    const meta = await fetch(BASE + "meta.json").then((r) => r.json());
+    const [decBytes, headsBytes] = await Promise.all([fetchChecked(meta, `decoder${variant}.onnx`), fetchChecked(meta, `heads${variant}.onnx`)]);
+    // one after the other: the WebGPU EP refuses a second session while one is being created
+    const dec = await ort.InferenceSession.create(decBytes, decOpts);
+    const heads = await ort.InferenceSession.create(headsBytes, base);
+    Object.assign(m, { dec, headsSession: heads, meta, c: meta.config, backend, variant });
+    return m;
+  }
+  ids(rows, t) { return new ort.Tensor("int64", BigInt64Array.from(rows.flat(2), BigInt), [rows.length, t, 4]); }
+  async run(x) {
+    const old = [this.pk, this.pv, this.h];
+    const r = await this.dec.run({ x, past_k: this.pk, past_v: this.pv });
+    this.pk = r.present_k; this.pv = r.present_v; this.h = r.h;
+    for (const t of old) if (t && t.location === "gpu-buffer") t.dispose();
+    return r.h;
+  }
+  async start(prefix, n) {
+    const { layers, heads, d } = this.c;
+    for (const t of [this.pk, this.pv, this.h]) if (t && t.location === "gpu-buffer") t.dispose();
+    this.h = null;
+    this.pk = this.pv = new ort.Tensor("float32", new Float32Array(0), [layers, n, heads, 0, d / heads]);
+    return this.run(this.ids(Array.from({ length: n }, () => prefix), prefix.length));
+  }
+  async next(steps) { return this.run(this.ids(steps.map((s) => [s]), 1)); }
+  async heads(h, kind, pitch, dur) {
+    const t = (a) => new ort.Tensor("int64", BigInt64Array.from(a, BigInt), [a.length]);
+    const r = await this.headsSession.run({ h, kind: t(kind), pitch: t(pitch), dur: t(dur) });
+    return [r.kind_logits.data, r.pitch_logits.data, r.dur_logits.data, r.finger_logits.data];
+  }
+}
+function setup() {
+  $("time").innerHTML = TIMES.map((t) => `<option ${t === "4/4" ? "selected" : ""}>${t}</option>`).join("");
+  $("durs").innerHTML = DURATIONS.map((d) => `<label><input type="checkbox" value="${d}" ${["2", "4"].includes(d) ? "checked" : ""}>${d}</label>`).join("");
+  $("styles").innerHTML = STYLES.map((s) => `<label><input type="checkbox" value="${s}">${s}</label>`).join("");
+}
+
+function readSpec() {
+  const checked = (id) => [...$(id).querySelectorAll("input:checked")].map((e) => e.value);
+  const spec = { time: $("time").value, key: $("key").value, bars: +$("bars").value, range_lo: $("lo").value.trim(),
+    range_hi: $("hi").value.trim(), durs: checked("durs"), hands: $("hands").value, styles: checked("styles"),
+    patterns: JSON.parse($("patterns").value || "[]") };
+  if ($("level").value) spec.level = +$("level").value;
+  return spec;
+}
+
+function resourceBytes() {
+  const sum = (re) => performance.getEntriesByType("resource").filter((e) => re.test(e.name))
+    .reduce((a, e) => a + (e.transferSize || e.encodedBodySize || 0), 0);
+  return { model: sum(/\.onnx$/), wasm: sum(/\.wasm$/), js: sum(/vendor\/.*\.mjs$/) };
+}
+
+async function load() {
+  $("loadInfo").textContent = "loading…";
+  const t0 = performance.now();
+  try {
+    // WASM by default: per-step GPU dispatch and readback cost more than this 11M model's maths
+    // (docs/research/melody-browser.md). WebGPU only when asked for, with fallback.
+    const want = PARAMS.get("backend") || "wasm";
+    let backend = want === "webgpu" && await webgpuAvailable() ? "webgpu" : "wasm";
+    const variantFor = (b) => ($("variant").value === "auto" ? AUTO_VARIANT[b] : $("variant").value);
+    try {
+      ort = await importOrt(backend);
+      model = await OrtModel.load(backend, variantFor(backend), +$("threads").value);
+    } catch (e) {
+      if (backend !== "webgpu") throw e;
+      console.warn("WebGPU session failed, falling back to WASM:", e);
+      backend = "wasm";
+      ort = await importOrt(backend);
+      model = await OrtModel.load(backend, variantFor(backend), +$("threads").value);
+    }
+    if (want === "webgpu" && backend !== "webgpu") console.warn("WebGPU requested but unavailable; using WASM");
+    V = makeVocab(JSON.parse(new TextDecoder().decode(await fetchChecked(model.meta, "vocab.json"))));
+  } catch (e) { $("loadInfo").textContent = `load failed: ${e.message}`; throw e; }
+  const ms = performance.now() - t0, b = resourceBytes();
+  window.loadStats = { ms, bytes: b, meta: model.meta, backend: model.backend, variant: model.variant || "fp32" };
+  $("loadInfo").textContent = `${model.backend} ${model.variant || "fp32"}, ${model.meta.run} step ${model.meta.step}, loaded in ${ms.toFixed(0)} ms, ` +
+    `model ${(b.model / 1e6).toFixed(2)} MB transferred, wasm ${(b.wasm / 1e6).toFixed(2)} MB`;
+  $("key").innerHTML = V.kind.filter((k) => k.startsWith("KEY_")).map((k) => `<option>${k.slice(4)}</option>`).join("");
+  for (const id of ["gen", "bench", "parity"]) $(id).disabled = false;
+}
+
+// In-browser parity: teacher-force parity.json's steps through this runtime and compare with the PyTorch
+// logits export.py stored (rounded to 1e-4). Same measures as export.parity.
+async function checkParity() {
+  const fx = JSON.parse(new TextDecoder().decode(await fetchChecked(model.meta, "parity.json")));
+  const s = fx.steps, ref = fx.logits;
+  let h = await model.start(s.slice(0, fx.split), 1), maxProb = 0, maxAbs = 0, agree = 0, total = 0;
+  const softmax = (a) => { const m = Math.max(...a), e = a.map((x) => Math.exp(x - m)), z = e.reduce((x, y) => x + y, 0); return e.map((x) => x / z); };
+  const argmax = (a) => a.reduce((bi, x, i) => (x > a[bi] ? i : bi), 0);
+  for (let t = fx.split; t < s.length; t++) {
+    const lg = await model.heads(h, [s[t][0]], [s[t][1]], [s[t][2]]);
+    for (let f = 0; f < 4; f++) {
+      const got = Array.from(lg[f]), want = ref[f][t - fx.split];
+      const pg = softmax(got), pw = softmax(want);
+      for (let i = 0; i < got.length; i++) { maxAbs = Math.max(maxAbs, Math.abs(got[i] - want[i])); maxProb = Math.max(maxProb, Math.abs(pg[i] - pw[i])); }
+      agree += argmax(got) === argmax(want); total++;
+    }
+    if (t < s.length - 1) h = await model.next([s[t]]);
+  }
+  const out = { backend: model.backend, variant: model.variant || "fp32", positions: s.length - fx.split, max_abs: maxAbs, max_prob_diff: maxProb, top1: agree / total };
+  $("loadInfo").textContent += ` | parity: max prob diff ${maxProb.toFixed(4)}, top-1 ${(100 * out.top1).toFixed(1)}%`;
+  return out;
+}
+window.checkParity = checkParity;
+
+async function run(spec, n, temperature, seed) {
+  const t0 = performance.now();
+  const cands = await generate(V, model, spec, { n, temperature, seed });
+  return { ms: performance.now() - t0, cands };
+}
+
+function show() {
+  $("cands").innerHTML = "<tr><th>#</th><th>done</th><th>steps</th><th>mean log p</th></tr>" + results.map((c, i) =>
+    `<tr class="${i === sel ? "sel" : ""}" data-i="${i}"><td>${i + 1}</td><td>${c.done}</td><td>${c.len}</td><td>${c.mean.toFixed(3)}</td></tr>`).join("");
+  for (const tr of $("cands").querySelectorAll("tr[data-i]")) tr.onclick = () => { sel = +tr.dataset.i; show(); };
+  const c = results[sel];
+  let text;
+  try { text = JSON.stringify(decode(V, c.steps), null, 1); } catch (e) { text = `decode failed: ${e.message}`; }
+  $("out").textContent = text;
+}
+
+async function onGen() {
+  $("genInfo").textContent = "generating…";
+  const spec = readSpec();
+  const { ms, cands } = await run(spec, +$("n").value, +$("temp").value, +$("seed").value);
+  results = cands; sel = 0;
+  $("genInfo").textContent = `${cands.length} candidates in ${ms.toFixed(0)} ms (${(ms / cands.length).toFixed(0)} ms per tune)`;
+  $("play").disabled = false;
+  show();
+}
+
+// Benchmark for the current spec. batched: one generate() call decodes all n candidates as one batch.
+// sequential: n generate() calls of one candidate each. cold = the first call after load (includes WebGPU
+// shader compilation and allocator warm-up); warm = median of `runs` later calls with seeds 1..runs.
+async function bench({ runs = 5, n = +$("n").value, mode = "batched" } = {}) {
+  const spec = readSpec();
+  const once = async (seed) => {
+    if (mode === "batched") return run(spec, n, 1.0, seed);
+    let ms = 0;
+    const cands = [];
+    for (let i = 0; i < n; i++) { const r = await run(spec, 1, 1.0, seed * 1000 + i); ms += r.ms; cands.push(...r.cands); }
+    return { ms, cands };
+  };
+  const cold = (await once(999)).ms;
+  const times = [], steps = [];
+  for (let i = 0; i < runs; i++) {
+    const r = await once(i + 1);
+    times.push(r.ms);
+    steps.push(Math.max(...r.cands.map((c) => c.len)));
+  }
+  times.sort((a, b) => a - b);
+  const out = { mode, n, runs, cold_ms: cold, median_ms: times[runs >> 1], min_ms: times[0], max_ms: times[runs - 1],
+    median_ms_per_tune: times[runs >> 1] / n, decode_steps: steps, backend: model.backend,
+    variant: model.variant || "fp32", threads: ort.env.wasm.numThreads, spec };
+  $("genInfo").textContent = `bench ${mode} n=${n} on ${model.backend}: cold ${cold.toFixed(0)} ms, warm median ${out.median_ms.toFixed(0)} ms (${out.median_ms_per_tune.toFixed(0)} ms per tune)`;
+  return out;
+}
+window.bench = bench;
+window.loadModel = load;
+
+function play() {
+  const song = decode(V, results[sel].steps);
+  const ac = new AudioContext();
+  const den = +song.time.split("/")[1], bpm = 100;
+  const secPer32 = (60 / bpm) * den / 32;
+  for (const hand of ["RH", "LH"]) {
+    let t = ac.currentTime + 0.1;
+    for (const bar of song.bars) {
+      if (!bar[hand]) { t += (+song.time.split("/")[0] * 32 / den) * secPer32; continue; }
+      for (const tok of bar[hand].split(" ")) {
+        if (tok === "{tie}") continue;
+        const [head, durF] = tok.split(":");
+        const len = durUnits(durF.split("@")[0]) * secPer32;
+        if (head !== "r") for (const p of head.match(/[A-G][#b]?\d/g)) {
+          const o = ac.createOscillator(), g = ac.createGain();
+          o.type = "triangle";
+          o.frequency.value = 440 * 2 ** ((midiOf(p) - 69) / 12);
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + len * 0.95);
+          o.connect(g).connect(ac.destination);
+          o.start(t); o.stop(t + len);
+        }
+        t += len;
+      }
+    }
+  }
+}
+
+setup();
+$("load").onclick = load;
+$("parity").onclick = () => checkParity();
+$("gen").onclick = onGen;
+$("bench").onclick = () => bench();
+$("play").onclick = play;
+</script>
+</body>
+</html>
