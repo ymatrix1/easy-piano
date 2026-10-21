@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Melody model demo</title>
+<style>
+  :root { --bg: #fafafa; --fg: #1a1a1a; --muted: #666; --line: #ddd; --accent: #2a6df4; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161616; --fg: #eee; --muted: #999; --line: #333; --accent: #6b9cff; } }
+  body { background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; margin: 0 auto; max-width: 960px; padding: 16px; }
+  fieldset { border: 1px solid var(--line); margin: 0 0 12px; }
+  label { display: inline-block; margin: 2px 12px 2px 0; }
+  input[type=text], input[type=number], select { width: 6em; }
+  textarea { width: 100%; height: 3em; font: 12px monospace; }
+  button { margin-right: 8px; padding: 4px 12px; }
+  pre { background: var(--bg); border: 1px solid var(--line); padding: 8px; overflow-x: auto; font-size: 12px; }
+  .muted { color: var(--muted); }
+  table { border-collapse: collapse; font-size: 12px; }
+  td, th { border: 1px solid var(--line); padding: 2px 6px; text-align: left; }
+  tr.sel { outline: 2px solid var(--accent); }
+</style>
+</head>
+<body>
+<h1>Melody model demo</h1>
+<p class="muted">Spec-conditioned compound GPT (D20), ONNX in onnxruntime-web, masked decoding. Model files from
+<code>python -m melody_model.export --run &lt;name&gt;</code>; serve with <code>python web/serve.py</code>.</p>
+
+<fieldset><legend>Model</legend>
+  <label>Variant <select id="variant"><option value=".int8">int8</option><option value="">fp32</option></select></label>
+  <label>Threads <input id="threads" type="number" value="1" min="1" max="16"></label>
+  <button id="load">Load</button> <span id="loadInfo" class="muted">not loaded</span>
+</fieldset>
+
+<fieldset><legend>Spec</legend>
+  <label>Time <select id="time"></select></label>
+  <label>Key <select id="key"></select></label>
+  <label>Bars <input id="bars" type="number" value="8" min="1" max="64"></label>
+  <label>Range <input id="lo" type="text" value="C4"> – <input id="hi" type="text" value="G4"></label>
+  <label>Hands <select id="hands"><option>RH</option><option>LH</option><option>BOTH</option></select></label>
+  <label>Level <select id="level"><option value="">–</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+  <div>Durations: <span id="durs"></span></div>
+  <div>Styles: <span id="styles"></span></div>
+  <label style="display:block">Patterns (JSON list of skill-spec <code>required</code> objects)
+    <textarea id="patterns">[]</textarea></label>
+</fieldset>
+
+<fieldset><legend>Sampling</legend>
+  <label>Candidates <input id="n" type="number" value="8" min="1" max="32"></label>
+  <label>Temperature <input id="temp" type="number" value="1.0" step="0.1" min="0.1"></label>
+  <label>Seed <input id="seed" type="number" value="1"></label>
+  <button id="gen" disabled>Generate</button>
+  <button id="play" disabled>Play</button>
+  <button id="bench" disabled>Benchmark</button>
+  <span id="genInfo" class="muted"></span>
+</fieldset>
+
+<table id="cands"></table>
+<pre id="out"></pre>
+
+<script type="module">
+import * as ort from "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.wasm.min.mjs";
+import { DURATIONS, decode, durUnits, generate, makeVocab, midiOf } from "./melody.js";
+
+const $ = (id) => document.getElementById(id);
+const TIMES = ["2/4", "3/4", "4/4", "3/8", "6/8", "9/8", "12/8", "2/2"];
+const STYLES = ["classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese"];
+let V = null, model = null, results = [], sel = 0;
+
+// One ORT session pair; keeps the KV cache between calls (melody_model/export.py).
+class OrtModel {
+  static async load(variant, threads) {
+    ort.env.wasm.numThreads = threads;
+    const m = new OrtModel();
+    const opts = { executionProviders: ["wasm"], graphOptimizationLevel: "all" };
+    const [dec, heads, meta] = await Promise.all([
+      ort.InferenceSession.create(`model/decoder${variant}.onnx`, opts),
+      ort.InferenceSession.create(`model/heads${variant}.onnx`, opts),
+      fetch("model/meta.json").then((r) => r.json()),
+    ]);
+    Object.assign(m, { dec, headsSession: heads, meta, c: meta.config });
+    return m;
+  }
+  ids(rows, t) { return new ort.Tensor("int64", BigInt64Array.from(rows.flat(2), BigInt), [rows.length, t, 4]); }
+  async run(x) {
+    const r = await this.dec.run({ x, past_k: this.pk, past_v: this.pv });
+    this.pk = r.present_k; this.pv = r.present_v;
+    return r.h;
+  }
+  async start(prefix, n) {
+    const { layers, heads, d } = this.c;
+    const empty = new ort.Tensor("float32", new Float32Array(0), [layers, n, heads, 0, d / heads]);
+    this.pk = this.pv = empty;
+    return this.run(this.ids(Array.from({ length: n }, () => prefix), prefix.length));
+  }
+  async next(steps) { return this.run(this.ids(steps.map((s) => [s]), 1)); }
+  async heads(h, kind, pitch, dur) {
+    const t = (a) => new ort.Tensor("int64", BigInt64Array.from(a, BigInt), [a.length]);
+    const r = await this.headsSession.run({ h, kind: t(kind), pitch: t(pitch), dur: t(dur) });
+    return [r.kind_logits.data, r.pitch_logits.data, r.dur_logits.data, r.finger_logits.data];
+  }
+}
+function setup() {
+  $("time").innerHTML = TIMES.map((t) => `<option ${t === "4/4" ? "selected" : ""}>${t}</option>`).join("");
+  $("durs").innerHTML = DURATIONS.map((d) => `<label><input type="checkbox" value="${d}" ${["2", "4"].includes(d) ? "checked" : ""}>${d}</label>`).join("");
+  $("styles").innerHTML = STYLES.map((s) => `<label><input type="checkbox" value="${s}">${s}</label>`).join("");
+}
+
+function readSpec() {
+  const checked = (id) => [...$(id).querySelectorAll("input:checked")].map((e) => e.value);
+  const spec = { time: $("time").value, key: $("key").value, bars: +$("bars").value, range_lo: $("lo").value.trim(),
+    range_hi: $("hi").value.trim(), durs: checked("durs"), hands: $("hands").value, styles: checked("styles"),
+    patterns: JSON.parse($("patterns").value || "[]") };
+  if ($("level").value) spec.level = +$("level").value;
+  return spec;
+}
+
+function resourceBytes() {
+  const sum = (re) => performance.getEntriesByType("resource").filter((e) => re.test(e.name))
+    .reduce((a, e) => a + (e.transferSize || e.encodedBodySize || 0), 0);
+  return { model: sum(/\.onnx$/), wasm: sum(/\.wasm$/), js: sum(/onnxruntime-web.*\.mjs$/) };
+}
+
+async function load() {
+  $("loadInfo").textContent = "loading…";
+  const t0 = performance.now();
+  try {
+    if (!V) V = makeVocab(await fetch("model/vocab.json").then((r) => r.json()));
+    model = await OrtModel.load($("variant").value, +$("threads").value);
+  } catch (e) { $("loadInfo").textContent = `load failed: ${e.message}`; throw e; }
+  const ms = performance.now() - t0, b = resourceBytes();
+  window.loadStats = { ms, bytes: b, meta: model.meta };
+  $("loadInfo").textContent = `${model.meta.run} step ${model.meta.step}, loaded in ${ms.toFixed(0)} ms, ` +
+    `model ${(b.model / 1e6).toFixed(2)} MB transferred, wasm ${(b.wasm / 1e6).toFixed(2)} MB`;
+  $("key").innerHTML = V.kind.filter((k) => k.startsWith("KEY_")).map((k) => `<option>${k.slice(4)}</option>`).join("");
+  for (const id of ["gen", "bench"]) $(id).disabled = false;
+}
+
+async function run(spec, n, temperature, seed) {
+  const t0 = performance.now();
+  const cands = await generate(V, model, spec, { n, temperature, seed });
+  return { ms: performance.now() - t0, cands };
+}
+
+function show() {
+  $("cands").innerHTML = "<tr><th>#</th><th>done</th><th>steps</th><th>mean log p</th></tr>" + results.map((c, i) =>
+    `<tr class="${i === sel ? "sel" : ""}" data-i="${i}"><td>${i + 1}</td><td>${c.done}</td><td>${c.len}</td><td>${c.mean.toFixed(3)}</td></tr>`).join("");
+  for (const tr of $("cands").querySelectorAll("tr[data-i]")) tr.onclick = () => { sel = +tr.dataset.i; show(); };
+  const c = results[sel];
+  let text;
+  try { text = JSON.stringify(decode(V, c.steps), null, 1); } catch (e) { text = `decode failed: ${e.message}`; }
+  $("out").textContent = text;
+}
+
+async function onGen() {
+  $("genInfo").textContent = "generating…";
+  const spec = readSpec();
+  const { ms, cands } = await run(spec, +$("n").value, +$("temp").value, +$("seed").value);
+  results = cands; sel = 0;
+  $("genInfo").textContent = `${cands.length} candidates in ${ms.toFixed(0)} ms (${(ms / cands.length).toFixed(0)} ms per tune)`;
+  $("play").disabled = false;
+  show();
+}
+
+// Benchmark: `runs` generations of n candidates for the current spec, after one warm-up.
+async function bench({ runs = 5, n = +$("n").value } = {}) {
+  const spec = readSpec();
+  await run(spec, n, 1.0, 999);
+  const times = [], steps = [];
+  for (let i = 0; i < runs; i++) {
+    const r = await run(spec, n, 1.0, i + 1);
+    times.push(r.ms);
+    steps.push(Math.max(...r.cands.map((c) => c.len)));
+  }
+  times.sort((a, b) => a - b);
+  const out = { n, runs, median_ms: times[runs >> 1], min_ms: times[0], max_ms: times[runs - 1],
+    median_ms_per_tune: times[runs >> 1] / n, decode_steps: steps, threads: ort.env.wasm.numThreads,
+    variant: $("variant").value || "fp32", spec };
+  $("genInfo").textContent = `bench n=${n}: median ${out.median_ms.toFixed(0)} ms (${out.median_ms_per_tune.toFixed(0)} ms per tune)`;
+  return out;
+}
+window.bench = bench;
+window.loadModel = load;
+
+function play() {
+  const song = decode(V, results[sel].steps);
+  const ac = new AudioContext();
+  const den = +song.time.split("/")[1], bpm = 100;
+  const secPer32 = (60 / bpm) * den / 32;
+  for (const hand of ["RH", "LH"]) {
+    let t = ac.currentTime + 0.1;
+    for (const bar of song.bars) {
+      if (!bar[hand]) { t += (+song.time.split("/")[0] * 32 / den) * secPer32; continue; }
+      for (const tok of bar[hand].split(" ")) {
+        if (tok === "{tie}") continue;
+        const [head, durF] = tok.split(":");
+        const len = durUnits(durF.split("@")[0]) * secPer32;
+        if (head !== "r") for (const p of head.match(/[A-G][#b]?\d/g)) {
+          const o = ac.createOscillator(), g = ac.createGain();
+          o.type = "triangle";
+          o.frequency.value = 440 * 2 ** ((midiOf(p) - 69) / 12);
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + len * 0.95);
+          o.connect(g).connect(ac.destination);
+          o.start(t); o.stop(t + len);
+        }
+        t += len;
+      }
+    }
+  }
+}
+
+setup();
+$("load").onclick = load;
+$("gen").onclick = onGen;
+$("bench").onclick = () => bench();
+$("play").onclick = play;
+</script>
+</body>
+</html>

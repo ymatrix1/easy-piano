@@ -1,6 +1,6 @@
 # Melody model
 
-Status: draft. Practice-tune model, steps 2–3 (beans piano-lkg2, piano-bgqv). Corpora and design: [melody-corpora.md](../research/melody-corpora.md), [D18–D21](../DECISIONS.md). Code: `tools/melody-model/`.
+Status: draft. Practice-tune model, steps 2–5 (beans piano-lkg2, piano-bgqv). Corpora and design: [melody-corpora.md](../research/melody-corpora.md), [D18–D21](../DECISIONS.md). Code: `tools/melody-model/`.
 
 ## Converters (`melody_model/convert.py`)
 
@@ -118,3 +118,30 @@ python -m melody_model.train --name base --steps 20000      # refuses to run wit
 - Output in git-ignored `data/melody/runs/<name>/`: `config.json` (args, params, dataset and vocab sha256, gate), `log.jsonl`, `ckpt.pt` (best validation loss), `summary.json`.
 
 Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers → 1,087 steps, 19.4M tokens, ~160k tokens/s, 3.8 GB peak, validation loss 2.17 → 1.40 (kind 0.35, pitch 0.79, dur 0.25, finger 0.003; fingering is almost always absent in the data).
+
+## Browser export (`melody_model/export.py`, `web/`, step 5)
+
+```
+python -m melody_model.export --run base1      # -> tools/melody-model/web/model/ (git-ignored)
+python tools/melody-model/web/serve.py         # http://localhost:8780/
+```
+
+- `decoder.onnx`: one decoding call with a KV cache. `x (B,T,4)`, `past_k/past_v (L,B,H,P,hd)` → `h (B,d)` of the last step, `present_k/present_v`. Prefill with the spec prefix and `P = 0`, then one step per call. Chosen over a full-sequence graph, which re-runs the prefix every step (O(n²)).
+- `heads.onnx`: `h, kind, pitch, dur` → four logit vectors. Head *i* reads only earlier fields, so the caller samples kind, reruns for pitch with that kind, and so on.
+- `*.int8.onnx`: onnxruntime dynamic quantization of MatMul/Gemm weights (int8); embeddings and LayerNorm stay fp32. Exported with the TorchScript exporter (opset 17).
+- `meta.json`: run, step, val loss, config, sizes, parity. `vocab.json`: field vocabularies.
+- Parity (`tests/test_export.py`): KV-cache path vs PyTorch full sequence, batch of 2; fp32 max abs logit diff < 1e-4, int8 max prob diff < 0.05.
+- `web/melody.js` (no DOM): `encodeSpec` (= `encode_spec`, durations sorted as `spec_from_song`), `Grammar` masks, `generate`, `decode` (= `tokenizer.decode`). `web/check.mjs` + `tests/test_web.py` check it against Python under Node.
+
+Masks at each step:
+
+| Rule | Mask |
+|---|---|
+| Plan | `PLAN`, then `BARS_n` triples (`SEC_` lettered from A, no letter skipped; `CAD_`; `CON_`), `PLAN_END` |
+| Bars | `BAR`, then the spec's hands in order (`BOTH` = RH then LH, both required); `END` only after bar `n` |
+| Bar fill | `NOTE`/`REST` dur ≤ remaining and the rest fillable with allowed durations; hand closes only at exactly full |
+| Pitch | `NOTE` within `RANGE_LO…RANGE_HI`; `CHORD` above the last chord pitch, ≤ 12 semitones over the root, ≤ 4 notes |
+| CHORD/TIE | only after `NOTE`/`CHORD`; no `REST` after `TIE`; no `TIE` at the tune's last slot; chord fingering all or none |
+| Unused fields | `<none>` |
+
+Candidates are ranked by mean log probability under the masked distributions. Chrome desktop timings: [melody-browser.md](../research/melody-browser.md).
