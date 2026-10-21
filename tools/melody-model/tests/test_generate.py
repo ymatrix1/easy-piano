@@ -2,7 +2,7 @@ from melody_model import tokenizer as tk
 from melody_model.generate import KID, Masker, build_prefix, level_for
 
 NS = {"course": "essentials-1", "node": "rests",
-      "taught": {"accidentals": [], "durations": ["1", "2", "4", "8"], "hands_together": False, "max_interval": 4,
+      "taught": {"accidentals": [], "durations": ["1", "2", "4", "8"], "hands_together": False, "max_interval": 5,
                  "pitches": {"RH": ["C4", "D4", "E4", "F4", "G4"]}, "polyphony": {"RH": 1}, "rest_durations": ["4"],
                  "rests": True, "times": ["4/4"]},
       "spec": {"bars": [8, 8], "bpm": [72, 88], "hands": "RH", "time": "4/4", "required": [{"rest": True}]}}
@@ -29,7 +29,7 @@ def test_masker_walks_the_grammar_and_fills_bars():
     assert m.durs_for("NOTE") == ["1", "2", "4", "8"] and m.durs_for("REST") == ["4"]
     m.advance("NOTE", "C4", "2")
     assert m.durs_for("NOTE") == ["2", "4", "8"]
-    assert m.pitches_for("NOTE") == ["C4", "D4", "E4", "F4"]  # G4 is a 7-semitone leap, taught up to a fourth
+    assert m.pitches_for("NOTE") == ["C4", "D4", "E4", "F4"]  # G4 is a 7-semitone leap, taught up to 5 semitones
     m.advance("NOTE", "D4", "2")
     assert m.kinds() == ["BAR"]
 

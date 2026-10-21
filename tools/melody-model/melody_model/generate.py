@@ -34,8 +34,6 @@ PID = {p: i for i, p in enumerate(tk.PITCHES)}
 DID = {d: i for i, d in enumerate(tk.DURS)}
 CONTENT = ROOT / "content"
 CLI = ROOT / "tools" / "content-cli" / "target" / "debug" / "content.exe"
-# skill-spec interval numbers -> largest leap in semitones (rubric.interval_semitones)
-INTERVAL_SEMITONES = {2: 2, 3: 4, 4: 5, 5: 7, 6: 9, 7: 11, 8: 12}
 
 
 def node_spec(node: str, specs_json: Path) -> dict:
@@ -72,7 +70,7 @@ class Masker:
         self.pitches = {h: [p for p in t["pitches"].get(h, [])] for h in self.hands}
         self.durs = [d for d in DURATIONS if d in t["durations"]]
         self.rest_durs = [d for d in DURATIONS if d in t.get("rest_durations", [])] if t["rests"] else []
-        self.max_leap = INTERVAL_SEMITONES.get(t["max_interval"], 12)
+        self.max_leap = t["max_interval"]  # semitones (taught set, docs/specs/skill-specs.md)
         self.poly = {h: t["polyphony"].get(h, 1) for h in self.hands}
         num, den = (int(x) for x in time.split("/"))
         self.bar_beats = num * 4 / den  # in quarters
@@ -105,8 +103,10 @@ class Masker:
         else:
             out.append("BAR" if self.bar_no < self.bars else "END")
         hand = self.hands[self.hand_i]
-        if self.chord_n and self.chord_n < self.poly[hand]:
+        if self.chord_n and self.chord_n < self.poly[hand] and self.pitches_for("CHORD"):
             out.append("CHORD")
+        if "NOTE" in out and not self.pitches_for("NOTE"):
+            out.remove("NOTE")
         return out
 
     def pitches_for(self, kind: str) -> list[str]:
@@ -122,8 +122,17 @@ class Masker:
         return near or [min(ps, key=lambda p: abs(parse_pitch(p).midi - prev))]  # never a leap the level has not taught
 
     def durs_for(self, kind: str) -> list[str]:
+        """Durations that fit and leave a remainder the taught values can still fill."""
         pool = self.rest_durs if kind == "REST" else self.durs
-        return [d for d in pool if dur_beats(d, 4) <= self.left + 1e-9]
+        return [d for d in pool if dur_beats(d, 4) <= self.left + 1e-9 and self._fillable(self.left - dur_beats(d, 4))]
+
+    def _fillable(self, beats: float) -> bool:
+        units = round(beats * 8)  # 32nd notes
+        sizes = {round(dur_beats(d, 4) * 8) for d in self.durs + self.rest_durs}
+        ok = [True] + [False] * units
+        for u in range(1, units + 1):
+            ok[u] = any(sz <= u and ok[u - sz] for sz in sizes)
+        return ok[units]
 
     def advance(self, kind: str, pitch: str, dur: str):
         if self.phase == "plan":

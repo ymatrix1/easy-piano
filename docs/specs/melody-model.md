@@ -131,3 +131,5 @@ python -m melody_model.generate --run base1 --node essentials-1/rests -n 16 --ke
 - `report.json` per run: candidates, rubric passes, kept files, errors.
 
 First try (2-minute smoke checkpoint, essentials-1/rests, 8 candidates): 5 passed the rubric; the 3 failures missed the required rest (and one leap, from a mask fallback since fixed).
+
+Full run `base1` (2026-10-21, RTX 4070 SUPER): 20,000 steps, 356.9M tokens, 2,211 s (~37 min), peak 3.8 GB, best validation loss 0.875 (kind 0.273, pitch 0.446, dur 0.154 at step 19,500; train ~0.91, no overfitting). Generation, 16 candidates per node, 10 lesson nodes from Piano Basics to Essentials III, GPU: **108 / 155 decoded candidates pass the rubric (70%)**, from 14/16 (c-d-e, f-and-g) and 15/15 (hands-together) down to 6/16 (shifting). All remaining failures are unmet `required` patterns (a required pitch 26, F# 6, rhythm share 6, rest 4, dotted rhythm 4, interval 3); taught-set rules (pitches, durations, leaps, chords) always pass. Follow-up: steer decoding toward unmet required patterns near the end of the tune.
