@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magenta tunes</title>
+<style>
+  :root { --bg: #fafaf7; --fg: #1d1d1b; --muted: #6b6b66; --card: #fff; --line: #d8d8d2; --accent: #2f6fde; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --fg: #ecece6; --muted: #9a9a92; --card: #21211f; --line: #3a3a36; --accent: #7aa7ff; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 system-ui, sans-serif; }
+  header { position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; z-index: 1; }
+  header h1 { font-size: 17px; margin: 0 8px 0 0; }
+  label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  main { padding: 16px; display: grid; gap: 16px; max-width: 1100px; margin: 0 auto; }
+  .tune { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .head h2 { font-size: 15px; margin: 0; }
+  .model { font-size: 13px; color: var(--muted); }
+  .model b { color: var(--accent); }
+  button { font: inherit; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  button.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+  svg { display: block; width: 100%; height: auto; color: var(--fg); }
+  .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Magenta tunes</h1>
+  <label><input type="checkbox" id="reveal"> Show model</label>
+  <label>Level <select id="level"><option value="">all</option></select></label>
+  <label><input type="checkbox" id="fingers" checked> Fingering</label>
+</header>
+<main id="list"><p class="empty">Loading out/index.json… Run <code>node generate.js</code> first, then serve this folder.</p></main>
+<script>
+const MODEL_NAMES = { basic_rnn: 'MusicRNN basic_rnn', melody_rnn: 'MusicRNN melody_rnn', chord_pitches_improv: 'ImprovRNN chord_pitches_improv' };
+const LETTER = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+const SEMI = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const GAP = 10; // staff line spacing
+const STEP_W = 9; // px per 16th step
+const BAR_PAD = 14;
+const BARS_PER_ROW = 4;
+
+let songs = [];
+let order = [];
+
+// generator: model = "<checkpoint url>#sha256=…", prompt_ref = "level=e1;temperature=1;chords=C-F;…".
+function genInfo(song) {
+  const g = song.generator;
+  const ref = Object.fromEntries((g.prompt_ref || '').split(';').filter(Boolean).map((kv) => kv.split('=')));
+  return { checkpoint: (g.model || '').split('#')[0].split('/').pop(), seed: g.seed, ...ref };
+}
+
+function parseToken(tok) {
+  const m = /^(r|([A-G])(#|b)?(\d)):(\d+)(\.?)(?:@(\d))?$/.exec(tok);
+  if (!m) throw new Error('bad token ' + tok);
+  const steps = (16 / Number(m[5])) * (m[6] ? 1.5 : 1);
+  if (m[1] === 'r') return { rest: true, steps };
+  const oct = Number(m[4]);
+  const acc = m[3] === '#' ? 1 : m[3] === 'b' ? -1 : 0;
+  return { letter: m[2], acc, oct, steps, finger: m[7], step: oct * 7 + LETTER[m[2]], midi: 12 * (oct + 1) + SEMI[m[2]] + acc };
+}
+
+const svgEl = (tag, attrs, text) => {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+};
+
+// Treble staff: bottom line E4 (diatonic step 30), top line F5 (38).
+function drawSong(song, showFingers) {
+  const bars = song.bars.map((b) => b.RH.split(/\s+/).map(parseToken));
+  const rows = [];
+  for (let i = 0; i < bars.length; i += BARS_PER_ROW) rows.push(bars.slice(i, i + BARS_PER_ROW));
+  const left = 46;
+  const barW = 16 * STEP_W + 2 * BAR_PAD;
+  const width = left + BARS_PER_ROW * barW + 4;
+  const rowH = 120;
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${rows.length * rowH}`, role: 'img', 'aria-label': 'Treble staff' });
+  rows.forEach((row, r) => {
+    const top = r * rowH + 34; // y of the top line (F5)
+    const yOf = (step) => top + (38 - step) * (GAP / 2);
+    for (let l = 0; l < 5; l++) svg.append(svgEl('line', { x1: 0, x2: left + row.length * barW, y1: top + l * GAP, y2: top + l * GAP, stroke: 'currentColor', 'stroke-width': 1 }));
+    svg.append(svgEl('text', { x: 2, y: top + 4 * GAP + 9, 'font-size': 50, fill: 'currentColor', 'font-family': 'Segoe UI Symbol, Noto Music, serif' }, '\u{1D11E}'));
+    if (r === 0) {
+      svg.append(svgEl('text', { x: 30, y: top + 2 * GAP - 2, 'font-size': 17, 'font-weight': 700, fill: 'currentColor' }, '4'));
+      svg.append(svgEl('text', { x: 30, y: top + 4 * GAP - 2, 'font-size': 17, 'font-weight': 700, fill: 'currentColor' }, '4'));
+    }
+    row.forEach((notes, b) => {
+      const x0 = left + b * barW;
+      const xEnd = x0 + barW;
+      svg.append(svgEl('line', { x1: xEnd, x2: xEnd, y1: top, y2: top + 4 * GAP, stroke: 'currentColor', 'stroke-width': r === rows.length - 1 && b === row.length - 1 ? 3 : 1 }));
+      let pos = 0;
+      for (const n of notes) {
+        const x = x0 + BAR_PAD + pos * STEP_W + 6;
+        pos += n.steps;
+        if (n.rest) {
+          if (n.steps >= 8) svg.append(svgEl('rect', { x: x - 6, y: top + 2 * GAP - 5, width: 12, height: 5, fill: 'currentColor' }));
+          else svg.append(svgEl('text', { x: x - 6, y: top + 3 * GAP + 4, 'font-size': 30, fill: 'currentColor', 'font-family': 'Segoe UI Symbol, Noto Music, serif' }, n.steps >= 4 ? '\u{1D13D}' : '\u{1D13E}'));
+          continue;
+        }
+        const y = yOf(n.step);
+        for (let s = 28; s >= n.step; s -= 2) if (s <= 28) svg.append(svgEl('line', { x1: x - 9, x2: x + 9, y1: yOf(s), y2: yOf(s), stroke: 'currentColor' }));
+        for (let s = 40; s <= n.step; s += 2) svg.append(svgEl('line', { x1: x - 9, x2: x + 9, y1: yOf(s), y2: yOf(s), stroke: 'currentColor' }));
+        const hollow = n.steps >= 8;
+        svg.append(svgEl('ellipse', { cx: x, cy: y, rx: 6, ry: 4.3, transform: `rotate(-20 ${x} ${y})`, fill: hollow ? 'none' : 'currentColor', stroke: 'currentColor', 'stroke-width': hollow ? 1.6 : 1 }));
+        if (n.acc) svg.append(svgEl('text', { x: x - 19, y: y + 5, 'font-size': 15, fill: 'currentColor' }, n.acc > 0 ? '♯' : '♭'));
+        if (n.steps === 6 || n.steps === 12) svg.append(svgEl('circle', { cx: x + 10, cy: n.step % 2 === 0 ? y - 3 : y, r: 1.8, fill: 'currentColor' }));
+        if (n.steps < 16) {
+          const up = n.step < 34;
+          const sx = up ? x + 5.6 : x - 5.6;
+          const sy2 = up ? y - 32 : y + 32;
+          svg.append(svgEl('line', { x1: sx, x2: sx, y1: y, y2: sy2, stroke: 'currentColor', 'stroke-width': 1.3 }));
+          if (n.steps === 2) svg.append(svgEl('path', { d: up ? `M${sx} ${sy2} q 2 10 9 14` : `M${sx} ${sy2} q 2 -10 9 -14`, fill: 'none', stroke: 'currentColor', 'stroke-width': 1.8 }));
+        }
+        if (showFingers && n.finger) svg.append(svgEl('text', { x: x - 3, y: Math.min(top - 8, y - 38), 'font-size': 11, fill: 'currentColor', opacity: 0.7 }, n.finger));
+      }
+    });
+  });
+  return svg;
+}
+
+// Simple WebAudio playback (triangle wave), scheduled on the audio clock.
+let ctx = null;
+let playing = null;
+function play(song, button) {
+  stop();
+  ctx = ctx || new AudioContext();
+  const spb = 60 / song.bpm / 4; // seconds per 16th step
+  let t = ctx.currentTime + 0.1;
+  const oscs = [];
+  for (const bar of song.bars) {
+    for (const n of bar.RH.split(/\s+/).map(parseToken)) {
+      const d = n.steps * spb;
+      if (!n.rest) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.value = 440 * Math.pow(2, (n.midi - 69) / 12);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.3, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.02, t + d * 0.95);
+        o.connect(g).connect(ctx.destination);
+        o.start(t);
+        o.stop(t + d);
+        oscs.push(o);
+      }
+      t += d;
+    }
+  }
+  button.classList.add('playing');
+  button.textContent = 'Stop';
+  const timer = setTimeout(stop, (t - ctx.currentTime) * 1000 + 100);
+  playing = { oscs, button, timer };
+}
+function stop() {
+  if (!playing) return;
+  playing.oscs.forEach((o) => { try { o.stop(); } catch {} });
+  clearTimeout(playing.timer);
+  playing.button.classList.remove('playing');
+  playing.button.textContent = 'Play';
+  playing = null;
+}
+
+function render() {
+  stop();
+  const reveal = document.getElementById('reveal').checked;
+  const level = document.getElementById('level').value;
+  const fingers = document.getElementById('fingers').checked;
+  const list = document.getElementById('list');
+  list.replaceChildren();
+  // Blind mode shuffles once so file order (grouped by model) gives nothing away.
+  const shown = (reveal ? songs : order).filter((s) => !level || genInfo(s).level === level);
+  shown.forEach((song, i) => {
+    const card = document.createElement('section');
+    card.className = 'tune';
+    const head = document.createElement('div');
+    head.className = 'head';
+    const h = document.createElement('h2');
+    h.textContent = `Tune ${i + 1}`;
+    const btn = document.createElement('button');
+    btn.textContent = 'Play';
+    btn.onclick = () => (playing && playing.button === btn ? stop() : play(song, btn));
+    const meta = document.createElement('span');
+    meta.className = 'model';
+    const g = genInfo(song);
+    meta.innerHTML = reveal
+      ? `<b>${MODEL_NAMES[g.checkpoint] || g.checkpoint}</b> · seed ${g.seed} · score ${g.score}${g.chords ? ' · chords ' + g.chords.split('-').join(' ') : ''} · ${g.level}`
+      : `level ${g.level} · ${song.bpm} bpm`;
+    head.append(h, btn, meta);
+    card.append(head, drawSong(song, fingers));
+    list.append(card);
+  });
+  if (!shown.length) list.innerHTML = '<p class="empty">No tunes.</p>';
+}
+
+(async () => {
+  const files = await (await fetch('out/index.json')).json();
+  songs = await Promise.all(files.map(async (f) => (await fetch('out/' + f)).json()));
+  order = songs.map((s) => [Math.random(), s]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  const sel = document.getElementById('level');
+  for (const l of [...new Set(songs.map((s) => genInfo(s).level))].sort()) sel.append(new Option(l, l));
+  for (const id of ['reveal', 'level', 'fingers']) document.getElementById(id).onchange = render;
+  render();
+})().catch((e) => {
+  document.getElementById('list').innerHTML = `<p class="empty">Could not load tunes: ${e.message}. Run <code>node generate.js</code>, then <code>python -m http.server 8771 --directory tools/spikes/magenta</code>.</p>`;
+});
+</script>
+</body>
+</html>

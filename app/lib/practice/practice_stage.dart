@@ -7,6 +7,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show PlatformInt64Util;
 
 import '../l10n/app_localizations.dart';
+import '../audio/backing.dart';
 import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
@@ -192,7 +193,7 @@ class _PracticeStageState extends State<PracticeStage>
   bool _wasCountIn = false;
 
   /// Notes the app plays with the student in play-along (other hand + ACC).
-  List<NoteView> _companion = const [];
+  List<BackingNote> _backing = const [];
 
   /// Pre-listen: the app plays the passage first; input is ignored meanwhile.
   bool _demo = false;
@@ -242,11 +243,20 @@ class _PracticeStageState extends State<PracticeStage>
             if (tw != null) _scroll.value = tw.value;
           });
     if (_playAlong) {
-      _companion = companion(
-        songJson: widget.songJson,
-        hand: widget.stage.hand,
-      );
+      _backing = _companionNotes();
+      pianoSynth.loadParts({for (final n in _backing) n.part});
     }
+    pianoSynth.debugRegisterMixProbe((synth, leadSec) {
+      final notes = _playAlong ? _backing : _companionNotes();
+      scheduleBacking(
+        synth,
+        notes,
+        fromBeat: 0,
+        msPerBeat: _msPerBeat,
+        beatsPerBar: _beatsPerBar.round(),
+        inSec: (b) => leadSec + b * _msPerBeat / 1000,
+      );
+    }, _totalBeats * _msPerBeat / 1000 + 4);
     pianoSynth.load();
     if (widget.stage.preListen && widget.failedAttempts == 0) {
       _startDemo();
@@ -258,6 +268,14 @@ class _PracticeStageState extends State<PracticeStage>
     );
     _ticker = createTicker((_) => _tick())..start();
   }
+
+  List<BackingNote> _companionNotes() => [
+    for (final n in companion(
+      songJson: widget.songJson,
+      hand: widget.stage.hand,
+    ))
+      BackingNote(n.pitch, n.beat, n.beats, n.partName),
+  ];
 
   double get _totalBeats => _initialTargets.isEmpty
       ? 1
@@ -290,9 +308,9 @@ class _PracticeStageState extends State<PracticeStage>
     _startMs =
         widget.midi.now() + (_playAlong ? _countInBeats * _msPerBeat : 0);
     if (!_playAlong) return;
-    // Piano notes scheduled before the samples decode are silent, so wait for
+    // Notes scheduled before the samples decode are silent, so wait for
     // them; the count-in (>= 2.5 s) usually covers the first load.
-    pianoSynth.load().then((_) {
+    pianoSynth.loadParts({for (final n in _backing) n.part}).then((_) {
       if (!mounted || _finished || _paused) return;
       final nowBeat = (widget.midi.now() - _startMs) / _msPerBeat;
       _scheduleBacking(math.max(-_countInBeats, nowBeat));
@@ -319,38 +337,14 @@ class _PracticeStageState extends State<PracticeStage>
         pianoSynth.click(inSec(b), accent: b % _beatsPerBar == 0);
       }
     }
-    for (final n in _companion) {
-      if (n.beat < fromBeat) continue;
-      if (n.partName == 'DRUMS') {
-        pianoSynth.drum(n.pitch, inSec(n.beat));
-        continue;
-      }
-      if (n.partName == 'BASS') {
-        pianoSynth.bass(
-          n.pitch,
-          inSec(n.beat),
-          n.beats * _msPerBeat / 1000 * 0.9,
-          velocity: 90,
-        );
-        continue;
-      }
-      if (n.partName == 'CHOIR') {
-        pianoSynth.choir(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
-        continue;
-      }
-      if (n.partName == 'PAD') {
-        pianoSynth.pad(n.pitch, inSec(n.beat), n.beats * _msPerBeat / 1000);
-        continue;
-      }
-      pianoSynth.schedule(
-        n.pitch,
-        inSec(n.beat),
-        n.beats * _msPerBeat / 1000 * 0.95,
-        velocity: 62,
-        force: true,
-        part: n.partName == 'ACC' ? 'ACC' : 'piano',
-      );
-    }
+    scheduleBacking(
+      pianoSynth,
+      _backing,
+      fromBeat: fromBeat,
+      msPerBeat: _msPerBeat,
+      beatsPerBar: _beatsPerBar.round(),
+      inSec: inSec,
+    );
   }
 
   /// Flips the metronome; reschedules backing from the current beat so the
@@ -813,7 +807,8 @@ class _PracticeStageState extends State<PracticeStage>
                 tooltip: widget.showKeyboard
                     ? AppLocalizations.of(context).hideKeyboard
                     : AppLocalizations.of(context).showKeyboard,
-                onPressed: widget.onToggleKeyboard,
+                // The keyboard is hidden for the whole demo; a toggle then would do nothing.
+                onPressed: _demo ? null : widget.onToggleKeyboard,
                 icon: Icon(
                   widget.showKeyboard ? Icons.piano : Icons.piano_off,
                   color: StagePalette.text,
@@ -946,7 +941,7 @@ class _PracticeStageState extends State<PracticeStage>
                   },
                 ),
               ),
-              if (widget.showKeyboard)
+              if (widget.showKeyboard && !_demo)
                 SizedBox(
                   // Taller on big screens: about a quarter of the height.
                   height: (MediaQuery.sizeOf(context).height * 0.24).clamp(

@@ -209,3 +209,20 @@ def test_chinese_music_is_tagged_not_rejected():
     assert filters.pdmx_ok(row) == (True, "")
     meta = {"title": row["title"], "composer": row["composer_name"], "genres": row["genres"], "tags": row["tags"]}
     assert "chinese" in styles_for("pdmx", meta)
+
+
+def test_file_with_several_scores_is_rejected():
+    abc = "X:1\nT:A\nM:4/4\nL:1/4\nK:C\nC D E F|G4|]\n\nX:2\nT:B\nM:4/4\nL:1/4\nK:C\nE F G A|c4|]\n"
+    _, _, _, songs, errors = build.work(("nottingham", "t", "abc", abc, {}))
+    assert songs == [] and errors == ["N scores in one file"]
+
+
+def test_phrase_cut_never_mid_phrase():
+    stable = "C4:1"   # ends on the tonic: a phrase end
+    open_ = "D4:1"
+    bars = [{"RH": open_} for _ in range(70)]
+    for i in (39, 55):  # bars 40 and 56 end phrases
+        bars[i] = {"RH": stable}
+    song = {"time": "4/4", "key": "C", "bars": bars}
+    assert build.phrase_cut(song) == 56
+    assert build.phrase_cut({**song, "bars": [{"RH": open_} for _ in range(70)]}) is None

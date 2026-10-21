@@ -25,12 +25,12 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 - Clef and **play bar stay fixed** just after the clef (≈ 12% of the width); the **notes scroll** right to left (reference code: the notes container moves with song time, the rhythm line never moves). The bar's glow **pulses on every beat**.
 - The top progress bar advances with song time.
-- **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. A metronome toggle in the top bar (play-along only, default on, remembered per device) clicks every beat, with or without a companion; off keeps only the count-in. Toggling mid-song reschedules from the current beat. A count-in of whole bars, at least 2.5 s long, clicks before the start while the first note scrolls in from the right. Pause stops the sound; resume reschedules from the current beat.
+- **Companion:** the app plays the hand not being practised plus the song's `ACC` part through the synth. A metronome toggle in the top bar (play-along only, default on, remembered per device) clicks every beat (a recorded cross-stick, accented on beat 1; [D22](../DECISIONS.md)), with or without a companion; off keeps only the count-in. Toggling mid-song reschedules from the current beat. A count-in of whole bars, at least 2.5 s long, clicks before the start while the first note scrolls in from the right. Pause stops the sound; resume reschedules from the current beat.
 - Finger numbers above notes; hit notes turn **cyan**, missed notes **red**.
 
 ## Sound
 
-Sampled grand piano (FluidR3_GM via midi-js-soundfonts, MIT; `app/assets/piano/`), one sample every 3 semitones C2–C7, pitch-shifted in between, Web Audio on web. The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
+Sampled grand piano (Salamander Grand Piano V3, CC-BY 3.0; `app/assets/piano/`), one sample every 3 semitones C1–C8 with full decay, pitch-shifted in between, soft notes darker (velocity low-pass), Web Audio on web ([D22](../DECISIONS.md)). The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
 
 ## Pause
 

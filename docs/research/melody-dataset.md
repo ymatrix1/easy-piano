@@ -16,7 +16,7 @@ Question: how many usable training tunes do the corpora give, with what styles, 
 | PDMX | 254,077 | 38,895 | 8,749 | 34,922 / 1,989 / 1,984 | 1,000,788 |
 | **Total** | | **39,615** | **9,469** | | **1,016,605** |
 
-Tunes over 64 bars are cut to 64 (PDMX 6,043, Nottingham 4, Mutopia 3).
+Tunes over 64 bars were cut to 64 (PDMX 6,043, Nottingham 4, Mutopia 3). Builds after PR #41's follow-ups cut at a phrase end or reject instead, reject files with several scores and ties into another pitch, and accept mixed key-signature objects; this dataset (the one `base1` was trained on) predates them.
 
 ## Styles (PDMX; a tune can have several)
 

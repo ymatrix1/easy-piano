@@ -1,0 +1,103 @@
+{
+  "level": "e3",
+  "rules": "Treble C4-C5 with F#4/Bb4, eighth/quarter/dotted quarter/half, quarter/half rests, max leap 6th, end on C",
+  "tool_version": "1.23.1",
+  "tfjs": "2.8.6",
+  "backend": "cpu",
+  "node": "v24.6.0",
+  "temp": 1,
+  "n": 20,
+  "reject_n": 200,
+  "checkpoints": [
+    {
+      "checkpoint": "chord_pitches_improv",
+      "sha256": "f9a2b7a8623f819e89ba011523ce46166650a4cb8475f09a8785ae810fd04318",
+      "chords": [
+        "C",
+        "Am",
+        "Dm",
+        "G",
+        "C",
+        "F",
+        "G7",
+        "C"
+      ],
+      "load_ms": 620,
+      "masked_ms_per_tune": 455,
+      "masked_mean_score": 0.643,
+      "masked_best": [
+        {
+          "seed": 7,
+          "total": 0.736,
+          "stepwise": 0.7,
+          "repetition": 0.5,
+          "ending": 0.6,
+          "eighths": 0,
+          "repeatedNote": 0.11,
+          "distinct": 8,
+          "span": 12,
+          "restShare": 0
+        },
+        {
+          "seed": 3,
+          "total": 0.732,
+          "stepwise": 0.55,
+          "repetition": 0.5,
+          "ending": 1,
+          "eighths": 0,
+          "repeatedNote": 0.35,
+          "distinct": 6,
+          "span": 9,
+          "restShare": 0
+        },
+        {
+          "seed": 18,
+          "total": 0.731,
+          "stepwise": 0.9,
+          "repetition": 0,
+          "ending": 1,
+          "eighths": 0.05,
+          "repeatedNote": 0.48,
+          "distinct": 5,
+          "span": 7,
+          "restShare": 0
+        },
+        {
+          "seed": 6,
+          "total": 0.727,
+          "stepwise": 0.89,
+          "repetition": 0.25,
+          "ending": 0.6,
+          "eighths": 0.55,
+          "repeatedNote": 0.25,
+          "distinct": 7,
+          "span": 12,
+          "restShare": 0.06
+        },
+        {
+          "seed": 19,
+          "total": 0.7,
+          "stepwise": 0.86,
+          "repetition": 0.25,
+          "ending": 0.6,
+          "eighths": 0.07,
+          "repeatedNote": 0.5,
+          "distinct": 6,
+          "span": 11,
+          "restShare": 0
+        }
+      ],
+      "reject_ms_per_tune": 514,
+      "reject_accepted": 0,
+      "reject_n": 200,
+      "reject_violations": {
+        "duration": 163,
+        "ending": 159,
+        "pitch": 152,
+        "leap": 47,
+        "rest": 51,
+        "barline": 8
+      }
+    }
+  ]
+}
