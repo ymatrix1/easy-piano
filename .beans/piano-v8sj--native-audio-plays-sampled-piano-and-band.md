@@ -1,20 +1,24 @@
 ---
 # piano-v8sj
-title: Native audio plays sampled piano and band
+title: One Rust audio engine for all platforms (D30)
 status: todo
-type: task
+type: epic
 created_at: 2026-10-21T13:18:09Z
 updated_at: 2026-10-21T13:18:09Z
 ---
 
 ## Context
-Android/iOS/desktop use a silent PianoSynth stub; the D22 samples only play on web. Found in piano-k1d3 (D22). Blocked by: none.
+Android/iOS/desktop are silent (`piano_synth_stub.dart`); D22 sound lives only in the Web Audio graph. D30 (proposed): one Rust `audio/` engine for every platform, web via AudioWorklet, so web and phones sound identical. Blocked by: none.
 
 ## Higher Goal
-Realistic, properly credited sound on every platform.
+Same realistic sound on every platform, one audio clock (rule 7), memory that fits phones.
 
 ## Acceptance Criteria
-- [ ] Native PianoSynth plays app/assets/piano and app/assets/band with the same mix and expression
+- [ ] Stage 1: offline engine + CI parity test (child bean)
+- [ ] Stage 2: native output with measured latency (child bean)
+- [ ] Stage 3: web AudioWorklet replaces the Web Audio graph (child bean)
+- [ ] Blind A/B listen web vs native by the user
+- [ ] D30 accepted or revised by the user
 
 ## Out of Scope
-Anything else from D22.
+Menu SFX (stay synthesized), mic input, new instruments.

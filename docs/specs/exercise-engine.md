@@ -32,6 +32,24 @@ Reference: Simply Piano uses ~0.34 s MIDI / ~0.15 s mic total tolerance.
 - Default pass ratio 0.7. After every 2 failed attempts subtract 0.1 (floor 0.4). Matches proven reference behaviour.
 - After 3 fails offer Practice Mode: tempo 60%, wait-mode toggle.
 
+## Training mode
+
+Play-along stages run with `Settings::training` (the app turns it on for every play-along stage). Each critical section is graded as it ends, like the reference ([teardown](../research/simply-piano-teardown.md#play-along-error-feedback-and-training-mode)):
+
+| Step | Rule |
+|---|---|
+| Section threshold | `effective_threshold(pass_ratio, failed_attempts + section_fails)` |
+| Pass | All section notes judged and hits ≥ threshold × notes → `SectionEvent::Passed`, next section, `section_fails = 0` |
+| Early fail | Misses > (1 − threshold) × notes, even before the section ends |
+| Fail at full tempo | `section_fails += 1`, rewind to the section's first note; every `FAILS_BEFORE_PRACTICE` (2) failures the replay is a practice run (`intro` set) |
+| Practice run | Tempo × `PRACTICE_TEMPO` (0.75). Failed → practise again. Passed → `section_fails += 1`, replay the section at full tempo |
+
+`SectionEvent::Replay { beat, tempo, .. }` means the engine reset the section's targets and switched tempo; the caller restarts its clock one count-in before `beat` (the engine's clock resets). Slow runs count as assists: `assists` = lowest tempo used.
+
+## Play-along feedback
+
+`Session::take_feedback()` drains events in order: `Hit { target, delta_us, timing }` (`Timing::Early / OnTime / Late`, on time within ±`ON_TIME_US` = 120 ms), `Wrong { pitch, t_us }`, `Missed { target }`. `Frame::streak` counts chords hit in a row (a miss or wrong key resets it); the UI does not show it (the reference has none).
+
 ## Stars
 
 | Stars | Rule |
@@ -53,7 +71,9 @@ Matches the reference app (studied from its stage logic, not copied):
 ```
 Session::new(&song, Settings { mode, input, tempo, pass_ratio, failed_attempts, hand }) -> Session
 session.on_note(NoteEvent { pitch, on, t_us })
-session.tick(t_us) -> Frame { playhead_beat, cursor, hits, misses, wrong, done }
+session.tick(t_us) -> Frame { playhead_beat, cursor, hits, misses, wrong, done, hint_active, streak }
+session.take_feedback() -> Vec<Feedback>              // play-along error animations
+session.take_section_event() -> Option<SectionEvent>  // training mode
 session.result() -> StageResult { passed, stars, hit_ratio, wrong, mean_abs_timing_ms, sections, threshold, suggest_practice }
 session.end_us()   // audio time when the last window has closed
 ```

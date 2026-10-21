@@ -554,6 +554,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earn {need} stars from any of these songs ({have}/{need})'**
   String gateProgress(int need, int have);
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Early'**
+  String get early;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get late;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Slow practice'**
+  String get slowPractice;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s practise this part slower'**
+  String get slowPracticeIntro;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Try this part again'**
+  String get sectionTryAgain;
+
+  /// Play-along training / timing feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Now at full speed!'**
+  String get sectionFullSpeed;
+
+  /// No description provided for @micInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone'**
+  String get micInput;
+
+  /// No description provided for @micUseMidi.
+  ///
+  /// In en, this message translates to:
+  /// **'Use MIDI / screen keys'**
+  String get micUseMidi;
+
+  /// No description provided for @micExplainTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play with the microphone'**
+  String get micExplainTitle;
+
+  /// No description provided for @micExplainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy Piano listens to your piano through the microphone so you can play without a cable. Audio is analysed on this device and never recorded or sent. The app\'s own piano sound is muted while listening.'**
+  String get micExplainBody;
+
+  /// No description provided for @micAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone'**
+  String get micAllow;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @micDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access was blocked. Allow it in the browser\'s site settings and try again.'**
+  String get micDenied;
+
+  /// No description provided for @micUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone input is not available in this browser.'**
+  String get micUnavailable;
+
+  /// No description provided for @micCalibrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate'**
+  String get micCalibrate;
+
+  /// No description provided for @micCalibrateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate the microphone'**
+  String get micCalibrateTitle;
+
+  /// No description provided for @micCalibrateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Play any key each time the circle lights up.'**
+  String get micCalibrateBody;
+
+  /// No description provided for @micCalibrateRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'I didn\'t hear enough notes. Try again a little louder.'**
+  String get micCalibrateRetry;
+
+  /// No description provided for @micCalibrateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done: {ms} ms delay'**
+  String micCalibrateDone(int ms);
+
+  /// No description provided for @micListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening'**
+  String get micListening;
+
+  /// No description provided for @micDefaultDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Default microphone'**
+  String get micDefaultDevice;
+
+  /// No description provided for @micHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard: {note}'**
+  String micHeard(String note);
+
+  /// No description provided for @micTestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a key: the bar moves and the note shows here.'**
+  String get micTestHint;
+
+  /// No description provided for @micTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get micTurnOff;
+
+  /// 12 pitch-class names from C, comma-separated, in the locale's note naming.
+  ///
+  /// In en, this message translates to:
+  /// **'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B'**
+  String get micNoteNames;
+
+  /// No description provided for @micNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone found. Plug one in or pick another input.'**
+  String get micNotFound;
+
+  /// No description provided for @micBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone is in use by another app. Close it and try again.'**
+  String get micBusy;
+
+  /// No description provided for @micQuietTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Best in a quiet room: talking, typing or music nearby can be heard as notes.'**
+  String get micQuietTip;
 }
 
 class _AppLocalizationsDelegate

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
 
 import 'piano_synth.dart';
+import 'recording_synth.dart';
 
 PianoSynth createPianoSynth() => _WebPianoSynth();
 
@@ -628,6 +629,14 @@ class _WebPianoSynth implements PianoSynth {
     if (_offline != null || !Uri.base.queryParameters.containsKey('mixprobe')) {
       return;
     }
+    globalContext.setProperty(
+      'epDumpEvents'.toJS,
+      (() {
+        final rec = RecordingSynth();
+        schedule(rec, 0.5);
+        return jsonEncode({'durSec': durSec, 'events': rec.events}).toJS;
+      }).toJS,
+    );
     globalContext.setProperty(
       'epMeasureMix'.toJS,
       (() => _measureMix(

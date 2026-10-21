@@ -263,4 +263,101 @@ class AppLocalizationsFr extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Gagne $need étoiles avec n\'importe lesquels de ces morceaux ($have/$need)';
   }
+
+  @override
+  String get early => 'En avance';
+
+  @override
+  String get late => 'En retard';
+
+  @override
+  String get slowPractice => 'Pratique lente';
+
+  @override
+  String get slowPracticeIntro => 'Travaillons ce passage plus lentement';
+
+  @override
+  String get sectionTryAgain => 'Réessaie ce passage';
+
+  @override
+  String get sectionFullSpeed => 'Maintenant à pleine vitesse !';
+
+  @override
+  String get micInput => 'Microphone';
+
+  @override
+  String get micUseMidi => 'Utiliser MIDI / touches à l\'écran';
+
+  @override
+  String get micExplainTitle => 'Jouer avec le microphone';
+
+  @override
+  String get micExplainBody =>
+      'Easy Piano écoute votre piano par le microphone pour jouer sans câble. L\'audio est analysé sur cet appareil, jamais enregistré ni envoyé. Le son de piano de l\'app est coupé pendant l\'écoute.';
+
+  @override
+  String get micAllow => 'Autoriser le microphone';
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get micDenied =>
+      'L\'accès au microphone est bloqué. Autorisez-le dans les paramètres du site du navigateur, puis réessayez.';
+
+  @override
+  String get micUnavailable =>
+      'L\'entrée microphone n\'est pas disponible dans ce navigateur.';
+
+  @override
+  String get micCalibrate => 'Calibrer';
+
+  @override
+  String get micCalibrateTitle => 'Calibrer le microphone';
+
+  @override
+  String get micCalibrateBody =>
+      'Jouez une touche chaque fois que le cercle s\'allume.';
+
+  @override
+  String get micCalibrateRetry =>
+      'Je n\'ai pas entendu assez de notes. Réessayez un peu plus fort.';
+
+  @override
+  String micCalibrateDone(int ms) {
+    return 'Terminé : $ms ms de délai';
+  }
+
+  @override
+  String get micListening => 'Écoute';
+
+  @override
+  String get micDefaultDevice => 'Microphone par défaut';
+
+  @override
+  String micHeard(String note) {
+    return 'Entendu : $note';
+  }
+
+  @override
+  String get micTestHint =>
+      'Jouez une touche : la barre bouge et la note s\'affiche ici.';
+
+  @override
+  String get micTurnOff => 'Couper';
+
+  @override
+  String get micNoteNames => 'Do,Do♯,Ré,Ré♯,Mi,Fa,Fa♯,Sol,Sol♯,La,La♯,Si';
+
+  @override
+  String get micNotFound =>
+      'Aucun microphone trouvé. Branchez-en un ou choisissez une autre entrée.';
+
+  @override
+  String get micBusy =>
+      'Le microphone est utilisé par une autre app. Fermez-la et réessayez.';
+
+  @override
+  String get micQuietTip =>
+      'Idéal dans une pièce calme : voix, frappe au clavier ou musique proches peuvent être prises pour des notes.';
 }

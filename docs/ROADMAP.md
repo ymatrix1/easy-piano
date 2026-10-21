@@ -18,6 +18,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] Monorepo scaffold, CI (Flutter, Rust, content lint)
 - [x] Notation parser + JSON schemas + `content lint`
 - [x] Core session: wait + play_along, critical sections, stars
+- [x] Play-along error feedback and training mode (section replay, 75% practice runs)
 - [x] Practice studio: staff + keyboard with hit/miss colors, fingering, key hints, results (`app/lib/practice/`)
 - [ ] Falling notes view
 - [x] Web only: Web MIDI + touch input; sampled piano synth (Web Audio), sound toggle, pre-listen, play-along companion + metronome
@@ -34,7 +35,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 3: Mic and library
 
-- [ ] Mic monophonic detection + calibration
+- [x] Mic detection (single notes + chords) + calibration, web ([input](specs/input.md), [research](research/mic-input.md)); native capture pending
 - [ ] MusicXML/MIDI importers; song library with 30 PD pieces
 - [ ] Daily workout, streaks, daily goal
 

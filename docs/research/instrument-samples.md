@@ -78,6 +78,21 @@ The mix is about 9 dB louder than before (it was very quiet) with peaks held und
 
 The seam was already click-free by this measure; the crossfade is a safety margin for other pitches. Drum hits added: 7 files, +54 KB (band now 1.01 MB, total audio 2.92 MB).
 
+## Rust engine parity (D30 stage 1, 2026-10-21)
+
+`audio/` renders the same Ode to Joy events the web app schedules (`audio/tests/fixtures/ode_to_joy_events.csv`, exported with `?mixprobe` + `window.epDumpEvents()`) and compares with the Web Audio levels for those events (`ode_to_joy_web_levels.csv`). `cargo test` in `audio/`.
+
+| Part | Rust RMS | Web RMS | Rust vs ACC | Web vs ACC |
+|---|---|---|---|---|
+| `ACC` | -20.39 | -21.40 | 0 | 0 |
+| `BASS` | -24.50 | -26.59 | -4.11 | -5.19 |
+| `DRUMS` | -27.75 | -29.62 | -7.36 | -8.22 |
+| `PAD` | -34.45 | -36.42 | -14.06 | -15.02 |
+| `CHOIR` | -33.58 | -35.39 | -13.19 | -13.99 |
+| Mix RMS / peak | -18.96 / -0.82 | -19.84 / -3.34 | | |
+
+Worst balance difference 1.08 dB (gate 2 dB). The Rust limiter has no look-ahead, so peaks run about 2.5 dB hotter than Web Audio's (still under 0 dBFS, soft clipper behind it). Decoded sample memory: web holds 183 MB (float32, full length); the engine holds 66 MB (16-bit, tails trimmed at -60 dB or 10 s).
+
 ## Implications
 
 - Ship Salamander piano + FluidR3 band + Virtuosity drums; supersede the synth part of D14 (D22, proposed).

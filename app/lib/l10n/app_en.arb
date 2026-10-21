@@ -126,5 +126,68 @@
         "type": "int"
       }
     }
-  }
+  },
+  "early": "Early",
+  "@early": {
+    "description": "Play-along training / timing feedback"
+  },
+  "late": "Late",
+  "@late": {
+    "description": "Play-along training / timing feedback"
+  },
+  "slowPractice": "Slow practice",
+  "@slowPractice": {
+    "description": "Play-along training / timing feedback"
+  },
+  "slowPracticeIntro": "Let's practise this part slower",
+  "@slowPracticeIntro": {
+    "description": "Play-along training / timing feedback"
+  },
+  "sectionTryAgain": "Try this part again",
+  "@sectionTryAgain": {
+    "description": "Play-along training / timing feedback"
+  },
+  "sectionFullSpeed": "Now at full speed!",
+  "@sectionFullSpeed": {
+    "description": "Play-along training / timing feedback"
+  },
+  "micInput": "Microphone",
+  "micUseMidi": "Use MIDI / screen keys",
+  "micExplainTitle": "Play with the microphone",
+  "micExplainBody": "Easy Piano listens to your piano through the microphone so you can play without a cable. Audio is analysed on this device and never recorded or sent. The app's own piano sound is muted while listening.",
+  "micAllow": "Allow microphone",
+  "cancel": "Cancel",
+  "micDenied": "Microphone access was blocked. Allow it in the browser's site settings and try again.",
+  "micUnavailable": "Microphone input is not available in this browser.",
+  "micCalibrate": "Calibrate",
+  "micCalibrateTitle": "Calibrate the microphone",
+  "micCalibrateBody": "Play any key each time the circle lights up.",
+  "micCalibrateRetry": "I didn't hear enough notes. Try again a little louder.",
+  "micCalibrateDone": "Done: {ms} ms delay",
+  "@micCalibrateDone": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "micListening": "Listening",
+  "micDefaultDevice": "Default microphone",
+  "micHeard": "Heard: {note}",
+  "@micHeard": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "micTestHint": "Play a key: the bar moves and the note shows here.",
+  "micTurnOff": "Turn off",
+  "micNoteNames": "C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B",
+  "@micNoteNames": {
+    "description": "12 pitch-class names from C, comma-separated, in the locale's note naming."
+  },
+  "micNotFound": "No microphone found. Plug one in or pick another input.",
+  "micBusy": "The microphone is in use by another app. Close it and try again.",
+  "micQuietTip": "Best in a quiet room: talking, typing or music nearby can be heard as notes."
 }

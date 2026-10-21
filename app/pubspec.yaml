@@ -69,14 +69,12 @@ flutter:
   uses-material-design: true
 
   fonts:
-    - family: Bravura
-      fonts:
-        - asset: assets/fonts/Bravura.otf
     - family: Audiowide
       fonts:
         - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
 
   assets:
+    - assets/fonts/Bravura.otf # lazy, see lib/ui/staff/music_font.dart
     - assets/piano/
     - assets/band/bass/
     - assets/band/strings/
