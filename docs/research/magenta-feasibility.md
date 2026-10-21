@@ -63,7 +63,22 @@ Rules: C4–C5 plus F#4 and Bb4, eighth / quarter / dotted quarter / half, quart
 | `melody_rnn` | 1141 | 20/20 | 0.598 | 0.828 | 1492 | 0/200 |
 | `chord_pitches_improv` | 627 | 20/20 | 0.562 | 0.672 | 665 | 0/200 |
 
-Seen in the viewer: 3 of the 15 kept e3 tunes collapse into a loop (basic_rnn seed 17, the top basic_rnn tune, is C4 + quarter rest eight bars long; basic_rnn 14 and melody_rnn 19 are close). The model loops, and the ranking rewards it because exact bar repetition scores full marks. A real ranker needs a pitch-variety / range term and a cap on rests. The 15 written e3 songs use 25 F#, 18 Bb, 22 rests and 8 dotted quarters, and pass `content lint` apart from the same `source_url` error. Fingering: each bar takes the first five-finger position (C, G, F, D) that covers its notes, else spreads its span over 1–5; good enough to read, not teaching-grade. Rerunning `--level e1` reproduced the e1 table's scores exactly (same seeds); ms/tune varied by up to 0.5 s between runs.
+Seen in the viewer: 3 of the 15 kept e3 tunes collapse into a loop (basic_rnn seed 17, the top basic_rnn tune, is C4 + quarter rest eight bars long; basic_rnn 14 and melody_rnn 19 are close). The model loops, and the ranking rewards it because exact bar repetition scores full marks. Fixed in ranker v2 (below). The 15 written e3 songs (v1) use 25 F#, 18 Bb, 22 rests and 8 dotted quarters, and pass `content lint` apart from the same `source_url` error. Fingering: each bar takes the first five-finger position (C, G, F, D) that covers its notes, else spreads its span over 1–5; good enough to read, not teaching-grade. Rerunning `--level e1` reproduced the e1 table's scores exactly (same seeds); ms/tune varied by up to 0.5 s between runs.
+
+### Ranker v2: variety, range, rest cap
+
+Score weights now: 0.35 stepwise, 0.2 repetition, 0.15 ending, 0.1 eighth share, **0.2 variety** (half distinct pitches out of 5, half span out of a fifth), minus the repeated-note penalty and **2 × rest share above 15 %**. Tunes with fewer than 4 distinct pitches or a span under a fourth score 0. Masked sampling is unchanged (same seeds give the same tunes); only the ranking and so the kept top 5 change. Score scales differ from v1, so the v1 score columns above aren't comparable.
+
+| Level | Checkpoint | Mean score (20) | Best | Kept 5: distinct pitches | Kept 5: span (semitones) | Kept 5: max rest share |
+|---|---|---|---|---|---|---|
+| e1 | `basic_rnn` | 0.474 | 0.830 | 4–5 | 7 | 0 |
+| e1 | `melody_rnn` | 0.501 | 0.828 | 4–5 | 5–7 | 0 |
+| e1 | `chord_pitches_improv` | 0.689 | 0.847 | 5 | 7 | 0 |
+| e3 | `basic_rnn` | 0.529 | 0.770 | 5–6 | 7–12 | 0 |
+| e3 | `melody_rnn` | 0.452 | 0.830 | 4–9 | 5–12 | 0.03 |
+| e3 | `chord_pitches_improv` | 0.643 | 0.736 | 5–8 | 7–12 | 0.06 |
+
+In the viewer, none of the 30 kept tunes loops any more (each uses at least 7 staff positions, at most 2 rests). ImprovRNN has the highest mean score at both levels.
 
 ### Viewer
 

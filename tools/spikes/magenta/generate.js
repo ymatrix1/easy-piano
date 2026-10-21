@@ -214,8 +214,21 @@ function score(all) {
   const pen = notes[notes.length - 2].pitch;
   const ending = [62, 64, 71].includes(pen) ? 1 : pen === 67 ? 0.6 : 0.3;
   const eighths = notes.filter((n) => n.dur === 2).length / notes.length;
-  const total = 0.45 * stepwise + 0.25 * repetition + 0.2 * ending + 0.1 * (1 - Math.max(0, eighths - 0.3)) - 0.2 * Math.max(0, repeatedNote - 0.3);
-  return { total: +total.toFixed(3), stepwise: +stepwise.toFixed(2), repetition, ending, eighths: +eighths.toFixed(2), repeatedNote: +repeatedNote.toFixed(2) };
+  // Variety: distinct pitches (out of 5 wanted) and span (a fifth or more wanted), so loops on one note lose.
+  const distinct = new Set(notes.map((n) => n.pitch)).size;
+  const span = Math.max(...notes.map((n) => n.pitch)) - Math.min(...notes.map((n) => n.pitch));
+  const variety = 0.5 * Math.min(1, distinct / 5) + 0.5 * Math.min(1, span / 7);
+  // Rest cap: up to 15 % of the tune may be silent; beyond that, a steep penalty.
+  const restShare = all.filter((n) => n.pitch === null).reduce((s, n) => s + n.dur, 0) / TOTAL;
+  let total =
+    0.35 * stepwise + 0.2 * repetition + 0.15 * ending + 0.1 * (1 - Math.max(0, eighths - 0.3)) + 0.2 * variety -
+    0.2 * Math.max(0, repeatedNote - 0.3) - 2 * Math.max(0, restShare - 0.15);
+  // Hard floor: fewer than 4 distinct pitches or a span under a fourth is a loop, not a tune.
+  if (distinct < 4 || span < 5) total = 0;
+  return {
+    total: +total.toFixed(3), stepwise: +stepwise.toFixed(2), repetition, ending, eighths: +eighths.toFixed(2),
+    repeatedNote: +repeatedNote.toFixed(2), distinct, span, restShare: +restShare.toFixed(2),
+  };
 }
 
 // Five-finger positions, tried in order; a bar takes the first one that covers all its notes.
