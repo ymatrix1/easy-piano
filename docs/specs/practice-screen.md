@@ -30,7 +30,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 ## Sound
 
-Sampled grand piano (FluidR3_GM via midi-js-soundfonts, MIT; `app/assets/piano/`), one sample every 3 semitones C2–C7, pitch-shifted in between, Web Audio on web. The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
+Sampled grand piano (Salamander Grand Piano V3, CC-BY 3.0; `app/assets/piano/`), one sample every 3 semitones C1–C8 with full decay, pitch-shifted in between, soft notes darker (velocity low-pass), Web Audio on web ([D22](../DECISIONS.md)). The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
 
 ## Pause
 
