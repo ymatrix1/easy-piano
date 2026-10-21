@@ -9,6 +9,10 @@ abstract class PianoSynth {
   /// Whether the app plays piano sound. Off for digital pianos with their own
   /// speakers; on for MIDI controllers and the on-screen keyboard.
   bool get enabled;
+
+  /// Whether the piano samples are decoded (menu sounds fall back to a
+  /// synth until then).
+  bool get ready;
   set enabled(bool value);
 
   /// Whether play-along clicks every beat, also under a companion part.

@@ -85,7 +85,7 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 
 ## Sound
 
-`app/lib/ui/game/sfx.dart`: every sound is synthesised at runtime (oscillators and filtered noise; no audio files, nothing to license). Web uses Web Audio (`sfx_web.dart`); other platforms are silent until the native audio engine lands (`sfx_stub.dart`). Kinds: hover, tap, confirm, open, close, tab, locked, star ×3, win, lose. Browsers start audio only after a user gesture, so hovers before the first click are silent. Profile → Settings → Sound effects mutes them (in memory). Menu sounds never touch the practice audio clock (rule 7).
+`app/lib/ui/game/sfx.dart`: musical cues (tap, tab, confirm, locked, stars, win, lose) are short phrases on the app's sampled piano (Salamander, [D22](../DECISIONS.md)) through their own `sfx` mix bus; hover, open and close are filtered-noise ticks and whooshes. Until the piano samples decode, a small oscillator synth stands in. Web uses Web Audio (`sfx_web.dart`); other platforms are silent until the native audio engine lands (`sfx_stub.dart`). Kinds: hover, tap, confirm, open, close, tab, locked, star ×3, win, lose. Browsers start audio only after a user gesture, so hovers before the first click are silent. Profile → Settings → Sound effects mutes them (in memory). Menu sounds never touch the practice audio clock (rule 7).
 
 ## Motion rules
 
@@ -101,7 +101,7 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 - [x] Content: `sections` and planned modules in `courses.json`, linted
 - [x] Info stage, result screen and pause bar use the kit
 - [x] Bundled OFL display font (Audiowide)
-- [x] Hover / click / idle animations and synthesised menu sounds with a mute setting
+- [x] Hover / click / idle animations and menu sounds (sampled piano cues) with a mute setting
 - [ ] Practice screen palette aligned with the menu (practice-screen spec)
 - [ ] Practice modes beyond free play; persisted progress (settings/progress store)
 - [x] Localised UI strings (gen-l10n, [i18n spec](i18n.md))

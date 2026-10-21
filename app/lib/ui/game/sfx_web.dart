@@ -4,10 +4,13 @@ import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
+import '../../audio/piano_synth.dart';
 import 'sfx.dart';
 
-/// Web Audio synth for menu sounds. The context is created on first use and
-/// resumed on user gestures (browsers keep it suspended until then).
+/// Menu sounds on web. Musical cues (taps, confirms, stars, win/lose) are
+/// short phrases on the app's sampled piano, so menus sound like the same
+/// instrument as the lessons (D22). Whooshes are filtered noise. Until the
+/// piano samples decode, a small Web Audio synth stands in.
 class SfxPlayer {
   web.AudioContext? _ctx;
   web.AudioBuffer? _noise;
@@ -33,12 +36,14 @@ class SfxPlayer {
   }
 
   void play(SfxKind kind) {
+    pianoSynth.load();
+    if (pianoSynth.ready && _piano(kind)) return;
     final ctx = _c;
     if (ctx.state != 'running') return; // no gesture yet: stay silent
     final t = ctx.currentTime + 0.005;
     switch (kind) {
       case SfxKind.hover:
-        _tone(t, 2200, 2600, 0.035, 0.018, 'sine');
+        _noiseBurst(t, 0.03, 0.025, 'bandpass', 5000, 7000);
       case SfxKind.tap:
         _tone(t, 520, 210, 0.08, 0.13, 'triangle');
         _noiseBurst(t, 0.012, 0.05, 'highpass', 3000, 3000);
@@ -70,6 +75,47 @@ class SfxPlayer {
         _tone(t, 392, 380, 0.16, 0.08, 'triangle');
         _tone(t + 0.14, 311, 290, 0.26, 0.08, 'triangle');
     }
+  }
+
+  /// Piano phrase for [kind]: (pitch, delay s, duration s, velocity).
+  /// Returns false for sounds that stay synthesized (hover and whooshes).
+  bool _piano(SfxKind kind) {
+    final notes = switch (kind) {
+      SfxKind.tap => const [(88, 0.0, 0.12, 38)],
+      SfxKind.tab => const [(84, 0.0, 0.15, 44), (91, 0.05, 0.2, 36)],
+      SfxKind.confirm => const [(79, 0.0, 0.2, 60), (84, 0.07, 0.4, 70)],
+      SfxKind.locked => const [(38, 0.0, 0.25, 70), (39, 0.0, 0.25, 62)],
+      SfxKind.star1 => const [(84, 0.0, 1.2, 82), (72, 0.0, 1.2, 50)],
+      SfxKind.star2 => const [(88, 0.0, 1.2, 84), (76, 0.0, 1.2, 52)],
+      SfxKind.star3 => const [(91, 0.0, 1.4, 88), (79, 0.0, 1.4, 56)],
+      SfxKind.win => const [
+        (72, 0.0, 0.3, 70),
+        (76, 0.09, 0.3, 74),
+        (79, 0.18, 0.3, 78),
+        (84, 0.27, 1.4, 90),
+        (60, 0.27, 1.4, 62),
+        (67, 0.27, 1.4, 58),
+        (76, 0.27, 1.4, 64),
+      ],
+      SfxKind.lose => const [
+        (67, 0.0, 0.3, 60),
+        (63, 0.16, 0.8, 54),
+        (55, 0.16, 0.8, 44),
+      ],
+      SfxKind.hover || SfxKind.open || SfxKind.close => null,
+    };
+    if (notes == null) return false;
+    for (final (pitch, delay, dur, vel) in notes) {
+      pianoSynth.schedule(
+        pitch,
+        delay,
+        dur,
+        velocity: vel,
+        force: true,
+        part: 'sfx',
+      );
+    }
+    return true;
   }
 
   /// Oscillator with an exponential pitch glide and a fast attack, exp decay.

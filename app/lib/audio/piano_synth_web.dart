@@ -101,6 +101,9 @@ class _WebPianoSynth implements PianoSynth {
   final _scheduled = <_Voice>[];
 
   @override
+  bool get ready => _samples['piano']?.isNotEmpty ?? false;
+
+  @override
   bool get enabled {
     try {
       return web.window.localStorage.getItem(_prefKey) != 'off';
@@ -480,6 +483,7 @@ class _WebPianoSynth implements PianoSynth {
   /// (docs/specs/content-format.md). `live` is the learner's own keys.
   static const _defaultLevels = {
     'live': 1.0,
+    'sfx': 0.6,
     'piano': 1.0,
     'ACC': 1.0,
     'DRUMS': 0.19,
@@ -491,6 +495,7 @@ class _WebPianoSynth implements PianoSynth {
   /// Reverb send per part: pads and voices sit further back than drums.
   static const _reverbSends = {
     'live': 0.12,
+    'sfx': 0.22,
     'piano': 0.14,
     'ACC': 0.16,
     'DRUMS': 0.08,

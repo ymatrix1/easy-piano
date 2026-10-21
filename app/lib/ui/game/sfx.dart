@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 import 'sfx_stub.dart' if (dart.library.js_interop) 'sfx_web.dart' as impl;
 
-/// Menu sound effects. All sounds are synthesised at runtime (no audio
-/// files), so they are license-clean and weigh nothing. Web uses Web Audio;
+/// Menu sound effects: piano cues on the app's sampled piano, noise
+/// whooshes, and a synth fallback while samples load. Web uses Web Audio;
 /// other platforms are silent until the native audio engine lands.
 /// See docs/specs/visual-style.md.
 enum SfxKind {
