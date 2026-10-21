@@ -11,10 +11,12 @@ chord size; no ties, no fingering (the arranger fingers later). Required
 patterns and finger spans are not masked: the rubric filters them (deviation
 recorded in docs/specs/melody-model.md).
 
-Both gates fail closed: candidates are written as song JSON (D17 fields) and must
-(1) get a result from `content check` and pass the rubric, then (2) pass
-`content similar` against our songs and the training-set export
-(`python -m melody_model.simcorpus`). Any tool failure or missing result aborts.
+Candidates are written as song JSON (D17 fields) and must get a result from
+`content check` and pass the rubric. `content similar` then runs against our
+songs and the training-set export (`python -m melody_model.simcorpus`); for now
+it only reports matches (D27, proposed: user, 2026-10-21, "lets not block for
+now and decide later"); `--block-similar` drops them. Both tools fail closed:
+any tool failure or missing result aborts.
 Kept tunes are ranked by mean log-probability with a bonus for ending on the tonic.
 """
 
@@ -330,6 +332,11 @@ def main(argv):
     ap.add_argument(
         "--source", default="own", help="SRC token (the model always saw one in training); 'none' omits it"
     )
+    ap.add_argument(
+        "--block-similar",
+        action="store_true",
+        help="drop tunes the similarity check flags (off for now, D27)",
+    )
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
@@ -380,16 +387,22 @@ def main(argv):
     errors = rubric_gate(cli, args.node, [c[0] for c in cands])
     passing = [(f, s_, sc) for f, s_, sc in cands if not errors[str(f)]]
     similar = similarity_gate(cli, [f for f, _, _ in passing])
-    kept = [(f, s_, sc + (0.5 if ends_on_tonic(s_) else 0)) for f, s_, sc in passing if not similar[s_["id"]]]
+    kept = [
+        (f, s_, sc + (0.5 if ends_on_tonic(s_) else 0))
+        for f, s_, sc in passing
+        if not (args.block_similar and similar[s_["id"]])
+    ]
     kept.sort(key=lambda x: -x[2])
     report = {
         "node": args.node,
         "run": args.run,
         "candidates": len(cands),
         "rubric_pass": len(passing),
-        "similarity_pass": len(kept),
+        "similarity_blocking": args.block_similar,
         "similarity_threshold": SIM_THRESHOLD,
+        "similar_count": sum(similar.values()),
         "kept": [str(f.name) for f, _, _ in kept[: args.keep]],
+        "kept_flagged_similar": [f.name for f, s_, _ in kept[: args.keep] if similar[s_["id"]]],
         "errors": {Path(k).name: v for k, v in errors.items() if v},
         "similar": sorted(i for i, flag in similar.items() if flag),
     }

@@ -50,8 +50,8 @@ def patterns_of(song: dict) -> list[dict]:
     if "RH" in hands and "LH" in hands:
         for rb, lb in zip(hands["RH"], hands["LH"]):
             r = {t for t, e in _onsets(rb) if not e.is_rest}
-            left = {t for t, e in _onsets(lb) if not e.is_rest}
-            if r & left:
+            lh = {t for t, e in _onsets(lb) if not e.is_rest}
+            if r & lh:
                 out.append({"hands_together": True})
                 break
     for hand, bars in hands.items():

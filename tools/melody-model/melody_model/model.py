@@ -113,10 +113,10 @@ class CompoundGPT(nn.Module):
         logits = self.heads_logits(self.hidden(x), y)
         losses = []
         for i, lg in enumerate(logits):
-            loss = F.cross_entropy(
+            per_pos = F.cross_entropy(
                 lg.float().reshape(-1, lg.shape[-1]), y[..., i].reshape(-1), reduction="none"
             )
-            losses.append((loss * mask.reshape(-1)).sum() / mask.sum().clamp(min=1))
+            losses.append((per_pos * mask.reshape(-1)).sum() / mask.sum().clamp(min=1))
         return sum(losses), losses
 
     def n_params(self) -> int:

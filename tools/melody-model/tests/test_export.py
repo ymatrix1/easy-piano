@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from conftest import need
 
-torch = pytest.importorskip("torch")  # train extra; CI installs the base deps only
+torch = pytest.importorskip("torch")  # the `train` extra; CI installs neither torch nor the `export` extra
 
 from melody_model.model import CompoundGPT, Config  # noqa: E402
 from melody_model.tokenizer import FIELDS, encode_song  # noqa: E402

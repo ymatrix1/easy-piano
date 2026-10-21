@@ -124,6 +124,7 @@ Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers
 ## Browser export (`melody_model/export.py`, `web/`, step 5)
 
 ```
+uv sync --extra train --extra export          # torch + onnx/onnxruntime 1.30.0
 python -m melody_model.export --run base1      # -> tools/melody-model/web/model/ (git-ignored)
 python tools/melody-model/web/fetch_ort.py     # onnxruntime-web 1.30.0 -> web/vendor/ (git-ignored, sha256-pinned)
 python tools/melody-model/web/serve.py         # http://localhost:8780/ (COOP/COEP: needed for wasm threads)
@@ -163,7 +164,7 @@ python -m melody_model.generate --run base1 --node essentials-1/rests -n 16 --ke
 - Masked decoding at every step: grammar (plan triples per bar, `PLAN_END`, `BAR`, hands in order, events, `END`), taught pitches per hand, no leap over the taught interval, taught durations that still fit the bar, chord size ≤ taught polyphony with rising chord notes; no ties, no fingering (the arranger fingers later).
 - Candidates become song JSON with D17 fields (`source: generated`, `license: CC0-1.0`, `generator.method: melody-model`, `spec_node`). Two gates, both **fail closed** (a tool error, missing output or a candidate without a result aborts the run):
   1. Rubric: `content check <content> <course/node> <files>` (`core/src/rubric.rs`); also proves each file parses as a `Song`.
-  2. Similarity: `content similar <files> --corpus content/songs --corpus data/melody/similarity-corpus [--corpus references/melody-corpus] --threshold 0.5`. The corpus is every dataset tune exported by `python -m melody_model.simcorpus` (39,615 songs; one check of a node's candidates takes ~3 min on this machine).
+  2. Similarity: `content similar <files> --corpus content/songs --corpus data/melody/similarity-corpus [--corpus references/melody-corpus] --threshold 0.5`. **Report-only for now** (D27, proposed; user, 2026-10-21: "lets not block for now and decide later"): flagged ids go to `report.json` (`similar`, `kept_flagged_similar`); `--block-similar` drops them. At this corpus size the 0.5 threshold flags every simple tune (short low-information fragments score 1.00), so it needs calibration before it can block. The corpus is every dataset tune exported by `python -m melody_model.simcorpus` (39,615 songs; one check of a node's candidates takes ~3 min on this machine).
 - Kept tunes are ranked by mean log-probability plus a bonus for ending on the tonic. Sampling must reach `END` (no truncated candidates); the duration head is conditioned on the pitch field exactly as in training (`<none>` for rests).
 - `report.json` per run: candidates, rubric passes, similarity passes, kept files, rubric errors, ids rejected as similar.
 - The content CLI is found via `$CONTENT_CLI`, a built `tools/content-cli/target/{release,debug}/content`, or `cargo run`.
