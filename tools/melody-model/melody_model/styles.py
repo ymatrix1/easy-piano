@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import re
 
+from .filters import is_chinese
+
 # PDMX `genres` values -> styles
 PDMX_GENRE = {
     "classical": "classical", "folk": "folk", "religiousmusic": "religious", "worldmusic": "world",
@@ -49,6 +51,9 @@ def styles_for(corpus: str, meta: dict) -> list[str]:
     for style, rx in _KW:
         if rx.search(text):
             out.add(style)
+    if is_chinese([meta.get(k) or "" for k in ("title", "composer", "arranger")],
+                  " ".join(str(meta.get(k) or "") for k in ("tags", "genres", "groups"))):
+        out.add("chinese")
     for s in meta.get("styles", []):  # local datasets may state styles
         out.add(s)
     return sorted(out)

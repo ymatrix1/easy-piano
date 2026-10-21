@@ -52,12 +52,9 @@ def pdmx_flags(row: dict) -> list[str]:
 
 
 def pdmx_ok(row: dict) -> tuple[bool, str]:
-    """Hard rejects: duplicates, Chinese music, length. Licence conflicts are flagged (pdmx_flags)."""
+    """Hard rejects: duplicates, length. Licence conflicts are flagged (pdmx_flags)."""
     if row["subset:deduplicated"] != "True":
         return False, "pdmx duplicate"
-    if is_chinese([row.get(k, "") for k in ("title", "song_name", "subtitle", "composer_name", "artist_name")],
-                  " ".join(row.get(k, "") for k in ("tags", "genres", "groups"))):
-        return False, "chinese music (user rule)"
     try:
         bars = int(float(row["song_length.bars"]))
     except ValueError:
@@ -132,7 +129,7 @@ def split_of(corpus: str, tune_id: str) -> str:
     return "train" if h < 90 else ("valid" if h < 95 else "test")
 
 
-# --- Chinese music (user rule, 2026-10-20: "i just dont want chinese music") --------------
+# --- Chinese music: tagged STYLE_chinese so generation can avoid it (user, 2026-10-20) ------
 HAN = re.compile("[㐀-䶿一-鿿豈-﫿]")
 KANA = re.compile("[぀-ヿ]")  # Japanese titles mix kanji with kana; Japanese music is allowed
 CHINESE_TAGS = re.compile(r"\b(chinese\w*|china|c-?pop|mandopop|cantopop|mandarin|cantonese|guzheng|erhu|pipa|dizi|guqin|"

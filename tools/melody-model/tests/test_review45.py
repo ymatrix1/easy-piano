@@ -198,3 +198,14 @@ def test_licence_conflict_is_flagged_not_rejected():
            "song_name": "NA", "subtitle": "NA", "song_length.bars": "32"}
     assert filters.pdmx_ok(row) == (True, "")
     assert filters.pdmx_flags(row) == ["licence-conflict"]
+
+
+def test_chinese_music_is_tagged_not_rejected():
+    from melody_model.styles import styles_for
+    row = {"subset:no_license_conflict": "True", "subset:deduplicated": "True", "genres": "worldmusic",
+           "is_original": "False", "composer_name": "Teresa Teng", "artist_name": "NA",
+           "title": "The Moon Represents My Heart", "song_name": "NA", "subtitle": "NA", "song_length.bars": "32",
+           "tags": "chinese-ballad", "groups": "NA"}
+    assert filters.pdmx_ok(row) == (True, "")
+    meta = {"title": row["title"], "composer": row["composer_name"], "genres": row["genres"], "tags": row["tags"]}
+    assert "chinese" in styles_for("pdmx", meta)

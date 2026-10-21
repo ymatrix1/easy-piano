@@ -37,7 +37,7 @@ Compound steps: each step is `(kind, pitch, dur, finger)`. Fields that do not ap
 
 | Field | Values | Size |
 |---|---|---|
-| kind | structure, spec, style, pattern, plan, FIM tokens (below) | 180 |
+| kind | structure, spec, style, pattern, plan, FIM tokens (below) | 181 |
 | pitch | spelled `C0`…`B8` with `''`, `#`, `b` | 190 |
 | dur | the 13 durations above | 14 |
 | finger | 1–5 | 6 |
@@ -53,7 +53,7 @@ END
 ```
 
 - Event: `NOTE(pitch, dur, finger?)`; chord = `NOTE` then `CHORD(pitch, finger?)` per extra pitch (same onset, no dur); `REST(dur)`; `TIE` after a note's steps = tied into the next note (`{tie}` in song JSON).
-- Style (`styles.py`): `STYLE_classical|folk|religious|world|children|pop|rock|soundtrack|game|jazz|electronic`, several allowed, sorted. From corpus (NMD → folk, own → children, Mutopia style) and PDMX genres, tags, groups and title keywords (e.g. zelda → game, anime → soundtrack). Free-text tags never enter the vocab. Training drops them at random so the model also runs without; generation picks the styles the app allows.
+- Style (`styles.py`): `STYLE_classical|folk|religious|world|children|pop|rock|soundtrack|game|jazz|electronic|chinese`, several allowed, sorted. From corpus (NMD → folk, own → children, Mutopia style) and PDMX genres, tags, groups and title keywords (e.g. zelda → game, anime → soundtrack). Free-text tags never enter the vocab. Training drops them at random so the model also runs without; generation picks the styles the app allows.
 - Source: `SRC_own|nottingham|mutopia|pdmx|local`; training only (lets the model separate corpus habits), omitted at generation.
 - Pattern (skill-spec `required`, [skill-specs.md](skill-specs.md)): `PAT` then one step per key in fixed order: `PAT_rhythm(dur)`, `PAT_interval_min_2…8`, `PAT_accidental(pitch class at octave 4)`, `PAT_pitch(pitch)`, `PAT_hand_RH|LH`, `PAT_share_25|50|75|100` (`min_bar_share` rounded up), `PAT_rest`, `PAT_chord`, `PAT_hands_together`. A test encodes every pattern in `content/skill-specs/*.json`.
 - Plan: one triple per bar, bar count = `BARS_n`. `SEC_A…H`: same letter = same or near-same bar (rhythm equal and ≥ half the intervals equal; letters after H fold into H). `CAD_STABLE`: last melody note is in the tonic triad, else `CAD_OPEN`. `CON_UP|DOWN|FLAT`: last minus first melody pitch, `FLAT` within ±2 semitones (`labels.py`).
@@ -93,7 +93,7 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 - `flags` (D21): PDMX clean-data risks (`licence-conflict`, `genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset. Licence-conflict scores (the file's internal licence disagrees with the public tag) are included, flagged (user, 2026-10-20).
 - `styles`: style labels (see Tokens).
 - Flagged tunes **are** used in training (D21; user, 2026-10-20: "no i want to use the flagged tunes"). Known risk: weights may memorise copyrighted melodies. Flags and provenance let any corpus or flag be dropped and the model retrained.
-- **No Chinese music** (user rule, 2026-10-20): hard reject in every corpus by metadata (`filters.is_chinese`): Chinese tags, Han script without kana (after repairing PDMX mojibake), Chinese instrument/genre words, known Chinese artists. Errs toward excluding; counted as `reject: chinese music (user rule)`. Local datasets must not register Chinese music.
+- **Chinese music** is included and tagged `STYLE_chinese` (user, 2026-10-20, on the agent's recommendation; earlier "i just dont want chinese music"), detected by metadata (`filters.is_chinese`: Chinese tags, Han script without kana after repairing PDMX mojibake, Chinese instrument/genre words, known Chinese artists). Generation avoids it unless asked.
 - Provenance per tune: `source_url`, `sha256` (source file, or the tune's ABC text for NMD), `license`, `composition_license`, `arranger`, `flags`.
 - Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are truncated and counted.
 - PDMX downloads are checked against pinned sha256 (`download.PDMX_SHA256`).

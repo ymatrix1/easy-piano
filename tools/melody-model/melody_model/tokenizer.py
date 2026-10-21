@@ -25,7 +25,7 @@ KEYS = tuple(_TONICS) + tuple(t + "m" for t in ("A", "E", "B", "F#", "C#", "G#",
 MAX_BARS = 64
 COURSES = ("none", "piano-basics", "essentials-1", "essentials-2", "essentials-3")
 HANDS = ("RH", "LH", "BOTH")
-STYLES = ("classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic")
+STYLES = ("classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese")
 SOURCES = ("own", "nottingham", "mutopia", "pdmx", "local")
 # Required-pattern keys of docs/specs/skill-specs.md (content/skill-specs/*.json); a test checks every
 # pattern there encodes. Values ride in the pitch/dur fields or in the kind itself.
