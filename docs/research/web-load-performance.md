@@ -30,6 +30,7 @@ Two causes:
 - Splash stays until `flutter-first-frame`; shows "Couldn't load / Reload" on an uncaught error or after 45 s of visible time; warns in the console when not cross-origin isolated.
 - `tools/sync_content.py` also writes `assets/content/bundle.json` (all files in one map); `ContentRepo.load` reads it in one request, falling back to parallel per-file loads.
 - `main()` runs `RustLib.init`, `AppLocale.load` and `ContentRepo.load` in parallel.
+- Bravura.otf (373 KB) left the pubspec font manifest, which web fetches before the first frame. `lib/ui/staff/music_font.dart` loads it with `FontLoader` after the first frame; `StaffPainter` repaints when it lands. Checked on the preview: FontManifest.json no longer lists Bravura, and a lesson staff draws clef and noteheads.
 
 ## Results (after)
 
@@ -52,6 +53,6 @@ Single run each, unthrottled; not a Lighthouse score.
 
 ## Follow-ups
 
-- Subset or lazy-load Bravura.otf (373 KB at boot).
+- Subset Bravura.otf to the glyphs we draw (still 373 KB, now after boot).
 - Try skwasm (`flutter build web --wasm`) once COOP/COEP stays on; measure.
 - Service worker / PWA caching for repeat visits.
