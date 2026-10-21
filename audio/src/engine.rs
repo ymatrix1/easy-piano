@@ -226,7 +226,7 @@ impl Engine {
     /// Renders interleaved stereo frames into `out` (len = 2 x frames).
     pub fn render(&mut self, out: &mut [f32]) {
         let bank = Arc::clone(&self.bank);
-        for frame in out.chunks_exact_mut(2) {
+        for frame in out.as_chunks_mut::<2>().0 {
             while self.queue.first().is_some_and(|e| e.at <= self.now) {
                 let e = self.queue.remove(0);
                 self.start(e.sound);
