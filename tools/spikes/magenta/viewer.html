@@ -45,6 +45,13 @@ const BARS_PER_ROW = 4;
 let songs = [];
 let order = [];
 
+// generator: model = "<checkpoint url>#sha256=…", prompt_ref = "level=e1;temperature=1;chords=C-F;…".
+function genInfo(song) {
+  const g = song.generator;
+  const ref = Object.fromEntries((g.prompt_ref || '').split(';').filter(Boolean).map((kv) => kv.split('=')));
+  return { checkpoint: (g.model || '').split('#')[0].split('/').pop(), seed: g.seed, ...ref };
+}
+
 function parseToken(tok) {
   const m = /^(r|([A-G])(#|b)?(\d)):(\d+)(\.?)(?:@(\d))?$/.exec(tok);
   if (!m) throw new Error('bad token ' + tok);
@@ -165,7 +172,7 @@ function render() {
   const list = document.getElementById('list');
   list.replaceChildren();
   // Blind mode shuffles once so file order (grouped by model) gives nothing away.
-  const shown = (reveal ? songs : order).filter((s) => !level || s.generator.level === level);
+  const shown = (reveal ? songs : order).filter((s) => !level || genInfo(s).level === level);
   shown.forEach((song, i) => {
     const card = document.createElement('section');
     card.className = 'tune';
@@ -178,9 +185,9 @@ function render() {
     btn.onclick = () => (playing && playing.button === btn ? stop() : play(song, btn));
     const meta = document.createElement('span');
     meta.className = 'model';
-    const g = song.generator;
+    const g = genInfo(song);
     meta.innerHTML = reveal
-      ? `<b>${MODEL_NAMES[g.checkpoint.split('/').pop()] || g.checkpoint}</b> · seed ${g.seed} · score ${g.score.total}${g.chords ? ' · chords ' + g.chords.join(' ') : ''} · ${g.level}`
+      ? `<b>${MODEL_NAMES[g.checkpoint] || g.checkpoint}</b> · seed ${g.seed} · score ${g.score}${g.chords ? ' · chords ' + g.chords.split('-').join(' ') : ''} · ${g.level}`
       : `level ${g.level} · ${song.bpm} bpm`;
     head.append(h, btn, meta);
     card.append(head, drawSong(song, fingers));
@@ -194,7 +201,7 @@ function render() {
   songs = await Promise.all(files.map(async (f) => (await fetch('out/' + f)).json()));
   order = songs.map((s) => [Math.random(), s]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const sel = document.getElementById('level');
-  for (const l of [...new Set(songs.map((s) => s.generator.level))].sort()) sel.append(new Option(l, l));
+  for (const l of [...new Set(songs.map((s) => genInfo(s).level))].sort()) sel.append(new Option(l, l));
   for (const id of ['reveal', 'level', 'fingers']) document.getElementById(id).onchange = render;
   render();
 })().catch((e) => {

@@ -3,8 +3,14 @@
   "private": true,
   "type": "commonjs",
   "description": "Feasibility spike: rule-limited melody generation with Magenta.js",
-  "scripts": { "generate": "node generate.js" },
+  "scripts": {
+    "generate": "node generate.js",
+    "test": "node test.js"
+  },
   "dependencies": {
     "@magenta/music": "1.23.1"
+  },
+  "engines": {
+    "node": "24.6.0"
   }
 }

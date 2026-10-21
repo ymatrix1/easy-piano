@@ -1,17 +1,24 @@
 // Feasibility spike: rule-limited melodies from Magenta.js MusicRNN checkpoints.
 //
 //   node generate.js [--level e1|e3] [--n 20] [--reject 200] [--temp 1.0] [--seed 1]
-//                    [--only basic_rnn,melody_rnn]
+//                    [--only basic_rnn,melody_rnn] [--lock]   (--lock: rewrite checkpoints.lock.json)
 //
 // Two modes per checkpoint:
-//   masked   - our own copy of MusicRNN.sampleRnn (Apache-2.0, magenta-js) that sets
-//              disallowed event logits to -Infinity before sampling, so every tune
-//              obeys the rules by construction.
+//   masked   - our own copy of MusicRNN.sampleRnn that sets disallowed event logits to
+//              -Infinity before sampling, so every tune obeys the rules by construction.
 //   reject   - plain sampling from the model, rules checked afterwards; reports the
 //              acceptance rate.
-// Writes the top 5 songs per checkpoint (our content JSON), summary-<level>-<checkpoint>.json
-// and index.json (for viewer.html) to out/.
+// Writes the top 5 songs per checkpoint (song JSON, spike only: no license claimed),
+// summary-<level>-<checkpoint>.json and index.json (for viewer.html) to out/.
+// Checkpoint files are checked against checkpoints.lock.json (sha256) before use.
+//
+// generate() is a modified version of MusicRNN.sampleRnn from magenta-js
+// (https://github.com/magenta/magenta-js, music/src/music_rnn/model.ts),
+// Copyright 2018 The Magenta Team, Apache License 2.0. Changes: step-by-step loop
+// with sampling on the CPU, a seeded PRNG instead of tf.multinomial, an optional
+// logit mask, greedy (temperature 0) mode and per-step probabilities for tests.
 require('./stub-tone');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const tf = require('@tensorflow/tfjs');
@@ -19,6 +26,7 @@ const mm = require('@magenta/music/node/music_rnn');
 const pkg = require('@magenta/music/package.json');
 
 const BASE = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/';
+const LOCK = path.join(__dirname, 'checkpoints.lock.json');
 
 // Level rule sets. Durations and rests in 16th steps (4 per quarter, 4/4).
 const LEVELS = {
@@ -41,15 +49,19 @@ const LEVELS = {
     bpm: 90,
   },
 };
-const LEVEL_ID = (() => {
-  const i = process.argv.indexOf('--level');
-  return i > 0 ? process.argv[i + 1] : 'e1';
-})();
-if (!LEVELS[LEVEL_ID]) throw new Error(`unknown level ${LEVEL_ID}`);
-const RULES = { ...LEVELS[LEVEL_ID], bars: 8, stepsPerBar: 16, final: 60 };
-const CHECKPOINTS = [{ id: 'basic_rnn' }, { id: 'melody_rnn' }, { id: 'chord_pitches_improv', chords: RULES.chords }];
-const TOTAL = RULES.bars * RULES.stepsPerBar;
-const FINAL_ONSET = TOTAL - 8; // last note: half note C on beats 3-4 of bar 8
+const CHECKPOINT_IDS = ['basic_rnn', 'melody_rnn', 'chord_pitches_improv'];
+let LEVEL_ID;
+let RULES;
+let TOTAL;
+let FINAL_ONSET; // last note: half note C on beats 3-4 of bar 8
+function useLevel(id) {
+  if (!LEVELS[id]) throw new Error(`unknown level ${id}`);
+  LEVEL_ID = id;
+  RULES = { ...LEVELS[id], bars: 8, stepsPerBar: 16, final: 60 };
+  TOTAL = RULES.bars * RULES.stepsPerBar;
+  FINAL_ONSET = TOTAL - 8;
+}
+useLevel('e1');
 const NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
 const noteName = (p) => `${NAMES[p % 12]}${Math.floor(p / 12) - 1}`;
 const DUR_TOKEN = { 2: '8', 4: '4', 6: '4.', 8: '2' };
@@ -112,9 +124,17 @@ function allowed(t, cur, lastPitch, minPitch, depth) {
   return ok;
 }
 
+// temp 0 = greedy (argmax), like MusicRNN with no temperature.
 function sampleIndex(logits, mask, temp, rand) {
   let max = -Infinity;
-  for (let i = 0; i < logits.length; i++) if ((!mask || mask[i]) && logits[i] > max) max = logits[i];
+  let arg = -1;
+  for (let i = 0; i < logits.length; i++) {
+    if ((!mask || mask[i]) && logits[i] > max) {
+      max = logits[i];
+      arg = i;
+    }
+  }
+  if (!temp) return arg;
   const w = new Float64Array(logits.length);
   let sum = 0;
   for (let i = 0; i < logits.length; i++) {
@@ -130,9 +150,10 @@ function sampleIndex(logits, mask, temp, rand) {
   return w.findLastIndex((x) => x > 0);
 }
 
-// Adapted from MusicRNN.sampleRnn in magenta-js (Apache-2.0): same LSTM step, but
-// the sampling happens on the CPU so we can mask logits. Primer: one step, C4 onset.
-function generate(model, chords, { masked, temp, seed }) {
+// Modified MusicRNN.sampleRnn (see file header): same LSTM step, but the sampling
+// happens on the CPU so we can mask logits. Primer: one step, C4 onset.
+// withProbs returns the unmasked softmax per step (for the equivalence test).
+function generate(model, chords, { masked, temp, seed, withProbs = false }) {
   const minPitch = model.dataConverter.minPitch;
   const depth = model.lstmFcW.shape[1];
   const rand = rng(seed);
@@ -142,6 +163,7 @@ function generate(model, chords, { masked, temp, seed }) {
   let h = model.biasShapes.map((s) => tf.zeros([1, s / 4]));
   let cur = { onset: 0, pitch: RULES.pitches[0] };
   let lastPitch = cur.pitch;
+  const probs = [];
   for (let t = 1; t < TOTAL; t++) {
     const prev = tf.oneHot(tf.tensor1d([events[t - 1]], 'int32'), depth).toFloat();
     const input = chordSteps ? tf.concat([chordSteps[t], prev], 1) : prev;
@@ -152,6 +174,7 @@ function generate(model, chords, { masked, temp, seed }) {
     const logits = tf.tidy(() => h[h.length - 1].matMul(model.lstmFcW).add(model.lstmFcB).as1D().dataSync());
     prev.dispose();
     if (input !== prev) input.dispose();
+    if (withProbs) probs.push(softmax(logits));
     const mask = masked ? allowed(t, cur, lastPitch, minPitch, depth) : null;
     const ev = sampleIndex(logits, mask, temp, rand);
     events.push(ev);
@@ -163,7 +186,56 @@ function generate(model, chords, { masked, temp, seed }) {
   c.forEach((x) => x.dispose());
   h.forEach((x) => x.dispose());
   if (chordSteps) chordSteps.forEach((x) => x.dispose());
-  return { events, minPitch };
+  return { events, minPitch, probs };
+}
+
+function softmax(logits) {
+  const max = Math.max(...logits);
+  const e = Array.from(logits, (x) => Math.exp(x - max));
+  const s = e.reduce((a, b) => a + b, 0);
+  return e.map((x) => x / s);
+}
+
+// Download each checkpoint file and compare its sha256 with checkpoints.lock.json.
+// --lock writes the lock file instead (first run only).
+async function verifyCheckpoint(id, { write = false } = {}) {
+  const lock = fs.existsSync(LOCK) ? JSON.parse(fs.readFileSync(LOCK, 'utf8')) : {};
+  const get = async (f) => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const r = await fetch(`${BASE}${id}/${f}`);
+        if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
+        return Buffer.from(await r.arrayBuffer());
+      } catch (e) {
+        if (attempt >= 3) throw e;
+      }
+    }
+  };
+  const manifest = await get('weights_manifest.json');
+  const files = ['config.json', 'weights_manifest.json', ...JSON.parse(manifest).flatMap((g) => g.paths)];
+  const hashes = {};
+  for (const f of files) hashes[f] = crypto.createHash('sha256').update(f === 'weights_manifest.json' ? manifest : await get(f)).digest('hex');
+  // One digest for the whole checkpoint: sha256 over "file:hash" lines in order.
+  const digest = crypto.createHash('sha256').update(files.map((f) => `${f}:${hashes[f]}`).join('\n')).digest('hex');
+  if (write) {
+    lock[id] = { url: BASE + id, sha256: digest, files: hashes };
+    fs.writeFileSync(LOCK, JSON.stringify(lock, null, 2) + '\n');
+  } else if (!lock[id] || lock[id].sha256 !== digest) {
+    throw new Error(`checkpoint ${id}: sha256 ${digest} does not match checkpoints.lock.json (${lock[id]?.sha256})`);
+  }
+  return digest;
+}
+
+async function loadModel(id) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const model = new mm.MusicRNN(BASE + id);
+      await model.initialize();
+      return model;
+    } catch (e) {
+      if (attempt >= 3) throw e; // checkpoint fetch from GCS sometimes aborts
+    }
+  }
 }
 
 // Events -> notes ({pitch|null for rest, start, dur} in steps).
@@ -266,22 +338,27 @@ function toSong(notes, meta) {
     arranger: 'Easy Piano contributors',
     source: 'generated',
     source_url: null,
-    license: 'CC0-1.0',
-    composition_license: 'CC0-1.0',
+    // Spike only: the checkpoint weights have no stated license and the training data is
+    // undisclosed, so no license is claimed. `content lint` rejects NOASSERTION on purpose,
+    // which keeps these files out of content/.
+    license: 'NOASSERTION',
+    composition_license: 'NOASSERTION',
     bpm: RULES.bpm,
     time: '4/4',
     key: 'C',
+    // Fields allowed by core/src/song.rs Generator; run settings go into prompt_ref.
     generator: {
-      method: 'magenta-musicrnn-masked-sampling',
-      tool: '@magenta/music',
-      tool_version: pkg.version,
-      checkpoint: BASE + meta.checkpoint,
+      method: 'magenta',
+      tool: `@magenta/music@${pkg.version} tools/spikes/magenta/generate.js`,
+      model: `${BASE}${meta.checkpoint}#sha256=${meta.sha256}`,
       seed: meta.seed,
-      temperature: meta.temp,
-      chords: meta.chords ?? null,
-      level: LEVEL_ID,
-      rules: RULES.label,
-      score: meta.score,
+      prompt_ref: [
+        `level=${LEVEL_ID}`,
+        `temperature=${meta.temp}`,
+        meta.chords ? `chords=${meta.chords.join('-')}` : null,
+        'ranker=v2',
+        `score=${meta.score.total}`,
+      ].filter(Boolean).join(';'),
     },
     bars,
     critical: [[0, RULES.bars]],
@@ -289,23 +366,17 @@ function toSong(notes, meta) {
 }
 
 async function main() {
+  useLevel(args.level ?? 'e1');
   await tf.setBackend('cpu');
   const outDir = path.join(__dirname, 'out');
   fs.mkdirSync(outDir, { recursive: true });
   const summary = { level: LEVEL_ID, rules: RULES.label, tool_version: pkg.version, tfjs: tf.version.tfjs, backend: tf.getBackend(), node: process.version, temp: TEMP, n: N, reject_n: NREJECT, checkpoints: [] };
-  for (const ck of CHECKPOINTS) {
-    if (args.only && !args.only.split(',').includes(ck.id)) continue;
+  for (const id of CHECKPOINT_IDS) {
+    if (args.only && !args.only.split(',').includes(id)) continue;
+    const ck = { id, chords: id === 'chord_pitches_improv' ? RULES.chords : undefined };
+    const sha256 = await verifyCheckpoint(id, { write: 'lock' in args });
     let t0 = Date.now();
-    let model;
-    for (let attempt = 1; ; attempt++) {
-      try {
-        model = new mm.MusicRNN(BASE + ck.id);
-        await model.initialize();
-        break;
-      } catch (e) {
-        if (attempt >= 3) throw e; // checkpoint fetch from GCS sometimes aborts
-      }
-    }
+    const model = await loadModel(id);
     const loadMs = Date.now() - t0;
 
     t0 = Date.now();
@@ -331,12 +402,13 @@ async function main() {
 
     masked.sort((a, b) => b.score.total - a.score.total);
     for (const m of masked.slice(0, 5)) {
-      const song = toSong(m.notes, { checkpoint: ck.id, seed: m.seed, temp: TEMP, chords: ck.chords, score: m.score });
+      const song = toSong(m.notes, { checkpoint: ck.id, sha256, seed: m.seed, temp: TEMP, chords: ck.chords, score: m.score });
       fs.writeFileSync(path.join(outDir, `${song.id}.json`), JSON.stringify(song, null, 2) + '\n');
     }
     const meanScore = masked.reduce((s, m) => s + m.score.total, 0) / N;
     const row = {
       checkpoint: ck.id,
+      sha256,
       chords: ck.chords ?? null,
       load_ms: loadMs,
       masked_ms_per_tune: Math.round(maskedMs),
@@ -356,7 +428,11 @@ async function main() {
   fs.writeFileSync(path.join(outDir, 'index.json'), JSON.stringify(songs, null, 2) + '\n');
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+module.exports = { LEVELS, useLevel, allowed, generate, toNotes, violations, score, loadModel, verifyCheckpoint, rng, sampleIndex, rules: () => RULES };
+
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
