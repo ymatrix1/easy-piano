@@ -1,0 +1,62 @@
+{
+  "weights": [
+    3.0629,
+    1.1433,
+    0.3664,
+    1.461,
+    5.1972,
+    0.4169,
+    0.25,
+    0.25
+  ],
+  "thresholds": [
+    -0.4435,
+    1.4226,
+    2.4212,
+    3.3219,
+    5.3235,
+    7.6778,
+    10.6778,
+    11.2779,
+    11.8779
+  ],
+  "course_levels": [
+    1,
+    6
+  ],
+  "skills": [
+    "reading",
+    "hand_position",
+    "intervals",
+    "rhythm",
+    "key",
+    "coordination",
+    "texture",
+    "speed"
+  ],
+  "fit": {
+    "date": "2026-10-21",
+    "signals": [
+      "course anchors",
+      "course order pairs",
+      "node envelopes",
+      "simplified pairs",
+      "pdmx complexity"
+    ],
+    "course_songs": 40,
+    "held_out": 8,
+    "kendall_tau_held_out": 0.714,
+    "kendall_tau_held_out_prior": 0.327,
+    "kendall_tau_all": 0.66,
+    "course_level_mae": 0.903,
+    "simplified_easier": "21/21",
+    "pdmx_tunes": 2368,
+    "pdmx_spearman": 0.577,
+    "pdmx_kendall_tau": 0.443,
+    "pdmx_mean_level_by_complexity": {
+      "0": 4.67,
+      "1": 4.91,
+      "2": 6.99
+    }
+  }
+}
