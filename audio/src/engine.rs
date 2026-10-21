@@ -52,6 +52,8 @@ struct Voice {
     part: Option<Part>,
     tone: Option<LowPass>,
     choke_group: bool,
+    /// Pitch of a held live key (released by [Engine::note_off]).
+    live_pitch: Option<u8>,
     done: bool,
 }
 
@@ -109,6 +111,47 @@ impl Engine {
         self.queue.insert(pos, event);
     }
 
+    /// Replaces the sample bank (more files loaded); sounding voices keep
+    /// playing if their sample is still there.
+    pub fn set_bank(&mut self, bank: Arc<SampleBank>) {
+        self.bank = bank;
+    }
+
+    /// Starts a learner key now on the piano (live bus, no dynamics); it
+    /// sounds until [Engine::note_off]. A repeated key restarts.
+    pub fn note_on(&mut self, pitch: u8, velocity: u8) {
+        self.note_off_with(pitch, 0.05);
+        self.start(Sound::Note {
+            instrument: Instrument::Piano,
+            part: Part::Live,
+            pitch,
+            dur: u64::MAX / 2,
+            velocity,
+        });
+        if let Some(v) = self.voices.last_mut() {
+            v.live_pitch = Some(pitch);
+        }
+    }
+
+    /// Releases a held learner key (damper fade).
+    pub fn note_off(&mut self, pitch: u8) {
+        self.note_off_with(pitch, mix::envelope(Instrument::Piano).1);
+    }
+
+    fn note_off_with(&mut self, pitch: u8, tau: f32) {
+        let now = self.now;
+        let decay = (-1.0 / (tau * self.rate)).exp();
+        for v in self
+            .voices
+            .iter_mut()
+            .filter(|v| v.live_pitch == Some(pitch))
+        {
+            v.release_at = v.release_at.min(now);
+            v.decay = decay;
+            v.live_pitch = None;
+        }
+    }
+
     /// Releases every voice and drops queued events.
     pub fn stop_all(&mut self) {
         self.queue.clear();
@@ -155,6 +198,7 @@ impl Engine {
                     part: Some(part),
                     tone,
                     choke_group: false,
+                    live_pitch: None,
                     done: false,
                 });
             }
@@ -193,6 +237,7 @@ impl Engine {
                     part: Some(Part::Drums),
                     tone: None,
                     choke_group: gm == 46,
+                    live_pitch: None,
                     done: false,
                 });
             }
@@ -213,6 +258,7 @@ impl Engine {
                     part: None,
                     tone: None,
                     choke_group: false,
+                    live_pitch: None,
                     done: false,
                 });
             }
@@ -300,11 +346,11 @@ impl Engine {
 
 fn sample_in<'a>(bank: &'a SampleBank, source: &Source) -> Option<&'a Sample> {
     match source {
-        Source::Pitched(i, p) => bank.pitched.get(i)?.get(p),
-        Source::Drum(gm, i) => bank.drums.get(gm)?.get(*i),
-        Source::SoftHat => bank.soft_hat.as_ref(),
-        Source::Click(true) => bank.click_accent.as_ref(),
-        Source::Click(false) => bank.click.as_ref(),
+        Source::Pitched(i, p) => bank.pitched.get(i)?.get(p).map(|s| s.as_ref()),
+        Source::Drum(gm, i) => bank.drums.get(gm)?.get(*i).map(|s| s.as_ref()),
+        Source::SoftHat => bank.soft_hat.as_deref(),
+        Source::Click(true) => bank.click_accent.as_deref(),
+        Source::Click(false) => bank.click.as_deref(),
     }
 }
 
@@ -321,13 +367,19 @@ mod tests {
 
     fn bank() -> Arc<SampleBank> {
         let mut b = SampleBank::default();
-        b.drums
-            .insert(38, vec![ramp(1000, 0.1), ramp(1000, 0.2), ramp(1000, 0.3)]);
-        b.drums.insert(42, vec![ramp(1000, 0.4)]);
-        b.drums.insert(46, vec![ramp(1000, 0.5)]);
-        b.soft_hat = Some(ramp(1000, 0.05));
+        b.drums.insert(
+            38,
+            vec![
+                Arc::new(ramp(1000, 0.1)),
+                Arc::new(ramp(1000, 0.2)),
+                Arc::new(ramp(1000, 0.3)),
+            ],
+        );
+        b.drums.insert(42, vec![Arc::new(ramp(1000, 0.4))]);
+        b.drums.insert(46, vec![Arc::new(ramp(1000, 0.5))]);
+        b.soft_hat = Some(Arc::new(ramp(1000, 0.05)));
         let mut piano = std::collections::BTreeMap::new();
-        piano.insert(60, ramp(1000, 0.5));
+        piano.insert(60, Arc::new(ramp(1000, 0.5)));
         b.pitched.insert(Instrument::Piano, piano);
         Arc::new(b)
     }
@@ -417,7 +469,7 @@ mod tests {
         let rate = 44_100;
         let mut b = SampleBank::default();
         let mut piano = std::collections::BTreeMap::new();
-        piano.insert(60, ramp(rate, 0.5));
+        piano.insert(60, Arc::new(ramp(rate, 0.5)));
         b.pitched.insert(Instrument::Piano, piano);
         let mut e = Engine::new(rate, Arc::new(b));
         let ms = |t: u64| t * rate as u64 / 1000;
@@ -438,6 +490,19 @@ mod tests {
         assert!(at(60) > 0.1);
         // Released at 250 ms with a 0.12 s time constant: well down by 580 ms.
         assert!(at(580) < at(240) * 0.15, "{} vs {}", at(580), at(240));
+    }
+
+    #[test]
+    fn live_key_sounds_until_released() {
+        let mut e = engine();
+        e.note_on(60, 127);
+        let mut buf = vec![0f32; 2 * 300];
+        e.render(&mut buf);
+        assert!(buf[2 * 290].abs() > 0.1, "held key still sounding");
+        e.note_off(60);
+        let mut tail = vec![0f32; 2 * 900];
+        e.render(&mut tail);
+        assert!(e.voices.is_empty(), "released key faded out");
     }
 
     #[test]

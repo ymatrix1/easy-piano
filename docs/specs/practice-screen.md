@@ -32,7 +32,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 
 ## Sound
 
-Sampled grand piano (Salamander Grand Piano V3, CC-BY 3.0; `app/assets/piano/`), one sample every 3 semitones C1–C8 with full decay, pitch-shifted in between, soft notes darker (velocity low-pass), Web Audio on web ([D22](../DECISIONS.md)). The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered in the browser. Pre-listen and companion play even when muted.
+Sampled grand piano (Salamander Grand Piano V3, CC-BY 3.0; `app/assets/piano/`), one sample every 3 semitones C1–C8 with full decay, pitch-shifted in between, soft notes darker (velocity low-pass): Web Audio on web ([D22](../DECISIONS.md)); on Android, iOS and desktop the Rust engine in `audio/` plays the same samples and mix through the platform output ([D30](../DECISIONS.md)). The student's keys sound through it (MIDI controllers often have no speaker). A top-bar toggle mutes it for digital pianos with their own sound; the choice is remembered per device. Pre-listen and companion play even when muted.
 
 ## Pause
 

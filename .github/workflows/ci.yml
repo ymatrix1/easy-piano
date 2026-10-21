@@ -55,7 +55,9 @@ jobs:
 
       - name: cargo clippy (audio)
         working-directory: audio
-        run: cargo clippy --all-targets -- -D warnings
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
+          cargo clippy --all-targets --all-features -- -D warnings
 
       # Includes the web parity test (renders Ode to Joy, D30).
       - name: cargo test (audio)

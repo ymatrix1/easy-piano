@@ -1,6 +1,7 @@
 //! Decoded samples, held compactly: 16-bit stereo, quiet tails trimmed.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 /// Pitched instruments (sample every 3 semitones, nearest one pitch-shifted).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -167,14 +168,15 @@ impl Sample {
     }
 }
 
-/// Every sample the engine can play.
-#[derive(Default)]
+/// Every sample the engine can play. Cheap to clone (samples are shared),
+/// so a loader can add files and hand the engine a new bank.
+#[derive(Default, Clone)]
 pub struct SampleBank {
-    pub pitched: BTreeMap<Instrument, BTreeMap<u8, Sample>>,
-    pub drums: BTreeMap<u8, Vec<Sample>>,
-    pub soft_hat: Option<Sample>,
-    pub click: Option<Sample>,
-    pub click_accent: Option<Sample>,
+    pub pitched: BTreeMap<Instrument, BTreeMap<u8, Arc<Sample>>>,
+    pub drums: BTreeMap<u8, Vec<Arc<Sample>>>,
+    pub soft_hat: Option<Arc<Sample>>,
+    pub click: Option<Arc<Sample>>,
+    pub click_accent: Option<Arc<Sample>>,
 }
 
 impl SampleBank {
@@ -184,7 +186,7 @@ impl SampleBank {
             .get(&instrument)?
             .iter()
             .min_by_key(|(p, _)| (**p as i32 - pitch as i32).abs())
-            .map(|(p, s)| (*p, s))
+            .map(|(p, s)| (*p, s.as_ref()))
     }
 
     /// Bytes of decoded audio held.
