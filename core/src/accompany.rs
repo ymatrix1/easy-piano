@@ -4,8 +4,10 @@
 //! vi), chosen by how much of the bar's melody it covers, with a small bias
 //! toward I/IV/V and toward keeping the previous chord. The chord is then
 //! written as `BASS`, `ACC` and `DRUMS` parts in a pattern set by the style
-//! and the meter. Parts the learner plays are never doubled: when the left
-//! hand is played there is no `BASS` or `ACC`. Pure and deterministic.
+//! and the meter. The piano part is never doubled: when the left hand is
+//! played there is no `ACC`; a sustained strings `PAD` holds the chord
+//! instead, with the bass an octave below the left hand. Pure and
+//! deterministic.
 
 use crate::notation::{parse_bar, Event};
 use crate::pitch::pitch_name;
@@ -131,6 +133,16 @@ fn acc(pcs: [u8; 3], style: &str, m: Meter) -> String {
     }
 }
 
+/// The chord held for the whole bar on strings (left hand played).
+fn pad(pcs: [u8; 3], m: Meter) -> String {
+    let c = voicing(pcs);
+    match m {
+        Meter::Four => format!("{c}:1"),
+        Meter::Three | Meter::SixEight => format!("{c}:2."),
+        Meter::Two => format!("{c}:2"),
+    }
+}
+
 /// Drum pattern (General MIDI: kick C2, snare D2, closed hat F#2); only the
 /// band-like styles get drums.
 fn drums(style: &str, m: Meter) -> Option<&'static str> {
@@ -172,8 +184,10 @@ pub fn accompany(song: &Song, style: &str, played: &[&str]) -> Song {
         let i = pick(&melody(bar), prev);
         prev = Some(i);
         let pcs = CHORDS[i].0;
-        if !left {
-            bar.insert("BASS".into(), bass(pcs, style, m));
+        bar.insert("BASS".into(), bass(pcs, style, m));
+        if left {
+            bar.insert("PAD".into(), pad(pcs, m));
+        } else {
             bar.insert("ACC".into(), acc(pcs, style, m));
         }
         if let Some(d) = drums(style, m) {
@@ -243,11 +257,24 @@ mod tests {
     }
 
     #[test]
-    fn left_hand_is_not_doubled_and_other_cases_pass_through() {
+    fn left_hand_gets_strings_not_piano_and_other_cases_pass_through() {
         let s = song("4/4", r#"[{"RH":"E4:1","LH":"C3:1"}]"#);
         let a = accompany(&s, "pop", &["RH", "LH"]);
-        assert!(!a.bars[0].contains_key("BASS") && !a.bars[0].contains_key("ACC"));
-        assert!(a.bars[0].contains_key("DRUMS"));
+        assert!(
+            !a.bars[0].contains_key("ACC"),
+            "no piano chords over the left hand"
+        );
+        assert_eq!(a.bars[0]["PAD"], "C3E3G3:1");
+        assert!(a.bars[0].contains_key("BASS") && a.bars[0].contains_key("DRUMS"));
+        for time in ["3/4", "2/4", "6/8"] {
+            let bar = if time == "2/4" {
+                r#"{"RH":"E4:2","LH":"C3:2"}"#
+            } else {
+                r#"{"RH":"E4:2.","LH":"C3:2."}"#
+            };
+            let b = accompany(&song(time, &format!("[{bar}]")), "folk", &["RH", "LH"]);
+            assert!(b.validate().is_empty(), "{time}: {:?}", b.validate());
+        }
         let odd = song("5/4", r#"[{"RH":"C4:1 C4:4"}]"#);
         assert_eq!(accompany(&odd, "pop", &["RH"]).bars, odd.bars);
     }
