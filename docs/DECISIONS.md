@@ -29,6 +29,8 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D21](#d21-train-the-melody-model-on-everything-we-can-flagged-and-style-tagged) | 2026-10-20 | Train on everything we can, flagged and style-tagged; supersedes part of D19 | accepted |
 | [D24](#d24-melody-model-weights-licence-storage-and-training-data-disclosure) | 2026-10-21 | Melody-model weights: licence, storage, disclosure | proposed |
 | [D25](#d25-melody-model-decoding-masks-cover-the-taught-set-the-rubric-covers-patterns-and-fingering) | 2026-10-21 | Melody-model decoding: masks vs rubric | proposed |
+| [D27](#d27-melody-model-similarity-check-reports-does-not-block-until-calibrated) | 2026-10-21 | Melody-model similarity check: report, don't block (for now) | proposed |
+| [D28](#d28-practice-mode-generates-tunes-in-the-app-at-runtime) | 2026-10-21 | Practice mode generates tunes at runtime (supersedes part of D17) | accepted |
 | [D26](#d26-explainable-song-difficulty-level-from-skill-scores-and-a-monotonic-ordinal-model) | 2026-10-21 | Explainable song difficulty level from skill scores and a monotonic ordinal model | proposed |
 
 ## Accepted
@@ -195,7 +197,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 ### D17. Generated practice songs: CC0, provenance, rubric, human review
 
-- **Status:** proposed
+- **Status:** proposed; runtime generation for practice mode superseded by [D28](#d28-practice-mode-generates-tunes-in-the-app-at-runtime)
 - **Context:** Essentials I-III have 54 levels; the reference course size is about 50 / 41 / 55 levels. Hand-writing every practice tune does not scale, so we want generated tunes (rules, PD variations, LLM via an agent skill, Magenta.js). Generated material raises three questions: license, traceability, and whether it only uses what was taught.
 - **Decision:** Generated songs use `source: "generated"`, `license: "CC0-1.0"` and a required `generator` object (`method`, `tool`, `model`, `seed`, `source_song`, `prompt_ref`). Each targets a journey node (`spec_node`) and must pass the rubric (`core/src/rubric.rs`) against that node's taught set and `content/skill-specs/<course>.json`. Every generated song is reviewed by a human in its PR (played or listened to). Generation happens only in the content pipeline (tools, agent skills); the app never generates songs at runtime. Generated songs never widen the taught set.
 - **Why:** CC0 is the simplest license for machine-made material whose copyright status is unclear, and lets anyone reuse it. Provenance lets us rerun, audit or remove a batch by method or model. The rubric turns "only what was taught" into a check CI can run, and human review catches what the rubric cannot (musicality, accidental likeness to a known tune). Offline generation keeps the app deterministic, small and free of model dependencies.
@@ -285,3 +287,27 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Skill scores are explainable ("hard because of 16ths and hand shifts") and map to course concepts. Non-negative weights over features that only grow with difficulty make the level monotonic: more of any difficulty never lowers it, which a learner and an author can trust. An ordinal model fits 10 ordered levels with few parameters, so ~40 course songs can calibrate it. One Rust implementation serves the app, the CLI and Python (via the CLI), so labels, checks and the app never disagree.
 - **Alternatives:** Keep `level_of` (unexplained, not tied to the course); hand-set thresholds per feature (no calibration, brittle); gradient-boosted or neural regressor on PDMX (opaque, not monotonic, PDMX labels are coarse 0-3 and uploader-set); level = node index from the rubric alone (only defined for songs inside the course's taught set, says nothing above Essentials III).
 - **Impact:** New core module, weights JSON, `content level` command, lint warning, calibration script. Follow-ups: replace the melody model's `level_of` (bean piano-9aw0), use in import and placement. Weights must be refitted when course content changes a lot; lint's warning shows drift.
+
+### D27. Melody-model similarity check reports, does not block, until calibrated
+
+- **Status:** proposed
+- **Decided by:** user, 2026-10-21 (direction): "lets not block for now and decide later"
+- **Context:** D21 and D24 rely on `content similar` to stop generated tunes that copy a training melody. At the training-corpus size (39,615 tunes) the 0.5 threshold, calibrated on 40 songs (PR #34), flags every simple tune: short, low-information fragments (scale runs, repeated figures) score 1.00. In the first gated run 123 of 160 candidates passed the rubric and 0 passed the similarity check (`tools/melody-model/releases/melody-model-v1.eval-generation.json`).
+- **Decision:** The generator still runs the similarity check, fails closed on tool errors, and records every flagged tune in `report.json`, but does not drop them (`--block-similar` restores blocking). Human review (D17) sees the flags and is the only gate until the rule is decided.
+- **Why:** A gate that blocks everything carries no information; ordinary melodic material is shared by many tunes. Reporting keeps the evidence for review and for calibration.
+- **Alternatives:** Keep blocking (no usable tunes); raise the threshold without evidence; ignore matches below a minimum length and information (planned, needs calibration with known-innocent and known-copy sets).
+- **Impact:** **Risk:** a memorised copyrighted melody (flagged pop/film/game training data, D21) can reach content if review misses it. Follow-up bean piano-vx1w: calibrate the rule and decide block vs review-only.
+
+### D28. Practice mode generates tunes in the app at runtime
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-21: "lets remove that rule the app never generates at runtime, I want to add a practice mode that will generate"; "we can remove the copy check and human review for that mode"
+- **Context:** D17 says generation happens only in the content pipeline and the app never generates songs at runtime. The melody model (PR #47) runs in the browser in about 0.3–0.4 s per 8-bar tune (int8, Chrome desktop, PR #48), and the rubric is in Rust `core`, so the app can check a tune locally.
+- **Decision:** Supersedes D17's "the app never generates at runtime" for a **practice mode**. In it, the app generates tunes on device for the learner's current node, using the downloaded model (sha256-verified, D24). Each tune must pass the rubric (`core/src/rubric.rs`) against that node's taught set before it is shown, and is marked as generated. Generated tunes stay **outside the course**: course levels, star gates and song slots use reviewed content only (D17 still applies there). Nothing generated at runtime is saved as content or shared. Practice mode needs **no copy check and no human review** (user's call); the rubric is its only gate.
+- **Why:** Endless, level-fit practice is a core learning feature; on-device generation keeps it local-first (D8) and free of servers.
+- **Alternatives:** A large pre-generated, reviewed pool downloaded per node (no runtime model, every tune checked); server-side generation (breaks D8).
+- **Impact:**
+  - The app gains a model download (~12.5 MB int8, cached) and an inference path (onnxruntime on web; native runtimes later).
+  - **No human review and no copy check in practice mode, by decision.** Known risk, accepted by the user: a learner may be shown a phrase memorised from flagged training data (D21). Course content keeps review (D17) and the similarity report (D27).
+  - Phone latency must be measured before shipping on mobile.
+  - Implementation: bean piano-c6v1.
