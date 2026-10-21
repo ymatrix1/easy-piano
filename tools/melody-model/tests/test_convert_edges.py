@@ -75,16 +75,21 @@ def test_tie_chain_of_three_is_merged(tmp_path):
     assert via_xml(s, tmp_path)["bars"][0]["RH"] == "C4:2. D4:4"
 
 
-def test_tie_across_barline_is_rejected():
+def test_tie_across_barline_is_kept(tmp_path):
     s = score(([[n("C4", 2), n("D4", 2, "start")], [n("D4", 2, "stop"), n("E4", 2)]], T()), key=m21.key.Key("C"))
-    with pytest.raises(Unsupported, match="tie across barline"):
-        convert.convert_score(s)
+    song = convert.convert_score(s)
+    assert [b["RH"] for b in song["bars"]] == ["C4:2 D4:2 {tie}", "D4:2 E4:2"]
+    assert via_xml(convert.song_to_score(song), tmp_path)["bars"] == song["bars"]  # MusicXML round trip keeps the tie
 
 
-def test_tie_sum_without_single_duration_is_rejected():
+def test_tie_sum_without_single_duration_stays_tied():
     s = score(([[n("C4", 1, "start"), n("C4", 0.25, "stop"), n("D4", 0.75), n("E4", 2)]], T()), key=m21.key.Key("C"))
-    with pytest.raises(Unsupported, match="tie sum"):
-        convert.convert_score(s)
+    assert convert.convert_score(s)["bars"][0]["RH"] == "C4:4 {tie} C4:16 D4:8. E4:2"
+
+
+def test_tie_to_a_different_pitch_is_dropped():
+    s = score(([[n("C4", 2, "start"), n("D4", 2, "stop")]], T()), key=m21.key.Key("C"))
+    assert convert.convert_score(s)["bars"][0]["RH"] == "C4:2 D4:2"
 
 
 XML_CHORD = """<?xml version="1.0" encoding="UTF-8"?>

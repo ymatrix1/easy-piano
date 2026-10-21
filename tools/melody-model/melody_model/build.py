@@ -30,6 +30,7 @@ from .download import NMD_URL, RAW, ROOT
 from .filters import dedupe_key, is_chinese, nmd_ok, pdmx_flags, pdmx_ok, playable, split_of
 from .labels import plan
 from .notation import Unsupported
+from .styles import styles_for
 from .tokenizer import MAX_BARS, encode_song
 
 OUT = ROOT / "data" / "melody" / "dataset"
@@ -73,6 +74,7 @@ def jobs_pdmx(limit: int | None):
                     "arranger": row["artist_name"] if row["artist_name"] != "NA" else "",
                     "source_url": f"https://zenodo.org/records/15571083 {row['mxl']}",
                     "title": row["title"], "composer": row["composer_name"], "n_tracks": row["n_tracks"],
+                    "genres": row["genres"], "tags": row["tags"], "groups": row["groups"],
                     "skip": None if ok else why, "flags": pdmx_flags(row)}
             if not ok:
                 yield ("pdmx", tune_id, "skip", "", meta)
@@ -90,7 +92,8 @@ def jobs_mutopia():
     for e in json.loads(man.read_text(encoding="utf-8"))["files"]:
         yield ("mutopia", e["path"].removesuffix(".mid"), "mid", str(RAW / "mutopia" / e["path"]), {
             "license": e["license"], "composition_license": "public-domain (Mutopia header)", "arranger": "Mutopia typesetter",
-            "source_url": e["url"], "sha256": e["sha256"], "title": e["title"], "composer": e["composer"]})
+            "source_url": e["url"], "sha256": e["sha256"], "title": e["title"], "composer": e["composer"],
+            "style": e.get("style", "")})
 
 
 LOCAL = ROOT / "data" / "melody" / "local-datasets.json"
@@ -126,6 +129,9 @@ def load_local() -> list[dict]:
             raise SystemExit(f"{where}: timing must be one of {TIMINGS}")
         if e.get("meter", "4/4") not in METERS:
             raise SystemExit(f"{where}: meter must be one of {METERS}")
+        from .tokenizer import STYLES
+        if not isinstance(e.get("styles", []), list) or not set(e.get("styles", [])) <= set(STYLES):
+            raise SystemExit(f"{where}: styles must be a list from {STYLES}")
         if e.get("group_by", "file") not in ("file", "folder"):
             raise SystemExit(f"{where}: group_by must be 'file' or 'folder'")
         if not isinstance(e.get("track", 0), (int, str)) or isinstance(e.get("track", 0), bool):
@@ -148,7 +154,8 @@ def jobs_local(entry: dict):
         yield (entry["name"], rel.with_suffix("").as_posix(), kind, str(f), {
             "license": entry["license"], "composition_license": entry.get("composition_license", ""),
             "arranger": entry.get("arranger", ""), "source_url": entry["source"], "sha256": sha256(f.read_bytes()),
-            "flags": list(entry["flags"]), "group": group, "track": entry.get("track", 0), "meter": entry.get("meter", "4/4")})
+            "flags": list(entry["flags"]), "group": group, "track": entry.get("track", 0), "meter": entry.get("meter", "4/4"),
+            "styles": list(entry.get("styles", []))})
 
 
 def work(job):
@@ -192,6 +199,7 @@ def record(corpus, tune_id, meta, song, split) -> dict:
             "source_url": meta.get("source_url", ""), "sha256": meta.get("sha256", ""),
             "license": meta.get("license", ""), "composition_license": meta.get("composition_license", ""),
             "arranger": meta.get("arranger", ""), "flags": meta.get("flags", []),
+            "styles": styles_for(corpus, {**meta, "title": song.get("title") or meta.get("title", "")}),
             "title": song.get("title") or meta.get("title", ""), "composer": song.get("composer") or meta.get("composer", ""),
             "time": song["time"], "key": song["key"], "bars": song["bars"], "plan": plan(song)}
 
@@ -252,6 +260,8 @@ def main(argv):
                 st["kept unflagged"] += not rec["flags"]
                 for f in rec["flags"]:
                     st[f"flag {f}"] += 1
+                for x in rec["styles"] or ["(none)"]:
+                    st[f"style {x}"] += 1
                 st[f"split {split}"] += 1
                 st[f"time {song['time']}"] += 1
                 st["bars total"] += len(song["bars"])

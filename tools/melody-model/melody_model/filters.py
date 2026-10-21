@@ -30,6 +30,8 @@ ARRANGED = re.compile(r"\b(arr\.?|arranged|arrangement|version|easy piano|simpli
 def pdmx_flags(row: dict) -> list[str]:
     """Clean-data risks of a PDMX row. Kept, not dropped (D21): exclude flagged tunes to train a clean model."""
     flags = []
+    if row.get("subset:no_license_conflict", "True") != "True":
+        flags.append("licence-conflict")  # user, 2026-10-20: include, flagged
     genres = set(row["genres"].split("-")) - {"NA"}
     original = row["is_original"] == "True"
     if genres and not genres <= PDMX_GENRES:
@@ -50,9 +52,7 @@ def pdmx_flags(row: dict) -> list[str]:
 
 
 def pdmx_ok(row: dict) -> tuple[bool, str]:
-    """Hard rejects only: licence conflict, duplicates, length."""
-    if row["subset:no_license_conflict"] != "True":
-        return False, "pdmx licence conflict"
+    """Hard rejects: duplicates, Chinese music, length. Licence conflicts are flagged (pdmx_flags)."""
     if row["subset:deduplicated"] != "True":
         return False, "pdmx duplicate"
     if is_chinese([row.get(k, "") for k in ("title", "song_name", "subtitle", "composer_name", "artist_name")],

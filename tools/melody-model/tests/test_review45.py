@@ -182,3 +182,19 @@ def test_is_chinese(texts, tags, expected):
 def test_is_chinese_repairs_mojibake():
     garbled = "义勇军进行曲".encode("utf-8").decode("latin-1")
     assert filters.is_chinese([garbled])
+
+
+def test_styles_from_metadata():
+    from melody_model.styles import styles_for
+    assert styles_for("pdmx", {"genres": "soundtrack", "tags": "zelda-ocarina-piano", "title": "Song of Storms"}) == ["game", "soundtrack"]
+    assert styles_for("pdmx", {"genres": "classical", "tags": "NA", "title": "Minuet in G"}) == ["classical"]
+    assert styles_for("nottingham", {"title": "Ashgrove"}) == ["folk"]
+    assert styles_for("mutopia", {"style": "Hymn", "title": "Old 100th"}) == ["religious"]
+
+
+def test_licence_conflict_is_flagged_not_rejected():
+    row = {"subset:no_license_conflict": "False", "subset:deduplicated": "True", "genres": "classical",
+           "is_original": "False", "composer_name": "Bach", "artist_name": "NA", "title": "Minuet",
+           "song_name": "NA", "subtitle": "NA", "song_length.bars": "32"}
+    assert filters.pdmx_ok(row) == (True, "")
+    assert filters.pdmx_flags(row) == ["licence-conflict"]
