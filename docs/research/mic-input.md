@@ -95,7 +95,7 @@ Tune split (includes the typing, hum and knock clips; the held-out noise clip is
 | melody | 45 | 1.000 | 0.867 | 0.929 | 14.7 / 22 | 87 / 113 |
 | two-hands | 36 | 1.000 | 0.917 | 0.957 | 15.2 / 31 | 107 / 128 |
 
-**Noise.** Before the piano-note checks the same detector reported 457–575 false notes per minute on these clips (score and blind modes), matching the student's report. Now: ~21/min on the tune split (typing, hum, knocks) and 60/min on held-out chatter. **Expected-pitch phantoms on noise** (a C/E/G reported while the lesson waits for it, which would pass the step): 7 in 72 s, all from chatter. Steady talking near the mic can still pass a step occasionally; the setup panel asks for a quiet room, as the reference app does.
+**Noise.** Before the piano-note checks the same detector reported 457–575 false notes per minute on these clips (score and blind modes), matching the student's report. Now: ~21/min on the tune split (typing, hum, knocks) and 60/min on held-out chatter. **Expected-pitch phantoms on noise** (a C/E/G reported while the lesson waits for it, which would pass the step): 7 in the 24 s of chatter (all three conditions); none from typing, hum or knocks. Steady talking near the mic can still pass a step occasionally; the setup panel asks for a quiet room, as the reference app does.
 
 ### Wrong notes, held-out set
 
