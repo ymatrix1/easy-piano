@@ -159,6 +159,8 @@ jobs:
         with:
           # cargokit builds into the app's build dir, not app/rust/target.
           workspaces: app/rust -> ../build/easy_piano_bridge/build
+          # Keep the slow first build even if a later step (emulator) fails.
+          cache-on-failure: true
 
       - uses: subosito/flutter-action@v2
         with:
