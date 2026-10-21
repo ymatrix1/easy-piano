@@ -61,20 +61,23 @@ pub fn course_songs(walk: &[NodeTaught], songs: &BTreeMap<String, Song>, model: 
 /// Song metadata a tune row may lack, so `Song` deserializes.
 fn fill_song_fields(v: &mut Value) {
     let Some(o) = v.as_object_mut() else { return };
-    for (k, d) in [("id", json!("tune")), ("title", json!("")), ("composer", json!("?")), ("arranger", json!("?")), ("source", json!("dataset")), ("license", json!("?")), ("composition_license", json!("?")), ("bpm", json!(100)), ("time", json!("4/4")), ("key", json!("C"))] {
+    for (k, d) in [("id", json!("tune")), ("title", json!("?")), ("composer", json!("?")), ("arranger", json!("?")), ("source", json!("dataset")), ("license", json!("?")), ("composition_license", json!("?")), ("bpm", json!(100)), ("time", json!("4/4")), ("key", json!("C"))] {
         if o.get(k).is_none_or(Value::is_null) {
             o.insert(k.into(), d);
         }
     }
-    // Scoring only, nothing is published: license and provenance checks do not
-    // apply, so rows from any dataset validate on their music alone.
+    // Rows from other pipelines may carry fields `Song` would not know; drop them.
     for k in ["generator", "spec_node"] {
         o.remove(k);
     }
-    for k in ["license", "composition_license"] {
-        o.insert(k.into(), json!("public-domain"));
-    }
-    o.insert("source".into(), json!("original"));
+}
+
+/// Validation errors about the music. License and provenance rules are left
+/// out: dataset rows are scored, never published, and keep their own license
+/// values, which this command does not verify (`license_checked: false`).
+fn music_errors(s: &Song) -> Vec<String> {
+    const NOT_MUSIC: [&str; 6] = ["license", "composition_license", "source_url", "`generator`", "generated songs", "generator."];
+    s.validate().into_iter().filter(|e| !NOT_MUSIC.iter().any(|p| e.starts_with(p))).collect()
 }
 
 fn round3(x: f64) -> f64 {
@@ -108,11 +111,12 @@ pub fn run(args: &[String]) -> i32 {
             let id = v.get("id").cloned().unwrap_or(Value::Null);
             fill_song_fields(&mut v);
             let row = match serde_json::from_value::<Song>(v).map_err(|e| e.to_string()) {
-                Ok(s) if s.validate().is_empty() => {
+                Ok(s) if music_errors(&s).is_empty() => {
                     let sk = skills(&features(&s));
-                    json!({"id": id, "skills": sk.map(round3), "level_score": round3(model.level_score(model.z(&sk))), "level": model.level(&sk)})
+                    json!({"id": id, "skills": sk.map(round3), "level_score": round3(model.level_score(model.z(&sk))), "level": model.level(&sk),
+                        "license": s.license, "license_checked": false})
                 }
-                Ok(s) => json!({"id": id, "error": s.validate().join("; ")}),
+                Ok(s) => json!({"id": id, "error": music_errors(&s).join("; ")}),
                 Err(e) => json!({"id": id, "error": e}),
             };
             println!("{row}");

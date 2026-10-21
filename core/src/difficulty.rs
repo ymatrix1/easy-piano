@@ -1,4 +1,4 @@
-//! Song difficulty (docs/specs/difficulty.md, D23).
+//! Song difficulty (docs/specs/difficulty.md, D24).
 //!
 //! `features` measures a song per hand and per bar (graded hands only), `skills`
 //! folds those into 8 scores in 0..1, and `Model` maps the scores to a level
@@ -79,14 +79,17 @@ pub struct Features {
     // Key.
     /// Sharps or flats in the key signature.
     pub key_signature: u8,
+    /// `key` is not a key name we know; it is read as C major.
+    pub unknown_key: bool,
     /// Notes outside the key's scale (minor keys allow the raised 7th).
     pub out_of_key_per_bar: f64,
     pub black_keys_per_bar: f64,
     // Coordination (zero with one hand).
     /// Onsets where both hands strike.
     pub together_per_bar: f64,
-    /// LH onsets with no RH onset at the same moment.
-    pub independent_per_bar: f64,
+    /// Moments where either hand starts a note (union of both hands' onsets).
+    /// Unlike "LH onsets without RH", this cannot drop when a note is added.
+    pub onsets_per_bar: f64,
     pub lh_notes_per_bar: f64,
     pub lh_distinct_durations: usize,
     // Texture.
@@ -126,17 +129,25 @@ fn on_ledger(hand: &str, p: u8) -> bool {
     if hand == "LH" { p <= 40 || p >= 60 } else { p <= 61 || p >= 81 }
 }
 
-/// Sharps/flats of a key and the pitch classes of its scale. Unknown keys read as C.
-pub fn key_info(key: &str) -> (u8, BTreeSet<u8>) {
-    let minor = key.len() > 1 && key.ends_with('m');
-    let tonic_name = if minor { &key[..key.len() - 1] } else { key };
-    let tonic = parse_pitch(&format!("{tonic_name}4")).map(|p| p % 12).unwrap_or(0);
-    // Relative major's tonic decides the signature.
-    let major = if minor { (tonic + 3) % 12 } else { tonic };
-    // Signature size by major tonic pitch class (C, Db, D, Eb, E, F, F#/Gb, G, Ab, A, Bb, B).
-    const SIZE: [u8; 12] = [0, 5, 2, 3, 4, 1, 6, 1, 4, 3, 2, 5];
-    let steps: &[u8] = if minor { &[0, 2, 3, 5, 7, 8, 10, 11] } else { &[0, 2, 4, 5, 7, 9, 11] };
-    (SIZE[major as usize], steps.iter().map(|s| (tonic + s) % 12).collect())
+/// Sharps/flats of a key and the pitch classes of its scale (minor keys add
+/// the raised 7th). `None` for a key name we do not know.
+pub fn key_info(key: &str) -> Option<(u8, BTreeSet<u8>)> {
+    const MAJOR: [(&str, u8); 15] = [
+        ("C", 0), ("G", 1), ("D", 2), ("A", 3), ("E", 4), ("B", 5), ("F#", 6), ("C#", 7),
+        ("F", 1), ("Bb", 2), ("Eb", 3), ("Ab", 4), ("Db", 5), ("Gb", 6), ("Cb", 7),
+    ];
+    const MINOR: [(&str, u8); 15] = [
+        ("A", 0), ("E", 1), ("B", 2), ("F#", 3), ("C#", 4), ("G#", 5), ("D#", 6), ("A#", 7),
+        ("D", 1), ("G", 2), ("C", 3), ("F", 4), ("Bb", 5), ("Eb", 6), ("Ab", 7),
+    ];
+    let (name, table, steps): (&str, &[(&str, u8)], &[u8]) = match key.strip_suffix('m') {
+        Some(t) => (t, &MINOR, &[0, 2, 3, 5, 7, 8, 10, 11]),
+        None => (key, &MAJOR, &[0, 2, 4, 5, 7, 9, 11]),
+    };
+    let size = table.iter().find(|(n, _)| *n == name)?.1;
+    // `Cb4` parses one octave off, but only the pitch class matters here.
+    let tonic = parse_pitch(&format!("{name}4")).ok()? % 12;
+    Some((size, steps.iter().map(|s| (tonic + s) % 12).collect()))
 }
 
 fn hands(song: &Song) -> BTreeMap<&'static str, Hand> {
@@ -187,8 +198,10 @@ pub fn features(song: &Song) -> Features {
     let beat = 1.0 / unit as f64;
     let bars = song.bars.len().max(1);
     let per_bar = |n: usize| n as f64 / bars as f64;
-    let (key_signature, scale) = key_info(&song.key);
-    let mut f = Features { bars: song.bars.len(), hands: hs.len(), key_signature, fastest: 1.0, ..Default::default() };
+    let known = key_info(&song.key);
+    let unknown_key = known.is_none();
+    let (key_signature, scale) = known.unwrap_or_else(|| key_info("C").expect("C is a key"));
+    let mut f = Features { bars: song.bars.len(), hands: hs.len(), key_signature, unknown_key, fastest: 1.0, ..Default::default() };
     let (mut ledger, mut cross, mut shift, mut skips, mut leaps) = (0, 0, 0, 0, 0);
     let (mut dotted, mut sync, mut ties, mut rests, mut tuplets) = (0, 0, 0, 0, 0);
     let (mut out_key, mut black, mut chords) = (0, 0, 0);
@@ -229,7 +242,10 @@ pub fn features(song: &Song) -> Features {
         let together = |x: &Hit| r.hits.iter().any(|y| (x.at - y.at).abs() < EPS);
         let n = l.hits.iter().filter(|x| together(x)).count();
         f.together_per_bar = per_bar(n);
-        f.independent_per_bar = per_bar(l.hits.len() - n);
+        let mut at: Vec<f64> = r.hits.iter().chain(&l.hits).map(|x| x.at).collect();
+        at.sort_by(f64::total_cmp);
+        at.dedup_by(|a, b| (*a - *b).abs() < EPS);
+        f.onsets_per_bar = per_bar(at.len());
         f.lh_notes_per_bar = per_bar(l.hits.len());
         f.lh_distinct_durations = l.hits.iter().map(|x| dur_label(x.dur)).collect::<BTreeSet<_>>().len();
     }
@@ -240,6 +256,8 @@ pub fn features(song: &Song) -> Features {
     (f.dotted_per_bar, f.syncopations_per_bar, f.ties_per_bar) = (per_bar(dotted), per_bar(sync), per_bar(ties));
     (f.rests_per_bar, f.tuplets_per_bar) = (per_bar(rests), per_bar(tuplets));
     (f.out_of_key_per_bar, f.black_keys_per_bar, f.chords_per_bar) = (per_bar(out_key), per_bar(black), per_bar(chords));
+    // `bpm` counts the meter's beat unit (the denominator note), as the session
+    // engine plays it: 6/8 at 120 is 120 eighths a minute, 2/2 at 60 is 60 halves.
     let bar_secs = num as f64 * 60.0 / song.bpm.max(1.0);
     let onsets: usize = hs.values().map(|h| h.hits.len()).sum();
     f.notes_per_second = onsets as f64 / (bars as f64 * bar_secs);
@@ -274,12 +292,14 @@ pub fn skills(f: &Features) -> Skills {
         mean(&[
             (1.0, cap(f.hands.saturating_sub(1) as f64, 1.0)),
             (1.0, cap(f.together_per_bar, 2.0)),
-            (1.0, cap(f.independent_per_bar, 2.0)),
+            (1.0, cap(f.onsets_per_bar, 8.0)),
             (1.0, cap(f.lh_notes_per_bar, 4.0)),
             (1.0, cap(f.lh_distinct_durations as f64, 3.0)),
         ]),
         mean(&[(1.0, cap(f.max_notes_at_once.saturating_sub(1) as f64, 3.0)), (1.0, cap(f.chords_per_bar, 2.0)), (1.0, cap(f.chord_hands as f64, 2.0))]),
-        mean(&[(2.0, cap(f.notes_per_second, 4.0)), (1.0, cap(f.peak_notes_per_second, 6.0)), (1.0, cap(f.unique_bars as f64, 32.0))]),
+        // `unique_bars` is reported but not scored: adding a note can make two bars
+        // equal and lower it, which would break monotonicity.
+        mean(&[(2.0, cap(f.notes_per_second, 4.0)), (1.0, cap(f.peak_notes_per_second, 6.0))]),
     ]
 }
 
@@ -370,7 +390,7 @@ fn reason(skill: usize, f: &Features) -> String {
         2 => format!("leaps up to {} semitones, {:.1} skips and {:.1} leaps per bar", f.max_leap, f.skips_per_bar, f.leaps_per_bar),
         3 => format!("fastest note a {}, {} note values", fraction_name(f.fastest), f.distinct_durations),
         4 => format!("{} sharps/flats in the key, {:.1} accidentals per bar", f.key_signature, f.out_of_key_per_bar),
-        5 => format!("both hands: {:.1} together and {:.1} independent left-hand notes per bar", f.together_per_bar, f.independent_per_bar),
+        5 => format!("both hands: {:.1} notes together, {:.1} onsets per bar", f.together_per_bar, f.onsets_per_bar),
         6 => format!("up to {} notes at once, {:.1} chords per bar", f.max_notes_at_once, f.chords_per_bar),
         _ => format!("{:.1} notes per second (peak {:.1}), {} different bars", f.notes_per_second, f.peak_notes_per_second, f.unique_bars),
     }
@@ -392,7 +412,8 @@ pub fn evaluate(song: &Song, model: &Model) -> Report {
     bars.truncate(3);
     let mut order: Vec<usize> = (0..SKILLS.len()).collect();
     order.sort_by(|&a, &b| (model.weights[b] * s[b]).total_cmp(&(model.weights[a] * s[a])));
-    let reasons = order.iter().filter(|&&k| s[k] >= 0.25 && model.weights[k] > 0.0).take(3).map(|&k| format!("{}: {}", SKILLS[k], reason(k, &f))).collect();
+    let unknown = f.unknown_key.then(|| format!("key: unknown key `{}`, read as C major", song.key));
+    let reasons = unknown.into_iter().chain(order.iter().filter(|&&k| s[k] >= 0.25 && model.weights[k] > 0.0).take(3).map(|&k| format!("{}: {}", SKILLS[k], reason(k, &f)))).collect();
     Report {
         level: score.round().clamp(1.0, 10.0) as u8,
         level_score: round3(score),
@@ -459,14 +480,42 @@ mod tests {
 
     #[test]
     fn key_signatures() {
-        assert_eq!(key_info("C").0, 0);
-        assert_eq!(key_info("G").0, 1);
-        assert_eq!(key_info("F").0, 1);
-        assert_eq!(key_info("Am").0, 0);
-        assert_eq!(key_info("Dm").0, 1);
-        assert_eq!(key_info("Eb").0, 3);
-        assert!(key_info("Am").1.contains(&8), "G# allowed in A minor");
-        assert!(!key_info("C").1.contains(&6));
+        let size = |k| key_info(k).map(|x| x.0);
+        for (k, n) in [("C", 0), ("G", 1), ("F", 1), ("Am", 0), ("Dm", 1), ("Eb", 3), ("C#", 7), ("Cb", 7), ("Db", 5), ("Gb", 6), ("G#m", 5), ("Ebm", 6)] {
+            assert_eq!(size(k), Some(n), "{k}");
+        }
+        assert_eq!(size("G#"), None, "G# major is not a written key");
+        assert_eq!(size("H"), None);
+        assert!(key_info("Am").unwrap().1.contains(&8), "G# allowed in A minor");
+        assert!(!key_info("C").unwrap().1.contains(&6));
+        assert!(key_info("Cb").unwrap().1.contains(&11), "Cb major has Cb");
+    }
+
+    #[test]
+    fn unknown_key_reads_as_c_with_a_reason() {
+        let s = song("H", 96, TWINKLE);
+        assert!(features(&s).unknown_key);
+        let r = evaluate(&s, &Model::builtin());
+        assert!(r.reasons[0].contains("unknown key `H`"), "{:?}", r.reasons);
+        assert_eq!(r.level, evaluate(&song("C", 96, TWINKLE), &Model::builtin()).level);
+    }
+
+    fn meter(time: &str, bpm: u32, bars: &str) -> Song {
+        let s = song("C", bpm, bars);
+        Song { time: time.into(), ..s }
+    }
+
+    #[test]
+    fn notes_per_second_follow_the_meter_beat_unit() {
+        // 3/4 at 60: three quarters, one second each.
+        let f = features(&meter("3/4", 60, r#"[{"RH":"C4:4 D4:4 E4:4"}]"#));
+        assert!((f.notes_per_second - 1.0).abs() < EPS);
+        // 6/8 at 120: six eighths a bar, half a second each.
+        let f = features(&meter("6/8", 120, r#"[{"RH":"C4:8 D4:8 E4:8 F4:8 E4:8 D4:8"}]"#));
+        assert!((f.notes_per_second - 2.0).abs() < EPS);
+        // 2/2 at 60: two halves a bar, one second each.
+        let f = features(&meter("2/2", 60, r#"[{"RH":"C4:2 D4:2"}]"#));
+        assert!((f.notes_per_second - 1.0).abs() < EPS);
     }
 
     #[test]
@@ -492,11 +541,24 @@ mod tests {
     #[test]
     fn coordination_and_texture() {
         let f = features(&song("C", 90, r#"[{"RH":"E4:4 D4:4 C4:2","LH":"C3E3G3:2 G2:4 G2:4"}]"#));
-        assert_eq!((f.hands, f.together_per_bar, f.independent_per_bar), (2, 2.0, 1.0));
+        assert_eq!((f.hands, f.together_per_bar, f.onsets_per_bar), (2, 2.0, 4.0));
         assert_eq!((f.max_notes_at_once, f.chords_per_bar, f.chord_hands, f.max_stretch), (3, 1.0, 1, 7));
     }
 
     // Monotonicity: each change adds difficulty and must never lower the level.
+
+    #[test]
+    fn an_rh_note_on_an_lh_onset_never_lowers_coordination() {
+        // Regression: splitting LH onsets into "together" and "independent" let
+        // this extra RH note lower coordination.
+        let lh = "C3:4 C3:4 C3:4 C3:4";
+        let a = song("C", 96, &format!(r#"[{{"RH":"C4:4 D4:4 E4:2","LH":"{lh}"}}]"#));
+        let b = song("C", 96, &format!(r#"[{{"RH":"C4:4 D4:4 E4:4 F4:4","LH":"{lh}"}}]"#));
+        let (sa, sb) = (skills(&features(&a)), skills(&features(&b)));
+        assert!(sb[5] >= sa[5], "coordination {} < {}", sb[5], sa[5]);
+        // The other skills move too (the half note becomes two quarters), so only
+        // coordination is compared.
+    }
 
     #[test]
     fn sixteenths_never_lower_the_level() {

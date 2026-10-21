@@ -28,4 +28,4 @@ Shared evaluator for app, content-cli and Python tools.
 App UI.
 
 ## Summary of Changes
-Done in PR feat/difficulty-evaluator: D23 (proposed), docs/specs/difficulty.md, core/src/difficulty.rs + rubric::taught_violations, core/data/difficulty-weights.json, tools/difficulty/calibrate.py, content level command and lint warning. Held-out Kendall tau 0.714, PDMX Spearman 0.577.
+Done in PR feat/difficulty-evaluator: D24 (proposed), docs/specs/difficulty.md, core/src/difficulty.rs + rubric::taught_violations, core/data/difficulty-weights.json, tools/difficulty/calibrate.py, content level command and lint warning. Held-out Kendall tau 0.714, PDMX Spearman 0.577.

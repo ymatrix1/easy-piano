@@ -1,4 +1,4 @@
-"""Fit the song difficulty model (docs/specs/difficulty.md, D23).
+"""Fit the song difficulty model (docs/specs/difficulty.md, D24).
 
 Skill scores come from Rust (`content level`), so Python never re-implements
 features. The fit is a cumulative-logit ordinal model with non-negative skill
@@ -11,8 +11,9 @@ weights, trained on:
 5. PDMX `complexity` (0-3) as weak labels, only if the git-ignored PDMX data is
    present locally (`<data>/raw/pdmx/PDMX.csv`, `<data>/dataset/tunes.jsonl`).
 
-Every 5th course song is held out for the reported Kendall tau, then the model
-is refit on all songs and written to core/data/difficulty-weights.json.
+Scores are cross-validated (5 folds) and compared with baselines that never saw
+course order, with bootstrap intervals; then the model is refit on all songs and
+written to core/data/difficulty-weights.json.
 
     python tools/difficulty/calibrate.py [--data data/melody] [--pdmx-max 3000] [--dry-run]
 """
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import random
 import subprocess
@@ -43,6 +45,12 @@ GRADED = ("RH", "LH")
 MIN_WEIGHT = 0.25
 # Thresholds without data (levels above the course) keep this spacing.
 PRIOR_SPACING = 0.6
+SEED = 7
+FOLDS = 5
+# Expected level at the first and last course node: an assumption (spec, D24), not fitted.
+COURSE_LEVELS = [1, 6]
+# Fixed starting point, so a run does not depend on the previous weights file.
+PRIOR = {"weights": [1.0] * 8, "thresholds": [0.4 + 0.6 * i for i in range(9)]}
 
 
 def content(*args: str) -> str:
@@ -97,7 +105,7 @@ def split_chord(head: str) -> list[str]:
     return notes + ([cur] if cur else [])
 
 
-def pdmx_rows(data: Path, limit: int, seed: int = 7) -> list[tuple[dict, int]]:
+def pdmx_rows(data: Path, limit: int, seed: int = SEED) -> list[tuple[dict, int]]:
     csv_path, tunes = data / "raw" / "pdmx" / "PDMX.csv", data / "dataset" / "tunes.jsonl"
     if not (csv_path.exists() and tunes.exists()):
         return []
@@ -175,7 +183,18 @@ def level_score(w, theta, x):
     return 1.0 + np.sum(1.0 / (1.0 + np.exp(np.asarray(theta)[None, :] - np.atleast_1d(z)[:, None])), axis=1)
 
 
-def build(course, envelopes, simple, pdmx, held: set[str]):
+def envelopes(train, n_nodes, lo, hi):
+    """Most of each skill seen up to each node, from training songs only."""
+    env, out = np.zeros(8), []
+    for i in range(n_nodes):
+        for c in (c for c in train if c["index"] == i):
+            env = np.maximum(env, c["skills"])
+        if env.any():
+            out.append((env.copy(), lo + (hi - lo) * i / max(1, n_nodes - 1)))
+    return out
+
+
+def build(course, n_nodes, simple, pdmx, held: set[str]):
     f = Fit()
     train = [c for c in course if c["id"] not in held]
     for c in train:
@@ -184,7 +203,7 @@ def build(course, envelopes, simple, pdmx, held: set[str]):
         for b in train:
             if b["index"] > a["index"]:
                 f.pair(b["skills"], a["skills"], 2.0 / len(train))
-    for env, exp in envelopes:
+    for env, exp in envelopes(train, n_nodes, *COURSE_LEVELS):
         f.ordinal(env, exp, 0.3)
     for orig, s in simple:
         if orig["id"] not in held:
@@ -196,6 +215,33 @@ def build(course, envelopes, simple, pdmx, held: set[str]):
     return f
 
 
+def tau_ci(scores, target, seed=SEED, n=2000):
+    """Kendall tau with a 95% bootstrap interval over songs."""
+    scores, target = np.asarray(scores, dtype=float), np.asarray(target, dtype=float)
+    rng = np.random.default_rng(seed)
+    boot = []
+    for _ in range(n):
+        i = rng.integers(0, len(scores), len(scores))
+        t = kendalltau(scores[i], target[i]).statistic
+        if np.isfinite(t):
+            boot.append(t)
+    lo, hi = np.percentile(boot, [2.5, 97.5])
+    return {"tau": round(float(kendalltau(scores, target).statistic), 3), "ci95": [round(float(lo), 3), round(float(hi), 3)]}
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def easier(w, theta, pairs) -> int:
+    """Pairs whose simplified variant scores strictly lower (ties fail)."""
+    return sum(bool(level_score(w, theta, [o["skills"]])[0] > level_score(w, theta, [s])[0]) for o, s in pairs)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, default=ROOT / "data" / "melody")
@@ -203,64 +249,81 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
-    start = json.loads(WEIGHTS.read_text(encoding="utf-8"))
     report = json.loads(content(str(ROOT / "content"), "--course"))
     course = report["songs"]
-    lo, hi = start["course_levels"]
     n_nodes = report["nodes"]
-    env = np.zeros(8)
-    envelopes = []
-    for i in range(n_nodes):
-        for c in (c for c in course if c["index"] == i):
-            env = np.maximum(env, c["skills"])
-        if env.any():
-            envelopes.append((env.copy(), lo + (hi - lo) * i / max(1, n_nodes - 1)))
-
     songs = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "content" / "songs").glob("*.json")}
     variants = [v for c in course if (v := simplify(songs[c["id"]]))]
     scored = {r["id"]: r for r in score_rows(variants)}
-    simple = [(c, scored[c["id"] + "~simple"]["skills"]) for c in course if c["id"] + "~simple" in scored and "skills" in scored[c["id"] + "~simple"]]
+    simple = [(c, scored[c["id"] + "~simple"]["skills"]) for c in course if "skills" in scored.get(c["id"] + "~simple", {})]
 
     pdmx_raw = pdmx_rows(a.data, a.pdmx_max)
     pdmx = []
     if pdmx_raw:
         rows = score_rows([t for t, _ in pdmx_raw])
         pdmx = [(r["skills"], c) for r, (_, c) in zip(rows, pdmx_raw) if "skills" in r]
-    print(f"course songs {len(course)}, nodes {n_nodes}, envelopes {len(envelopes)}, simplified pairs {len(simple)}, "
+    print(f"course songs {len(course)}, nodes {n_nodes}, simplified pairs {len(simple)}, "
           f"pdmx {len(pdmx)} ({'present' if pdmx_raw else 'absent, skipped'})")
 
-    held = {c["id"] for k, c in enumerate(course) if k % 5 == 2}
-    w, theta, _ = build(course, envelopes, simple, pdmx, held).run(start)
-    test = [c for c in course if c["id"] in held]
-    ls = level_score(w, theta, [c["skills"] for c in test])
-    tau_held = kendalltau(ls, [c["index"] for c in test]).statistic
-    base = level_score(start["weights"], start["thresholds"], [c["skills"] for c in test])
-    tau_base = kendalltau(base, [c["index"] for c in test]).statistic
+    X = np.array([c["skills"] for c in course])
+    idx = [c["index"] for c in course]
+    # Cross-validation: each song is scored by a model that never saw it (its
+    # anchor, its pairs, its envelope contribution, its simplified pair).
+    oof = np.zeros(len(course))
+    simple_cv = 0
+    for k in range(FOLDS):
+        held = {c["id"] for j, c in enumerate(course) if j % FOLDS == k}
+        w, theta, _ = build(course, n_nodes, simple, pdmx, held).run(PRIOR)
+        rows = [j for j, c in enumerate(course) if c["id"] in held]
+        oof[rows] = level_score(w, theta, X[rows])
+        simple_cv += easier(w, theta, [(o, s) for o, s in simple if o["id"] in held])
+    # Baselines that never saw course order, on the same songs.
+    baselines = {
+        "uniform_skill_sum": tau_ci(X.sum(axis=1), idx),
+        "speed_skill_only": tau_ci(X[:, 7], idx),
+        "reading_skill_only": tau_ci(X[:, 0], idx),
+    }
+    # Course signals only, then PDMX as labels this fit never used.
+    pdmx_course_only = None
+    if pdmx:
+        w0, t0, _ = build(course, n_nodes, simple, [], set()).run(PRIOR)
+        pdmx_course_only = round(float(spearmanr(level_score(w0, t0, [x for x, _ in pdmx]), [c for _, c in pdmx]).statistic), 3)
 
-    w, theta, loss = build(course, envelopes, simple, pdmx, set()).run(start)
-    all_ls = level_score(w, theta, [c["skills"] for c in course])
-    tau_all = kendalltau(all_ls, [c["index"] for c in course]).statistic
+    w, theta, _ = build(course, n_nodes, simple, pdmx, set()).run(PRIOR)
+    all_ls = level_score(w, theta, X)
     mae = float(np.mean(np.abs(np.clip(np.round(all_ls), 1, 10) - [c["expected"] for c in course])))
-    simple_ok = sum(level_score(w, theta, [o["skills"]])[0] >= level_score(w, theta, [s])[0] for o, s in simple)
     fit = {
         "date": date.today().isoformat(),
-        "signals": ["course anchors", "course order pairs", "node envelopes", "simplified pairs"] + (["pdmx complexity"] if pdmx else []),
+        "command": "python tools/difficulty/calibrate.py " + " ".join(sys.argv[1:]),
+        "seed": SEED,
+        "signals": ["course anchors", "course order pairs", "node envelopes (train songs only)", "simplified pairs"] + (["pdmx complexity"] if pdmx else []),
         "course_songs": len(course),
-        "held_out": len(test),
-        "kendall_tau_held_out": round(float(tau_held), 3),
-        "kendall_tau_held_out_prior": round(float(tau_base), 3),
-        "kendall_tau_all": round(float(tau_all), 3),
-        "course_level_mae": round(mae, 3),
-        "simplified_easier": f"{simple_ok}/{len(simple)}",
+        "note": "Course tau is measured against node index, which the fit also uses (anchors, pairs). "
+                "Cross-validated scores and baselines that never saw course order are given for comparison; "
+                "pdmx.spearman_course_only is the one check against labels the fit did not use.",
+        "cv_folds": FOLDS,
+        "kendall_tau_cv": tau_ci(oof, idx),
+        "baselines": baselines,
+        "kendall_tau_fitted": tau_ci(all_ls, idx),
+        "course_level_mae_fitted": round(mae, 3),
+        "simplified_easier_cv": f"{simple_cv}/{len(simple)}",
+        "simplified_easier_fitted": f"{easier(w, theta, simple)}/{len(simple)}",
     }
     if pdmx:
         pl = level_score(w, theta, [x for x, _ in pdmx])
         cs = [c for _, c in pdmx]
-        fit["pdmx_tunes"] = len(pdmx)
-        fit["pdmx_spearman"] = round(float(spearmanr(pl, cs).statistic), 3)
-        fit["pdmx_kendall_tau"] = round(float(kendalltau(pl, cs).statistic), 3)
-        fit["pdmx_mean_level_by_complexity"] = {str(c): round(float(np.mean(pl[np.array(cs) == c])), 2) for c in sorted(set(cs))}
-    out = {"weights": w, "thresholds": theta, "course_levels": start["course_levels"], "skills": SKILLS, "fit": fit}
+        fit["pdmx"] = {
+            "tunes_sampled": len(pdmx_raw),
+            "tunes_scored": len(pdmx),
+            "per_complexity": {str(c): cs.count(c) for c in sorted(set(cs))},
+            "tunes_jsonl_sha256": sha256(a.data / "dataset" / "tunes.jsonl"),
+            "pdmx_csv_sha256": sha256(a.data / "raw" / "pdmx" / "PDMX.csv"),
+            "spearman_course_only": pdmx_course_only,
+            "spearman_fitted": round(float(spearmanr(pl, cs).statistic), 3),
+            "kendall_tau_fitted": round(float(kendalltau(pl, cs).statistic), 3),
+            "mean_level_by_complexity": {str(c): round(float(np.mean(pl[np.array(cs) == c])), 2) for c in sorted(set(cs))},
+        }
+    out = {"weights": w, "thresholds": theta, "course_levels": COURSE_LEVELS, "skills": SKILLS, "fit": fit}
     print(json.dumps(out, indent=2))
     if not a.dry_run:
         WEIGHTS.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")

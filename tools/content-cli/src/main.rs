@@ -828,6 +828,19 @@ mod tests {
     }
 
     #[test]
+    fn course_mean_levels_rise_course_by_course() {
+        let (songs, walk) = repo_walk();
+        let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
+        let mean = |course: &str| {
+            let v: Vec<f64> = list.iter().filter(|c| c.node.starts_with(&format!("{course}/"))).map(|c| c.level_score).collect();
+            assert!(!v.is_empty(), "{course} has no songs");
+            v.iter().sum::<f64>() / v.len() as f64
+        };
+        let means: Vec<f64> = ["piano-basics", "essentials-1", "essentials-2", "essentials-3"].iter().map(|c| mean(c)).collect();
+        assert!(means.windows(2).all(|w| w[0] < w[1]), "mean level per course {means:?}");
+    }
+
+    #[test]
     fn node_fit_agrees_with_the_rubric_on_every_song() {
         use easy_piano_core::difficulty::node_fit;
         use easy_piano_core::rubric::taught_violations;

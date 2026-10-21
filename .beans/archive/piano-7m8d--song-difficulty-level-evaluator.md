@@ -26,4 +26,4 @@ One shared, pure Rust evaluator that says how hard a song is, why, and which jou
 App UI use, learner-data recalibration, melody-model wiring.
 
 ## Summary of Changes
-Done in PR feat/difficulty-evaluator: D23 (proposed), docs/specs/difficulty.md, core/src/difficulty.rs + rubric::taught_violations, core/data/difficulty-weights.json, tools/difficulty/calibrate.py, content level command and lint warning. Held-out Kendall tau 0.714, PDMX Spearman 0.577.
+Done in PR feat/difficulty-evaluator: D24 (proposed), docs/specs/difficulty.md, core/src/difficulty.rs + rubric::taught_violations, core/data/difficulty-weights.json, tools/difficulty/calibrate.py, content level command and lint warning. Held-out Kendall tau 0.714, PDMX Spearman 0.577.
