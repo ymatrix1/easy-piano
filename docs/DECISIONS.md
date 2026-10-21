@@ -301,13 +301,13 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 ### D28. Practice mode generates tunes in the app at runtime
 
 - **Status:** accepted
-- **Decided by:** user, 2026-10-21: "lets remove that rule the app never generates at runtime, I want to add a practice mode that will generate"
+- **Decided by:** user, 2026-10-21: "lets remove that rule the app never generates at runtime, I want to add a practice mode that will generate"; "we can remove the copy check and human review for that mode"
 - **Context:** D17 says generation happens only in the content pipeline and the app never generates songs at runtime. The melody model (PR #47) runs in the browser in about 0.3–0.4 s per 8-bar tune (int8, Chrome desktop, PR #48), and the rubric is in Rust `core`, so the app can check a tune locally.
-- **Decision:** Supersedes D17's "the app never generates at runtime" for a **practice mode**. In it, the app generates tunes on device for the learner's current node, using the downloaded model (sha256-verified, D24). Each tune must pass the rubric (`core/src/rubric.rs`) against that node's taught set before it is shown, and is marked as generated. Generated tunes stay **outside the course**: course levels, star gates and song slots use reviewed content only (D17 still applies there). Nothing generated at runtime is saved as content or shared.
+- **Decision:** Supersedes D17's "the app never generates at runtime" for a **practice mode**. In it, the app generates tunes on device for the learner's current node, using the downloaded model (sha256-verified, D24). Each tune must pass the rubric (`core/src/rubric.rs`) against that node's taught set before it is shown, and is marked as generated. Generated tunes stay **outside the course**: course levels, star gates and song slots use reviewed content only (D17 still applies there). Nothing generated at runtime is saved as content or shared. Practice mode needs **no copy check and no human review** (user's call); the rubric is its only gate.
 - **Why:** Endless, level-fit practice is a core learning feature; on-device generation keeps it local-first (D8) and free of servers.
 - **Alternatives:** A large pre-generated, reviewed pool downloaded per node (no runtime model, every tune checked); server-side generation (breaks D8).
 - **Impact:**
   - The app gains a model download (~12.5 MB int8, cached) and an inference path (onnxruntime on web; native runtimes later).
-  - **No human review and no similarity check at runtime** (the check needs the 40k-tune corpus and is not calibrated, D27). Known risk: a learner may be shown a phrase memorised from flagged training data (D21). Follow-up: a light runtime copy check (hashes of distinctive phrases) once bean piano-vx1w calibrates the rule.
+  - **No human review and no copy check in practice mode, by decision.** Known risk, accepted by the user: a learner may be shown a phrase memorised from flagged training data (D21). Course content keeps review (D17) and the similarity report (D27).
   - Phone latency must be measured before shipping on mobile.
   - Implementation: bean piano-c6v1.

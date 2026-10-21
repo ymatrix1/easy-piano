@@ -20,9 +20,8 @@ Endless level-fit practice for the learner's current node, on device.
 - [ ] Model download (cached, sha256-verified per D24) and on-device inference (onnxruntime-web first)
 - [ ] Spec from the node's taught set; masked decoding; rubric check in core before showing
 - [ ] Phone latency measured; fallback if too slow
-- [ ] Runtime copy check once the similarity rule is calibrated (piano-vx1w)
 
 ## Out of Scope
-Saving or sharing generated tunes as content.
+Saving or sharing generated tunes as content. Copy check and human review in practice mode (D28: not needed).
 
 ## Summary of Changes
