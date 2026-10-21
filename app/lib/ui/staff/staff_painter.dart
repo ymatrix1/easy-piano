@@ -224,22 +224,18 @@ class StaffPainter extends CustomPainter {
     return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
   }
 
-  /// Horizontal extent of the background cover drawn over the notes:
-  /// opaque up to [solid], linear fade to clear at [end]. Play-along: solid
-  /// ends one space before the clefs' right edge and the fade ends at the
-  /// play bar. Wait mode: the fade runs from the left edge to half a
-  /// notehead before the page start, so the current note is never covered.
-  static ({double solid, double end}) coverRange(
+  /// Horizontal edge-fade mask for everything that scrolls (noteheads,
+  /// stems, ledgers, dots, finger labels, hit bursts): fully transparent at
+  /// and left of [clear] (the clefs' right edge), linear up to fully opaque
+  /// at [full], a little before the anchor so the current note is never
+  /// dimmed.
+  static ({double clear, double full}) edgeFade(
     double clefRight,
     double anchorX,
-    double space, {
-    required bool wait,
-  }) {
-    if (wait) {
-      return (solid: 0.0, end: math.max(0.0, anchorX - space * 0.6));
-    }
-    final solid = math.max(0.0, clefRight - space);
-    return (solid: solid, end: math.max(solid + space, anchorX));
+    double space,
+  ) {
+    final full = math.max(clefRight + 1.0, anchorX - space * 0.6);
+    return (clear: clefRight, full: full);
   }
 
   /// Grand staff: spaces between the treble bottom line and the bass top
@@ -305,8 +301,7 @@ class StaffPainter extends CustomPainter {
       if (_hasBass) (bassTopY, bassTopY + space * 4),
     ];
 
-    // Band, staff lines, clefs and brace. Painted again over the notes
-    // near the clefs (see the cover below), so keep it free of notes.
+    // Band, staff lines, clefs and brace.
     void paintBackground() {
       if (bandColor != null) {
         final band = Paint()
@@ -494,6 +489,9 @@ class StaffPainter extends CustomPainter {
         : clockSec!() - introStartSec!;
     final introOn = introT != null && introT < 1.0;
     final first = _lowerBound(firstBeat);
+    // All scrolling elements go through one layer that is masked at the end.
+    final fade = edgeFade(clefRight, anchorX, space);
+    canvas.saveLayer(Offset.zero & size, Paint());
     var introN = 0;
     if (introOn) {
       for (var i = first; i < notes.length && notes[i].beat <= lastBeat; i++) {
@@ -592,32 +590,6 @@ class StaffPainter extends CustomPainter {
       if (intro != null) canvas.restore();
     }
 
-    // Cover: a copy of the background laid over the notes, opaque at the
-    // clefs and fading to clear at the play bar / page start, so passing
-    // notes ghost into the band and slide under crisp clefs.
-    final cover = coverRange(clefRight, anchorX, space, wait: !showPlayLine);
-    if (cover.end > 0) {
-      final rect = Rect.fromLTRB(0, 0, cover.end, size.height);
-      canvas.saveLayer(rect, Paint());
-      canvas.clipRect(rect);
-      paintBackground();
-      paintPlayBar();
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..blendMode = BlendMode.dstIn
-          ..shader = LinearGradient(
-            colors: const [
-              Color(0xFF000000),
-              Color(0xFF000000),
-              Color(0x00000000),
-            ],
-            stops: [0, cover.solid / cover.end, 1],
-          ).createShader(rect),
-      );
-      canvas.restore();
-    }
-
     if (showEndCheck && lastX != null) {
       final c = Offset(lastX + space * 4, (staffTop + staffBottom) / 2);
       canvas.drawCircle(c, space * 1.6, Paint()..color = checkColor);
@@ -666,6 +638,24 @@ class StaffPainter extends CustomPainter {
         }
       }
     }
+
+    // Mask the layer: alpha 0 up to the clefs' right edge, ramping to 1.
+    final maskRect = Offset.zero & size;
+    canvas.drawRect(
+      maskRect,
+      Paint()
+        ..blendMode = BlendMode.dstIn
+        ..shader = LinearGradient(
+          colors: const [
+            Color(0x00000000),
+            Color(0x00000000),
+            Color(0xFF000000),
+            Color(0xFF000000),
+          ],
+          stops: [0, fade.clear / size.width, fade.full / size.width, 1],
+        ).createShader(maskRect),
+    );
+    canvas.restore();
   }
 
   static bool _isDotted(double beats) =>
