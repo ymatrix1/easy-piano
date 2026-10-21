@@ -55,6 +55,25 @@ Local SQLite: profile, per-level best score, stars, attempts, streak, settings, 
 
 [D15](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`.
 
+## Build (Android)
+
+Phones are `arm64-v8a`. Build the installable APK with:
+
+```
+python tools/sync_content.py
+cd app && flutter build apk --release --target-platform android-arm64
+```
+
+Output: `app/build/app/outputs/flutter-apk/app-release.apk` (debug-signed for now). Don't sideload an APK from `flutter run` on an emulator: it carries only the emulator's ABI (`x86_64`) and crashes on a phone with `Could not find 'libflutter.so'`.
+
+Native-library notes:
+
+- cpal reaches AAudio through Oboe (C++). `app/rust/build.rs` links the NDK's `c++_static` + `c++abi`; without them the bridge fails to load (`cannot locate symbol "__cxa_pure_virtual"`).
+- cpal reads the JavaVM and Context from `ndk-context`. `MainActivity` loads `libeasy_piano_bridge.so` and calls `initAndroidContext` (`app/rust/src/android.rs`) before Flutter starts.
+- Launcher icon, label and splash (brand `#15104F` + logo) live in `app/android/app/src/main/res` and the manifest.
+
+CI (`ci.yml`, job `android`) builds the arm64 APK, checks its native libraries, uploads it as artifact `easy-piano-arm64-apk`, and boots the app to the home screen on an API 34 x86_64 emulator (`integration_test/app_smoke_test.dart`). Cargo (cargokit target dir), Gradle, Flutter/pub and the AVD snapshot are cached.
+
 ## Platform matrix
 
 | Target | MIDI | Mic | Notes |

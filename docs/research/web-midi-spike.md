@@ -44,7 +44,16 @@ Gotchas: `integrate` comments out the existing `main.dart` and adds a demo; rest
 
 ## Not done
 
-- Android/iOS build smoke test (needs Android SDK / macOS).
+- iOS build smoke test (needs macOS).
+
+## Android smoke test (2026-10-21)
+
+| Check | Result |
+|---|---|
+| Samsung Galaxy S23 Ultra (SDK release 16), release APK `--target-platform android-arm64` | boots to home screen; nothing in `logcat -b crash` |
+| Sideloaded APK built for the emulator | crash: `Could not find 'libflutter.so'... only found: [x86_64]` |
+| First arm64 APK | `RustLib.init` failed: `cannot locate symbol "__cxa_pure_virtual"` (Oboe C++ runtime not linked); fixed in `app/rust/build.rs` |
+| CI emulator, API 34 x86_64 | `integration_test/app_smoke_test.dart` must reach `HomePage` (job `android`) |
 
 ## Implications
 

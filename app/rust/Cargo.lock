@@ -376,6 +376,8 @@ dependencies = [
  "easy_piano_audio",
  "easy_piano_core",
  "flutter_rust_bridge",
+ "jni",
+ "ndk-context",
 ]
 
 [[package]]
