@@ -1,0 +1,12 @@
+[
+  {
+    "name": "my-midi-set",
+    "path": "data/melody/raw/my-midi-set",
+    "source": "https://example.org/where-it-came-from",
+    "license": "state the licence of the files and of the songs",
+    "flags": ["pop"],
+    "timing": "score",
+    "track": 0,
+    "group_by": "file"
+  }
+]

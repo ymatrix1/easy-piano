@@ -2,9 +2,12 @@
 //! Exit code 1 on any error. Layout: docs/specs/content-format.md.
 //! `content specs <content_dir> [--out <file>]`: cumulative taught set per journey
 //! node plus its skill spec (docs/specs/skill-specs.md).
+//! `content level <content_dir> ...`: song difficulty (docs/specs/difficulty.md).
 
+mod level;
 mod similar;
 
+use easy_piano_core::difficulty::Model;
 use easy_piano_core::rubric::{check, CourseSpecs, NodeSpec, TaughtSet};
 use easy_piano_core::song::Song;
 use serde_json::Value;
@@ -15,6 +18,8 @@ use std::path::{Path, PathBuf};
 const STAGE_TYPES: [&str; 5] = ["wait", "play_along", "one_note", "animation", "quiz"];
 const NODE_KINDS: [&str; 5] = ["lesson", "song", "star_gate", "boss", "mini_boss"];
 const UI_TYPES: [&str; 4] = ["treble", "bass", "both", "touch"];
+/// A course song whose level is this far from its node's expected level warns.
+const LEVEL_TOLERANCE: f64 = 2.5;
 
 #[derive(Default)]
 struct Lint {
@@ -529,6 +534,14 @@ fn lint_dir(root: &Path) -> Lint {
         }
     }
 
+    // Difficulty: a course song far from its node's expected level only warns.
+    for c in level::course_songs(&walk, &song_map, &Model::builtin()).0 {
+        if (c.level as f64 - c.expected).abs() > LEVEL_TOLERANCE {
+            let path = root.join("songs").join(format!("{}.json", c.id));
+            lint.warn(&path, format!("level {} but node {} expects about {:.0} (content level)", c.level, c.node, c.expected));
+        }
+    }
+
     // Strings: every referenced key exists in English.
     let en_path = root.join("strings").join("en.json");
     let en = read_json(&mut lint, &en_path).unwrap_or(Value::Null);
@@ -590,6 +603,9 @@ fn lint_dir(root: &Path) -> Lint {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some("level") {
+        std::process::exit(level::run(&args[2..]));
+    }
     if args.get(1).map(String::as_str) == Some("similar") {
         std::process::exit(similar::run(&args[2..]));
     }
@@ -781,5 +797,73 @@ mod tests {
             .map(|n| format!("{}/{}", n["course"].as_str().unwrap(), n["node"].as_str().unwrap()))
             .collect();
         assert!(missing.is_empty(), "nodes without a skill spec: {missing:?}");
+    }
+
+    fn repo_walk() -> (BTreeMap<String, Song>, Vec<NodeTaught>) {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content");
+        let (songs, _) = load_songs(&root);
+        let mut lint = Lint::default();
+        let walk = taught_walk(&mut lint, &root, &songs);
+        (songs, walk)
+    }
+
+    #[test]
+    fn course_songs_rank_in_course_order() {
+        let (songs, walk) = repo_walk();
+        let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
+        assert!(list.len() >= 30);
+        // Kendall tau between level score and node index.
+        let (mut c, mut d) = (0i64, 0i64);
+        for (i, a) in list.iter().enumerate() {
+            for b in &list[i + 1..] {
+                let s = (b.index as f64 - a.index as f64) * (b.level_score - a.level_score);
+                if s > 0.0 { c += 1 } else if s < 0.0 { d += 1 }
+            }
+        }
+        let tau = (c - d) as f64 / (c + d) as f64;
+        assert!(tau > 0.5, "tau {tau}");
+        let first = &list[0];
+        let last = list.iter().max_by_key(|c| c.index).unwrap();
+        assert!(last.level > first.level, "{} {} vs {} {}", first.id, first.level, last.id, last.level);
+    }
+
+    #[test]
+    fn course_mean_levels_rise_course_by_course() {
+        let (songs, walk) = repo_walk();
+        let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
+        let mean = |course: &str| {
+            let v: Vec<f64> = list.iter().filter(|c| c.node.starts_with(&format!("{course}/"))).map(|c| c.level_score).collect();
+            assert!(!v.is_empty(), "{course} has no songs");
+            v.iter().sum::<f64>() / v.len() as f64
+        };
+        let means: Vec<f64> = ["piano-basics", "essentials-1", "essentials-2", "essentials-3"].iter().map(|c| mean(c)).collect();
+        assert!(means.windows(2).all(|w| w[0] < w[1]), "mean level per course {means:?}");
+    }
+
+    #[test]
+    fn node_fit_agrees_with_the_rubric_on_every_song() {
+        use easy_piano_core::difficulty::node_fit;
+        use easy_piano_core::rubric::taught_violations;
+        let (songs, walk) = repo_walk();
+        let nodes: Vec<(String, TaughtSet)> = walk.iter().map(|w| (format!("{}/{}", w.course, w.node), w.taught.clone())).collect();
+        for song in songs.values() {
+            let fit = node_fit(song, &nodes);
+            let first_ok = nodes.iter().position(|(_, t)| taught_violations(song, t).is_empty());
+            assert_eq!(fit, first_ok.map(|i| nodes[i].0.as_str()), "{}", song.id);
+            if let Some(i) = first_ok {
+                assert!(nodes[i..].iter().all(|(_, t)| taught_violations(song, t).is_empty()), "{}: taught sets only grow", song.id);
+            }
+            // A course song fits by the node where it is taught.
+            if let Some(w) = walk.iter().position(|w| w.songs.contains(&song.id)).filter(|_| song.source != "generated") {
+                assert!(first_ok.is_some_and(|i| i <= w), "{} fits after its own node", song.id);
+            }
+            // A song with spec_node that passes the rubric fits by that node.
+            if let Some(key) = &song.spec_node {
+                let i = nodes.iter().position(|(k, _)| k == key).unwrap();
+                if taught_violations(song, &nodes[i].1).is_empty() {
+                    assert!(first_ok.is_some_and(|f| f <= i), "{}", song.id);
+                }
+            }
+        }
     }
 }
