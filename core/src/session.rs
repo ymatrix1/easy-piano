@@ -1022,7 +1022,7 @@ mod tests {
             .iter()
             .all(|t| matches!(t.state, ChordState::Hit { .. })));
         let f = s.tick(9_100_000);
-        assert!(!f.done && f.cursor as usize == first);
+        assert!(!f.done && f.cursor == first);
         assert_eq!(f.playhead_beat, s.targets()[first].beat);
         let mut other = song();
         other.bars[0] = longer.bars[1].clone();
