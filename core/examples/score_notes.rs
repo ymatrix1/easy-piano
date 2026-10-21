@@ -24,9 +24,17 @@ fn main() {
     };
     let notes: Vec<RawNote> = rows(notes_path)
         .into_iter()
-        .map(|r| RawNote { pitch: r[0] as u8, start: r[1], dur: r[2], amp: r[3] as f32 })
+        .map(|r| RawNote {
+            pitch: r[0] as u8,
+            start: r[1],
+            dur: r[2],
+            amp: r[3] as f32,
+        })
         .collect();
-    let truth: Vec<(u8, f64)> = rows(truth_path).into_iter().map(|r| (r[0] as u8, r[1])).collect();
+    let truth: Vec<(u8, f64)> = rows(truth_path)
+        .into_iter()
+        .map(|r| (r[0] as u8, r[1]))
+        .collect();
     let cleaned = clean(&notes, &CleanConfig::default());
     let tune = melody(&cleaned, 0.06);
     let fmt = |(p, r, f): (f64, f64, f64)| format!("P={p:.2} R={r:.2} F1={f:.2}");

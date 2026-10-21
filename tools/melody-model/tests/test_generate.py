@@ -1,11 +1,28 @@
-from melody_model import tokenizer as tk
-from melody_model.generate import KID, Masker, build_prefix, level_for
+import json
+import random
 
-NS = {"course": "essentials-1", "node": "rests",
-      "taught": {"accidentals": [], "durations": ["1", "2", "4", "8"], "hands_together": False, "max_interval": 5,
-                 "pitches": {"RH": ["C4", "D4", "E4", "F4", "G4"]}, "polyphony": {"RH": 1}, "rest_durations": ["4"],
-                 "rests": True, "times": ["4/4"]},
-      "spec": {"bars": [8, 8], "bpm": [72, 88], "hands": "RH", "time": "4/4", "required": [{"rest": True}]}}
+import pytest
+
+from melody_model import generate
+from melody_model import tokenizer as tk
+from melody_model.generate import Masker, build_prefix, level_for
+
+NS = {
+    "course": "essentials-1",
+    "node": "rests",
+    "taught": {
+        "accidentals": [],
+        "durations": ["1", "2", "4", "8"],
+        "hands_together": False,
+        "max_interval": 5,
+        "pitches": {"RH": ["C4", "D4", "E4", "F4", "G4"]},
+        "polyphony": {"RH": 1},
+        "rest_durations": ["4"],
+        "rests": True,
+        "times": ["4/4"],
+    },
+    "spec": {"bars": [8, 8], "bpm": [72, 88], "hands": "RH", "time": "4/4", "required": [{"rest": True}]},
+}
 
 
 def test_prefix_is_a_valid_spec():
@@ -29,7 +46,12 @@ def test_masker_walks_the_grammar_and_fills_bars():
     assert m.durs_for("NOTE") == ["1", "2", "4", "8"] and m.durs_for("REST") == ["4"]
     m.advance("NOTE", "C4", "2")
     assert m.durs_for("NOTE") == ["2", "4", "8"]
-    assert m.pitches_for("NOTE") == ["C4", "D4", "E4", "F4"]  # G4 is a 7-semitone leap, taught up to 5 semitones
+    assert m.pitches_for("NOTE") == [
+        "C4",
+        "D4",
+        "E4",
+        "F4",
+    ]  # G4 is a 7-semitone leap, taught up to 5 semitones
     m.advance("NOTE", "D4", "2")
     assert m.kinds() == ["BAR"]
 
@@ -38,23 +60,19 @@ def test_level_for_beginner_set():
     assert level_for(NS["taught"]) <= 2
 
 
-import json
-import random
-import subprocess
-
-import pytest
-
-from melody_model import generate
-
-
 def test_end_to_end_sample_is_a_valid_song(tmp_path):
     torch = pytest.importorskip("torch")
     from melody_model.model import CompoundGPT, Config
+
     torch.manual_seed(0)
-    model = CompoundGPT(Config(layers=1, d=32, heads=2, ctx=1024, dropout=0.0)).eval()  # untrained: masks alone must keep it valid
+    model = CompoundGPT(
+        Config(layers=1, d=32, heads=2, ctx=1024, dropout=0.0)
+    ).eval()  # untrained: masks alone must keep it valid
     prefix = build_prefix(NS, "C", 4, "4/4", [], 1)
     for seed in range(3):
-        steps, _ = generate.sample_tune(model, prefix, Masker(NS, 4, "4/4"), random.Random(seed), 1.0, torch, "cpu")
+        steps, _ = generate.sample_tune(
+            model, prefix, Masker(NS, 4, "4/4"), random.Random(seed), 1.0, torch, "cpu"
+        )
         assert tk.FIELDS["kind"][steps[-1][0]] == "END"
         song = generate.to_song(tk.decode(steps), NS, seed, "test", 1, 80)
         assert len(song["bars"]) == 4 and all(b["RH"] for b in song["bars"])

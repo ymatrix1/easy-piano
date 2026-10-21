@@ -57,7 +57,9 @@ class Block(nn.Module):
         b, t, d = x.shape
         q, k, v = self.qkv(self.n1(x)).view(b, t, 3, self.heads, d // self.heads).permute(2, 0, 3, 1, 4)
         q, k = rope(q, cos, sin), rope(k, cos, sin)
-        a = F.scaled_dot_product_attention(q, k, v, is_causal=True, dropout_p=self.p if self.training else 0.0)
+        a = F.scaled_dot_product_attention(
+            q, k, v, is_causal=True, dropout_p=self.p if self.training else 0.0
+        )
         x = x + self.drop(self.proj(a.transpose(1, 2).reshape(b, t, d)))
         return x + self.drop(self.mlp(self.n2(x)))
 
@@ -70,7 +72,9 @@ class CompoundGPT(nn.Module):
         self.blocks = nn.ModuleList(Block(c) for _ in range(c.layers))
         self.norm = nn.LayerNorm(c.d)
         self.heads = nn.ModuleList(nn.Linear(c.d, n) for n in FIELD_SIZES)
-        self.cond = nn.ModuleList(nn.Embedding(n, c.d) for n in FIELD_SIZES[:-1])  # kind, pitch, dur feed later heads
+        self.cond = nn.ModuleList(
+            nn.Embedding(n, c.d) for n in FIELD_SIZES[:-1]
+        )  # kind, pitch, dur feed later heads
         hd = c.d // c.heads
         inv = 1.0 / (10000 ** (torch.arange(0, hd, 2).float() / hd))
         ang = torch.outer(torch.arange(c.ctx).float(), inv)
@@ -109,8 +113,10 @@ class CompoundGPT(nn.Module):
         logits = self.heads_logits(self.hidden(x), y)
         losses = []
         for i, lg in enumerate(logits):
-            l = F.cross_entropy(lg.float().reshape(-1, lg.shape[-1]), y[..., i].reshape(-1), reduction="none")
-            losses.append((l * mask.reshape(-1)).sum() / mask.sum().clamp(min=1))
+            loss = F.cross_entropy(
+                lg.float().reshape(-1, lg.shape[-1]), y[..., i].reshape(-1), reduction="none"
+            )
+            losses.append((loss * mask.reshape(-1)).sum() / mask.sum().clamp(min=1))
         return sum(losses), losses
 
     def n_params(self) -> int:

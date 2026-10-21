@@ -102,7 +102,10 @@ fn id_matches_file(lint: &mut Lint, path: &Path, v: &Value) -> Option<String> {
 fn load_songs(root: &Path) -> (BTreeMap<String, Song>, Vec<(PathBuf, String)>) {
     let (mut songs, mut bad) = (BTreeMap::new(), Vec::new());
     for p in json_files(&root.join("songs")) {
-        match fs::read_to_string(&p).map_err(|e| e.to_string()).and_then(|t| Song::from_json(&t)) {
+        match fs::read_to_string(&p)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Song::from_json(&t))
+        {
             Ok(s) => {
                 songs.insert(s.id.clone(), s);
             }
@@ -126,17 +129,37 @@ struct NodeTaught {
 /// requires every course to come after the courses it `requires`, so this order
 /// is a valid learning order. Generated songs never widen the set.
 fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> Vec<NodeTaught> {
-    let read = |p: PathBuf| fs::read_to_string(p).ok().and_then(|t| serde_json::from_str::<Value>(&t).ok());
+    let read = |p: PathBuf| {
+        fs::read_to_string(p)
+            .ok()
+            .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+    };
     let courses_path = root.join("courses.json");
     let mut out = Vec::new();
     let mut taught = TaughtSet::default();
     let mut seen: BTreeSet<String> = BTreeSet::new();
     let courses = read(courses_path.clone()).unwrap_or(Value::Null);
-    for course in courses.get("courses").and_then(Value::as_array).into_iter().flatten() {
-        let Some(cid) = course.get("id").and_then(Value::as_str) else { continue };
-        for r in course.get("requires").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str) {
+    for course in courses
+        .get("courses")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let Some(cid) = course.get("id").and_then(Value::as_str) else {
+            continue;
+        };
+        for r in course
+            .get("requires")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+        {
             if !seen.contains(r) {
-                lint.err(&courses_path, format!("course `{cid}` requires `{r}`, which must be listed before it"));
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}` requires `{r}`, which must be listed before it"),
+                );
             }
         }
         seen.insert(cid.to_string());
@@ -146,39 +169,85 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
         let expected = format!("courses/{cid}/journey.json");
         match course.get("journey").and_then(Value::as_str) {
             Some(j) if j == expected => {}
-            other => lint.err(&courses_path, format!("course `{cid}`: `journey` must be `{expected}`, found {other:?}")),
+            other => lint.err(
+                &courses_path,
+                format!("course `{cid}`: `journey` must be `{expected}`, found {other:?}"),
+            ),
         }
         let cdir = root.join("courses").join(cid);
-        let Some(journey) = read(cdir.join("journey.json")) else { continue };
-        for node in journey.get("nodes").and_then(Value::as_array).into_iter().flatten() {
+        let Some(journey) = read(cdir.join("journey.json")) else {
+            continue;
+        };
+        for node in journey
+            .get("nodes")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
             let mut ids: Vec<String> = Vec::new();
-            for level in node.get("levels").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str) {
-                let Some(lv) = read(cdir.join("levels").join(format!("{level}.json"))) else { continue };
-                for st in lv.get("stages").and_then(Value::as_array).into_iter().flatten() {
-                    if let Some(s) = st.get("score").and_then(Value::as_str).filter(|s| !ids.iter().any(|i| i == s)) {
+            for level in node
+                .get("levels")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+            {
+                let Some(lv) = read(cdir.join("levels").join(format!("{level}.json"))) else {
+                    continue;
+                };
+                for st in lv
+                    .get("stages")
+                    .and_then(Value::as_array)
+                    .into_iter()
+                    .flatten()
+                {
+                    if let Some(s) = st
+                        .get("score")
+                        .and_then(Value::as_str)
+                        .filter(|s| !ids.iter().any(|i| i == s))
+                    {
                         ids.push(s.to_string());
                     }
                 }
             }
             // Profile variants (`songs` slots) teach the same node to other learners.
-            for s in node.get("songs").and_then(Value::as_object).into_iter().flat_map(|o| o.values()).filter_map(Value::as_str) {
+            for s in node
+                .get("songs")
+                .and_then(Value::as_object)
+                .into_iter()
+                .flat_map(|o| o.values())
+                .filter_map(Value::as_str)
+            {
                 if !ids.iter().any(|i| i == s) {
                     ids.push(s.to_string());
                 }
             }
-            for s in ids.iter().filter_map(|i| songs.get(i)).filter(|s| s.source != "generated") {
+            for s in ids
+                .iter()
+                .filter_map(|i| songs.get(i))
+                .filter(|s| s.source != "generated")
+            {
                 match TaughtSet::from_song(s) {
                     Ok(t) => taught.merge(&t),
                     Err(es) => {
                         let path = root.join("songs").join(format!("{}.json", s.id));
-                        es.iter().for_each(|e| lint.err(&path, format!("not counted as taught: {e}")));
+                        es.iter()
+                            .for_each(|e| lint.err(&path, format!("not counted as taught: {e}")));
                     }
                 }
             }
             out.push(NodeTaught {
                 course: cid.to_string(),
-                node: node.get("id").and_then(Value::as_str).unwrap_or("?").to_string(),
-                kind: node.get("kind").and_then(Value::as_str).unwrap_or("").to_string(),
+                node: node
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("?")
+                    .to_string(),
+                kind: node
+                    .get("kind")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
                 songs: ids,
                 taught: taught.clone(),
             });
@@ -191,7 +260,9 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
 fn load_specs(lint: &mut Lint, root: &Path, walk: &[NodeTaught]) -> BTreeMap<String, NodeSpec> {
     let mut out = BTreeMap::new();
     for path in json_files(&root.join("skill-specs")) {
-        let Ok(text) = fs::read_to_string(&path) else { continue };
+        let Ok(text) = fs::read_to_string(&path) else {
+            continue;
+        };
         let specs: CourseSpecs = match serde_json::from_str(&text) {
             Ok(s) => s,
             Err(e) => {
@@ -199,13 +270,25 @@ fn load_specs(lint: &mut Lint, root: &Path, walk: &[NodeTaught]) -> BTreeMap<Str
                 continue;
             }
         };
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or_default();
+        let stem = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default();
         if specs.course != stem {
-            lint.err(&path, format!("course `{}` must match file name `{stem}`", specs.course));
+            lint.err(
+                &path,
+                format!("course `{}` must match file name `{stem}`", specs.course),
+            );
         }
         for n in specs.nodes {
-            if !walk.iter().any(|w| w.course == specs.course && w.node == n.node) {
-                lint.err(&path, format!("node `{}` is not in the course journey", n.node));
+            if !walk
+                .iter()
+                .any(|w| w.course == specs.course && w.node == n.node)
+            {
+                lint.err(
+                    &path,
+                    format!("node `{}` is not in the course journey", n.node),
+                );
             }
             for e in n.validate() {
                 lint.err(&path, format!("node `{}`: {e}", n.node));
@@ -225,7 +308,10 @@ fn specs_report(root: &Path) -> (Value, Lint) {
     let mut lint = Lint::default();
     let (songs, bad) = load_songs(root);
     for (p, e) in bad {
-        lint.err(&p, format!("song not loaded, taught sets may be too small: {e}"));
+        lint.err(
+            &p,
+            format!("song not loaded, taught sets may be too small: {e}"),
+        );
     }
     let walk = taught_walk(&mut lint, root, &songs);
     let specs = load_specs(&mut lint, root, &walk);
@@ -261,13 +347,20 @@ fn check_songs(root: &Path, node: &str, files: &[String]) -> i32 {
     let (songs, _) = load_songs(root);
     let walk = taught_walk(&mut lint, root, &songs);
     let specs = load_specs(&mut lint, root, &walk);
-    let (Some(w), Some(spec)) = (walk.iter().find(|w| format!("{}/{}", w.course, w.node) == node), specs.get(node)) else {
+    let (Some(w), Some(spec)) = (
+        walk.iter()
+            .find(|w| format!("{}/{}", w.course, w.node) == node),
+        specs.get(node),
+    ) else {
         eprintln!("error: no node or spec `{node}`");
         return 2;
     };
     let mut out = BTreeMap::new();
     for f in files {
-        let errors = match fs::read_to_string(f).map_err(|e| e.to_string()).and_then(|t| Song::from_json(&t).map_err(|e| e.to_string())) {
+        let errors = match fs::read_to_string(f)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Song::from_json(&t).map_err(|e| e.to_string()))
+        {
             Ok(song) => check(&song, &w.taught, spec),
             Err(e) => vec![format!("not a song: {e}")],
         };
@@ -553,7 +646,9 @@ fn lint_dir(root: &Path) -> Lint {
     for song in song_map.values() {
         let Some(key) = &song.spec_node else { continue };
         let path = root.join("songs").join(format!("{}.json", song.id));
-        let w = walk.iter().find(|w| format!("{}/{}", w.course, w.node) == *key);
+        let w = walk
+            .iter()
+            .find(|w| format!("{}/{}", w.course, w.node) == *key);
         let (Some(spec), Some(w)) = (specs.get(key), w) else {
             lint.err(&path, format!("spec_node `{key}` has no skill spec"));
             continue;
@@ -567,7 +662,13 @@ fn lint_dir(root: &Path) -> Lint {
     for c in level::course_songs(&walk, &song_map, &Model::builtin()).0 {
         if (c.level as f64 - c.expected).abs() > LEVEL_TOLERANCE {
             let path = root.join("songs").join(format!("{}.json", c.id));
-            lint.warn(&path, format!("level {} but node {} expects about {:.0} (content level)", c.level, c.node, c.expected));
+            lint.warn(
+                &path,
+                format!(
+                    "level {} but node {} expects about {:.0} (content level)",
+                    c.level, c.node, c.expected
+                ),
+            );
         }
     }
 
@@ -645,12 +746,18 @@ fn main() {
         };
         std::process::exit(check_songs(Path::new(dir), node, &args[4..]));
     }
-    let (Some(cmd @ ("lint" | "specs" | "practice-pack")), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
-        eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]\n       content check <content_dir> <course/node> <song.json>...");
+    let (Some(cmd @ ("lint" | "specs" | "practice-pack")), Some(dir)) =
+        (args.get(1).map(String::as_str), args.get(2))
+    else {
+        eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]\n       content practice-pack <content_dir> [--out <file>]\n       content check <content_dir> <course/node> <song.json>...");
         std::process::exit(2);
     };
     if cmd == "specs" || cmd == "practice-pack" {
-        let (report, lint) = if cmd == "specs" { specs_report(Path::new(dir)) } else { practice::pack(Path::new(dir)) };
+        let (report, lint) = if cmd == "specs" {
+            specs_report(Path::new(dir))
+        } else {
+            practice::pack(Path::new(dir))
+        };
         let text = serde_json::to_string_pretty(&report).unwrap_or_default();
         match (args.get(3).map(String::as_str), args.get(4)) {
             (Some("--out"), Some(out)) => {
@@ -691,13 +798,31 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("content-check-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
-        let good = content.join("songs/cdefg-drill.json").to_string_lossy().into_owned();
+        let good = content
+            .join("songs/cdefg-drill.json")
+            .to_string_lossy()
+            .into_owned();
         let bad = dir.join("bad.json");
         fs::write(&bad, "{not json").unwrap();
         let bad = bad.to_string_lossy().into_owned();
-        assert_eq!(check_songs(&content, "piano-basics/f-and-g", std::slice::from_ref(&good)), 0);
-        assert_eq!(check_songs(&content, "piano-basics/f-and-g", &[good.clone(), bad]), 1, "an unparsable song fails");
-        assert_eq!(check_songs(&content, "no-such/node", &[good]), 2, "unknown node is an error, not a pass");
+        assert_eq!(
+            check_songs(
+                &content,
+                "piano-basics/f-and-g",
+                std::slice::from_ref(&good)
+            ),
+            0
+        );
+        assert_eq!(
+            check_songs(&content, "piano-basics/f-and-g", &[good.clone(), bad]),
+            1,
+            "an unparsable song fails"
+        );
+        assert_eq!(
+            check_songs(&content, "no-such/node", &[good]),
+            2,
+            "unknown node is an error, not a pass"
+        );
         fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -730,7 +855,11 @@ mod tests {
     }
 
     fn song_json(id: &str, source: &str, bars: &str, extra: &str) -> String {
-        let license = if source == "generated" { "CC0-1.0" } else { "CC-BY-SA-4.0" };
+        let license = if source == "generated" {
+            "CC0-1.0"
+        } else {
+            "CC-BY-SA-4.0"
+        };
         format!(
             r#"{{"id":"{id}","title":"T","composer":"Trad.","arranger":"X","source":"{source}","source_url":null,
             "license":"{license}","composition_license":"public-domain","bpm":80,"time":"4/4","key":"C",
@@ -742,18 +871,44 @@ mod tests {
     fn fixture(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("content-specs-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
-        for d in ["songs", "strings", "skill-specs", "courses/c1/levels", "courses/c2/levels"] {
+        for d in [
+            "songs",
+            "strings",
+            "skill-specs",
+            "courses/c1/levels",
+            "courses/c2/levels",
+        ] {
             fs::create_dir_all(dir.join(d)).unwrap();
         }
         let w = |p: &str, t: &str| fs::write(dir.join(p), t).unwrap();
         w("strings/en.json", "{}");
-        w("courses.json", r#"{"courses":[{"id":"c1","requires":[],"journey":"courses/c1/journey.json"},{"id":"c2","requires":["c1"],"journey":"courses/c2/journey.json"}]}"#);
+        w(
+            "courses.json",
+            r#"{"courses":[{"id":"c1","requires":[],"journey":"courses/c1/journey.json"},{"id":"c2","requires":["c1"],"journey":"courses/c2/journey.json"}]}"#,
+        );
         for (c, n, l, s) in [("c1", "a", "l1", "s1"), ("c2", "b", "l2", "s2")] {
-            w(&format!("courses/{c}/journey.json"), &format!(r#"{{"nodes":[{{"id":"{n}","kind":"lesson","levels":["{l}"]}}]}}"#));
-            w(&format!("courses/{c}/levels/{l}.json"), &format!(r#"{{"id":"{l}","stages":[{{"type":"wait","score":"{s}"}}]}}"#));
+            w(
+                &format!("courses/{c}/journey.json"),
+                &format!(r#"{{"nodes":[{{"id":"{n}","kind":"lesson","levels":["{l}"]}}]}}"#),
+            );
+            w(
+                &format!("courses/{c}/levels/{l}.json"),
+                &format!(r#"{{"id":"{l}","stages":[{{"type":"wait","score":"{s}"}}]}}"#),
+            );
         }
-        w("songs/s1.json", &song_json("s1", "original", r#"[{"RH":"C4:4 D4:4 E4:2"}]"#, ""));
-        w("songs/s2.json", &song_json("s2", "original", r#"[{"RH":"C4:8 D4:8 E4:8 F4:8 G4:2"}]"#, ""));
+        w(
+            "songs/s1.json",
+            &song_json("s1", "original", r#"[{"RH":"C4:4 D4:4 E4:2"}]"#, ""),
+        );
+        w(
+            "songs/s2.json",
+            &song_json(
+                "s2",
+                "original",
+                r#"[{"RH":"C4:8 D4:8 E4:8 F4:8 G4:2"}]"#,
+                "",
+            ),
+        );
         w(
             "skill-specs/c2.json",
             r#"{"course":"c2","nodes":[{"node":"b","new_skill":"eighths","required":[{"rhythm":"8"}],
@@ -765,10 +920,19 @@ mod tests {
     #[test]
     fn taught_set_accumulates_across_courses_and_skips_generated_songs() {
         let dir = fixture("walk");
-        fs::write(dir.join("courses/c2/levels/l2.json"), r#"{"id":"l2","stages":[{"type":"wait","score":"s2"},{"type":"wait","score":"g"}]}"#).unwrap();
+        fs::write(
+            dir.join("courses/c2/levels/l2.json"),
+            r#"{"id":"l2","stages":[{"type":"wait","score":"s2"},{"type":"wait","score":"g"}]}"#,
+        )
+        .unwrap();
         fs::write(
             dir.join("songs/g.json"),
-            song_json("g", "generated", r#"[{"RH":"A4:1"}]"#, r#","generator":{"method":"rules","seed":1}"#),
+            song_json(
+                "g",
+                "generated",
+                r#"[{"RH":"A4:1"}]"#,
+                r#","generator":{"method":"rules","seed":1}"#,
+            ),
         )
         .unwrap();
         let walk = taught_walk(&mut Lint::default(), &dir, &load_songs(&dir).0);
@@ -778,10 +942,17 @@ mod tests {
         assert_eq!(walk[0].taught.pitches["RH"], BTreeSet::from([60, 62, 64]));
         assert!(!walk[0].taught.durations.contains("8"));
         assert_eq!(walk[1].songs, vec!["s2", "g"]);
-        assert_eq!(walk[1].taught.pitches["RH"], BTreeSet::from([60, 62, 64, 65, 67]), "A4 from the generated song must not count");
+        assert_eq!(
+            walk[1].taught.pitches["RH"],
+            BTreeSet::from([60, 62, 64, 65, 67]),
+            "A4 from the generated song must not count"
+        );
         assert!(walk[1].taught.durations.contains("8") && walk[1].taught.durations.contains("4"));
         assert!(lint.errors.is_empty(), "{:?}", lint.errors);
-        assert_eq!(report[1]["taught"]["pitches"]["RH"], serde_json::json!(["C4", "D4", "E4", "F4", "G4"]));
+        assert_eq!(
+            report[1]["taught"]["pitches"]["RH"],
+            serde_json::json!(["C4", "D4", "E4", "F4", "G4"])
+        );
         assert_eq!(report[1]["self_check"]["s2"], serde_json::json!([]));
         assert!(report[0]["spec"].is_null());
     }
@@ -790,11 +961,29 @@ mod tests {
     fn lint_runs_the_rubric_for_songs_with_spec_node() {
         let dir = fixture("rubric");
         let gen = r#","generator":{"method":"llm","tool":"compose-song"},"spec_node":"c2/b""#;
-        fs::write(dir.join("songs/good.json"), song_json("good", "generated", r#"[{"RH":"E4:8 D4:8 C4:4 D4:2"}]"#, gen)).unwrap();
-        fs::write(dir.join("songs/bad.json"), song_json("bad", "generated", r#"[{"RH":"C4:4 A4:4 C4:2"}]"#, gen)).unwrap();
+        fs::write(
+            dir.join("songs/good.json"),
+            song_json(
+                "good",
+                "generated",
+                r#"[{"RH":"E4:8 D4:8 C4:4 D4:2"}]"#,
+                gen,
+            ),
+        )
+        .unwrap();
+        fs::write(
+            dir.join("songs/bad.json"),
+            song_json("bad", "generated", r#"[{"RH":"C4:4 A4:4 C4:2"}]"#, gen),
+        )
+        .unwrap();
         fs::write(
             dir.join("songs/lost.json"),
-            song_json("lost", "generated", r#"[{"RH":"C4:1"}]"#, &gen.replace("c2/b", "c2/zz")),
+            song_json(
+                "lost",
+                "generated",
+                r#"[{"RH":"C4:1"}]"#,
+                &gen.replace("c2/b", "c2/zz"),
+            ),
         )
         .unwrap();
         fs::write(
@@ -806,10 +995,22 @@ mod tests {
         fs::remove_dir_all(&dir).unwrap();
         let e = lint.errors.join("\n");
         assert!(!e.contains("good.json"), "{e}");
-        assert!(e.contains("bad.json: rubric c2/b: RH: pitches not taught: A4"), "{e}");
-        assert!(e.contains("bad.json: rubric c2/b: missing required pattern {\"rhythm\":\"8\"}"), "{e}");
-        assert!(e.contains("lost.json: spec_node `c2/zz` has no skill spec"), "{e}");
-        assert!(e.contains("node `nope` is not in the course journey"), "{e}");
+        assert!(
+            e.contains("bad.json: rubric c2/b: RH: pitches not taught: A4"),
+            "{e}"
+        );
+        assert!(
+            e.contains("bad.json: rubric c2/b: missing required pattern {\"rhythm\":\"8\"}"),
+            "{e}"
+        );
+        assert!(
+            e.contains("lost.json: spec_node `c2/zz` has no skill spec"),
+            "{e}"
+        );
+        assert!(
+            e.contains("node `nope` is not in the course journey"),
+            "{e}"
+        );
     }
 
     #[test]
@@ -825,16 +1026,29 @@ mod tests {
             r#"{"nodes":[{"id":"b","kind":"song","levels":["l2"],"songs":{"default":"s2","folk":"v"}}]}"#,
         )
         .unwrap();
-        fs::write(dir.join("songs/v.json"), song_json("v", "original", r#"[{"RH":"B4:1"}]"#, "")).unwrap();
+        fs::write(
+            dir.join("songs/v.json"),
+            song_json("v", "original", r#"[{"RH":"B4:1"}]"#, ""),
+        )
+        .unwrap();
         fs::write(dir.join("songs/broken.json"), "{").unwrap();
         let (report, lint) = specs_report(&dir);
         fs::remove_dir_all(&dir).unwrap();
         let e = lint.errors.join("\n");
-        assert!(e.contains("course `c2` requires `c1`, which must be listed before it"), "{e}");
-        assert!(e.contains("course `c1`: `journey` must be `courses/c1/journey.json`, found None"), "{e}");
+        assert!(
+            e.contains("course `c2` requires `c1`, which must be listed before it"),
+            "{e}"
+        );
+        assert!(
+            e.contains("course `c1`: `journey` must be `courses/c1/journey.json`, found None"),
+            "{e}"
+        );
         assert!(e.contains("broken.json: song not loaded"), "{e}");
         assert_eq!(report[0]["songs"], serde_json::json!(["s2", "v"]));
-        assert!(report[0]["taught"]["pitches"]["RH"].as_array().unwrap().contains(&serde_json::json!("B4")));
+        assert!(report[0]["taught"]["pitches"]["RH"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("B4")));
     }
 
     #[test]
@@ -846,9 +1060,18 @@ mod tests {
         let missing: Vec<String> = nodes
             .iter()
             .filter(|n| n["spec"].is_null())
-            .map(|n| format!("{}/{}", n["course"].as_str().unwrap(), n["node"].as_str().unwrap()))
+            .map(|n| {
+                format!(
+                    "{}/{}",
+                    n["course"].as_str().unwrap(),
+                    n["node"].as_str().unwrap()
+                )
+            })
             .collect();
-        assert!(missing.is_empty(), "nodes without a skill spec: {missing:?}");
+        assert!(
+            missing.is_empty(),
+            "nodes without a skill spec: {missing:?}"
+        );
     }
 
     fn repo_walk() -> (BTreeMap<String, Song>, Vec<NodeTaught>) {
@@ -869,14 +1092,25 @@ mod tests {
         for (i, a) in list.iter().enumerate() {
             for b in &list[i + 1..] {
                 let s = (b.index as f64 - a.index as f64) * (b.level_score - a.level_score);
-                if s > 0.0 { c += 1 } else if s < 0.0 { d += 1 }
+                if s > 0.0 {
+                    c += 1
+                } else if s < 0.0 {
+                    d += 1
+                }
             }
         }
         let tau = (c - d) as f64 / (c + d) as f64;
         assert!(tau > 0.5, "tau {tau}");
         let first = &list[0];
         let last = list.iter().max_by_key(|c| c.index).unwrap();
-        assert!(last.level > first.level, "{} {} vs {} {}", first.id, first.level, last.id, last.level);
+        assert!(
+            last.level > first.level,
+            "{} {} vs {} {}",
+            first.id,
+            first.level,
+            last.id,
+            last.level
+        );
     }
 
     #[test]
@@ -884,12 +1118,27 @@ mod tests {
         let (songs, walk) = repo_walk();
         let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
         let mean = |course: &str| {
-            let v: Vec<f64> = list.iter().filter(|c| c.node.starts_with(&format!("{course}/"))).map(|c| c.level_score).collect();
+            let v: Vec<f64> = list
+                .iter()
+                .filter(|c| c.node.starts_with(&format!("{course}/")))
+                .map(|c| c.level_score)
+                .collect();
             assert!(!v.is_empty(), "{course} has no songs");
             v.iter().sum::<f64>() / v.len() as f64
         };
-        let means: Vec<f64> = ["piano-basics", "essentials-1", "essentials-2", "essentials-3"].iter().map(|c| mean(c)).collect();
-        assert!(means.windows(2).all(|w| w[0] < w[1]), "mean level per course {means:?}");
+        let means: Vec<f64> = [
+            "piano-basics",
+            "essentials-1",
+            "essentials-2",
+            "essentials-3",
+        ]
+        .iter()
+        .map(|c| mean(c))
+        .collect();
+        assert!(
+            means.windows(2).all(|w| w[0] < w[1]),
+            "mean level per course {means:?}"
+        );
     }
 
     #[test]
@@ -897,17 +1146,36 @@ mod tests {
         use easy_piano_core::difficulty::node_fit;
         use easy_piano_core::rubric::taught_violations;
         let (songs, walk) = repo_walk();
-        let nodes: Vec<(String, TaughtSet)> = walk.iter().map(|w| (format!("{}/{}", w.course, w.node), w.taught.clone())).collect();
+        let nodes: Vec<(String, TaughtSet)> = walk
+            .iter()
+            .map(|w| (format!("{}/{}", w.course, w.node), w.taught.clone()))
+            .collect();
         for song in songs.values() {
             let fit = node_fit(song, &nodes);
-            let first_ok = nodes.iter().position(|(_, t)| taught_violations(song, t).is_empty());
+            let first_ok = nodes
+                .iter()
+                .position(|(_, t)| taught_violations(song, t).is_empty());
             assert_eq!(fit, first_ok.map(|i| nodes[i].0.as_str()), "{}", song.id);
             if let Some(i) = first_ok {
-                assert!(nodes[i..].iter().all(|(_, t)| taught_violations(song, t).is_empty()), "{}: taught sets only grow", song.id);
+                assert!(
+                    nodes[i..]
+                        .iter()
+                        .all(|(_, t)| taught_violations(song, t).is_empty()),
+                    "{}: taught sets only grow",
+                    song.id
+                );
             }
             // A course song fits by the node where it is taught.
-            if let Some(w) = walk.iter().position(|w| w.songs.contains(&song.id)).filter(|_| song.source != "generated") {
-                assert!(first_ok.is_some_and(|i| i <= w), "{} fits after its own node", song.id);
+            if let Some(w) = walk
+                .iter()
+                .position(|w| w.songs.contains(&song.id))
+                .filter(|_| song.source != "generated")
+            {
+                assert!(
+                    first_ok.is_some_and(|i| i <= w),
+                    "{} fits after its own node",
+                    song.id
+                );
             }
             // A song with spec_node that passes the rubric fits by that node.
             if let Some(key) = &song.spec_node {

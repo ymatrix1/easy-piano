@@ -28,7 +28,11 @@ def main() -> int:
     want = json.loads(MANIFEST.read_text(encoding="utf-8"))["files"]
     DEST.mkdir(parents=True, exist_ok=True)
     for name in FILES:
-        data = (HERE.parent / "vocab.json").read_bytes().replace(b"\r\n", b"\n") if name == "vocab.json" else (src / name).read_bytes()
+        data = (
+            (HERE.parent / "vocab.json").read_bytes().replace(b"\r\n", b"\n")
+            if name == "vocab.json"
+            else (src / name).read_bytes()
+        )
         got = hashlib.sha256(data).hexdigest()
         if got != want[name]["sha256"]:
             print(f"{name}: sha256 {got} != manifest {want[name]['sha256']}", file=sys.stderr)

@@ -79,7 +79,7 @@ Round trip: `decode(encode_song(song))` returns `time`, `key` and RH/LH bars exa
 
 ## Checks
 
-`cd tools/melody-model && python -m pytest` (venv: `pip install -r requirements.txt`).
+`cd tools/melody-model && uv sync && uv run pytest` (training deps: `uv sync --extra train`).
 
 ## Dataset (`melody_model/build.py`, step 3)
 

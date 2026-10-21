@@ -12,7 +12,9 @@ use serde_json::{json, Value};
 use std::path::Path;
 
 /// Order of duration labels in the model vocabulary (melody.js DURATIONS).
-const DURATIONS: [&str; 13] = ["1", "1.", "2", "2.", "2..", "4", "4.", "4..", "8", "8.", "16", "16.", "32"];
+const DURATIONS: [&str; 13] = [
+    "1", "1.", "2", "2.", "2..", "4", "4.", "4..", "8", "8.", "16", "16.", "32",
+];
 
 /// Length of a duration label in quarter notes (`4.` = 1.5).
 fn quarters(label: &str) -> Option<f64> {
@@ -30,11 +32,35 @@ fn quarters(label: &str) -> Option<f64> {
 pub fn level_for(t: &TaughtSet) -> u8 {
     let mut score = 0;
     for ps in t.pitches.values() {
-        let span = ps.iter().max().zip(ps.iter().min()).map_or(0, |(a, b)| a - b);
-        score = score.max(if span <= 7 { 0 } else if span <= 12 { 1 } else if span <= 19 { 2 } else { 3 });
+        let span = ps
+            .iter()
+            .max()
+            .zip(ps.iter().min())
+            .map_or(0, |(a, b)| a - b);
+        score = score.max(if span <= 7 {
+            0
+        } else if span <= 12 {
+            1
+        } else if span <= 19 {
+            2
+        } else {
+            3
+        });
     }
-    let shortest = t.durations.iter().filter_map(|d| quarters(d)).fold(f64::INFINITY, f64::min);
-    score += if shortest >= 1.0 { 0 } else if shortest >= 0.5 { 1 } else if shortest >= 0.25 { 2 } else { 3 };
+    let shortest = t
+        .durations
+        .iter()
+        .filter_map(|d| quarters(d))
+        .fold(f64::INFINITY, f64::min);
+    score += if shortest >= 1.0 {
+        0
+    } else if shortest >= 0.5 {
+        1
+    } else if shortest >= 0.25 {
+        2
+    } else {
+        3
+    };
     score += match t.accidentals.len() {
         0 => 0,
         1 | 2 => 1,
@@ -62,14 +88,37 @@ pub fn gen_spec(course: &str, t: &TaughtSet, s: &NodeSpec) -> Result<Value, Stri
             return Err(format!("no {h} pitches taught yet"));
         }
     }
-    let all: Vec<u8> = hands.iter().flat_map(|h| t.pitches[*h].iter().copied()).collect();
-    let (lo, hi) = (*all.iter().min().unwrap_or(&60), *all.iter().max().unwrap_or(&60));
-    let durs: Vec<&str> = DURATIONS.iter().copied().filter(|d| t.durations.contains(*d)).collect();
+    let all: Vec<u8> = hands
+        .iter()
+        .flat_map(|h| t.pitches[*h].iter().copied())
+        .collect();
+    let (lo, hi) = (
+        *all.iter().min().unwrap_or(&60),
+        *all.iter().max().unwrap_or(&60),
+    );
+    let durs: Vec<&str> = DURATIONS
+        .iter()
+        .copied()
+        .filter(|d| t.durations.contains(*d))
+        .collect();
     if durs.is_empty() {
         return Err("no model durations taught yet".into());
     }
-    let rest_durs: Vec<&str> = if t.rests { DURATIONS.iter().copied().filter(|d| t.rest_durations.contains(*d)).collect() } else { vec![] };
-    let names = |h: &str| t.pitches[h].iter().map(|&p| pitch_name(p)).collect::<Vec<_>>();
+    let rest_durs: Vec<&str> = if t.rests {
+        DURATIONS
+            .iter()
+            .copied()
+            .filter(|d| t.rest_durations.contains(*d))
+            .collect()
+    } else {
+        vec![]
+    };
+    let names = |h: &str| {
+        t.pitches[h]
+            .iter()
+            .map(|&p| pitch_name(p))
+            .collect::<Vec<_>>()
+    };
     Ok(json!({
         "time": s.time,
         "key": "C",
@@ -128,10 +177,19 @@ mod tests {
         assert!(lint.errors.is_empty(), "{:?}", lint.errors);
         let nodes = p["nodes"].as_array().unwrap();
         assert!(nodes.len() > 10);
-        let n = nodes.iter().find(|n| n["course"] == "piano-basics" && n["node"] == "f-and-g").unwrap();
+        let n = nodes
+            .iter()
+            .find(|n| n["course"] == "piano-basics" && n["node"] == "f-and-g")
+            .unwrap();
         let g = &n["gen"];
-        assert_eq!(g["mask"]["pitches"]["RH"], json!(["C4", "D4", "E4", "F4", "G4"]));
-        assert_eq!((g["range_lo"].as_str(), g["range_hi"].as_str()), (Some("C4"), Some("G4")));
+        assert_eq!(
+            g["mask"]["pitches"]["RH"],
+            json!(["C4", "D4", "E4", "F4", "G4"])
+        );
+        assert_eq!(
+            (g["range_lo"].as_str(), g["range_hi"].as_str()),
+            (Some("C4"), Some("G4"))
+        );
         assert_eq!(g["hands"], "RH");
         // The rubric node round-trips into the bridge's check: a taught tune passes, a course song is refused.
         let node = n["practice"].to_string();
@@ -140,7 +198,10 @@ mod tests {
             "bpm": g["bpm"], "time": g["time"], "key":"C",
             "bars": vec![json!({"RH":"C4:4 D4:4 E4:4 D4:4"}); g["bars"].as_u64().unwrap() as usize]});
         let errs = check_generated(&song.to_string(), &node);
-        assert!(errs.iter().all(|e| e.contains("missing required pattern")), "{errs:?}");
+        assert!(
+            errs.iter().all(|e| e.contains("missing required pattern")),
+            "{errs:?}"
+        );
     }
 
     #[test]

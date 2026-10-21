@@ -26,8 +26,21 @@ ROOT = Path(__file__).resolve().parents[3]
 RAW = ROOT / "data" / "melody" / "raw"
 UA = {"User-Agent": "easy-piano-melody-model/0.1 (+https://github.com/ymatrix1/easy-piano)"}
 
-NMD_FILES = ("jigs", "hpps", "morris", "playford", "reelsa-c", "reelsd-g", "reelsh-l",
-             "reelsm-q", "reelsr-t", "reelsu-z", "slip", "waltzes", "xmas")  # Ashover excluded (user, 2026-10-20)
+NMD_FILES = (
+    "jigs",
+    "hpps",
+    "morris",
+    "playford",
+    "reelsa-c",
+    "reelsd-g",
+    "reelsh-l",
+    "reelsm-q",
+    "reelsr-t",
+    "reelsu-z",
+    "slip",
+    "waltzes",
+    "xmas",
+)  # Ashover excluded (user, 2026-10-20)
 PDMX_RECORD = "https://zenodo.org/records/15571083/files"
 # sha256 of the Zenodo files, checked 2026-10-20 (their md5 matched the Zenodo API checksums)
 PDMX_SHA256 = {
@@ -54,7 +67,10 @@ def fetch(url: str, dest: Path) -> str:
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
     h = hashlib.sha256()
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r, open(tmp, "wb") as f:
+    with (
+        urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r,
+        open(tmp, "wb") as f,
+    ):
         while chunk := r.read(1 << 20):
             h.update(chunk)
             f.write(chunk)
@@ -77,8 +93,12 @@ def get_text(url: str) -> str:
 
 def write_manifest(corpus: str, entries: list[dict], note: str) -> None:
     out = RAW / corpus / "manifest.json"
-    out.write_text(json.dumps({"corpus": corpus, "fetched": time.strftime("%Y-%m-%d"), "note": note,
-                               "files": entries}, indent=1), encoding="utf-8")
+    out.write_text(
+        json.dumps(
+            {"corpus": corpus, "fetched": time.strftime("%Y-%m-%d"), "note": note, "files": entries}, indent=1
+        ),
+        encoding="utf-8",
+    )
     print(f"{corpus}: {len(entries)} files -> {out}")
 
 
@@ -87,9 +107,18 @@ def nottingham() -> None:
     for name in NMD_FILES:
         url = NMD_URL.format(name=name)
         sha = fetch(url, RAW / "nottingham" / f"{name}.abc")
-        entries.append({"path": f"{name}.abc", "url": url, "license": "no licence stated; used under D18 (risk accepted)", "sha256": sha})
+        entries.append(
+            {
+                "path": f"{name}.abc",
+                "url": url,
+                "license": "no licence stated; used under D18 (risk accepted)",
+                "sha256": sha,
+            }
+        )
         time.sleep(1)
-    write_manifest("nottingham", entries, "Nottingham Music Database, original ABC; Ashover collection excluded")
+    write_manifest(
+        "nottingham", entries, "Nottingham Music Database, original ABC; Ashover collection excluded"
+    )
 
 
 def pdmx() -> None:
@@ -104,12 +133,21 @@ def pdmx() -> None:
             sha = file_sha256(dest)
         if sha != PDMX_SHA256[name]:
             raise SystemExit(f"pdmx {name}: sha256 {sha} does not match the pinned {PDMX_SHA256[name]}")
-        entries.append({"path": name, "url": f"{PDMX_RECORD}/{name}", "license": "dataset CC-BY-4.0; files PD/CC0", "sha256": sha})
+        entries.append(
+            {
+                "path": name,
+                "url": f"{PDMX_RECORD}/{name}",
+                "license": "dataset CC-BY-4.0; files PD/CC0",
+                "sha256": sha,
+            }
+        )
     if not (d / "mxl").exists():
         print("extracting mxl.tar.gz ...", flush=True)
         with tarfile.open(d / "mxl.tar.gz") as t:
             t.extractall(d, filter="data")
-    write_manifest("pdmx", entries, "PDMX (Long et al. 2024), Zenodo 15571083; use no_license_conflict subset")
+    write_manifest(
+        "pdmx", entries, "PDMX (Long et al. 2024), Zenodo 15571083; use no_license_conflict subset"
+    )
 
 
 def _ly_header(text: str) -> dict:
@@ -150,8 +188,17 @@ def mutopia(delay: float = 1.0) -> None:
         rel = piece.removeprefix("ftp/").replace("/", "__") + ".mid"
         sha = fetch(url, d / rel)
         time.sleep(delay)
-        entries.append({"path": rel, "url": url, "license": lic, "title": head.get("mutopiatitle", ""),
-                        "composer": head.get("mutopiacomposer", ""), "style": style, "sha256": sha})
+        entries.append(
+            {
+                "path": rel,
+                "url": url,
+                "license": lic,
+                "title": head.get("mutopiatitle", ""),
+                "composer": head.get("mutopiacomposer", ""),
+                "style": style,
+                "sha256": sha,
+            }
+        )
         print(f"  {rel} ({lic})", flush=True)
     write_manifest("mutopia", entries, f"Mutopia, styles {sorted(MUTOPIA_STYLES)}; skipped {skipped}")
 

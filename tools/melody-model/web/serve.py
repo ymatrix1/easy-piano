@@ -1,6 +1,6 @@
 """Serve the demo with cross-origin isolation (COOP/COEP), which onnxruntime-web needs for wasm threads.
 
-    python tools/melody-model/web/serve.py [port]
+python tools/melody-model/web/serve.py [port]
 """
 
 import sys
@@ -10,7 +10,12 @@ from pathlib import Path
 
 
 class Handler(SimpleHTTPRequestHandler):
-    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".mjs": "text/javascript", ".js": "text/javascript", ".wasm": "application/wasm"}
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".mjs": "text/javascript",
+        ".js": "text/javascript",
+        ".wasm": "application/wasm",
+    }
 
     def end_headers(self):
         self.send_header("Cross-Origin-Opener-Policy", "same-origin")
@@ -22,4 +27,6 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8780
     print(f"http://localhost:{port}/")
-    ThreadingHTTPServer(("127.0.0.1", port), partial(Handler, directory=str(Path(__file__).parent))).serve_forever()
+    ThreadingHTTPServer(
+        ("127.0.0.1", port), partial(Handler, directory=str(Path(__file__).parent))
+    ).serve_forever()

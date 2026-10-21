@@ -14,8 +14,13 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def song(name):
     s = json.loads((ROOT / "content" / "songs" / f"{name}.json").read_text(encoding="utf-8"))
-    t = {"corpus": "own", "time": s["time"], "key": s["key"], "styles": [],
-         "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]]}
+    t = {
+        "corpus": "own",
+        "time": s["time"],
+        "key": s["key"],
+        "styles": [],
+        "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]],
+    }
     t["plan"] = plan(t)
     return t
 

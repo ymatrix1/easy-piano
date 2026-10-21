@@ -27,11 +27,20 @@ def main(argv):
             t = json.loads(line)
             d = SIM_CORPUS / t["corpus"]
             d.mkdir(parents=True, exist_ok=True)
-            song = {"id": f"train-{i}", "title": t["title"] or t["id"], "composer": t["composer"] or "unknown",
-                    "arranger": t.get("arranger") or "unknown", "source": "training-corpus",
-                    "source_url": t.get("source_url") or None, "license": t.get("license") or "unknown",
-                    "composition_license": t.get("composition_license") or "unknown",
-                    "bpm": 100, "time": t["time"], "key": t["key"], "bars": t["bars"]}
+            song = {
+                "id": f"train-{i}",
+                "title": t["title"] or t["id"],
+                "composer": t["composer"] or "unknown",
+                "arranger": t.get("arranger") or "unknown",
+                "source": "training-corpus",
+                "source_url": t.get("source_url") or None,
+                "license": t.get("license") or "unknown",
+                "composition_license": t.get("composition_license") or "unknown",
+                "bpm": 100,
+                "time": t["time"],
+                "key": t["key"],
+                "bars": t["bars"],
+            }
             (d / f"{i}.json").write_text(json.dumps(song, ensure_ascii=False), encoding="utf-8")
             n += 1
     print(f"wrote {n} songs to {SIM_CORPUS}")

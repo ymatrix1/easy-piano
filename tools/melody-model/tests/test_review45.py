@@ -3,8 +3,8 @@
 import json
 from fractions import Fraction
 
-import music21 as m21
 import mido
+import music21 as m21
 import pytest
 
 from melody_model import build, convert, filters, gate
@@ -41,10 +41,21 @@ def write_reg(tmp_path, monkeypatch, entries):
 BASE = {"name": "mine", "path": "p", "source": "https://x", "license": "CC0", "flags": []}
 
 
-@pytest.mark.parametrize("change", [
-    {"flags": "pop"}, {"flags": [1]}, {"license": ""}, {"source": "  "}, {"name": 3},
-    {"timing": "live"}, {"meter": "6/8"}, {"group_by": "album"}, {"track": True}, {"name": "pdmx"},
-])
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"flags": "pop"},
+        {"flags": [1]},
+        {"license": ""},
+        {"source": "  "},
+        {"name": 3},
+        {"timing": "live"},
+        {"meter": "6/8"},
+        {"group_by": "album"},
+        {"track": True},
+        {"name": "pdmx"},
+    ],
+)
 def test_local_registry_rejects_bad_entries(tmp_path, monkeypatch, change):
     write_reg(tmp_path, monkeypatch, [{**BASE, **change}])
     with pytest.raises(SystemExit):
@@ -61,7 +72,10 @@ def test_local_registry_records_licence_as_given_and_honours_track(tmp_path, mon
     folder = tmp_path / "set"
     folder.mkdir()
     s = m21.stream.Score()
-    for pitches in (["C2"] * 8, ["E5", "D5", "C5", "D5", "E5", "E5", "E5", "D5"]):  # bass first, melody is track 1
+    for pitches in (
+        ["C2"] * 8,
+        ["E5", "D5", "C5", "D5", "E5", "E5", "E5", "D5"],
+    ):  # bass first, melody is track 1
         p = m21.stream.Part()
         p.append(m21.meter.TimeSignature("4/4"))
         p.append(m21.key.Key("C"))
@@ -79,6 +93,7 @@ def test_local_registry_records_licence_as_given_and_honours_track(tmp_path, mon
 
 def test_performed_midi_uses_given_meter(tmp_path):
     from melody_model import timed
+
     mf = mido.MidiFile(ticks_per_beat=480)
     tr = mido.MidiTrack()
     mf.tracks.append(tr)
@@ -104,6 +119,7 @@ def test_build_is_deterministic(tmp_path, monkeypatch):
 
 def test_train_refuses_without_gate(tmp_path, monkeypatch):
     from melody_model import train
+
     monkeypatch.setattr(gate, "GATE", tmp_path / "gate.json")
     with pytest.raises(SystemExit, match="no review gate"):
         train.main(["--name", "t"])
@@ -163,18 +179,21 @@ def test_hand_bars_joins_strain_end_and_pickup():
     assert len(bars) == 2 and [e.dur for e in bars[0]] == ["4.", "4", "8"]
 
 
-@pytest.mark.parametrize("texts,tags,expected", [
-    (["Teresa Teng - The Moon Represents My Heart"], "", True),
-    (["March of the Volunteers 义勇军进行曲"], "", True),
-    (["Erhu Improvisation no 1"], "", True),
-    (["Morning Waltz"], "waltz-piano-violin-taiwan-original", True),
-    (["Some tune"], "pianocover-cpop", True),
-    (["Seiken Densetsu 3 - 聖剣伝説３ ラスボス"], "", False),  # Japanese (kana present)
-    (["The Nutcracker 12c. Chinese Dance"], "", False),
-    (["China - Jacob French"], "", False),
-    (["Ode to Joy", "Beethoven"], "classical", False),
-    (["Catching Wasps", "Gregor Aichinger"], "marching-band", False),
-])
+@pytest.mark.parametrize(
+    "texts,tags,expected",
+    [
+        (["Teresa Teng - The Moon Represents My Heart"], "", True),
+        (["March of the Volunteers 义勇军进行曲"], "", True),
+        (["Erhu Improvisation no 1"], "", True),
+        (["Morning Waltz"], "waltz-piano-violin-taiwan-original", True),
+        (["Some tune"], "pianocover-cpop", True),
+        (["Seiken Densetsu 3 - 聖剣伝説３ ラスボス"], "", False),  # Japanese (kana present)
+        (["The Nutcracker 12c. Chinese Dance"], "", False),
+        (["China - Jacob French"], "", False),
+        (["Ode to Joy", "Beethoven"], "classical", False),
+        (["Catching Wasps", "Gregor Aichinger"], "marching-band", False),
+    ],
+)
 def test_is_chinese(texts, tags, expected):
     assert filters.is_chinese(texts, tags) is expected
 
@@ -186,28 +205,56 @@ def test_is_chinese_repairs_mojibake():
 
 def test_styles_from_metadata():
     from melody_model.styles import styles_for
-    assert styles_for("pdmx", {"genres": "soundtrack", "tags": "zelda-ocarina-piano", "title": "Song of Storms"}) == ["game", "soundtrack"]
+
+    assert styles_for(
+        "pdmx", {"genres": "soundtrack", "tags": "zelda-ocarina-piano", "title": "Song of Storms"}
+    ) == ["game", "soundtrack"]
     assert styles_for("pdmx", {"genres": "classical", "tags": "NA", "title": "Minuet in G"}) == ["classical"]
     assert styles_for("nottingham", {"title": "Ashgrove"}) == ["folk"]
     assert styles_for("mutopia", {"style": "Hymn", "title": "Old 100th"}) == ["religious"]
 
 
 def test_licence_conflict_is_flagged_not_rejected():
-    row = {"subset:no_license_conflict": "False", "subset:deduplicated": "True", "genres": "classical",
-           "is_original": "False", "composer_name": "Bach", "artist_name": "NA", "title": "Minuet",
-           "song_name": "NA", "subtitle": "NA", "song_length.bars": "32"}
+    row = {
+        "subset:no_license_conflict": "False",
+        "subset:deduplicated": "True",
+        "genres": "classical",
+        "is_original": "False",
+        "composer_name": "Bach",
+        "artist_name": "NA",
+        "title": "Minuet",
+        "song_name": "NA",
+        "subtitle": "NA",
+        "song_length.bars": "32",
+    }
     assert filters.pdmx_ok(row) == (True, "")
     assert filters.pdmx_flags(row) == ["licence-conflict"]
 
 
 def test_chinese_music_is_tagged_not_rejected():
     from melody_model.styles import styles_for
-    row = {"subset:no_license_conflict": "True", "subset:deduplicated": "True", "genres": "worldmusic",
-           "is_original": "False", "composer_name": "Teresa Teng", "artist_name": "NA",
-           "title": "The Moon Represents My Heart", "song_name": "NA", "subtitle": "NA", "song_length.bars": "32",
-           "tags": "chinese-ballad", "groups": "NA"}
+
+    row = {
+        "subset:no_license_conflict": "True",
+        "subset:deduplicated": "True",
+        "genres": "worldmusic",
+        "is_original": "False",
+        "composer_name": "Teresa Teng",
+        "artist_name": "NA",
+        "title": "The Moon Represents My Heart",
+        "song_name": "NA",
+        "subtitle": "NA",
+        "song_length.bars": "32",
+        "tags": "chinese-ballad",
+        "groups": "NA",
+    }
     assert filters.pdmx_ok(row) == (True, "")
-    meta = {"title": row["title"], "composer": row["composer_name"], "genres": row["genres"], "tags": row["tags"]}
+    meta = {
+        "title": row["title"],
+        "composer": row["composer_name"],
+        "genres": row["genres"],
+        "tags": row["tags"],
+    }
     assert "chinese" in styles_for("pdmx", meta)
 
 
@@ -218,7 +265,7 @@ def test_file_with_several_scores_is_rejected():
 
 
 def test_phrase_cut_never_mid_phrase():
-    stable = "C4:1"   # ends on the tonic: a phrase end
+    stable = "C4:1"  # ends on the tonic: a phrase end
     open_ = "D4:1"
     bars = [{"RH": open_} for _ in range(70)]
     for i in (39, 55):  # bars 40 and 56 end phrases

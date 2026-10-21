@@ -7,7 +7,10 @@ from melody_model import release
 
 def man_for(tmp_path, data=b"weights"):
     (tmp_path / "w.onnx").write_bytes(data)
-    return {"url": "unused/{file}", "files": {"w.onnx": {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}}}
+    return {
+        "url": "unused/{file}",
+        "files": {"w.onnx": {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}},
+    }
 
 
 def test_verify_ok_and_detects_tampering(tmp_path):
@@ -22,7 +25,9 @@ def test_verify_ok_and_detects_tampering(tmp_path):
 def test_fetch_rejects_bad_download(tmp_path, monkeypatch):
     (tmp_path / "src").mkdir()
     man = man_for(tmp_path / "src", b"good")
-    monkeypatch.setattr(release.urllib.request, "urlretrieve", lambda url, dest: open(dest, "wb").write(b"evil"))
+    monkeypatch.setattr(
+        release.urllib.request, "urlretrieve", lambda url, dest: open(dest, "wb").write(b"evil")
+    )
     with pytest.raises(SystemExit, match="failed verification"):
         release.fetch(tmp_path / "out", man)
     assert not (tmp_path / "out" / "w.onnx").exists()

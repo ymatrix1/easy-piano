@@ -63,7 +63,10 @@ pub fn melody_from_song(song: &Song) -> Vec<MelodyNote> {
         .timeline()
         .into_iter()
         .filter(|n| n.part == Part::Right)
-        .map(|n| MelodyNote { pitch: n.pitch, onset: n.start_beat })
+        .map(|n| MelodyNote {
+            pitch: n.pitch,
+            onset: n.start_beat,
+        })
         .collect();
     skyline(notes)
 }
@@ -75,7 +78,11 @@ pub fn tokens(melody: &[MelodyNote]) -> Vec<Token> {
         let ioi = melody[i].onset - melody[i - 1].onset;
         let rhythm = if i >= 2 {
             let prev = melody[i - 1].onset - melody[i - 2].onset;
-            if ioi > 0.0 && prev > 0.0 { (ioi / prev).log2().round().clamp(-2.0, 2.0) as i8 } else { 0 }
+            if ioi > 0.0 && prev > 0.0 {
+                (ioi / prev).log2().round().clamp(-2.0, 2.0) as i8
+            } else {
+                0
+            }
         } else {
             0
         };
@@ -90,14 +97,22 @@ pub fn tokens(melody: &[MelodyNote]) -> Vec<Token> {
 fn weight(t: &[Token], i: usize) -> f64 {
     let folded = |x: Token| {
         let c = x.class();
-        if c > 6 { c - 12 } else { c }
+        if c > 6 {
+            c - 12
+        } else {
+            c
+        }
     };
     let v = folded(t[i]);
     match v.unsigned_abs() {
         0 => 0.3,
         1 | 2 => {
             let prev = if i > 0 { folded(t[i - 1]) } else { 0 };
-            if prev != 0 && prev.signum() == v.signum() && prev.unsigned_abs() <= 2 { 0.05 } else { 0.5 }
+            if prev != 0 && prev.signum() == v.signum() && prev.unsigned_abs() <= 2 {
+                0.05
+            } else {
+                0.5
+            }
         }
         3 | 4 => 0.8,
         _ => 1.0,
@@ -113,7 +128,9 @@ fn ngrams(t: &[Token], n: usize) -> Vec<Vec<i8>> {
     if t.len() < n {
         return Vec::new();
     }
-    t.windows(n).map(|w| w.iter().map(|x| x.class()).collect()).collect()
+    t.windows(n)
+        .map(|w| w.iter().map(|x| x.class()).collect())
+        .collect()
 }
 
 /// Share of `query`'s octave-folded interval n-grams found anywhere in `cand`
@@ -144,7 +161,12 @@ const GAP: i32 = -4;
 
 fn pair(a: Token, b: Token) -> i32 {
     if a.class() == b.class() {
-        MATCH + if a.rhythm == b.rhythm { RHYTHM_BONUS } else { 0 }
+        MATCH
+            + if a.rhythm == b.rhythm {
+                RHYTHM_BONUS
+            } else {
+                0
+            }
     } else {
         MISMATCH
     }
@@ -152,7 +174,13 @@ fn pair(a: Token, b: Token) -> i32 {
 
 pub fn local_alignment(q: &[Token], c: &[Token]) -> Alignment {
     let (n, m) = (q.len(), c.len());
-    let empty = Alignment { score: 0.0, purity: 0.0, info: 0.0, query_span: (0, 0), cand_span: (0, 0) };
+    let empty = Alignment {
+        score: 0.0,
+        purity: 0.0,
+        info: 0.0,
+        query_span: (0, 0),
+        cand_span: (0, 0),
+    };
     if n == 0 || m == 0 {
         return empty;
     }
@@ -193,8 +221,16 @@ pub fn local_alignment(q: &[Token], c: &[Token]) -> Alignment {
     let span = (bi - i).max(bj - j);
     let purity = matched.len() as f64 / span as f64;
     let inf = info(q, &matched);
-    let score = purity.powi(2) * (inf / HOOK_INFO).min(1.0) * (matched.len() as f64 / HOOK_LEN as f64).min(1.0);
-    Alignment { score, purity, info: inf, query_span: (i, bi), cand_span: (j, bj) }
+    let score = purity.powi(2)
+        * (inf / HOOK_INFO).min(1.0)
+        * (matched.len() as f64 / HOOK_LEN as f64).min(1.0);
+    Alignment {
+        score,
+        purity,
+        info: inf,
+        query_span: (i, bi),
+        cand_span: (j, bj),
+    }
 }
 
 /// One corpus entry's comparison with the query.
@@ -209,12 +245,20 @@ pub struct Match {
 
 pub fn compare(name: &str, query: &[Token], cand: &[Token]) -> Match {
     let alignment = local_alignment(query, cand);
-    Match { name: name.to_string(), score: alignment.score, ngram: ngram_overlap(query, cand, NGRAM), alignment }
+    Match {
+        name: name.to_string(),
+        score: alignment.score,
+        ngram: ngram_overlap(query, cand, NGRAM),
+        alignment,
+    }
 }
 
 /// Compares the query with every corpus melody; best `top` first.
 pub fn top_matches(query: &[Token], corpus: &[(&str, &[Token])], top: usize) -> Vec<Match> {
-    let mut all: Vec<Match> = corpus.iter().map(|(name, t)| compare(name, query, t)).collect();
+    let mut all: Vec<Match> = corpus
+        .iter()
+        .map(|(name, t)| compare(name, query, t))
+        .collect();
     all.sort_by(|a, b| b.score.total_cmp(&a.score));
     all.truncate(top);
     all
@@ -243,11 +287,25 @@ mod tests {
 
     // Ode to Joy (PD), first two phrases, quarter notes with dotted endings.
     fn ode() -> Vec<(u8, f64)> {
-        [64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62, 64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 62, 60, 60]
-            .iter()
-            .enumerate()
-            .map(|(i, &p)| (p, if i == 12 || i == 26 { 1.5 } else if i == 13 || i == 27 { 0.5 } else { 1.0 }))
-            .collect()
+        [
+            64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62, 64, 64, 65, 67, 67, 65, 64,
+            62, 60, 60, 62, 64, 62, 60, 60,
+        ]
+        .iter()
+        .enumerate()
+        .map(|(i, &p)| {
+            (
+                p,
+                if i == 12 || i == 26 {
+                    1.5
+                } else if i == 13 || i == 27 {
+                    0.5
+                } else {
+                    1.0
+                },
+            )
+        })
+        .collect()
     }
 
     /// A leapy invented line, deterministic.
@@ -273,13 +331,23 @@ mod tests {
         let a = tokens(&mel(&ode()));
         let up: Vec<_> = ode().iter().map(|&(p, d)| (p + 5, d)).collect();
         assert_eq!(a, tokens(&mel(&up)));
-        assert_eq!(a[0], Token { interval: 0, rhythm: 0 });
+        assert_eq!(
+            a[0],
+            Token {
+                interval: 0,
+                rhythm: 0
+            }
+        );
         assert_eq!(a[1].interval, 1);
     }
 
     #[test]
     fn transposed_rhythm_varied_copy_scores_high() {
-        let copy: Vec<_> = ode().iter().enumerate().map(|(i, &(p, _))| (p + 5, if i % 3 == 0 { 0.75 } else { 0.5 })).collect();
+        let copy: Vec<_> = ode()
+            .iter()
+            .enumerate()
+            .map(|(i, &(p, _))| (p + 5, if i % 3 == 0 { 0.75 } else { 0.5 }))
+            .collect();
         let m = score(&copy, &ode());
         assert!(m.score > 0.95, "{m:?}");
         assert!(m.ngram > 0.9, "{m:?}");
@@ -288,7 +356,11 @@ mod tests {
 
     #[test]
     fn octave_displaced_copy_scores_high() {
-        let copy: Vec<_> = ode().iter().enumerate().map(|(i, &(p, d))| (if i % 4 == 2 { p + 12 } else { p }, d)).collect();
+        let copy: Vec<_> = ode()
+            .iter()
+            .enumerate()
+            .map(|(i, &(p, d))| (if i % 4 == 2 { p + 12 } else { p }, d))
+            .collect();
         let m = score(&copy, &ode());
         assert!(m.score > 0.95, "{m:?}");
         assert!(m.ngram > 0.9, "{m:?}");
@@ -322,10 +394,12 @@ mod tests {
 
     #[test]
     fn unrelated_tune_scores_low() {
-        let other: Vec<_> = [60, 67, 64, 72, 69, 65, 74, 71, 67, 76, 72, 79, 62, 69, 66, 59, 64, 71, 68, 61]
-            .iter()
-            .map(|&p| (p, 0.5))
-            .collect();
+        let other: Vec<_> = [
+            60, 67, 64, 72, 69, 65, 74, 71, 67, 76, 72, 79, 62, 69, 66, 59, 64, 71, 68, 61,
+        ]
+        .iter()
+        .map(|&p| (p, 0.5))
+        .collect();
         let m = score(&other, &ode());
         assert!(m.score < 0.4, "{m:?}");
         assert_eq!(m.ngram, 0.0);
@@ -335,7 +409,9 @@ mod tests {
     fn shared_scale_run_scores_low() {
         let up_down = even(&[60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60]);
         let mut other = filler(10, 5);
-        other.extend(even(&[62, 64, 65, 67, 69, 71, 72, 74, 72, 71, 69, 67, 65, 64, 62]));
+        other.extend(even(&[
+            62, 64, 65, 67, 69, 71, 72, 74, 72, 71, 69, 67, 65, 64, 62,
+        ]));
         let m = score(&up_down, &other);
         assert!(m.score < 0.5, "{m:?}");
     }
@@ -343,9 +419,18 @@ mod tests {
     #[test]
     fn skyline_keeps_top_note_per_onset() {
         let s = skyline(vec![
-            MelodyNote { pitch: 60, onset: 0.0 },
-            MelodyNote { pitch: 64, onset: 0.0 },
-            MelodyNote { pitch: 62, onset: 1.0 },
+            MelodyNote {
+                pitch: 60,
+                onset: 0.0,
+            },
+            MelodyNote {
+                pitch: 64,
+                onset: 0.0,
+            },
+            MelodyNote {
+                pitch: 62,
+                onset: 1.0,
+            },
         ]);
         assert_eq!(s.iter().map(|n| n.pitch).collect::<Vec<_>>(), vec![64, 62]);
     }

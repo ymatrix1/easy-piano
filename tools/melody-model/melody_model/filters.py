@@ -16,12 +16,14 @@ BLOCKED_NAMES = re.compile(
     r"badelt|giacchino|horner|silvestri|desplat|djawadi|toby fox|c418|mitsuda|sakimoto|"
     r"beatles|lennon|mccartney|queen|disney|menken|lloyd webber|sondheim|piazzolla|"
     r"gershwin|anime",
-    re.I)
+    re.I,
+)
 BLOCKED_TITLES = re.compile(
     r"\b(theme|ost|soundtrack|anime|undertale|zelda|mario|pokemon|minecraft|naruto|star wars|"
     r"harry potter|hedwig|pirates|frozen|game of thrones|interstellar|megalovania|tetris|"
     r"opening|ending|meme|remix|cover|fnaf|genshin|tiktok)\b",
-    re.I)
+    re.I,
+)
 
 # A PD composition does not clear a modern arrangement (docs/research/melody-corpora.md).
 ARRANGED = re.compile(r"\b(arr\.?|arranged|arrangement|version|easy piano|simplified)\b", re.I)
@@ -73,8 +75,8 @@ def nmd_ok(abc_tune: str) -> bool:
 
 
 # --- playability ------------------------------------------------------------
-MAX_RANGE = 24   # semitones per hand
-MAX_LEAP = 12    # melody, semitones
+MAX_RANGE = 24  # semitones per hand
+MAX_LEAP = 12  # melody, semitones
 MAX_EVENTS = 16  # per bar per hand
 MAX_CHORD = {"RH": 3, "LH": 4}
 MIN_NOTES = 8
@@ -132,12 +134,18 @@ def split_of(corpus: str, tune_id: str) -> str:
 # --- Chinese music: tagged STYLE_chinese so generation can avoid it (user, 2026-10-20) ------
 HAN = re.compile("[㐀-䶿一-鿿豈-﫿]")
 KANA = re.compile("[぀-ヿ]")  # Japanese titles mix kanji with kana; Japanese music is allowed
-CHINESE_TAGS = re.compile(r"\b(chinese\w*|china|c-?pop|mandopop|cantopop|mandarin|cantonese|guzheng|erhu|pipa|dizi|guqin|"
-                          r"taiwan\w*|hong ?kong|xinjiang|uyghur|qing ?dynasty)\b", re.I)
+CHINESE_TAGS = re.compile(
+    r"\b(chinese\w*|china|c-?pop|mandopop|cantopop|mandarin|cantonese|guzheng|erhu|pipa|dizi|guqin|"
+    r"taiwan\w*|hong ?kong|xinjiang|uyghur|qing ?dynasty)\b",
+    re.I,
+)
 CHINESE_WORDS = re.compile(r"\b(erhu|guzheng|pipa|dizi|guqin|c-?pop|mandopop|cantopop)\b", re.I)
-CHINESE_NAMES = re.compile(r"\b(jay chou|teresa teng|michael wong|wu bai|xian xinghai|abing|tan dun|faye wong|eason chan|"
-                           r"jj lin|g\.?e\.?m\.?|joker xue|hua chenyu|leslie cheung|jacky cheung|andy lau|mayday|"
-                           r"david tao|jolin tsai|stefanie sun|wang leehom|lin junjie|zhou jielun|deng lijun)\b", re.I)
+CHINESE_NAMES = re.compile(
+    r"\b(jay chou|teresa teng|michael wong|wu bai|xian xinghai|abing|tan dun|faye wong|eason chan|"
+    r"jj lin|g\.?e\.?m\.?|joker xue|hua chenyu|leslie cheung|jacky cheung|andy lau|mayday|"
+    r"david tao|jolin tsai|stefanie sun|wang leehom|lin junjie|zhou jielun|deng lijun)\b",
+    re.I,
+)
 
 
 def _demojibake(text: str) -> str:
