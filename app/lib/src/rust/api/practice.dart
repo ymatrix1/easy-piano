@@ -56,6 +56,10 @@ abstract class PracticeSession implements RustOpaqueInterface {
 
   PlatformInt64 endUs();
 
+  /// Streaming practice: `song_json` is the session's song with bars
+  /// appended; returns the number of targets added.
+  int extend({required String songJson});
+
   void onNote({
     required int pitch,
     required bool on_,

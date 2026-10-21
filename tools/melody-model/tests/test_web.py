@@ -90,6 +90,7 @@ GEN_SPECS = [
             "max_leap": 2,
             "poly": {"RH": 1},
             "rest_durs": ["2"],
+            "start": {"RH": "G4"},
         },
     },
     {
@@ -195,4 +196,6 @@ def test_masked_generation_obeys_spec(node_run):
         if spec.get("mask"):
             h = hands[0]
             line = [e.pitches[0].midi for bar in song["bars"] for e in parse_hand(bar[h]) if not e.is_rest]
+            start = [parse_hand(f"{p}:4")[0].pitches[0].midi for p in spec["mask"].get("start", {}).values()]
+            line = start + line  # streaming: the leap rule holds across chunks
             assert all(abs(a - b) <= spec["mask"]["max_leap"] for a, b in zip(line, line[1:]))

@@ -117,7 +117,7 @@ export class Grammar {
   }
 
   init() {
-    return { phase: "PLAN", plan: 0, maxSec: -1, bar: 0, hand: 0, used: 0, events: 0, last: null, root: null, top: null, chord: 0, fingered: false, prev: {} };
+    return { phase: "PLAN", plan: 0, maxSec: -1, bar: 0, hand: 0, used: 0, events: 0, last: null, root: null, top: null, chord: 0, fingered: false, prev: this.startPrev() };
   }
 
   kinds(st) {
@@ -150,6 +150,13 @@ export class Grammar {
       }
       default: return [K("PAD")];
     }
+  }
+
+  // Streaming practice: `mask.start` ({hand: pitch name}) is the last note of the previous chunk, so the
+  // leap rule holds across chunk boundaries.
+  startPrev() {
+    const start = (this.spec.mask && this.spec.mask.start) || {};
+    return Object.fromEntries(Object.entries(start).map(([h, p]) => [h, midiOf(p)]));
   }
 
   // With a mask: taught pitches of the current hand within max leap of that hand's previous note.

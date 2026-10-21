@@ -265,9 +265,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get practiceTune => 'Air d\'entraînement';
-
-  @override
   String get generatedBadge => 'Généré';
 
   @override
@@ -280,9 +277,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get practiceGenerating => 'Écriture d\'un air pour cette leçon…';
-
-  @override
-  String get practiceAnother => 'Un autre';
 
   @override
   String get practiceAgain => 'Rejouer';
@@ -313,4 +307,74 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get practicePlayAlong => 'Jouer en rythme';
+
+  @override
+  String get endlessPractice => 'Entraînement sans fin';
+
+  @override
+  String get endlessPracticeDesc =>
+      'De la musique nouvelle à ton niveau, écrite pendant que tu joues. Choisis le niveau et les règles.';
+
+  @override
+  String get setupLevel => 'Niveau';
+
+  @override
+  String get setupHands => 'Mains';
+
+  @override
+  String setupTempo(int bpm) {
+    return 'Tempo · $bpm bpm';
+  }
+
+  @override
+  String get setupNoteValues => 'Valeurs de notes';
+
+  @override
+  String get setupMode => 'Mode';
+
+  @override
+  String get handRight => 'Droite';
+
+  @override
+  String get handLeft => 'Gauche';
+
+  @override
+  String get handBoth => 'Les deux';
+
+  @override
+  String get noteValuesInvalid =>
+      'Ces valeurs ne peuvent pas remplir une mesure. Ajoute-en une plus longue ou plus courte.';
+
+  @override
+  String get streamEnded =>
+      'Impossible d\'écrire plus de musique avec ces réglages.';
+
+  @override
+  String get setupStyle => 'Style';
+
+  @override
+  String levelN(int level) {
+    return 'Niveau $level';
+  }
+
+  @override
+  String get styleAny => 'Peu importe';
+
+  @override
+  String get styleClassical => 'Classique';
+
+  @override
+  String get styleFolk => 'Folk';
+
+  @override
+  String get styleChildren => 'Enfantine';
+
+  @override
+  String get stylePop => 'Pop';
+
+  @override
+  String get styleJazz => 'Jazz';
+
+  @override
+  String get styleGame => 'Jeu vidéo';
 }

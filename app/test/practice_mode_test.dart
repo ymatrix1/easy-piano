@@ -6,10 +6,11 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:easy_piano/content/content_repo.dart';
 import 'package:easy_piano/input/midi_input.dart';
 import 'package:easy_piano/l10n/app_localizations.dart';
-import 'package:easy_piano/practice/generated/generated_practice_page.dart';
 import 'package:easy_piano/practice/generated/model_store.dart';
 import 'package:easy_piano/practice/generated/practice_service.dart';
-import 'package:easy_piano/src/rust/api/practice.dart';
+import 'package:easy_piano/practice/generated/practice_stream.dart';
+import 'package:easy_piano/practice/generated/song_feed.dart';
+import 'package:easy_piano/practice/generated/stream_practice_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -70,22 +71,51 @@ Map<String, Uint8List> _served(String base) => {
   for (final e in _files.entries) '$base${e.key}': e.value,
 };
 
-const _node = PracticeNodeDef(
+final _node = PracticeNodeDef(
   course: 'c',
   node: 'n',
-  rubricJson: '{}',
-  gen: {'bpm': 80, 'hands': 'RH'},
+  rubricJson: jsonEncode({
+    'taught': {
+      'pitches': {
+        'RH': [60, 62, 64, 65, 67],
+        'LH': [48, 50],
+      },
+      'durations': ['2', '4', '8'],
+      'rest_durations': ['2'],
+      'rests': true,
+      'max_interval': 4,
+      'polyphony': {'RH': 1, 'LH': 1},
+    },
+    'spec': {
+      'node': 'n',
+      'new_skill': 'x',
+      'required': [
+        {'rhythm': '8'},
+      ],
+      'bars': [4, 8],
+      'bpm': [70, 90],
+      'hands': 'RH',
+      'time': '4/4',
+    },
+  }),
+  gen: const {
+    'bpm': 80,
+    'level': 1,
+    'hands': 'RH',
+    'time': '4/4',
+    'durs': ['2', '4'],
+  },
 );
 
 Candidate _cand(String rh) => {
   'time': '4/4',
   'key': 'C',
   'bars': [
-    {'RH': rh},
+    for (var i = 0; i < 4; i++) {'RH': rh},
   ],
 };
 
-/// Fails any tune with an A4 (stands in for the core rubric, which is not
+/// Fails any song with an A4 (stands in for the core rubric, which is not
 /// loaded in `flutter test`; core/src/rubric.rs tests check_generated).
 List<String> _rubric(String song, String node) =>
     song.contains('A4') ? ['RH: pitches not taught: A4'] : [];
@@ -97,7 +127,7 @@ class _FakeGenerator implements TuneGenerator {
   final List<List<Candidate>> rounds;
   @override
   final bool supported;
-  int calls = 0;
+  final specs = <Map<String, dynamic>>[];
 
   @override
   Future<void> prepare({void Function(double fraction)? onProgress}) async {
@@ -111,8 +141,22 @@ class _FakeGenerator implements TuneGenerator {
     required int n,
     required int seed,
     double temperature = 0.9,
-  }) async => rounds[calls++ % rounds.length];
+  }) async {
+    specs.add(gen);
+    return rounds[(specs.length - 1) % rounds.length];
+  }
 }
+
+StreamSettings _settings() => StreamSettings(
+  node: _node,
+  hands: 'RH',
+  bpm: 100,
+  durations: ['4'],
+  style: 'jazz',
+);
+
+int _bars(SongFeed feed) =>
+    ((jsonDecode(feed.json) as Map)['bars'] as List).length;
 
 void main() {
   group('model download sha256 check', () {
@@ -166,144 +210,227 @@ void main() {
     });
   });
 
-  group('rubric gate', () {
-    test('a rubric-failing tune is never returned', () async {
+  group('stream rubric gate', () {
+    test('a rubric-failing chunk is never pushed', () async {
       final gen = _FakeGenerator([
-        [_cand('A4:1'), _cand('C4:1')],
+        [_cand('A4:1'), _cand('C4:4 D4:4 E4:4 D4:4')],
       ]);
-      final t = await PracticeService(
+      String? node;
+      final s = PracticeStream(
         gen,
-        rubric: _rubric,
-        seed: 7,
-      ).next(_node);
-      expect(t.songJson, isNot(contains('A4')));
-      expect(t.rejected, 1);
-      final song = jsonDecode(t.songJson) as Map<String, dynamic>;
+        _settings(),
+        rubric: (song, n) {
+          node = n;
+          return _rubric(song, n);
+        },
+        seed: 1,
+      );
+      final feed = await s.start();
+      expect(feed.json, isNot(contains('A4')));
+      expect(s.rejected, 1);
+      final song = jsonDecode(feed.json) as Map<String, dynamic>;
       expect(song['source'], 'generated');
       expect(song['generator']['method'], 'melody-model');
+      expect(song['bpm'], 100);
+      // The learner's choices reach both the model and the rubric.
+      final spec = (jsonDecode(node!) as Map)['spec'] as Map;
+      expect(spec['required'], isEmpty);
+      expect(spec['bpm'], [100, 100]);
+      final g = gen.specs.first;
+      expect(g['durs'], ['4']);
+      expect(g['bars'], 4);
+      expect(g['styles'], ['jazz']);
+      expect((g['mask'] as Map)['pitches'], {
+        'RH': ['C4', 'D4', 'E4', 'F4', 'G4'],
+      });
     });
 
-    test('gives up after maxAttempts when nothing passes', () async {
+    test(
+      'grows on demand, carries the last note, ends after failures',
+      () async {
+        final gen = _FakeGenerator([
+          [_cand('C4:4 D4:4 E4:4 F4:4')],
+          [_cand('E4:4 D4:4 C4:4 D4:4')],
+          [_cand('A4:1')],
+          [_cand('A4:2 A4:2')],
+        ]);
+        final s = PracticeStream(
+          gen,
+          _settings(),
+          rubric: _rubric,
+          maxAttempts: 2,
+        );
+        final feed = await s.start();
+        var pushes = 0;
+        var ended = false;
+        feed.addListener(() => feed.ended ? ended = true : pushes++);
+        await s.grow(); // joins the look-ahead chunk start() began
+        expect(_bars(feed), 8);
+        expect((gen.specs[1]['mask'] as Map)['start'], {'RH': 'F4'});
+        feed.onDemand!(100); // plenty left: nothing to do
+        expect(gen.specs, hasLength(2));
+        feed.onDemand!(4);
+        await s.grow();
+        expect(
+          ended,
+          isTrue,
+          reason: 'A4 chunks always fail, so the feed ends',
+        );
+        expect(pushes, 1);
+        expect(_bars(feed), 8);
+      },
+    );
+
+    test('note values must fill a bar', () {
+      expect(fillsBar(['4'], '4/4'), isTrue);
+      expect(fillsBar(['2.'], '4/4'), isFalse);
+      expect(fillsBar(['4.', '8'], '6/8'), isTrue);
+      expect(durUnits('4.'), 12);
+      expect(pitchName(61), 'C#4');
+      expect(NodeChoices(_node).hands, ['RH', 'LH', 'BOTH']);
+    });
+  });
+
+  group('stream pages', () {
+    Widget wrap(Widget home) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: home,
+    );
+
+    StreamPracticePage page(TuneGenerator gen) => StreamPracticePage(
+      settings: _settings(),
+      generator: gen,
+      midi: createMidiInput(),
+      title: 'Lesson',
+      stream: PracticeStream(gen, _settings(), rubric: _rubric),
+      stageBuilder: (context, stage, feed, onFinished, onExit) =>
+          ListenableBuilder(
+            listenable: feed,
+            builder: (_, _) => Column(
+              children: [
+                Text('bars ${_bars(feed)}'),
+                Text('mode ${stage.type} ${stage.hand}'),
+                TextButton(
+                  onPressed: () => feed.onDemand!(0),
+                  child: const Text('near the end'),
+                ),
+              ],
+            ),
+          ),
+    );
+
+    testWidgets('streams chunks with a Generated badge', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final gen = _FakeGenerator([
-        [_cand('A4:1'), _cand('A4:2 A4:2')],
+        [_cand('A4:1'), _cand('C4:4 D4:4 E4:4 D4:4')],
       ]);
-      await expectLater(
-        PracticeService(gen, rubric: _rubric, maxAttempts: 3).next(_node),
-        throwsA(isA<PracticeUnavailable>()),
-      );
-      expect(gen.calls, 3);
+      await tester.pumpWidget(wrap(page(gen)));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      expect(find.text('Generated'), findsOneWidget);
+      expect(find.text('mode wait RH'), findsOneWidget);
+      expect(find.textContaining('A4'), findsNothing);
+      expect(find.text('bars 8'), findsOneWidget, reason: 'one chunk ahead');
+      await tester.tap(find.text('near the end'));
+      for (var i = 0; i < 3; i++) {
+        await tester.pump();
+      }
+      expect(find.text('bars 12'), findsOneWidget);
     });
 
-    test('the bundled practice pack parses', () {
-      final pack = PracticeNodeDef.parsePack(
-        jsonEncode({
+    testWidgets('friendly error when no chunk passes', (tester) async {
+      final gen = _FakeGenerator([
+        [_cand('A4:1')],
+      ]);
+      await tester.pumpWidget(wrap(page(gen)));
+      for (var i = 0; i < 3; i++) {
+        await tester.pump();
+      }
+      expect(find.textContaining("Couldn't make a tune"), findsOneWidget);
+      expect(find.textContaining('bars'), findsNothing);
+      expect(find.text('RETRY'), findsOneWidget);
+    });
+
+    testWidgets('native platforms say not yet', (tester) async {
+      await tester.pumpWidget(wrap(page(_FakeGenerator([], supported: false))));
+      await tester.pump();
+      expect(find.textContaining('only work in the browser'), findsOneWidget);
+      expect(find.text('RETRY'), findsNothing);
+    });
+
+    testWidgets('setup offers taught choices and blocks bad note values', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final repo = ContentRepo.fromFiles({
+        'courses.json': jsonEncode({
+          'courses': [
+            {
+              'id': 'c',
+              'title': 'Course',
+              'description': '',
+              'journey': 'courses/c/journey.json',
+            },
+          ],
+        }),
+        'courses/c/journey.json': jsonEncode({
+          'nodes': [
+            {'id': 'n', 'kind': 'lesson', 'title': 'Node', 'levels': []},
+          ],
+        }),
+        'practice.json': jsonEncode({
           'version': 1,
           'nodes': [
             {
               'course': 'c',
               'node': 'n',
-              'practice': {'taught': {}, 'spec': {}},
-              'unavailable': 'no RH pitches taught yet',
+              'practice': jsonDecode(_node.rubricJson),
+              'gen': _node.gen,
             },
           ],
         }),
-      );
-      expect(pack['c/n']!.gen, isNull);
-    });
-  });
-
-  group('practice page', () {
-    Widget app(TuneGenerator gen) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: GeneratedPracticePage(
-        node: _node,
-        title: 'Lesson',
-        service: PracticeService(gen, rubric: _rubric),
-        midi: createMidiInput(),
-        stageBuilder: (context, stage, song, onFinished, onExit) => Column(
-          children: [
-            Text('song ${(jsonDecode(song) as Map)['bars'][0]['RH']}'),
-            Text('mode ${stage.type}'),
-            TextButton(
-              onPressed: () => onFinished(
-                ResultView(
-                  passed: true,
-                  stars: 3,
-                  hitRatio: 1,
-                  wrong: 0,
-                  sections: Float64List(0),
-                  threshold: 0.7,
-                  suggestPractice: false,
-                  notesHit: 3,
-                  notesTotal: 4,
-                  timing: 1,
-                  assists: 0,
-                  score: 1,
-                  starsExact: 3,
-                ),
-              ),
-              child: const Text('finish'),
-            ),
-          ],
+      });
+      await tester.pumpWidget(
+        wrap(
+          StreamSetupPage(
+            repo: repo,
+            generator: _FakeGenerator([]),
+            midi: createMidiInput(),
+          ),
         ),
-      ),
-    );
-
-    testWidgets('generates, labels, plays and offers another one', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final gen = _FakeGenerator([
-        [_cand('A4:1'), _cand('C4:1')],
-        [_cand('E4:1')],
-      ]);
-      await tester.pumpWidget(app(gen));
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('Generated'), findsOneWidget);
-      expect(
-        find.text('song C4:1'),
-        findsOneWidget,
-        reason: 'A4 tune failed the rubric',
       );
-      expect(find.text('song A4:1'), findsNothing);
-      expect(find.text('mode wait'), findsOneWidget);
-
-      await tester.tap(find.text('finish'));
       await tester.pump();
-      expect(find.text('3 of 4 notes'), findsOneWidget);
-      expect(find.textContaining('no stars'), findsWidgets);
-
-      await tester.tap(find.text('Play along'));
+      expect(find.text('1'), findsOneWidget, reason: 'one level chip');
+      expect(find.text('Any'), findsOneWidget);
+      expect(find.text('Jazz'), findsOneWidget);
+      expect(find.text('Both'), findsOneWidget);
+      expect(find.text('TEMPO · 80 BPM'), findsOneWidget);
+      // Only the half note left: it fills 4/4, so PLAY stays on.
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is NoteGlyph && w.glyph == durGlyph('4'),
+        ),
+      );
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is NoteGlyph && w.glyph == durGlyph('8'),
+        ),
+      );
       await tester.pump();
-      await tester.tap(find.text('ANOTHER ONE'));
+      expect(find.textContaining("can't fill a bar"), findsNothing);
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is NoteGlyph && w.glyph == durGlyph('2'),
+        ),
+      );
       await tester.pump();
-      await tester.pump();
-      expect(find.text('song E4:1'), findsOneWidget);
-      expect(find.text('mode play_along'), findsOneWidget);
-      expect(find.text('Generated'), findsOneWidget);
-    });
-
-    testWidgets('friendly error when no tune passes', (tester) async {
-      final gen = _FakeGenerator([
-        [_cand('A4:1')],
-      ]);
-      await tester.pumpWidget(app(gen));
-      await tester.pump();
-      await tester.pump();
-      expect(find.textContaining("Couldn't make a tune"), findsOneWidget);
-      expect(find.textContaining('song'), findsNothing);
-      expect(find.text('RETRY'), findsOneWidget);
-    });
-
-    testWidgets('native platforms say not yet', (tester) async {
-      await tester.pumpWidget(app(_FakeGenerator([], supported: false)));
-      await tester.pump();
-      expect(find.textContaining('only work in the browser'), findsOneWidget);
-      expect(find.text('RETRY'), findsNothing);
+      expect(find.textContaining("can't fill a bar"), findsOneWidget);
     });
   });
 

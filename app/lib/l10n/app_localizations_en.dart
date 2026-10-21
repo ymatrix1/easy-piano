@@ -261,9 +261,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get practiceTune => 'Practice tune';
-
-  @override
   String get generatedBadge => 'Generated';
 
   @override
@@ -276,9 +273,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get practiceGenerating => 'Writing a tune for this lesson…';
-
-  @override
-  String get practiceAnother => 'Another one';
 
   @override
   String get practiceAgain => 'Play again';
@@ -309,4 +303,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get practicePlayAlong => 'Play along';
+
+  @override
+  String get endlessPractice => 'Endless practice';
+
+  @override
+  String get endlessPracticeDesc =>
+      'New music written for your level while you play. Pick the level and the rules.';
+
+  @override
+  String get setupLevel => 'Level';
+
+  @override
+  String get setupHands => 'Hands';
+
+  @override
+  String setupTempo(int bpm) {
+    return 'Tempo · $bpm bpm';
+  }
+
+  @override
+  String get setupNoteValues => 'Note values';
+
+  @override
+  String get setupMode => 'Mode';
+
+  @override
+  String get handRight => 'Right';
+
+  @override
+  String get handLeft => 'Left';
+
+  @override
+  String get handBoth => 'Both';
+
+  @override
+  String get noteValuesInvalid =>
+      'These note values can\'t fill a bar. Add a longer or shorter one.';
+
+  @override
+  String get streamEnded => 'Couldn\'t write more music with these settings.';
+
+  @override
+  String get setupStyle => 'Style';
+
+  @override
+  String levelN(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String get styleAny => 'Any';
+
+  @override
+  String get styleClassical => 'Classical';
+
+  @override
+  String get styleFolk => 'Folk';
+
+  @override
+  String get styleChildren => 'Children\'s';
+
+  @override
+  String get stylePop => 'Pop';
+
+  @override
+  String get styleJazz => 'Jazz';
+
+  @override
+  String get styleGame => 'Game';
 }

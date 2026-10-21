@@ -6,8 +6,8 @@ import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/free_play_page.dart';
-import '../practice/generated/generated_practice_page.dart';
 import '../practice/generated/practice_service.dart';
+import '../practice/generated/stream_practice_page.dart';
 import '../practice/generated/tune_generator.dart';
 import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
@@ -68,22 +68,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// One generator per app session, so the model loads once (D28).
-  late final PracticeService? _practice = widget.repo.melodyManifest == null
+  late final TuneGenerator? _generator = widget.repo.melodyManifest == null
       ? null
-      : PracticeService(createTuneGenerator(widget.repo.melodyManifest!));
-
-  void _openPractice(CourseDef course, JourneyNode node) {
-    final def = widget.repo.practice['${course.id}/${node.id}'];
-    if (def == null || _practice == null) return;
-    _push(
-      (_) => GeneratedPracticePage(
-        node: def,
-        title: widget.repo.t(node.title),
-        service: _practice,
-        midi: widget.midi,
-      ),
-    );
-  }
+      : createTuneGenerator(widget.repo.melodyManifest!);
 
   void _push(WidgetBuilder b) =>
       Navigator.of(context).push(MaterialPageRoute(builder: b));
@@ -92,16 +79,24 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final progress = Progress(widget.repo, _stars);
     final tabs = [
-      LearnTab(
-        repo: widget.repo,
-        progress: progress,
-        onPlay: _playLevel,
-        onPractice: _practice == null ? null : _openPractice,
-      ),
+      LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
       SafeArea(
         bottom: false,
         child: PracticeTab(
           onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
+          onEndless: _generator == null || widget.repo.practice.isEmpty
+              ? null
+              : () => _push(
+                  (_) => StreamSetupPage(
+                    repo: widget.repo,
+                    generator: _generator,
+                    midi: widget.midi,
+                    initialNode: switch (progress.next) {
+                      (final c, final n) => '${c.id}/${n.id}',
+                      null => null,
+                    },
+                  ),
+                ),
         ),
       ),
       ProfileTab(

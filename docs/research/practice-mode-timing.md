@@ -21,6 +21,15 @@ Question: how long does the learner wait for a practice tune (cold and cached), 
 | Cold (empty cache, 12.5 MB from localhost) | 297 ms | 585 ms | 876 ms | **1.76 s** |
 | Cached (Cache Storage, re-verified) | 139 ms | 302 ms | 1031 ms | **1.47 s** |
 
+Deployed preview (Cloudflare Pages, `feat-practice-mode.easy-piano.pages.dev`, model files served same-origin from the `melody-model-v1` release, same headless Chrome, home connection):
+
+| Case | Fetch + verify | ORT sessions | First round (4 tunes) | Total |
+|---|---|---|---|---|
+| Cold | 3102 ms | 1925 ms | 776 ms | **5.80 s** |
+| Cached | 83 ms | 327 ms | 593 ms | **1.00 s** |
+
+Rounds on the preview: RH 469–546 ms (5 runs), both hands 2.9–4.4 s (3 runs, 16 bars).
+
 Localhost hides network time: a 12.5 MB download on a real connection adds about 1 s at 100 Mbit/s and 10 s at 10 Mbit/s. The progress bar covers that part.
 
 ## Per round, all 41 nodes × 3 seeds (123 rounds, 4 candidates each)
@@ -34,6 +43,17 @@ Localhost hides network time: a 12.5 MB download on a real connection adds about
 
 Per tune (÷ 4): about 130–270 ms one hand, 540 ms both hands, in line with melody-browser.md (0.3–0.4 s per 8-bar tune). Two-hand nodes are slower because sequences are longer (both hands, up to 16 bars).
 
+## Endless practice (streaming), real app UI
+
+Release web build on localhost, headless Chrome driving the Flutter UI (Practice → Endless practice → play along → PLAY), 4-bar chunks, 4 candidates per round, times from the app's own log:
+
+| Level, hands | First chunk | Next chunks | Chunks in the run |
+|---|---|---|---|
+| Piano Basics · Find middle C, RH, 68 bpm | 337 ms | 109–222 ms | 5 in ~50 s |
+| Essentials I · Saints both hands, both, 96 bpm | 685 ms | 296–612 ms | 5 in ~35 s |
+
+PLAY to first chunk shown: about 0.5 s plus the 1.5 s the script waits after its tap. No chunk was refused and the stream never ran dry: a 4-bar chunk at 96 bpm is 10 s of music.
+
 ## Rubric yield (same 492 candidates)
 
 | Measure | Value |
@@ -43,7 +63,7 @@ Per tune (÷ 4): about 130–270 ms one hand, 540 ms both hands, in line with me
 | Failure reason | all 118 errors are `missing required pattern` (masks already enforce pitches, leaps, durations, rests, chords) |
 | Nodes with no passing candidate | `essentials-3/flats`, `essentials-3/amazing-grace` |
 
-With 4 rounds (`maxAttempts`) a node with 94 % round yield practically never shows the error; the two zero-yield nodes always do (they require an accidental pattern; the spec prefix is in C and nothing pushes the model to it).
+These are whole-tune numbers with the node's required patterns. Endless practice (streaming) checks 4-bar chunks against the taught set without required patterns, so its yield is at least this and the two zero-yield nodes no longer block practice.
 
 ## Phone
 
@@ -58,12 +78,11 @@ Throttling slows the main thread, not necessarily the wasm worker threads, and a
 
 ## Implications
 
-- Desktop web: the first tune arrives in about 1.5–2 s plus download; "Another one" in about 0.5 s (one hand) to 2 s (two hands). Good enough without pre-generation.
-- Phones: two-hand nodes may take 15 s or more per round. `PracticeService.roundTimeout` (60 s) bounds a stuck or very slow round.
-- Two nodes cannot get a tune today; the learner sees the friendly error.
+- Desktop web: the first tune arrives in about 1 s cached and 6 s cold on the preview (download included); a one-hand 8-bar round takes about 0.5 s.
+- Streaming chunks are 4 bars: at 80 bpm in 4/4 a chunk is 12 s of music and costs well under 1 s to write on desktop, so one chunk of look-ahead is plenty. On a 4× throttled CPU a two-hand chunk may take around 7 s; still inside one chunk of music, with no margin to spare on slower phones.
+- `PracticeStream.roundTimeout` (60 s) bounds a stuck or very slow round.
 
 ## Follow-ups
 
 - Measure on a real mid-range Android phone in Chrome (bean under `piano-c6v1`).
-- Required-pattern nodes with accidentals: choose the spec key from the taught keys, or mask toward the required pattern, so `flats` and `amazing-grace` get tunes.
-- Two-hand speed on phones: pre-generate the next tune while the learner plays, or generate n = 2 there.
+- Two-hand speed on phones: measure chunk time on a real phone; if it nears a chunk's duration, generate n = 2 or keep two chunks ahead.

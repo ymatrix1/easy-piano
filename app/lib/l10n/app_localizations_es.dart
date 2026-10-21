@@ -264,9 +264,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get practiceTune => 'Melodía de práctica';
-
-  @override
   String get generatedBadge => 'Generada';
 
   @override
@@ -279,9 +276,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get practiceGenerating => 'Escribiendo una melodía para esta lección…';
-
-  @override
-  String get practiceAnother => 'Otra';
 
   @override
   String get practiceAgain => 'Tocar otra vez';
@@ -312,4 +306,73 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get practicePlayAlong => 'Tocar a la vez';
+
+  @override
+  String get endlessPractice => 'Práctica sin fin';
+
+  @override
+  String get endlessPracticeDesc =>
+      'Música nueva para tu nivel, escrita mientras tocas. Elige el nivel y las reglas.';
+
+  @override
+  String get setupLevel => 'Nivel';
+
+  @override
+  String get setupHands => 'Manos';
+
+  @override
+  String setupTempo(int bpm) {
+    return 'Tempo · $bpm ppm';
+  }
+
+  @override
+  String get setupNoteValues => 'Figuras';
+
+  @override
+  String get setupMode => 'Modo';
+
+  @override
+  String get handRight => 'Derecha';
+
+  @override
+  String get handLeft => 'Izquierda';
+
+  @override
+  String get handBoth => 'Ambas';
+
+  @override
+  String get noteValuesInvalid =>
+      'Con estas figuras no se puede llenar un compás. Añade una más larga o más corta.';
+
+  @override
+  String get streamEnded => 'No se pudo escribir más música con estos ajustes.';
+
+  @override
+  String get setupStyle => 'Estilo';
+
+  @override
+  String levelN(int level) {
+    return 'Nivel $level';
+  }
+
+  @override
+  String get styleAny => 'Cualquiera';
+
+  @override
+  String get styleClassical => 'Clásica';
+
+  @override
+  String get styleFolk => 'Folclórica';
+
+  @override
+  String get styleChildren => 'Infantil';
+
+  @override
+  String get stylePop => 'Pop';
+
+  @override
+  String get styleJazz => 'Jazz';
+
+  @override
+  String get styleGame => 'Videojuego';
 }

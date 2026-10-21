@@ -185,6 +185,18 @@ impl PracticeSession {
         }
     }
 
+    /// Streaming practice: `song_json` is the session's song with bars
+    /// appended; returns the number of targets added.
+    #[frb(sync)]
+    pub fn extend(&mut self, song_json: String) -> Result<u32, String> {
+        let song = Song::from_json(&song_json)?;
+        let errs = song.validate();
+        if !errs.is_empty() {
+            return Err(errs.join("; "));
+        }
+        self.inner.extend(&song).map(|n| n as u32)
+    }
+
     #[frb(sync)]
     pub fn end_us(&self) -> i64 {
         self.inner.end_us()

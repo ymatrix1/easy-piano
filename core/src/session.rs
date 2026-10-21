@@ -292,6 +292,31 @@ impl Session {
         &self.targets
     }
 
+    /// Streaming practice (docs/specs/practice-mode.md): `song` is the session's
+    /// song with bars appended. Targets already in the session keep their state;
+    /// the new ones are added after them. Returns how many were added, or an
+    /// error when `song` does not start with the session's targets.
+    pub fn extend(&mut self, song: &Song) -> Result<usize, String> {
+        let all = group_targets(&song.timeline(), self.settings.hand);
+        let n = self.targets.len();
+        if all.len() < n
+            || self.targets.iter().zip(&all).any(|(a, b)| {
+                (a.beat - b.beat).abs() > 1e-9 || a.pitches != b.pitches
+            })
+        {
+            return Err("extended song does not start with the current targets".into());
+        }
+        let added = all.len() - n;
+        self.targets.extend(all.into_iter().skip(n));
+        self.critical = vec![[0, song.bars.len()]];
+        if self.settings.mode == Mode::Wait && n > 0 && self.cursor == n && added > 0 {
+            // The learner finished the old part: the next note is current from now.
+            self.wait_beat = self.targets[n].beat;
+            self.current_since_us = self.now_us;
+        }
+        Ok(added)
+    }
+
     fn target_us(&self, t: &Target) -> i64 {
         (t.beat * self.us_per_beat).round() as i64
     }
@@ -975,5 +1000,28 @@ mod tests {
             },
         );
         assert_eq!(both.targets()[0].pitches, BTreeSet::from([48, 60]));
+    }
+
+    #[test]
+    fn extend_appends_targets_and_keeps_state() {
+        let mut s = wait();
+        let first = s.targets().len();
+        for (i, t) in s.targets().to_vec().iter().enumerate() {
+            for &p in &t.pitches {
+                press(&mut s, p, 1_000_000 * (i as i64 + 1));
+            }
+        }
+        assert!(s.tick(9_000_000).done);
+        let mut longer = song();
+        longer.bars.push(longer.bars[0].clone());
+        assert_eq!(s.extend(&longer).unwrap(), 4);
+        assert_eq!(s.targets().len(), first + 4);
+        assert!(s.targets()[..first].iter().all(|t| matches!(t.state, ChordState::Hit { .. })));
+        let f = s.tick(9_100_000);
+        assert!(!f.done && f.cursor as usize == first);
+        assert_eq!(f.playhead_beat, s.targets()[first].beat);
+        let mut other = song();
+        other.bars[0] = longer.bars[1].clone();
+        assert!(s.extend(&other).is_err());
     }
 }

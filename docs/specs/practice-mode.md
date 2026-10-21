@@ -1,33 +1,36 @@
 # Practice mode: generated tunes
 
-Status: web implemented (epic `piano-c6v1`, beans `piano-urcd`, `piano-movl`, `piano-h09q`). Decision: [D28](../DECISIONS.md#d28-practice-mode-generates-tunes-in-the-app-at-runtime). Model: [melody-model.md](melody-model.md). Timings: [research/practice-mode-timing.md](../research/practice-mode-timing.md).
+Status: web implemented, endless streaming (epic `piano-c6v1`, beans `piano-urcd`, `piano-movl`, `piano-h09q`). Decision: [D28](../DECISIONS.md#d28-practice-mode-generates-tunes-in-the-app-at-runtime). Model: [melody-model.md](melody-model.md). Timings: [research/practice-mode-timing.md](../research/practice-mode-timing.md).
 
 ## What the learner sees
 
+Endless practice: the model writes music at the learner's level while they play; the notes keep coming until they leave.
+
 | Step | Behaviour |
 |---|---|
-| Entry | Node sheet (Learn tab) shows **Practice tune** under PLAY when the node has a generation spec. |
+| Entry | Practice tab → **Endless practice** card (hidden when the build has no model manifest or practice pack). |
+| Setup | Game-style chips (chamfered, yellow when picked). **Level** 1–5: the taught set's difficulty (`level_for`); each level uses the last course node at that level, the widest taught set it allows (default: the level of the learner's next node). **Style**: any, classical, folk, children's, pop, jazz, game (the model's `STYLE_` token). **Hands**: right / left / both, offered only when that hand has taught notes. **Tempo**: 40–160 bpm (default: the node's). **Note values**: the taught values; PLAY is off while they cannot fill a bar. **Mode**: wait for me / play along. |
 | First use | "Getting the tune maker ready…" with a download bar (percent of the runtime files). |
 | Later uses | Files come from the browser cache; the bar jumps to 100 %. |
-| Generating | "Writing a tune for this lesson…" |
-| Playing | The normal stage UI (`PracticeStage`), wait mode first. A **Generated** badge stays on top. The banner says it is practice only, no stars. |
-| Finished | "N of M notes", no stars. Mode chips (Wait for me / Play along), **Another one**, **Play again**, close. |
-| No passing tune | "Couldn't make a tune that fits this lesson. Try again." with Retry. |
+| Generating | "Writing a tune for this lesson…" until the first 4-bar chunk passes the rubric. |
+| Playing | The normal stage UI (`PracticeStage`) in the chosen mode. New 4-bar chunks are appended while the learner plays (one chunk ahead from the start, then whenever fewer than 24 beats are left). A **Generated** badge stays on top; the banner says practice only, no stars. Close leaves at any time. |
+| Stream cannot continue | After a chunk fails every attempt the feed ends; the learner plays to the end and sees "Couldn't write more music with these settings", notes hit, and **Play again**. |
+| No first chunk | "Couldn't make a tune that fits this lesson. Try again." with Retry. |
 | Download/verify fails | "Couldn't load the tune maker…" with Retry. |
 | Native platforms | "Practice tunes only work in the browser for now." No retry. |
 
 ## Rules (D28)
 
-- [x] Tunes are generated on device for the chosen node.
+- [x] Tunes are generated on device for the chosen level (course node), streamed in chunks while the learner plays.
 - [x] Model files are verified by sha256 against the bundled release manifest before use, cached or not (D24).
-- [x] Every tune passes `rubric::check_generated` for the node's taught set and spec before it is shown; failures are dropped, never displayed.
-- [x] Retry: up to 4 rounds of 4 candidates (`PracticeService.maxAttempts`, `candidatesPerAttempt`), each bounded by `roundTimeout` (60 s), then the friendly error.
+- [x] Every chunk passes `rubric::check_generated`, checked as part of the whole song so far, before it is appended; failures are dropped, never displayed. The rubric node is the node's taught set with the learner's hands and tempo, any length, and no required pattern (a 4-bar chunk cannot carry every pattern of a node).
+- [x] Retry: up to 4 rounds of 4 candidates per chunk (`PracticeStream.maxAttempts`, `candidates`), each bounded by `roundTimeout` (60 s); then the first chunk shows the friendly error and later chunks end the stream.
 - [x] Tunes are marked `source: generated`, `generator.method: melody-model` and show the **Generated** badge. `check_generated` refuses any song without those marks.
 - [x] No stars, no level or gate progress: the page never returns a result to `HomePage` and never touches `Progress`.
 - [x] Nothing is saved or shared: the tune lives in page state only.
 - [x] No copy check, no human review (user's decision in D28).
 - [ ] Native platforms (no ONNX runtime wired yet).
-- [ ] Nodes whose required pattern needs an accidental (`essentials-3/flats`, `essentials-3/amazing-grace`) get no passing tune yet ([timing note](../research/practice-mode-timing.md)).
+- [x] Nodes whose required pattern needs an accidental get tunes too: streaming chunks do not require the node's patterns.
 
 ## Pipeline
 
@@ -37,8 +40,10 @@ Status: web implemented (epic `piano-c6v1`, beans `piano-urcd`, `piano-movl`, `p
 | Manifest | `tools/melody-model/releases/melody-model-v1.json` → `assets/content/melody-model-v1.json` | Trust root: file sizes, sha256, decoder shape. |
 | Download | `ModelStore` (`app/lib/practice/generated/model_store.dart`) | Cache Storage first (key = sha256/name), else fetch with progress; sha256 check either way; a bad cache entry is deleted and fetched again; a bad download throws `ModelIntegrityError` and is not cached. |
 | Runtime | `app/web/melody/practice.js` (loaded on demand via `window.epMelodyImport`) | onnxruntime-web 1.30.0 (wasm, up to 4 threads when cross-origin isolated), KV-cached decoder + heads, `melody.js` masked decoding and decoding. |
-| Gate | `PracticeService` → bridge `check_generated` → `core::rubric::check_generated` | Picks the first candidate (best mean log p) with no rubric errors. |
-| UI | `GeneratedPracticePage` | States above. |
+| Stream | `PracticeStream` (`practice_stream.dart`) | Builds each chunk's spec from the setup (`bars` 4, `styles` = the picked style, chosen durations, hands, tempo; masks from the taught set; `mask.start` = each hand's last note so the leap rule holds across chunks), picks the first candidate (best mean log p) that passes the gate, pushes the grown song to a `SongFeed`. |
+| Gate | bridge `check_generated` → `core::rubric::check_generated` | Rubric errors for the song so far; empty = append. |
+| Session | `Session::extend` (`core/src/session.rs`), bridge `PracticeSession.extend` | Appends targets for the new bars; judged targets keep their state; a wait-mode learner who already finished the old part continues at the first new note. |
+| UI | `StreamSetupPage`, `StreamPracticePage`, `PracticeStage(feed:)` | Setup, states above; the stage extends its session and staff on every push, asks for more through `SongFeed.onDemand`, fixes the wait-mode page scale, and finishes only after the feed ends. |
 
 ### Generation spec (`gen`)
 
@@ -69,7 +74,8 @@ python tools/melody-model/web/stage_app_model.py --release   # or --from <dir wi
 
 | Test | Covers |
 |---|---|
+| `core` `extend_appends_targets_and_keeps_state` | Appended targets, kept states, wait cursor moves on, mismatched prefix refused. |
 | `core` `check_generated_round_trips_and_fails_closed` | Taught set serde round trip; pass; untaught pitch fails; non-generated song refused; bad JSON fails. |
 | `content-cli` `pack_has_a_rubric_node_and_gen_spec_for_every_spec` | Pack for the repo content; pack node feeds `check_generated`. |
-| `tools/melody-model/tests/test_web.py` | Masked JS decoding obeys taught pitches, leap, chord size, rest values, no ties/fingering. |
-| `app/test/practice_mode_test.dart` | sha256 check (verified, tampered, corrupt cache, URL), rubric-failing tune never returned, give-up path, page flow with a fake generator, error and not-yet states. |
+| `tools/melody-model/tests/test_web.py` | Masked JS decoding obeys taught pitches, leap (including from `mask.start`), chord size, rest values, no ties/fingering. |
+| `app/test/practice_mode_test.dart` | sha256 check (verified, tampered, corrupt cache, URL); rubric-failing chunk never pushed; setup choices reach model and rubric; growth on demand with the last note carried; stream ends after failures; stream page with a fake generator (badge, chunks appended on demand), error and not-yet states; setup choices and the bar-fill guard. |

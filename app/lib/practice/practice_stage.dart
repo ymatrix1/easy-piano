@@ -19,6 +19,7 @@ import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
+import 'generated/song_feed.dart';
 
 /// FRB maps i64 to int on native and BigInt on web.
 int _int(Object v) => v is BigInt ? v.toInt() : v as int;
@@ -78,6 +79,7 @@ class PracticeStage extends StatefulWidget {
     this.onToggleKeyboard,
     this.midiLabel,
     this.onConnectMidi,
+    this.feed,
   });
 
   final StageDef stage;
@@ -105,6 +107,10 @@ class PracticeStage extends StatefulWidget {
   /// Connected MIDI device name, or null when none; tapping connects.
   final String? midiLabel;
   final VoidCallback? onConnectMidi;
+
+  /// Streaming practice: the song grows while it plays; [songJson] is its
+  /// first part. The stage ends only after the feed ends.
+  final SongFeed? feed;
 
   @override
   State<PracticeStage> createState() => _PracticeStageState();
@@ -170,7 +176,7 @@ class _PracticeStageState extends State<PracticeStage>
   _targetFirstNote; // target index → first staff note index
   late final double _beatsPerBar;
   late final double _usPerBeat;
-  late final List<TargetView> _initialTargets;
+  late List<TargetView> _initialTargets;
   final _scroll = ValueNotifier<double>(0);
   final _marks = ValueNotifier<int>(0);
   final _pressed = ValueNotifier<Set<int>>({});
@@ -218,23 +224,12 @@ class _PracticeStageState extends State<PracticeStage>
       passRatio: widget.stage.pass,
       failedAttempts: widget.failedAttempts,
     );
-    _initialTargets = _session.targets();
     _notes = [];
     _noteTarget = [];
     _targetFirstNote = [];
-    for (var i = 0; i < _initialTargets.length; i++) {
-      final t = _initialTargets[i];
-      _targetFirstNote.add(_notes.length);
-      for (var k = 0; k < t.pitches.length; k++) {
-        final p = t.pitches[k];
-        final f = k < t.fingers.length && t.fingers[k] > 0
-            ? t.fingers[k]
-            : null;
-        _notes.add(StaffNote(p, t.beat, t.beats, leftHand: p < 60, finger: f));
-        _noteTarget.add(i);
-      }
-    }
-    _targetStates = [for (final t in _initialTargets) t.state];
+    _initialTargets = const [];
+    _addTargets(_session.targets());
+    widget.feed?.addListener(_onFeed);
     _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
@@ -269,6 +264,51 @@ class _PracticeStageState extends State<PracticeStage>
     _ticker = createTicker((_) => _tick())..start();
   }
 
+  /// Adds staff notes for targets past the ones already drawn.
+  void _addTargets(List<TargetView> all) {
+    for (var i = _initialTargets.length; i < all.length; i++) {
+      final t = all[i];
+      _targetFirstNote.add(_notes.length);
+      for (var k = 0; k < t.pitches.length; k++) {
+        final p = t.pitches[k];
+        final f = k < t.fingers.length && t.fingers[k] > 0
+            ? t.fingers[k]
+            : null;
+        _notes.add(StaffNote(p, t.beat, t.beats, leftHand: p < 60, finger: f));
+        _noteTarget.add(i);
+      }
+    }
+    final old = _initialTargets.length;
+    _targetStates = [..._targetStates, for (final t in all.skip(old)) t.state];
+    _initialTargets = all;
+  }
+
+  /// Streaming: new bars arrived. Extends the session and, in play-along
+  /// with the metronome on, schedules clicks for the new beats.
+  void _onFeed() {
+    if (!mounted || _finished) return;
+    final before = _totalBeats;
+    try {
+      _session.extend(songJson: widget.feed!.json);
+    } catch (_) {
+      return; // a bad push never stops the stage; the next one may fit
+    }
+    _addTargets(_session.targets());
+    if (_playAlong && pianoSynth.metronome && !_paused && !_demo) {
+      final now = widget.midi.now();
+      for (var b = before.ceilToDouble(); b < _totalBeats; b++) {
+        pianoSynth.click(
+          (_startMs + b * _msPerBeat - now) / 1000,
+          accent: b % _beatsPerBar == 0,
+        );
+      }
+    }
+    _marks.value++;
+    setState(() {});
+  }
+
+  bool get _streaming => widget.feed != null && !widget.feed!.ended;
+
   List<BackingNote> _companionNotes() => [
     for (final n in companion(
       songJson: widget.songJson,
@@ -284,7 +324,7 @@ class _PracticeStageState extends State<PracticeStage>
   /// Wait mode fits the whole exercise on one page when it can.
   void _fitPage(double width) {
     _staffWidth = width;
-    if (_playAlong) return;
+    if (_playAlong || widget.feed != null) return;
     final usable = (0.92 - _waitAnchor) * width;
     _ppb = (usable / _totalBeats).clamp(_minPpb, _maxPpb);
   }
@@ -448,8 +488,9 @@ class _PracticeStageState extends State<PracticeStage>
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
       // Reference: slide so the next note returns to the left margin, but
       // never past the point where the end of the piece is already in view.
-      final lastVisible =
-          _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
+      final lastVisible = _streaming
+          ? nextBeat
+          : _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
       final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
       if (end <= _scroll.value + 0.01) return;
       _pageTween = Tween(begin: _scroll.value, end: end).animate(
@@ -541,9 +582,12 @@ class _PracticeStageState extends State<PracticeStage>
     } else {
       _frame = f;
     }
-    final over = _playAlong
-        ? _usAt(widget.midi.now()) > _int(_session.endUs())
-        : f.done;
+    widget.feed?.onDemand?.call(_totalBeats - _scroll.value);
+    final over =
+        !_streaming &&
+        (_playAlong
+            ? _usAt(widget.midi.now()) > _int(_session.endUs())
+            : f.done);
     if (over) {
       _finished = true;
       _ticker.stop();
@@ -608,6 +652,7 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   void dispose() {
     pianoSynth.stopAll();
+    widget.feed?.removeListener(_onFeed);
     _ticker.dispose();
     _pageAnim.dispose();
     _sub?.cancel();
