@@ -229,7 +229,8 @@ class _WebPianoSynth implements PianoSynth {
   }
 
   @override
-  Future<void> load() => _loadInstrument('piano');
+  Future<void> load() =>
+      Future.wait([_loadInstrument('piano'), _loadInstrument('click')]);
 
   @override
   Future<void> loadParts(Iterable<String> parts) => Future.wait([
@@ -247,6 +248,17 @@ class _WebPianoSynth implements PianoSynth {
   Future<void> _fetchInstrument(String name) async {
     final watch = Stopwatch()..start();
     final ctx = _context();
+    if (name == 'click') {
+      // Recorded cross-stick for the metronome (Virtuosity Drums, CC0).
+      await Future.wait([
+        _decode(ctx, 'assets/band/drums/click.mp3').then((b) => _click = b),
+        _decode(
+          ctx,
+          'assets/band/drums/click_accent.mp3',
+        ).then((b) => _clickAccent = b),
+      ]);
+      return;
+    }
     if (name == 'drums') {
       final hits = <int, List<web.AudioBuffer?>>{
         for (final MapEntry(key: gm, value: files) in _drumFiles.entries)
@@ -430,12 +442,23 @@ class _WebPianoSynth implements PianoSynth {
     _scheduled.add(v);
   }
 
-  final _clicks = <web.OscillatorNode>[];
+  final _clicks = <web.AudioScheduledSourceNode>[];
+  web.AudioBuffer? _click;
+  web.AudioBuffer? _clickAccent;
 
   @override
   void click(double startSec, {bool accent = false}) {
     final ctx = _context();
     final at = _at(startSec);
+    final sample = accent ? _clickAccent : _click;
+    if (sample != null) {
+      final src = ctx.createBufferSource()..buffer = sample;
+      src.connect(_out!);
+      src.start(at);
+      _clicks.add(src);
+      return;
+    }
+    // Fallback until the samples decode: a short beep.
     final osc = ctx.createOscillator()
       ..type = 'square'
       ..frequency.value = accent ? 1600 : 1100;
@@ -641,6 +664,10 @@ class _WebPianoSynth implements PianoSynth {
       final buf = await off.startRendering().toDart;
       out[solo ?? 'mix'] = _levels(buf);
     }
+    out['click'] = _levels(await _renderOffline(0.5, (s) => s.click(0.1)));
+    out['clickAccent'] = _levels(
+      await _renderOffline(0.5, (s) => s.click(0.1, accent: true)),
+    );
     // Headroom of the learner's own keys (no limiter): a loud two-hand chord.
     out['liveChord'] = _levels(
       await _renderOffline(3, (synth) {
@@ -725,6 +752,8 @@ class _WebPianoSynth implements PianoSynth {
     other._samples.forEach((k, v) => _samples[k] = {...v});
     _drums.addAll(other._drums);
     _softHat = other._softHat;
+    _click = other._click;
+    _clickAccent = other._clickAccent;
     for (final k in [...other._samples.keys, 'drums']) {
       _loads[k] = Future.value();
     }
