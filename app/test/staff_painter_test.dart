@@ -37,4 +37,14 @@ void main() {
     expect(t.systemX, 0);
     expect(t.clefX, space * 0.8);
   });
+
+  test('note fade is clear of the clefs and opaque at the anchor', () {
+    const space = 14.0, width = 390.0;
+    final g = StaffPainter.systemLayout(Staves.grand, space);
+    final f = StaffPainter.edgeFade(width, g.clefRight, 96, space).stops;
+    expect(f[0] * width, closeTo(g.clefRight, 0.01)); // alpha 0 at clef edge
+    expect(f[1] * width, lessThanOrEqualTo(96)); // opaque at anchor
+    expect(f[2] * width, closeTo(width - space * 3, 0.01));
+    expect(f[3], 1.0);
+  });
 }

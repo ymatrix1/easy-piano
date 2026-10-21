@@ -200,6 +200,23 @@ class StaffPainter extends CustomPainter {
     return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
   }
 
+  /// Gradient stops (fractions of [width]) for the note fade: transparent at
+  /// [clefRight], opaque 2 spaces later (never later than [anchorX], so the
+  /// note at the play bar or page start is always fully drawn), opaque until
+  /// 3 spaces before the right edge, transparent at the edge.
+  static ({List<double> stops}) edgeFade(
+    double width,
+    double clefRight,
+    double anchorX,
+    double space,
+  ) {
+    final a = (clefRight / width).clamp(0.0, 1.0);
+    final b = (math.min(clefRight + space * 2, anchorX) / width).clamp(a, 1.0);
+    final d = 1.0;
+    final c = ((width - space * 3) / width).clamp(b, d);
+    return (stops: [a, b, c, d]);
+  }
+
   bool get _hasTreble => staves != Staves.bass;
   bool get _hasBass => staves != Staves.treble;
 
@@ -423,12 +440,16 @@ class StaffPainter extends CustomPainter {
     final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final current = currentIndex?.call();
     double? lastX;
+    // Notes go on their own layer so a horizontal alpha mask can fade them
+    // in at the right edge and out before they reach the clef area.
+    final fade = edgeFade(size.width, clefRight, anchorX, space);
+    canvas.saveLayer(Offset.zero & size, Paint());
     for (var i = _lowerBound(firstBeat); i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       final x = anchorX + (n.beat - now) * pixelsPerBeat;
       lastX = x;
-      if (x < clefRight) continue; // behind the clef
+      if (x + space * 2 < clefRight) continue; // faded out behind the clef
       final onBass = _onBass(n);
       final step = diatonicStep(n.pitch);
       final y = _noteY(n.pitch, onBass, l);
@@ -504,6 +525,22 @@ class StaffPainter extends CustomPainter {
         );
       }
     }
+
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..blendMode = BlendMode.dstIn
+        ..shader = LinearGradient(
+          colors: const [
+            Color(0x00000000),
+            Color(0xFF000000),
+            Color(0xFF000000),
+            Color(0x00000000),
+          ],
+          stops: fade.stops,
+        ).createShader(Offset.zero & size),
+    );
+    canvas.restore();
 
     if (showEndCheck && lastX != null) {
       final c = Offset(lastX + space * 4, (staffTop + staffBottom) / 2);
