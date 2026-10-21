@@ -42,7 +42,7 @@ Run by the user on the PR 36 preview in their own browser with a Keystation Mini
 - `miniaudio`: Rust bindings need libclang, not installed. Same WASAPI exclusive backend underneath; numbers expected to match, not verified.
 - `flutter_soloud` (SoLoud): needs the Flutter app running plus a loopback test.
 - Oboe (Android), CoreAudio (iOS/macOS): need those devices.
-- End-to-end key to sound, MIDI p95 on the web build: needs a physical keyboard.
+- End-to-end key to sound: needs a hardware loopback. Audio output in a normal Chrome/Edge window on a named device (see the caveat above).
 
 ## Implications
 
