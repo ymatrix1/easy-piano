@@ -1,0 +1,14 @@
+{
+  "id": "e3-12-gate-amazing-grace",
+  "title": "str:level.e3.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "amazing-grace",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

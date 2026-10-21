@@ -631,10 +631,12 @@ impl SseDecode for crate::api::practice::NoteView {
         let mut var_pitch = <u8>::sse_decode(deserializer);
         let mut var_beat = <f64>::sse_decode(deserializer);
         let mut var_beats = <f64>::sse_decode(deserializer);
+        let mut var_partName = <String>::sse_decode(deserializer);
         return crate::api::practice::NoteView {
             pitch: var_pitch,
             beat: var_beat,
             beats: var_beats,
+            part_name: var_partName,
         };
     }
 }
@@ -845,6 +847,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::NoteView {
             self.pitch.into_into_dart().into_dart(),
             self.beat.into_into_dart().into_dart(),
             self.beats.into_into_dart().into_dart(),
+            self.part_name.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1049,6 +1052,7 @@ impl SseEncode for crate::api::practice::NoteView {
         <u8>::sse_encode(self.pitch, serializer);
         <f64>::sse_encode(self.beat, serializer);
         <f64>::sse_encode(self.beats, serializer);
+        <String>::sse_encode(self.part_name, serializer);
     }
 }
 

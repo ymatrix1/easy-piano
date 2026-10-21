@@ -1,0 +1,34 @@
+{
+  "id": "e3-flats",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.e3.flat.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 4,
+      "press": "B4",
+      "label": "4"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 4,
+      "press": "A#4",
+      "label": "4"
+    },
+    {
+      "at": 9,
+      "prompt": "your_turn"
+    }
+  ]
+}

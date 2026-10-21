@@ -15,13 +15,13 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 1: First playable
 
-- [ ] Monorepo scaffold, CI (Flutter, Rust, content lint)
+- [x] Monorepo scaffold, CI (Flutter, Rust, content lint)
 - [x] Notation parser + JSON schemas + `content lint`
 - [x] Core session: wait + play_along, critical sections, stars
 - [x] Practice studio: staff + keyboard with hit/miss colors, fingering, key hints, results (`app/lib/practice/`)
 - [ ] Falling notes view
 - [x] Web only: Web MIDI + touch input; sampled piano synth (Web Audio), sound toggle, pre-listen, play-along companion + metronome
-- [ ] Deploy web build (static host with COOP/COEP headers)
+- [x] Deploy web build (static host with COOP/COEP headers): Cloudflare Pages, D15
 - [x] 5 Piano Basics levels authored and lint-clean (`content/`)
 - [ ] 5 Piano Basics 1 levels playable end to end
 
@@ -40,8 +40,11 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Phase 4: Content scale
 
-- [ ] Piano Basics 2–4, Essentials 1, Pop Chords 1
-- [ ] Localization (pt-BR, es)
+- [x] Essentials I (19 levels, 2 star gates)
+- [x] Essentials II (18 levels, 2 star gates)
+- [x] Essentials III (17 levels, 2 star gates)
+- [ ] Piano Basics 2–4, Pop Chords 1
+- [x] Localization: en, pt-BR, es, fr, de UI and content strings, language picker ([i18n](specs/i18n.md))
 - [ ] Polyphonic mic research result
 
 ## Phase 5: My songs (D11)

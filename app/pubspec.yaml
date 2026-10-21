@@ -38,6 +38,10 @@ dependencies:
   easy_piano_bridge:
     path: rust_builder
   flutter_rust_bridge: 2.13.0
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -57,6 +61,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -67,12 +72,26 @@ flutter:
     - family: Bravura
       fonts:
         - asset: assets/fonts/Bravura.otf
+    - family: Audiowide
+      fonts:
+        - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
 
   assets:
     - assets/piano/
+    - assets/band/bass/
+    - assets/band/strings/
+    - assets/band/choir/
+    - assets/band/drums/
+    - assets/brand/logo.png
     - assets/content/
     - assets/content/courses/piano-basics/
     - assets/content/courses/piano-basics/levels/
+    - assets/content/courses/essentials-1/
+    - assets/content/courses/essentials-1/levels/
+    - assets/content/courses/essentials-2/
+    - assets/content/courses/essentials-2/levels/
+    - assets/content/courses/essentials-3/
+    - assets/content/courses/essentials-3/levels/
     - assets/content/songs/
     - assets/content/scenes/
     - assets/content/strings/

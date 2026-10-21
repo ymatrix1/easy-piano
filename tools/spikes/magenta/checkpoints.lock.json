@@ -1,0 +1,36 @@
+{
+  "basic_rnn": {
+    "url": "https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn",
+    "sha256": "584ef921b7cdf41a7e5709d3a4a2a3d2bd4a7070b683b099d5b74918eb2ae71f",
+    "files": {
+      "config.json": "fc8928dc067148eab3d50e8028b35b511038283d1fe58c2804b24926a8038ec1",
+      "weights_manifest.json": "cb91dce0a07cf2d735e20d2d776fa3449de19e33dd1a2a498c74f4bb8fb61470",
+      "group1-shard1of4": "f4b8281261c2914f549fbe9ff5ad46e6c007a5d05f6438dc7ba120734243126e",
+      "group1-shard2of4": "d12d50840e8e34110b700681b0f7d0a2c96985307b0366b5ac60b73d571c41a1",
+      "group1-shard3of4": "f40e868468254c659f7cf5300cadbe3dfb061fc5c3724a2ddd9bd490831d73a8",
+      "group1-shard4of4": "2e5b152a75bc30ba0e4d38175ab307568265f1862e0cdad70d2b9eab521f4281"
+    }
+  },
+  "melody_rnn": {
+    "url": "https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/melody_rnn",
+    "sha256": "721cb2ab0990cf36be154873c7ca9655490b44362a04ef013b32e3a31fbc4332",
+    "files": {
+      "config.json": "5d8748f85eca7ae3d46f3be7b85ce7c0a016af84fa117cfeee08bf6391fbf46c",
+      "weights_manifest.json": "9c802c461ffdaf188ad40724a0d5dd9934fb7bf7654dd69be2b8891d27767e8b",
+      "group1-shard1of4": "83e7cc6a19866e1961b09d827a527d6558683e69283a1968112a8be991451155",
+      "group1-shard2of4": "8be7de00494d31d04e6e00d6bb4233b31740f0d2c04de3205200d9a068ffb232",
+      "group1-shard3of4": "c156ae77e9cc62fa703a0f47d89a19c16493c79b24e596a493bc437f78b06802",
+      "group1-shard4of4": "63d71902000473d9fe06cd35f18e4126c0c08666bb2a6d8669d46f298e005911"
+    }
+  },
+  "chord_pitches_improv": {
+    "url": "https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/chord_pitches_improv",
+    "sha256": "f9a2b7a8623f819e89ba011523ce46166650a4cb8475f09a8785ae810fd04318",
+    "files": {
+      "config.json": "d94dbaf436fddaea5648f79361fa8096b173444b76d1db12ee799b3be8806267",
+      "weights_manifest.json": "c235ba9f70255d672cc2ce1b3f33196f40d7cb9ad52056a907712f5d6c6086c9",
+      "group1-shard1of2": "c360ed7ddd966979509852b79530027bc8de1805644286f556f6a8e7a4edcc44",
+      "group1-shard2of2": "0d92b23e3050a82521a8ed408ac6188d7a32d8ed61b095f80f5829a2d4872857"
+    }
+  }
+}

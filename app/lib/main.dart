@@ -7,6 +7,8 @@ import 'package:flutter/scheduler.dart';
 import 'content/content_repo.dart';
 import 'home/home_page.dart';
 import 'input/midi_input.dart';
+import 'l10n/app_locale.dart';
+import 'l10n/app_localizations.dart';
 import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
 import 'ui/key_geometry.dart';
@@ -16,35 +18,78 @@ import 'ui/staff/staff_spike_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
-  final locale =
-      WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'pt'
-      ? 'pt-BR'
-      : 'en';
-  final repo = await ContentRepo.load(locale: locale);
-  runApp(EasyPianoApp(repo: repo));
+  final dispatcher = WidgetsBinding.instance.platformDispatcher;
+  final appLocale = await AppLocale.load(dispatcher.locales);
+  final repo = await ContentRepo.load(locale: appLocale.current.tag);
+  runApp(EasyPianoApp(repo: repo, appLocale: appLocale));
 }
 
-class EasyPianoApp extends StatelessWidget {
-  EasyPianoApp({super.key, required this.repo});
+class EasyPianoApp extends StatefulWidget {
+  const EasyPianoApp({super.key, required this.repo, required this.appLocale});
 
   final ContentRepo repo;
+  final AppLocale appLocale;
 
+  @override
+  State<EasyPianoApp> createState() => _EasyPianoAppState();
+}
+
+class _EasyPianoAppState extends State<EasyPianoApp>
+    with WidgetsBindingObserver {
   /// One MIDI connection shared by every screen.
   final MidiInput midi = createMidiInput();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.appLocale.addListener(_onLocale);
+  }
+
+  @override
+  void dispose() {
+    widget.appLocale.removeListener(_onLocale);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (locales != null) widget.appLocale.device = locales;
+  }
+
+  /// Switches language live: content strings are read via `repo.t` without a
+  /// Localizations dependency, so every element is rebuilt (state is kept).
+  void _onLocale() {
+    widget.repo.locale = widget.appLocale.current.tag;
+    setState(() {});
+    void rebuild(Element e) {
+      e.markNeedsBuild();
+      e.visitChildren(rebuild);
+    }
+
+    (context as Element).visitChildren(rebuild);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Easy Piano',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C4CF1),
-        useMaterial3: true,
-      ),
-      home: HomePage(
-        repo: repo,
-        midi: midi,
-        spikes: (_) => const MidiSpikePage(),
+    return AppLocaleScope(
+      notifier: widget.appLocale,
+      child: MaterialApp(
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        debugShowCheckedModeBanner: false,
+        locale: widget.appLocale.current.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: ThemeData(
+          colorSchemeSeed: const Color(0xFF6C4CF1),
+          useMaterial3: true,
+        ),
+        home: HomePage(
+          repo: widget.repo,
+          midi: midi,
+          spikes: (_) => const MidiSpikePage(),
+        ),
       ),
     );
   }

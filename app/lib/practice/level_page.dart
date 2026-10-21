@@ -2,10 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
+import '../ui/game/game_theme.dart';
+import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import 'practice_stage.dart';
+import 'result_screen.dart';
 
 /// Runs a level's stages in order: scenes (captions until the Phase 2 player),
 /// then playable stages graded by the core. Wait stages repeat `repeats`
@@ -57,8 +62,8 @@ class _LevelPageState extends State<LevelPage> {
         SnackBar(
           content: Text(
             ok
-                ? 'No MIDI keyboard found. Plug it in and try again.'
-                : 'Web MIDI is not available in this browser.',
+                ? AppLocalizations.of(context).midiNotFound
+                : AppLocalizations.of(context).midiUnavailable,
           ),
         ),
       );
@@ -114,6 +119,7 @@ class _LevelPageState extends State<LevelPage> {
       _repeat = _stage.repeats;
     }
     _result = r;
+    Sfx.play(r.passed ? SfxKind.win : SfxKind.lose);
   });
 
   String _songTitle(String? id) {
@@ -135,7 +141,15 @@ class _LevelPageState extends State<LevelPage> {
           children: [
             Positioned.fill(child: _stageBody(repo, showKeyboard)),
             if (_result != null)
-              Positioned.fill(child: _resultScreen(context, _result!)),
+              Positioned.fill(
+                child: ResultScreen(
+                  result: _result!,
+                  stageType: _stage.type,
+                  songTitle: _songTitle(_stage.score),
+                  onRetry: _retry,
+                  onNext: _next,
+                ),
+              ),
           ],
         ),
       ),
@@ -151,7 +165,7 @@ class _LevelPageState extends State<LevelPage> {
         title: repo.t(widget.level.title),
         lines: [
           for (final l in lines) repo.t(l),
-          '(Animated scene arrives with the Phase 2 scene player.)',
+          AppLocalizations.of(context).scenePending,
         ],
         onContinue: _next,
         onExit: () => Navigator.of(context).pop(),
@@ -160,7 +174,7 @@ class _LevelPageState extends State<LevelPage> {
     if (!s.isPlayable || repo.songJson[s.score] == null) {
       return _InfoStage(
         title: s.type,
-        lines: const ['Not available yet.'],
+        lines: [AppLocalizations.of(context).notAvailableYet],
         onContinue: _next,
         onExit: () => Navigator.of(context).pop(),
       );
@@ -185,204 +199,6 @@ class _LevelPageState extends State<LevelPage> {
       onConnectMidi: _connectMidi,
     );
   }
-
-  Widget _stat(IconData icon, String label, String value, double fraction) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 76,
-          height: 76,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox.expand(
-                child: CircularProgressIndicator(
-                  value: fraction.clamp(0.0, 1.0),
-                  strokeWidth: 5,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation(
-                    StagePalette.current,
-                  ),
-                ),
-              ),
-              Icon(icon, color: StagePalette.current, size: 34),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _resultScreen(BuildContext context, ResultView r) {
-    final s = _stage;
-    // Reference formulas live in the core (session.rs): notes hit/total,
-    // timing from the mean and spread of errors, assists = tempo used.
-    final playAlong = s.type == 'play_along';
-    final notesFrac = r.notesTotal == 0 ? 0.0 : r.notesHit / r.notesTotal;
-    final title = _songTitle(s.score);
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [StagePalette.bgTop, StagePalette.bgBottom],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              r.passed ? 'Completed!' : 'Almost there!',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            if (title.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: StagePalette.current,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _stat(
-                  Icons.music_note_rounded,
-                  'NOTES',
-                  '${r.notesHit}/${r.notesTotal}',
-                  notesFrac,
-                ),
-                if (playAlong) ...[
-                  const SizedBox(width: 40),
-                  _stat(
-                    Icons.timer_outlined,
-                    'TIMING',
-                    '${(r.timing * 100).round()}%',
-                    r.timing,
-                  ),
-                  const SizedBox(width: 40),
-                  _stat(
-                    Icons.support_outlined,
-                    'ASSISTS',
-                    '${(r.assists * 100).round()}%',
-                    r.assists,
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Stars fill continuously (e.g. half a star), as in the reference.
-                for (var i = 0; i < 3; i++)
-                  _star((r.starsExact - i).clamp(0.0, 1.0)),
-              ],
-            ),
-            if (!r.passed)
-              Text(
-                playAlong
-                    ? 'Hit ${(r.threshold * 100).round()}% of the notes in each part to pass.'
-                    : s.type == 'one_note'
-                    ? 'Play more than 80% of the notes.'
-                    : 'Play more than 80% of the notes before the hint appears.'
-                          '${r.suggestPractice ? ' Try a slower tempo.' : ''}',
-                style: const TextStyle(color: StagePalette.textDim),
-              ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _circleButton(Icons.replay_rounded, _retry, filled: true),
-                const SizedBox(width: 16),
-                _circleButton(
-                  Icons.chevron_right_rounded,
-                  r.passed ? _next : null,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// A star filled from the left by [fill] (0–1).
-  Widget _star(double fill) {
-    const size = 64.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          const Icon(Icons.star_rounded, size: size, color: Colors.white24),
-          ClipRect(
-            clipper: _FractionClipper(fill),
-            child: const Icon(
-              Icons.star_rounded,
-              size: size,
-              color: StagePalette.current,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleButton(
-    IconData icon,
-    VoidCallback? onTap, {
-    bool filled = false,
-  }) {
-    final enabled = onTap != null;
-    return InkResponse(
-      onTap: onTap,
-      radius: 40,
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: filled ? const Color(0xFF14102A) : Colors.transparent,
-          border: Border.all(
-            color: enabled ? Colors.white70 : Colors.white24,
-            width: 2.5,
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: enabled ? Colors.white : Colors.white38,
-          size: 36,
-        ),
-      ),
-    );
-  }
 }
 
 class _InfoStage extends StatelessWidget {
@@ -400,100 +216,58 @@ class _InfoStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [StagePalette.bgTop, StagePalette.bgBottom],
-        ),
-      ),
+    return MenuBackground(
       child: Stack(
         children: [
-          Positioned(
-            left: 16,
-            top: 10,
-            child: IconButton(
-              onPressed: onExit,
-              icon: const Icon(
-                Icons.close_rounded,
-                color: Colors.white,
-                size: 30,
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 72, 16, 16),
+              child: PopIn(
+                from: 0.6,
+                child: GamePanel(
+                  title: title,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final l in lines)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            l,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: GameColors.text,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 14),
+                      GameButton(
+                        label: AppLocalizations.of(context).continueButton
+                            .toUpperCase(),
+                        onTap: onContinue,
+                        tone: GameTone.green,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.movie_filter_outlined,
-                    size: 52,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  for (final l in lines)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        l,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: StagePalette.done,
-                      foregroundColor: StagePalette.ink,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 36,
-                        vertical: 16,
-                      ),
-                      shape: const StadiumBorder(),
-                    ),
-                    onPressed: onContinue,
-                    child: const Text(
-                      'CONTINUE',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          Positioned(
+            left: 16,
+            top: 12,
+            child: GameRoundButton(
+              icon: Icons.close_rounded,
+              onTap: onExit,
+              tone: GameTone.red,
+              size: 48,
+              tooltip: AppLocalizations.of(context).exit,
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class _FractionClipper extends CustomClipper<Rect> {
-  _FractionClipper(this.fill);
-
-  final double fill;
-
-  @override
-  Rect getClip(Size size) =>
-      Rect.fromLTWH(0, 0, size.width * fill, size.height);
-
-  @override
-  bool shouldReclip(_FractionClipper old) => old.fill != fill;
 }

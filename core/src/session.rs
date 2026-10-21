@@ -78,7 +78,10 @@ impl Default for Settings {
 }
 
 fn hit_count(targets: &[Target]) -> usize {
-    targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count()
+    targets
+        .iter()
+        .filter(|t| matches!(t.state, ChordState::Hit { .. }))
+        .count()
 }
 
 /// Wait mode: time before the hint shows (reference default).
@@ -179,7 +182,11 @@ pub fn timing_score(deltas_s: &[f64], midi: bool) -> f64 {
     let var = deltas_s.iter().map(|d| (d - mean).powi(2)).sum::<f64>() / n;
     let part = |err: f64| ((0.3 - err) / 0.26).clamp(0.0, 1.0);
     let t = 0.8 * part(var.sqrt()) + 0.2 * part(mean.abs());
-    if midi { t } else { (t + 0.1).min(1.0) }
+    if midi {
+        t
+    } else {
+        (t + 0.1).min(1.0)
+    }
 }
 
 /// Reference song score: assists × notes ratio × (0.75 + 0.25 × timing).
@@ -224,9 +231,12 @@ fn plays(hand: HandFilter, n: &TimedNote) -> bool {
 }
 
 /// Notes the app plays along with the student in play-along: the hand that is
-/// not being practised plus the `ACC` accompaniment part.
+/// not being practised plus the backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`).
 pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
-    song.timeline().into_iter().filter(|n| n.accomp || !plays(hand, n)).collect()
+    song.timeline()
+        .into_iter()
+        .filter(|n| n.accomp || !plays(hand, n))
+        .collect()
 }
 
 fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
@@ -259,7 +269,11 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
 impl Session {
     pub fn new(song: &Song, settings: Settings) -> Session {
         let targets = group_targets(&song.timeline(), settings.hand);
-        let critical = if song.critical.is_empty() { vec![[0, song.bars.len()]] } else { song.critical.clone() };
+        let critical = if song.critical.is_empty() {
+            vec![[0, song.bars.len()]]
+        } else {
+            song.critical.clone()
+        };
         let wait_beat = targets.first().map_or(0.0, |t| t.beat);
         Session {
             us_per_beat: 60e6 / (song.bpm * settings.tempo),
@@ -299,7 +313,9 @@ impl Session {
     /// `CHORD_SPREAD_US` (re-striking a note refreshes its time); after the
     /// hint any order and timing completes it. Wrong keys never block.
     fn on_note_wait(&mut self, e: NoteEvent) {
-        let Some(t) = self.targets.get_mut(self.cursor) else { return };
+        let Some(t) = self.targets.get_mut(self.cursor) else {
+            return;
+        };
         if !t.pitches.contains(&e.pitch) {
             self.wrong += 1;
             return;
@@ -326,12 +342,17 @@ impl Session {
 
     fn on_note_play_along(&mut self, e: NoteEvent) {
         self.expire(e.t_us);
-        let (early, late) = (self.settings.input.early_us(), self.settings.input.window_us());
+        let (early, late) = (
+            self.settings.input.early_us(),
+            self.settings.input.window_us(),
+        );
         // Nearest pending target containing this pitch, within the window.
         let best = (self.cursor..self.targets.len())
             .filter(|&i| {
                 let t = &self.targets[i];
-                t.state == ChordState::Pending && t.pitches.contains(&e.pitch) && !t.played.contains(&e.pitch)
+                t.state == ChordState::Pending
+                    && t.pitches.contains(&e.pitch)
+                    && !t.played.contains(&e.pitch)
             })
             .map(|i| (i, e.t_us - self.target_us(&self.targets[i])))
             .filter(|&(_, d)| -early <= d && d <= late)
@@ -347,7 +368,9 @@ impl Session {
         t.deltas_us.push(e.t_us - target_us);
         t.first_us.get_or_insert(e.t_us);
         if t.played.len() == t.pitches.len() {
-            t.state = ChordState::Hit { delta_us: t.first_us.unwrap_or(e.t_us) - target_us };
+            t.state = ChordState::Hit {
+                delta_us: t.first_us.unwrap_or(e.t_us) - target_us,
+            };
         }
         self.advance_cursor();
     }
@@ -368,7 +391,9 @@ impl Session {
     }
 
     fn advance_cursor(&mut self) {
-        while self.cursor < self.targets.len() && self.targets[self.cursor].state != ChordState::Pending {
+        while self.cursor < self.targets.len()
+            && self.targets[self.cursor].state != ChordState::Pending
+        {
             self.cursor += 1;
         }
     }
@@ -395,9 +420,18 @@ impl Session {
                 self.now_us as f64 / self.us_per_beat
             }
         };
-        let hits = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count();
-        let misses = self.targets.iter().filter(|t| t.state == ChordState::Missed).count();
-        let hint_active = self.settings.mode == Mode::Wait && self.targets.get(self.cursor).is_some_and(|t| t.hinted);
+        let hits = self
+            .targets
+            .iter()
+            .filter(|t| matches!(t.state, ChordState::Hit { .. }))
+            .count();
+        let misses = self
+            .targets
+            .iter()
+            .filter(|t| t.state == ChordState::Missed)
+            .count();
+        let hint_active = self.settings.mode == Mode::Wait
+            && self.targets.get(self.cursor).is_some_and(|t| t.hinted);
         Frame {
             playhead_beat,
             cursor: self.cursor,
@@ -411,7 +445,8 @@ impl Session {
 
     /// Final grade. Call when `Frame::done` (PlayAlong: after the last window closes).
     pub fn result(&self) -> StageResult {
-        let threshold = effective_threshold(self.settings.pass_ratio, self.settings.failed_attempts);
+        let threshold =
+            effective_threshold(self.settings.pass_ratio, self.settings.failed_attempts);
         let total = self.targets.len().max(1);
         let hits: Vec<i64> = self
             .targets
@@ -423,7 +458,10 @@ impl Session {
             .collect();
         let hit_ratio = match self.settings.mode {
             Mode::Wait => {
-                self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count() as f64
+                self.targets
+                    .iter()
+                    .filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted)
+                    .count() as f64
                     / total as f64
             }
             Mode::PlayAlong => hits.len() as f64 / total as f64,
@@ -432,18 +470,30 @@ impl Session {
             .critical
             .iter()
             .map(|&[a, b]| {
-                let in_sec: Vec<&Target> = self.targets.iter().filter(|t| t.bar >= a && t.bar < b).collect();
+                let in_sec: Vec<&Target> = self
+                    .targets
+                    .iter()
+                    .filter(|t| t.bar >= a && t.bar < b)
+                    .collect();
                 if in_sec.is_empty() {
                     1.0
                 } else {
-                    in_sec.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).count() as f64 / in_sec.len() as f64
+                    in_sec
+                        .iter()
+                        .filter(|t| matches!(t.state, ChordState::Hit { .. }))
+                        .count() as f64
+                        / in_sec.len() as f64
                 }
             })
             .collect();
         let (passed, mean_abs_timing_ms, stars) = match self.settings.mode {
             Mode::Wait => {
                 // Reference: share of chords completed before their hint.
-                let clean = self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted).count();
+                let clean = self
+                    .targets
+                    .iter()
+                    .filter(|t| matches!(t.state, ChordState::Hit { .. }) && !t.hinted)
+                    .count();
                 let ratio = clean as f64 / total as f64;
                 let done = self.cursor >= self.targets.len();
                 let passed = if self.settings.drill {
@@ -464,8 +514,9 @@ impl Session {
             }
             Mode::PlayAlong => {
                 let passed = sections.iter().all(|&r| r >= threshold);
-                let mean = (!hits.is_empty())
-                    .then(|| hits.iter().map(|d| d.abs() as f64).sum::<f64>() / hits.len() as f64 / 1000.0);
+                let mean = (!hits.is_empty()).then(|| {
+                    hits.iter().map(|d| d.abs() as f64).sum::<f64>() / hits.len() as f64 / 1000.0
+                });
                 let stars = if !passed {
                     0
                 } else if hit_ratio >= 0.95 && mean.is_some_and(|m| m <= 60.0) {
@@ -481,14 +532,26 @@ impl Session {
         let notes_total: usize = self.targets.iter().map(|t| t.pitches.len()).sum();
         let (notes_hit, timing, assists, score, stars_exact) = match self.settings.mode {
             Mode::Wait => {
-                let hit: usize =
-                    self.targets.iter().filter(|t| matches!(t.state, ChordState::Hit { .. })).map(|t| t.pitches.len()).sum();
+                let hit: usize = self
+                    .targets
+                    .iter()
+                    .filter(|t| matches!(t.state, ChordState::Hit { .. }))
+                    .map(|t| t.pitches.len())
+                    .sum();
                 (hit, 1.0, 1.0, hit_ratio, stars as f64)
             }
             Mode::PlayAlong => {
-                let deltas: Vec<f64> = self.targets.iter().flat_map(|t| t.deltas_us.iter().map(|d| *d as f64 / 1e6)).collect();
+                let deltas: Vec<f64> = self
+                    .targets
+                    .iter()
+                    .flat_map(|t| t.deltas_us.iter().map(|d| *d as f64 / 1e6))
+                    .collect();
                 let hit = deltas.len().min(notes_total);
-                let ratio = if notes_total == 0 { 0.0 } else { hit as f64 / notes_total as f64 };
+                let ratio = if notes_total == 0 {
+                    0.0
+                } else {
+                    hit as f64 / notes_total as f64
+                };
                 let timing = timing_score(&deltas, self.settings.input == Input::Midi);
                 // Assists: playing slower than full tempo counts as help.
                 let assists = self.settings.tempo.clamp(0.0, 1.0);
@@ -516,7 +579,9 @@ impl Session {
 
     /// Audio-clock time (µs) when the stage is fully over (last window closed).
     pub fn end_us(&self) -> i64 {
-        (t_end(&self.targets) * self.us_per_beat).round() as i64 + self.settings.input.window_us() + 1
+        (t_end(&self.targets) * self.us_per_beat).round() as i64
+            + self.settings.input.window_us()
+            + 1
     }
 }
 
@@ -527,6 +592,7 @@ fn t_end(targets: &[Target]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::song::Part;
 
     /// 2 bars of 4/4 at 60 bpm (1 beat = 1 s): C D E F | G-chord(C E G) half, rest half.
     fn song() -> Song {
@@ -541,11 +607,21 @@ mod tests {
     }
 
     fn press(s: &mut Session, pitch: u8, t_us: i64) {
-        s.on_note(NoteEvent { pitch, on: true, t_us });
+        s.on_note(NoteEvent {
+            pitch,
+            on: true,
+            t_us,
+        });
     }
 
     fn play_along(settings: Settings) -> Session {
-        Session::new(&song(), Settings { mode: Mode::PlayAlong, ..settings })
+        Session::new(
+            &song(),
+            Settings {
+                mode: Mode::PlayAlong,
+                ..settings
+            },
+        )
     }
 
     #[test]
@@ -625,7 +701,10 @@ mod tests {
         assert!((effective_threshold(0.7, 2) - 0.6).abs() < 1e-9);
         assert_eq!(effective_threshold(0.7, 20), 0.4);
         // 3 of 4 hit (0.75) passes at the base threshold; 2 of 4 passes only after 4 failures.
-        let mut s = play_along(Settings { failed_attempts: 4, ..Settings::default() });
+        let mut s = play_along(Settings {
+            failed_attempts: 4,
+            ..Settings::default()
+        });
         press(&mut s, 60, 0);
         press(&mut s, 62, 1_000_000);
         for p in [60, 64, 67] {
@@ -638,14 +717,20 @@ mod tests {
 
     #[test]
     fn practice_mode_is_suggested_after_repeated_failures() {
-        let mut s = play_along(Settings { failed_attempts: 2, ..Settings::default() });
+        let mut s = play_along(Settings {
+            failed_attempts: 2,
+            ..Settings::default()
+        });
         s.tick(s.end_us());
         assert!(s.result().suggest_practice);
     }
 
     #[test]
     fn tempo_scales_target_times() {
-        let mut s = play_along(Settings { tempo: 0.5, ..Settings::default() }); // 1 beat = 2 s
+        let mut s = play_along(Settings {
+            tempo: 0.5,
+            ..Settings::default()
+        }); // 1 beat = 2 s
         press(&mut s, 60, 0);
         press(&mut s, 62, 2_000_000);
         assert!(matches!(s.targets()[1].state, ChordState::Hit { .. }));
@@ -653,7 +738,13 @@ mod tests {
 
     #[test]
     fn wait_mode_holds_playhead_until_correct_note() {
-        let mut s = Session::new(&song(), Settings { mode: Mode::Wait, ..Settings::default() });
+        let mut s = Session::new(
+            &song(),
+            Settings {
+                mode: Mode::Wait,
+                ..Settings::default()
+            },
+        );
         // Song time does not move while waiting (well before the 4 s hint).
         assert_eq!(s.tick(2_000_000).playhead_beat, 0.0);
         press(&mut s, 61, 2_000_000); // wrong
@@ -664,11 +755,20 @@ mod tests {
             press(&mut s, p, 4_000_000);
         }
         let r = s.result();
-        assert!(r.passed && r.stars == 3 && r.mean_abs_timing_ms.is_none(), "{r:?}");
+        assert!(
+            r.passed && r.stars == 3 && r.mean_abs_timing_ms.is_none(),
+            "{r:?}"
+        );
     }
 
     fn wait() -> Session {
-        Session::new(&song(), Settings { mode: Mode::Wait, ..Settings::default() })
+        Session::new(
+            &song(),
+            Settings {
+                mode: Mode::Wait,
+                ..Settings::default()
+            },
+        )
     }
 
     #[test]
@@ -776,7 +876,10 @@ mod tests {
 
     #[test]
     fn play_along_result_counts_chord_notes_and_tempo_assist() {
-        let mut s = play_along(Settings { tempo: 0.5, ..Settings::default() });
+        let mut s = play_along(Settings {
+            tempo: 0.5,
+            ..Settings::default()
+        });
         // 1 beat = 2 s at half tempo; hit C and the chord, skip D E F.
         press(&mut s, 60, 10_000);
         for p in [60, 64, 67] {
@@ -785,7 +888,10 @@ mod tests {
         s.tick(s.end_us());
         let r = s.result();
         assert_eq!((r.notes_hit, r.notes_total), (4, 7));
-        assert!((r.assists - 0.5).abs() < 1e-9 && (r.timing - 1.0).abs() < 1e-9, "{r:?}");
+        assert!(
+            (r.assists - 0.5).abs() < 1e-9 && (r.timing - 1.0).abs() < 1e-9,
+            "{r:?}"
+        );
         assert!((r.score - song_score(4.0 / 7.0, 1.0, 0.5)).abs() < 1e-9);
     }
 
@@ -797,20 +903,77 @@ mod tests {
             "bars":[{"RH":"C4:1","LH":"C3:1","ACC":"E3G3:2 E3G3:2"}]}"#;
         let song = Song::from_json(json).unwrap();
         assert!(song.validate().is_empty(), "{:?}", song.validate());
-        let s = Session::new(&song, Settings { hand: HandFilter::Both, ..Settings::default() });
-        let pitches: Vec<u8> = s.targets().iter().flat_map(|t| t.pitches.iter().copied()).collect();
+        let s = Session::new(
+            &song,
+            Settings {
+                hand: HandFilter::Both,
+                ..Settings::default()
+            },
+        );
+        let pitches: Vec<u8> = s
+            .targets()
+            .iter()
+            .flat_map(|t| t.pitches.iter().copied())
+            .collect();
         assert_eq!(pitches, vec![48, 60]);
-        let comp: Vec<u8> = companion_notes(&song, HandFilter::Right).iter().map(|n| n.pitch).collect();
+        let comp: Vec<u8> = companion_notes(&song, HandFilter::Right)
+            .iter()
+            .map(|n| n.pitch)
+            .collect();
         assert_eq!(comp, vec![48, 52, 55, 52, 55]); // beat 0: LH C3 + ACC E3 G3; beat 2: ACC again
         assert_eq!(companion_notes(&song, HandFilter::Both).len(), 4);
     }
 
     #[test]
+    fn drums_and_bass_join_the_companion_never_the_targets() {
+        let song = Song::from_json(r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "license":"CC0-1.0","composition_license":"public-domain","bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:1","DRUMS":"C2:2 D2:2","BASS":"C2:1","PAD":"G3:1"}]}"#).unwrap();
+        let s = Session::new(
+            &song,
+            Settings {
+                hand: HandFilter::Both,
+                ..Settings::default()
+            },
+        );
+        assert_eq!(s.targets().len(), 1);
+        let comp: Vec<(u8, Part)> = companion_notes(&song, HandFilter::Both)
+            .iter()
+            .map(|n| (n.pitch, n.part))
+            .collect();
+        assert_eq!(
+            comp,
+            vec![
+                (36, Part::Bass),
+                (36, Part::Drums),
+                (55, Part::Pad),
+                (38, Part::Drums)
+            ]
+        );
+    }
+
+    #[test]
     fn hand_filter_selects_left_hand_targets() {
-        let s = Session::new(&song(), Settings { hand: HandFilter::Left, ..Settings::default() });
-        let pitches: Vec<u8> = s.targets().iter().flat_map(|t| t.pitches.iter().copied()).collect();
+        let s = Session::new(
+            &song(),
+            Settings {
+                hand: HandFilter::Left,
+                ..Settings::default()
+            },
+        );
+        let pitches: Vec<u8> = s
+            .targets()
+            .iter()
+            .flat_map(|t| t.pitches.iter().copied())
+            .collect();
         assert_eq!(pitches, vec![48, 43]);
-        let both = Session::new(&song(), Settings { hand: HandFilter::Both, ..Settings::default() });
+        let both = Session::new(
+            &song(),
+            Settings {
+                hand: HandFilter::Both,
+                ..Settings::default()
+            },
+        );
         assert_eq!(both.targets()[0].pitches, BTreeSet::from([48, 60]));
     }
 }

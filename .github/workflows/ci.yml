@@ -1,0 +1,123 @@
+# Pre-push checks from AGENTS.md, run on every PR and push to main.
+# The web build (flutter_rust_bridge_codegen build-web + flutter build web)
+# runs in deploy-web.yml on the same triggers, so it is not repeated here.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with deploy-web.yml.
+  FLUTTER_VERSION: 3.47.7
+
+jobs:
+  rust:
+    name: Rust core + content lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            core
+            tools/content-cli
+
+      - name: cargo fmt (core)
+        working-directory: core
+        run: cargo fmt --check
+
+      - name: cargo clippy (core)
+        working-directory: core
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test (core)
+        working-directory: core
+        run: cargo test
+
+      - name: cargo fmt (content-cli)
+        working-directory: tools/content-cli
+        run: cargo fmt --check
+
+      - name: cargo clippy (content-cli)
+        working-directory: tools/content-cli
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Lint content
+        working-directory: tools/content-cli
+        run: cargo run -- lint ../../content
+
+  python:
+    name: Python (melody-model)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/melody-model
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: tools/melody-model/uv.lock
+
+      # No --extra train: torch stays out of CI.
+      - name: uv sync
+        run: uv sync --locked
+
+      - name: ruff check
+        run: uv run ruff check
+
+      - name: ruff format --check
+        run: uv run ruff format --check
+
+      # Slow/GPU-marked tests are deselected via addopts in pyproject.toml.
+      - name: pytest
+        run: uv run pytest
+
+  flutter:
+    name: Flutter analyze + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: flutter pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: dart format
+        working-directory: app
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: flutter analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: flutter test
+        working-directory: app
+        run: flutter test

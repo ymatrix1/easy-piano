@@ -79,6 +79,7 @@ class JourneyNode {
     required this.title,
     required this.levels,
     required this.songs,
+    this.starsNeeded,
   });
 
   factory JourneyNode.fromJson(Map<String, dynamic> j) => JourneyNode(
@@ -90,6 +91,7 @@ class JourneyNode {
       for (final e in ((j['songs'] as Map?) ?? {}).entries)
         e.key as String: e.value as String,
     },
+    starsNeeded: (j['stars_needed'] as num?)?.toInt(),
   );
 
   final String id;
@@ -99,20 +101,38 @@ class JourneyNode {
 
   /// Taste → song id slots (D12).
   final Map<String, String> songs;
+
+  /// `star_gate` only: stars to earn across its levels (pick any songs).
+  final int? starsNeeded;
 }
 
+/// A module (course). Planned modules are listed, locked, without a journey.
 class CourseDef {
   const CourseDef({
     required this.id,
     required this.title,
     required this.description,
     required this.nodes,
+    this.section = '',
+    this.planned = false,
   });
 
   final String id;
   final String title;
   final String description;
+
+  /// Journey nodes, shown as submodules; each holds levels (tasks).
   final List<JourneyNode> nodes;
+  final String section;
+  final bool planned;
+}
+
+/// A named group of modules (e.g. Basics).
+class SectionDef {
+  const SectionDef({required this.id, required this.title});
+
+  final String id;
+  final String title;
 }
 
 /// Scene caption lines in order (the scene player itself is Phase 2).
@@ -125,26 +145,42 @@ List<String> sceneCaptions(Map<String, dynamic> scene) => [
 class ContentRepo {
   ContentRepo({
     required this.courses,
+    this.sections = const [],
     required this.levels,
     required this.songJson,
     required this.scenes,
-    required this.strings,
-    required this.fallback,
-  });
+    required Map<String, Map<String, String>> stringsByLocale,
+    this.locale = 'en',
+  }) : _byLocale = stringsByLocale;
 
   final List<CourseDef> courses;
+  final List<SectionDef> sections;
   final Map<String, LevelDef> levels;
   final Map<String, String> songJson;
   final Map<String, Map<String, dynamic>> scenes;
 
-  /// Strings in the user's locale, and English as fallback.
-  final Map<String, String> strings;
-  final Map<String, String> fallback;
+  /// Content strings per locale tag (`en`, `pt-BR`, ...), from `strings/<tag>.json`.
+  final Map<String, Map<String, String>> _byLocale;
 
-  /// Resolves `str:key` (or a bare key) in the user's locale, then English.
+  /// Locale tags that have a strings file.
+  Iterable<String> get locales => _byLocale.keys;
+
+  /// Active content locale tag. See docs/specs/i18n.md.
+  String locale;
+
+  /// Strings in the active locale, and English as fallback.
+  Map<String, String> get strings => _byLocale[locale] ?? fallback;
+  Map<String, String> get fallback => _byLocale['en'] ?? const {};
+
+  /// Resolves `str:key` (or a bare key) in the active locale, then its base
+  /// language (`pt` for `pt-BR`), then English, then the key itself.
   String t(String ref) {
     final key = ref.startsWith('str:') ? ref.substring(4) : ref;
-    return strings[key] ?? fallback[key] ?? key;
+    final base = locale.split('-').first;
+    return _byLocale[locale]?[key] ??
+        _byLocale[base]?[key] ??
+        fallback[key] ??
+        key;
   }
 
   static Map<String, String> _stringMap(String text) =>
@@ -172,27 +208,40 @@ class ContentRepo {
         scenes[path.substring(7, path.length - 5)] = json(path);
       }
     }
+    final index = json('courses.json');
+    final sections = [
+      for (final s in (index['sections'] as List?) ?? const [])
+        SectionDef(id: s['id'] as String, title: s['title'] as String),
+    ];
     final courses = [
-      for (final c in json('courses.json')['courses'] as List)
+      for (final c in index['courses'] as List)
         CourseDef(
           id: c['id'] as String,
           title: c['title'] as String,
           description: c['description'] as String,
-          nodes: [
-            for (final n in json(c['journey'] as String)['nodes'] as List)
-              JourneyNode.fromJson(n as Map<String, dynamic>),
-          ],
+          section: c['section'] as String? ?? '',
+          planned: c['status'] == 'planned',
+          nodes: c['journey'] == null
+              ? const []
+              : [
+                  for (final n in json(c['journey'] as String)['nodes'] as List)
+                    JourneyNode.fromJson(n as Map<String, dynamic>),
+                ],
         ),
     ];
-    final en = _stringMap(files['strings/en.json']!);
-    final local = files['strings/$locale.json'];
+    final byLocale = <String, Map<String, String>>{
+      for (final path in files.keys)
+        if (path.startsWith('strings/') && path.endsWith('.json'))
+          path.substring(8, path.length - 5): _stringMap(files[path]!),
+    };
     return ContentRepo(
       courses: courses,
+      sections: sections,
       levels: levels,
       songJson: songs,
       scenes: scenes,
-      strings: local == null ? en : _stringMap(local),
-      fallback: en,
+      stringsByLocale: byLocale,
+      locale: locale,
     );
   }
 

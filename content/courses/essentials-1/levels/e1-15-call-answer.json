@@ -1,0 +1,20 @@
+{
+  "id": "e1-15-call-answer",
+  "title": "str:level.e1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "e1-call-answer",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "e1-call-answer",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

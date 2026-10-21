@@ -611,12 +611,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   NoteView dco_decode_note_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return NoteView(
       pitch: dco_decode_u_8(arr[0]),
       beat: dco_decode_f_64(arr[1]),
       beats: dco_decode_f_64(arr[2]),
+      partName: dco_decode_String(arr[3]),
     );
   }
 
@@ -850,7 +851,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_pitch = sse_decode_u_8(deserializer);
     var var_beat = sse_decode_f_64(deserializer);
     var var_beats = sse_decode_f_64(deserializer);
-    return NoteView(pitch: var_pitch, beat: var_beat, beats: var_beats);
+    var var_partName = sse_decode_String(deserializer);
+    return NoteView(
+      pitch: var_pitch,
+      beat: var_beat,
+      beats: var_beats,
+      partName: var_partName,
+    );
   }
 
   @protected
@@ -1110,6 +1117,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_8(self.pitch, serializer);
     sse_encode_f_64(self.beat, serializer);
     sse_encode_f_64(self.beats, serializer);
+    sse_encode_String(self.partName, serializer);
   }
 
   @protected

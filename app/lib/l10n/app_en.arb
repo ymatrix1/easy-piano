@@ -1,0 +1,130 @@
+{
+  "@@locale": "en",
+  "appTitle": "Easy Piano",
+  "logoLabel": "Easy Piano logo",
+  "navLearn": "Learn",
+  "navPractice": "Practice",
+  "navProfile": "Profile",
+  "sectionMore": "More",
+  "kickerContinue": "Continue",
+  "play": "Play",
+  "comingSoon": "Coming soon",
+  "moduleNumber": "Module {number}",
+  "@moduleNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "kindSong": "Song",
+  "kindBoss": "Boss",
+  "kindChallenge": "Challenge",
+  "kindStarGate": "Star gate",
+  "kindLesson": "Lesson",
+  "taskCount": "{count, plural, =1{1 task} other{{count} tasks}}",
+  "@taskCount": {
+    "description": "Number of tasks (levels) in a submodule.",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "practiceSubtitle": "Train skills outside the course path.",
+  "freePlay": "Free play",
+  "noteNames": "C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B",
+  "@noteNames": {
+    "description": "Twelve comma-separated pitch-class names from C, in the UI language (letters or solfege). Used for note readouts."
+  },
+  "freePlayHint": "Play any key. Use a MIDI keyboard or tap the screen.",
+  "octaveDown": "Lower octave",
+  "octaveUp": "Higher octave",
+  "freePlayDesc": "Play anything on your MIDI keyboard or the screen.",
+  "sightReading": "Sight reading",
+  "sightReadingDesc": "Read short random phrases at your level.",
+  "rhythmDrills": "Rhythm drills",
+  "rhythmDrillsDesc": "Tap the beat: quarters, halves, eighths.",
+  "songLibrary": "Song library",
+  "songLibraryDesc": "Practice any song you unlocked, at any tempo.",
+  "soon": "Soon",
+  "statStars": "Stars",
+  "statTasks": "Tasks",
+  "statModules": "Modules",
+  "profileSubtitle": "Your progress on this device.",
+  "settings": "Settings",
+  "developerTools": "Developer tools",
+  "soundEffects": "Sound effects",
+  "language": "Language",
+  "languageSystem": "Device default",
+  "@languageSystem": {
+    "description": "Language picker option: follow the device language."
+  },
+  "midiNotFound": "No MIDI keyboard found. Plug it in and try again.",
+  "midiUnavailable": "Web MIDI is not available in this browser.",
+  "scenePending": "(Animated scene arrives with the Phase 2 scene player.)",
+  "notAvailableYet": "Not available yet.",
+  "continueButton": "Continue",
+  "exit": "Exit",
+  "playFollowingNotes": "Play the following notes",
+  "resume": "Resume",
+  "restart": "Restart",
+  "exitToMap": "Exit to map",
+  "pause": "Pause",
+  "listenFirst": "Listen first…",
+  "playAlongTempo": "Play along · {percent}%",
+  "@playAlongTempo": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "skip": "Skip",
+  "connectMidi": "Connect MIDI",
+  "mutePianoSound": "Mute piano sound",
+  "playPianoSound": "Play piano sound",
+  "metronomeOff": "Turn metronome off",
+  "metronomeOn": "Turn metronome on",
+  "hideKeyboard": "Hide keyboard",
+  "showKeyboard": "Show keyboard",
+  "getReady": "Get ready…",
+  "passRulePlayAlong": "Hit {percent}% of the notes in each part to pass.",
+  "@passRulePlayAlong": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "passRuleOneNote": "Play more than 80% of the notes.",
+  "passRuleWait": "Play more than 80% of the notes before the hint appears.",
+  "trySlowerTempo": "Try a slower tempo.",
+  "completed": "Completed!",
+  "almostThere": "Almost there!",
+  "statNotes": "Notes",
+  "statTiming": "Timing",
+  "@statTiming": {
+    "description": "Result stat: how on time the notes were."
+  },
+  "statAssists": "Assists",
+  "retry": "Retry",
+  "next": "Next",
+  "locked": "Locked",
+  "middleCLabel": "C",
+  "@middleCLabel": {
+    "description": "Letter or solfege name written on middle C of the on-screen keyboard. See docs/specs/i18n.md (note naming)."
+  },
+  "gateProgress": "Earn {need} stars from any of these songs ({have}/{need})",
+  "@gateProgress": {
+    "placeholders": {
+      "need": {
+        "type": "int"
+      },
+      "have": {
+        "type": "int"
+      }
+    }
+  }
+}

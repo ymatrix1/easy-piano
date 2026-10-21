@@ -1,0 +1,45 @@
+{
+  "id": "e3-lh-g-drill",
+  "title": "Left Hand Moves Down",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "G",
+  "bars": [
+    {
+      "LH": "G2:4@5 A2:4@4 B2:4@3 C3:4@2"
+    },
+    {
+      "LH": "D3:2@1 D3:2@1"
+    },
+    {
+      "LH": "D3:4@1 C3:4@2 B2:4@3 A2:4@4"
+    },
+    {
+      "LH": "G2:1@5"
+    },
+    {
+      "LH": "G2:4@5 B2:4@3 D3:2@1"
+    },
+    {
+      "LH": "D3:4@1 B2:4@3 G2:2@5"
+    },
+    {
+      "LH": "A2:4@4 C3:4@2 B2:4@3 A2:4@4"
+    },
+    {
+      "LH": "G2:1@5"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

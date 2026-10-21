@@ -1,0 +1,164 @@
+{
+  "items": [
+    {
+      "path": "../../content/songs/amazing-grace.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/au-clair-de-la-lune.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/auld-lang-syne.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/c-finder.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/camptown-races.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/cde-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/cdefg-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-boogie.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-call-answer.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-eighth-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-hands-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-interval-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-lh-chord-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-lh-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-quarter-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e1-rest-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e2-a-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e2-f-position-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e2-f-waltz.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/e2-lh-a-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e2-shift-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e3-flat-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e3-lh-g-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e3-scale-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e3-sharp-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/e3-waltz-drill.json",
+      "method": "control-drill"
+    },
+    {
+      "path": "../../content/songs/frere-jacques.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/go-tell-aunt-rhody.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/greensleeves.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/hot-cross-buns.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/jingle-bells.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/joy-to-the-world.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/lightly-row.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/london-bridge.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/mary-had-a-little-lamb.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/minuet-in-g.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/ode-to-joy.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/oh-susanna.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/twinkle-twinkle.json",
+      "method": "control-song"
+    },
+    {
+      "path": "../../content/songs/when-the-saints.json",
+      "method": "control-song"
+    }
+  ]
+}

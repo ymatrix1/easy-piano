@@ -6,10 +6,14 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show PlatformInt64Util;
 
+import '../l10n/app_localizations.dart';
+import '../audio/backing.dart';
 import '../audio/piano_synth.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
+import '../ui/game/game_theme.dart';
+import '../ui/game/game_widgets.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
@@ -67,7 +71,7 @@ class PracticeStage extends StatefulWidget {
     required this.onTempo,
     required this.onRestart,
     required this.onExit,
-    this.instruction = 'Play the following notes',
+    this.instruction,
     this.repeatDone = 0,
     this.repeatTotal = 1,
     this.showKeyboard = true,
@@ -88,7 +92,9 @@ class PracticeStage extends StatefulWidget {
   final void Function(double tempo) onTempo;
   final VoidCallback onRestart;
   final VoidCallback onExit;
-  final String instruction;
+
+  /// Banner text; defaults to the localized "Play the following notes".
+  final String? instruction;
   final int repeatDone;
   final int repeatTotal;
 
@@ -106,14 +112,56 @@ class PracticeStage extends StatefulWidget {
 
 class _PracticeStageState extends State<PracticeStage>
     with TickerProviderStateMixin {
-  static const _low =
-      36; // C2: middle C sits in the centre (2 octaves each side)
-  static const _high = 84; // C6
+  /// Widest keyboard: C2–C6, middle C in the centre.
+  static const _fullLow = 36, _fullHigh = 84;
+
+  /// White keys narrower than this are hard to read and tap.
+  static const _minWhiteKeyPx = 30.0;
+
+  /// Visible key range for the keyboard width: as many octaves as fit, centred
+  /// on the exercise's notes (middle C when they fit around it), whole octaves
+  /// from C to C.
+  int _low = _fullLow, _high = _fullHigh;
+  double _keyboardWidth = 0;
+
+  void _fitKeyboard(double width) {
+    if (width == _keyboardWidth) return;
+    _keyboardWidth = width;
+    final octaves = ((width / _minWhiteKeyPx - 1) / 7).floor().clamp(1, 4);
+    final pitches = [for (final t in _initialTargets) ...t.pitches];
+    final lo = pitches.isEmpty ? 60 : pitches.reduce(math.min);
+    final hi = pitches.isEmpty ? 60 : pitches.reduce(math.max);
+    final centre = (lo + hi) / 2;
+    // Lowest C such that the range [c, c + 12*octaves] is centred on the notes.
+    var c = (((centre - 6.0 * octaves) / 12).round() * 12).clamp(
+      _fullLow,
+      _fullHigh - 12 * octaves,
+    );
+    if (lo < c) c = math.max(_fullLow, (lo ~/ 12) * 12);
+    if (hi > c + 12 * octaves) {
+      c = math.min(
+        _fullHigh - 12 * octaves,
+        ((hi + 11) ~/ 12) * 12 - 12 * octaves,
+      );
+    }
+    _low = c;
+    _high = math.min(_fullHigh, c + 12 * octaves);
+  }
+
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
-  static const _waitAnchor = 0.10; // page start, as a fraction of the width
-  static const _pageTurnAt = 0.80; // next note past this fraction → slide
-  static const _playLine = 0.12; // play bar right after the clef
+  static const _waitAnchorBase = 0.10; // page start, as a fraction of the width
+  static const _pageTurnAt =
+      0.60; // next note past this fraction → slide (reference)
+  static const _playLineBase = 0.12; // play bar right after the clef
+
+  /// Never start notes under the clef: on narrow screens a fraction of the
+  /// width is less than the clef's own width.
+  static const _clefClearPx = 96.0;
+  double get _waitAnchor =>
+      math.max(_waitAnchorBase, _clefClearPx / _staffWidth);
+  double get _playLine =>
+      math.max(_playLineBase, (_clefClearPx + 8) / _staffWidth);
 
   late final PracticeSession _session;
   late final List<StaffNote> _notes;
@@ -145,7 +193,7 @@ class _PracticeStageState extends State<PracticeStage>
   bool _wasCountIn = false;
 
   /// Notes the app plays with the student in play-along (other hand + ACC).
-  List<NoteView> _companion = const [];
+  List<BackingNote> _backing = const [];
 
   /// Pre-listen: the app plays the passage first; input is ignored meanwhile.
   bool _demo = false;
@@ -195,11 +243,20 @@ class _PracticeStageState extends State<PracticeStage>
             if (tw != null) _scroll.value = tw.value;
           });
     if (_playAlong) {
-      _companion = companion(
-        songJson: widget.songJson,
-        hand: widget.stage.hand,
-      );
+      _backing = _companionNotes();
+      pianoSynth.loadParts({for (final n in _backing) n.part});
     }
+    pianoSynth.debugRegisterMixProbe((synth, leadSec) {
+      final notes = _playAlong ? _backing : _companionNotes();
+      scheduleBacking(
+        synth,
+        notes,
+        fromBeat: 0,
+        msPerBeat: _msPerBeat,
+        beatsPerBar: _beatsPerBar.round(),
+        inSec: (b) => leadSec + b * _msPerBeat / 1000,
+      );
+    }, _totalBeats * _msPerBeat / 1000 + 4);
     pianoSynth.load();
     if (widget.stage.preListen && widget.failedAttempts == 0) {
       _startDemo();
@@ -211,6 +268,14 @@ class _PracticeStageState extends State<PracticeStage>
     );
     _ticker = createTicker((_) => _tick())..start();
   }
+
+  List<BackingNote> _companionNotes() => [
+    for (final n in companion(
+      songJson: widget.songJson,
+      hand: widget.stage.hand,
+    ))
+      BackingNote(n.pitch, n.beat, n.beats, n.partName),
+  ];
 
   double get _totalBeats => _initialTargets.isEmpty
       ? 1
@@ -242,7 +307,14 @@ class _PracticeStageState extends State<PracticeStage>
   void _begin() {
     _startMs =
         widget.midi.now() + (_playAlong ? _countInBeats * _msPerBeat : 0);
-    if (_playAlong) _scheduleBacking(-_countInBeats);
+    if (!_playAlong) return;
+    // Notes scheduled before the samples decode are silent, so wait for
+    // them; the count-in (>= 2.5 s) usually covers the first load.
+    pianoSynth.loadParts({for (final n in _backing) n.part}).then((_) {
+      if (!mounted || _finished || _paused) return;
+      final nowBeat = (widget.midi.now() - _startMs) / _msPerBeat;
+      _scheduleBacking(math.max(-_countInBeats, nowBeat));
+    });
   }
 
   /// Schedules count-in clicks, the companion notes and, when the metronome
@@ -265,16 +337,14 @@ class _PracticeStageState extends State<PracticeStage>
         pianoSynth.click(inSec(b), accent: b % _beatsPerBar == 0);
       }
     }
-    for (final n in _companion) {
-      if (n.beat < fromBeat) continue;
-      pianoSynth.schedule(
-        n.pitch,
-        inSec(n.beat),
-        n.beats * _msPerBeat / 1000 * 0.95,
-        velocity: 62,
-        force: true,
-      );
-    }
+    scheduleBacking(
+      pianoSynth,
+      _backing,
+      fromBeat: fromBeat,
+      msPerBeat: _msPerBeat,
+      beatsPerBar: _beatsPerBar.round(),
+      inSec: inSec,
+    );
   }
 
   /// Flips the metronome; reschedules backing from the current beat so the
@@ -374,9 +444,16 @@ class _PracticeStageState extends State<PracticeStage>
     if (_playAlong || cursor >= _initialTargets.length) return;
     final nextBeat = _initialTargets[cursor].beat;
     final x = (nextBeat - _scroll.value) * _ppb;
+    if (_pageAnim.isAnimating) return;
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
-      _pageTween = Tween(begin: _scroll.value, end: nextBeat).animate(
-        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
+      // Reference: slide so the next note returns to the left margin, but
+      // never past the point where the end of the piece is already in view.
+      final lastVisible =
+          _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
+      final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
+      if (end <= _scroll.value + 0.01) return;
+      _pageTween = Tween(begin: _scroll.value, end: end).animate(
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutSine),
       );
       _pageAnim.forward(from: 0);
     }
@@ -541,20 +618,35 @@ class _PracticeStageState extends State<PracticeStage>
     super.dispose();
   }
 
-  Widget _roundButton(IconData icon, VoidCallback onTap, {double size = 52}) =>
-      InkResponse(
-        onTap: onTap,
-        radius: size / 2 + 6,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white70, width: 2.5),
+  /// Progress pill: song position (play-along), repeats done, or notes judged.
+  Widget _progressPill(double value, bool showCount) => SizedBox(
+    width: 220,
+    height: 22,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(11),
+            child: LinearProgressIndicator(
+              value: value.clamp(0.0, 1.0),
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+            ),
           ),
-          child: Icon(icon, color: Colors.white, size: size * 0.55),
         ),
-      );
+        if (showCount)
+          Text(
+            '${widget.repeatDone}/${widget.repeatTotal}',
+            style: const TextStyle(
+              color: StagePalette.badge,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+      ],
+    ),
+  );
 
   Widget _topBar() {
     final f = _frame;
@@ -566,132 +658,187 @@ class _PracticeStageState extends State<PracticeStage>
         : waitPill
         ? widget.repeatDone / widget.repeatTotal
         : judged;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 20, 0),
-      child: Row(
-        children: [
-          // Paused: resume / restart / exit take the pause button's place in
-          // the same bar, so nothing covers the staff or the bar itself.
-          if (_paused) ...[
-            _roundButton(Icons.play_arrow_rounded, _resume, size: 44),
-            const SizedBox(width: 10),
-            _roundButton(Icons.replay_rounded, widget.onRestart, size: 44),
-            const SizedBox(width: 10),
-            _roundButton(
-              Icons.format_list_bulleted_rounded,
-              widget.onExit,
-              size: 44,
-            ),
-          ] else ...[
-            _roundButton(Icons.pause_rounded, _pause, size: 44),
-            const SizedBox(width: 14),
-            Text(
-              _demo
-                  ? 'Listen first…'
-                  : _playAlong
-                  ? 'Play along · ${(widget.tempo * 100).round()}%'
-                  : widget.instruction,
-              style: const TextStyle(
-                color: StagePalette.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Phones: MIDI shows as an icon and the progress bar drops to its own
+        // full-width row, so nothing overflows off the right edge.
+        final narrow = box.maxWidth < 720;
+        final progress = _paused && _playAlong
+            ? _tempoSelector()
+            : _progressPill(pillValue, waitPill);
+        final row = Row(
+          children: [
+            // Paused: resume / restart / exit take the pause button's place in
+            // the same bar, so nothing covers the staff or the bar itself.
+            if (_paused) ...[
+              SlideIn(
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.play_arrow_rounded,
+                  onTap: _resume,
+                  tone: GameTone.green,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).resume,
+                ),
               ),
-            ),
-            if (_demo) ...[
-              const SizedBox(width: 12),
-              TextButton(
-                onPressed: _endDemo,
-                style: TextButton.styleFrom(foregroundColor: StagePalette.text),
-                child: const Text('Skip'),
+              const SizedBox(width: 10),
+              SlideIn(
+                delay: const Duration(milliseconds: 60),
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.replay_rounded,
+                  onTap: widget.onRestart,
+                  tone: GameTone.blue,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).restart,
+                ),
               ),
-            ],
-          ],
-          const Spacer(),
-          if (widget.onConnectMidi != null) ...[
-            TextButton.icon(
-              onPressed: widget.onConnectMidi,
-              style: TextButton.styleFrom(foregroundColor: StagePalette.text),
-              icon: Icon(
-                widget.midiLabel == null
-                    ? Icons.usb_off_rounded
-                    : Icons.usb_rounded,
-                color: widget.midiLabel == null
-                    ? StagePalette.textDim
-                    : StagePalette.done,
+              const SizedBox(width: 10),
+              SlideIn(
+                delay: const Duration(milliseconds: 120),
+                offset: const Offset(-30, 0),
+                child: GameRoundButton(
+                  icon: Icons.format_list_bulleted_rounded,
+                  onTap: widget.onExit,
+                  tone: GameTone.red,
+                  size: 46,
+                  tooltip: AppLocalizations.of(context).exitToMap,
+                ),
               ),
-              label: Text(widget.midiLabel ?? 'Connect MIDI'),
-            ),
-            const SizedBox(width: 4),
-          ],
-          IconButton(
-            tooltip: pianoSynth.enabled
-                ? 'Mute piano sound'
-                : 'Play piano sound',
-            onPressed: () =>
-                setState(() => pianoSynth.enabled = !pianoSynth.enabled),
-            icon: Icon(
-              pianoSynth.enabled
-                  ? Icons.volume_up_rounded
-                  : Icons.volume_off_rounded,
-              color: StagePalette.text,
-            ),
-          ),
-          if (_playAlong)
-            IconButton(
-              tooltip: pianoSynth.metronome
-                  ? 'Turn metronome off'
-                  : 'Turn metronome on',
-              onPressed: _toggleMetronome,
-              icon: MetronomeIcon(
-                color: pianoSynth.metronome
-                    ? StagePalette.text
-                    : StagePalette.text.withValues(alpha: 0.4),
+            ] else ...[
+              GameRoundButton(
+                icon: Icons.pause_rounded,
+                onTap: _pause,
+                tone: GameTone.gold,
+                size: 46,
+                tooltip: AppLocalizations.of(context).pause,
               ),
-            ),
-          if (widget.onToggleKeyboard != null) ...[
-            IconButton(
-              tooltip: widget.showKeyboard ? 'Hide keyboard' : 'Show keyboard',
-              onPressed: widget.onToggleKeyboard,
-              icon: Icon(
-                widget.showKeyboard ? Icons.piano : Icons.piano_off,
-                color: StagePalette.text,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (_paused && _playAlong)
-            _tempoSelector()
-          else
-            SizedBox(
-              width: 220,
-              height: 22,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(11),
-                      child: LinearProgressIndicator(
-                        value: pillValue.clamp(0.0, 1.0),
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  _demo
+                      ? AppLocalizations.of(context).listenFirst
+                      : _playAlong
+                      ? AppLocalizations.of(context)
+                            .playAlongTempo((widget.tempo * 100).round())
+                      : widget.instruction ??
+                            AppLocalizations.of(context).playFollowingNotes,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: StagePalette.text,
+                    fontSize: narrow ? 14 : 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                  if (waitPill)
-                    Text(
-                      '${widget.repeatDone}/${widget.repeatTotal}',
-                      style: const TextStyle(
-                        color: StagePalette.badge,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
+                ),
+              ),
+              if (_demo) ...[
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: _endDemo,
+                  style: TextButton.styleFrom(
+                    foregroundColor: StagePalette.text,
+                  ),
+                  child: Text(AppLocalizations.of(context).skip),
+                ),
+              ],
+            ],
+            if (_paused) const Spacer() else const SizedBox(width: 8),
+            if (widget.onConnectMidi != null && narrow)
+              IconButton(
+                onPressed: widget.onConnectMidi,
+                tooltip:
+                    widget.midiLabel ??
+                    AppLocalizations.of(context).connectMidi,
+                icon: Icon(
+                  widget.midiLabel == null
+                      ? Icons.usb_off_rounded
+                      : Icons.usb_rounded,
+                  color: widget.midiLabel == null
+                      ? StagePalette.textDim
+                      : StagePalette.done,
+                ),
+              )
+            else if (widget.onConnectMidi != null) ...[
+              TextButton.icon(
+                onPressed: widget.onConnectMidi,
+                style: TextButton.styleFrom(foregroundColor: StagePalette.text),
+                icon: Icon(
+                  widget.midiLabel == null
+                      ? Icons.usb_off_rounded
+                      : Icons.usb_rounded,
+                  color: widget.midiLabel == null
+                      ? StagePalette.textDim
+                      : StagePalette.done,
+                ),
+                label: Text(
+                  widget.midiLabel ?? AppLocalizations.of(context).connectMidi,
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+            IconButton(
+              tooltip: pianoSynth.enabled
+                  ? AppLocalizations.of(context).mutePianoSound
+                  : AppLocalizations.of(context).playPianoSound,
+              onPressed: () =>
+                  setState(() => pianoSynth.enabled = !pianoSynth.enabled),
+              icon: Icon(
+                pianoSynth.enabled
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_off_rounded,
+                color: StagePalette.text,
               ),
             ),
-        ],
-      ),
+            if (_playAlong)
+              IconButton(
+                tooltip: pianoSynth.metronome
+                    ? AppLocalizations.of(context).metronomeOff
+                    : AppLocalizations.of(context).metronomeOn,
+                onPressed: _toggleMetronome,
+                icon: MetronomeIcon(
+                  color: pianoSynth.metronome
+                      ? StagePalette.text
+                      : StagePalette.text.withValues(alpha: 0.4),
+                ),
+              ),
+            if (widget.onToggleKeyboard != null) ...[
+              IconButton(
+                tooltip: widget.showKeyboard
+                    ? AppLocalizations.of(context).hideKeyboard
+                    : AppLocalizations.of(context).showKeyboard,
+                // The keyboard is hidden for the whole demo; a toggle then would do nothing.
+                onPressed: _demo ? null : widget.onToggleKeyboard,
+                icon: Icon(
+                  widget.showKeyboard ? Icons.piano : Icons.piano_off,
+                  color: StagePalette.text,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            if (!narrow) progress,
+          ],
+        );
+        return Padding(
+          padding: EdgeInsets.fromLTRB(narrow ? 8 : 16, 10, narrow ? 8 : 20, 0),
+          child: narrow
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    row,
+                    const SizedBox(height: 6),
+                    _paused && _playAlong
+                        ? progress
+                        : SizedBox(
+                            height: 16,
+                            width: double.infinity,
+                            child: _progressPill(pillValue, waitPill),
+                          ),
+                  ],
+                )
+              : row,
+        );
+      },
     );
   }
 
@@ -699,45 +846,27 @@ class _PracticeStageState extends State<PracticeStage>
   Widget _tempoSelector() {
     final options = <double>{0.6, 0.8, 1.0, widget.stage.tempo}.toList()
       ..sort();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.timer_outlined, color: Colors.white, size: 22),
-        const SizedBox(width: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white70, width: 1.5),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              for (final t in options)
-                InkWell(
-                  onTap: () => widget.onTempo(t),
-                  child: Container(
-                    width: 64,
-                    height: 36,
-                    alignment: Alignment.center,
-                    color: (t - widget.tempo).abs() < 1e-6
-                        ? Colors.white
-                        : Colors.transparent,
-                    child: Text(
-                      '${(t * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: (t - widget.tempo).abs() < 1e-6
-                            ? StagePalette.ink
-                            : Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
+    return SlideIn(
+      offset: const Offset(30, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.timer_rounded, color: Colors.white, size: 24),
+          const SizedBox(width: 8),
+          for (final t in options) ...[
+            GameButton(
+              label: '${(t * 100).round()}%',
+              onTap: () => widget.onTempo(t),
+              tone: (t - widget.tempo).abs() < 1e-6
+                  ? GameTone.gold
+                  : GameTone.wood,
+              fontSize: 15,
+              minWidth: 0,
+            ),
+            const SizedBox(width: 6),
+          ],
+        ],
+      ),
     );
   }
 
@@ -812,12 +941,17 @@ class _PracticeStageState extends State<PracticeStage>
                   },
                 ),
               ),
-              if (widget.showKeyboard)
+              if (widget.showKeyboard && !_demo)
                 SizedBox(
-                  height: 150,
+                  // Taller on big screens: about a quarter of the height.
+                  height: (MediaQuery.sizeOf(context).height * 0.24).clamp(
+                    150.0,
+                    260.0,
+                  ),
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final size = Size(c.maxWidth, c.maxHeight);
+                      _fitKeyboard(c.maxWidth);
                       return Listener(
                         onPointerDown: (e) =>
                             _touchDown(e.pointer, e.localPosition, size),
@@ -833,6 +967,8 @@ class _PracticeStageState extends State<PracticeStage>
                             hint: _hint,
                             hintColor: StagePalette.keyTarget,
                             labelMiddleC: true,
+                            middleCLabel: AppLocalizations.of(context)
+                                .middleCLabel,
                           ),
                         ),
                       );
@@ -842,11 +978,11 @@ class _PracticeStageState extends State<PracticeStage>
             ],
           ),
           if (countIn)
-            const Align(
-              alignment: Alignment(0, -0.55),
+            Align(
+              alignment: const Alignment(0, -0.55),
               child: Text(
-                'Get ready…',
-                style: TextStyle(
+                AppLocalizations.of(context).getReady,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.w800,

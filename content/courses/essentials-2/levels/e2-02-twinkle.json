@@ -1,0 +1,27 @@
+{
+  "id": "e2-02-twinkle",
+  "title": "str:level.e2.02.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "twinkle-twinkle",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "twinkle-twinkle",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "twinkle-twinkle",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

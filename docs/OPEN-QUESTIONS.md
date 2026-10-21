@@ -9,4 +9,6 @@
 | OQ5 | Sync: none, self-hostable server, or file export/import? | D8 says local-first |
 | OQ6 | Voice-over in scenes: none, TTS at build time, or recorded? | TTS keeps localization cheap |
 | OQ7 | Does Flutter Web + flutter_rust_bridge wasm meet the latency budget? | Phase 0 spike answers |
+| OQ9 | How do we detect a learner's current level (placement) and choose their start node? | Until answered every course and node stays open; star gates score progress but never lock. Draft: [specs/placement.md](specs/placement.md). Bean piano-vg8h |
 | OQ8 | How far do we mirror Simply Piano's course list vs design our own order? | Proposal in [curriculum](specs/curriculum.md) |
+| OQ10 | Licence and shippability of the melody-model weights: CC-BY-SA training data (Mutopia), CC-BY dataset terms (PDMX), untested NMD transcriptions (D18), and **copyrighted melodies in flagged PDMX tunes (D21)**? | Open: whether weights are an "adaptation" of training data, and whether memorised copyrighted melodies make the weights or outputs infringing. Options: CC-BY-SA-4.0 weights; CC0/MIT; retrain without flagged or CC-BY-SA sources before shipping. Provenance per tune allows any of these. Proposal: D24 (CC-BY-SA-4.0, full disclosure, release asset). Decide before shipping weights |

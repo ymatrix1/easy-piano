@@ -1,0 +1,33 @@
+{
+  "id": "e3-14-joy-to-the-world",
+  "title": "str:level.e3.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "joy-to-the-world",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "joy-to-the-world",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "joy-to-the-world",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "joy-to-the-world",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

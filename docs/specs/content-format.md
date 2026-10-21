@@ -49,6 +49,29 @@ content/
 }
 ```
 
+`bpm` counts the time signature's beat unit (its denominator note): `6/8` at 120 plays 120 eighths a minute, `2/2` at 60 plays 60 halves (session engine, [difficulty](difficulty.md)).
+
+### Generated songs (optional fields)
+
+Songs made by a generator ([D17](../DECISIONS.md), [skill-specs](skill-specs.md)) use `"source": "generated"`, `"license": "CC0-1.0"` and a `generator` object:
+
+```json
+"generator": {
+  "method": "llm", "tool": "compose-song", "model": "claude-opus-5-5",
+  "seed": 42, "source_song": null, "prompt_ref": ".agents/skills/compose-song/SKILL.md"
+},
+"spec_node": "essentials-1/eighths"
+```
+
+| Field | Rule |
+|---|---|
+| `generator.method` | required; `rules`, `pd-variation`, `llm`, `magenta` or `hand` |
+| `generator.source_song` | required for `pd-variation`: id of the PD song varied |
+| `tool`, `model`, `seed`, `prompt_ref` | optional, free text / integer |
+| `spec_node` | optional on any song, `course/node`; lint then runs the rubric against that node |
+
+`generator` is only allowed with `source: generated`; `source_url` is not required for it.
+
 ## Note token grammar (draft)
 
 ```
@@ -63,20 +86,33 @@ Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter r
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
 
-## Accompaniment part
+## Backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`)
 
 A bar may hold an `ACC` part next to `RH` / `LH`: our own accompaniment (chords, bass) in the same notation. It is played by the app in play-along and never graded; bar lengths are linted like any hand.
 
+A bar may also hold a backing band ([D14](../DECISIONS.md), sounds per [D22](../DECISIONS.md)), same notation, also app-played and never graded:
+
+| Part | Sound | Pitches |
+|---|---|---|
+| `DRUMS` | Sampled kit (Virtuosity Drums, CC0) | General MIDI percussion numbers written as note names: kick 36 `C2`, snare 38 `D2`, closed hi-hat 42 `F#2`, open hi-hat 46 `A#2`, crash 49 `C#3`. Lint rejects any other pitch. Length matters only for bar sums. |
+| `BASS` | Sampled electric bass (FluidR3, C1–C4) | Normal pitches (21–108), e.g. `C2:4 G2:4`. |
+| `PAD` | Sampled string ensemble (FluidR3, C3–C6, looped, slow attack/release) | Normal pitches; long chords, e.g. `G3C4E4:1`. Keep it off the melody's notes. |
+| `CHOIR` | Sampled wordless "ooh" voices (FluidR3, C3–C6, looped) | Normal pitches; sustained lines above the melody, e.g. `C5E5:1`; use `r:1` where it rests. |
+
+Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"`, `"BASS": "C2:4 G2:4 E2:4 G2:4"`. The bridge's `companion()` returns each note with its `part_name` so the app picks the instrument. Each part plays through its own gain bus into a reverb send, a gentle bus compressor and a limiter (default mix: piano 1.0, `ACC` 1.0, `DRUMS` 0.19, `BASS` 1.1, `PAD` 0.37, `CHOIR` 0.67; the learner's live keys 1.0, bypassing the dynamics). Measured on Ode to Joy play-along, RMS vs `ACC`: bass -5.2 dB, drums -8.9, choir -14.0, pad -15.0; mix peak -3.5 dBFS ([instrument-samples.md](../research/instrument-samples.md)). App-played notes get metric/phrase velocity and a few ms of seeded humanize (`app/lib/audio/backing.dart`); graded parts never do. `PianoSynth.setPartLevel(part, level)` scales it (1 = default), ready for a per-part mute/volume UI.
+
 ## Journey and levels (implemented)
 
+- `courses.json`: `sections[]` (`id`, `title`) and `courses[]` (`id`, `title`, `description`, `section`, `requires`, `journey`, optional `status`: `ready` (default) or `planned`). Planned courses have no journey and show locked in the app. Hierarchy: section → module (course) → submodule (journey node) → task (level); see [visual-style.md](visual-style.md).
 - Journey nodes: `id`, `kind` (`lesson`, `song`, `star_gate`, `boss`, `mini_boss`), `title`, `icon`, `levels`, `next`, optional `songs` slots keyed by taste (`default`, `classical`, `folk_world`, …; D12).
+- `star_gate` nodes also need `stars_needed` (1 to 3 × level count): one level per song, and the gate is passed when the stars summed over its levels reach it, so the learner picks which songs to play (e.g. 3 songs, `stars_needed: 5` ≈ any two played well). Other kinds must not set it. Gates never lock anything: until placement exists (OQ9) every node stays open.
 - Level stages: `type` (`wait`, `play_along`, `one_note`, `animation`, `quiz`); `score` required for wait/play_along/one_note; `scene` for animation; optional `tempo` (0.3–1.5), `pass` (0–1), `hand` (`RH`, `LH`, `both`), `pre_listen`, `repeats` (1–10, wait stages repeat in a row).
 - Levels: `ui` (`treble` / `bass` single staff for beginners, `both` grand staff), optional `keyboard` (default `true`; on-screen keyboard shown by default).
 - Beats: duration × time-signature denominator (quarter = 1 beat in x/4).
 
 ## What `content lint` checks
 
-Song metadata and allowed licenses; `source_url` unless `original`; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; every `str:` key exists in `strings/en.json`.
+Song metadata and allowed licenses; `source_url` unless `original` or `generated`; `generated` songs need `generator` and CC0-1.0; songs with `spec_node` pass the [rubric](skill-specs.md) for that node; `skill-specs/<course>.json` parse and name real journey nodes; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
 
 ## Rules
 

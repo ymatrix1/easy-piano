@@ -1,0 +1,33 @@
+{
+  "id": "e3-06-amazing-grace",
+  "title": "str:level.e3.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "amazing-grace",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "amazing-grace",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "amazing-grace",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "amazing-grace",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

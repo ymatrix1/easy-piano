@@ -1,0 +1,94 @@
+{
+  "level": "e1",
+  "rules": "Essentials I: C4-G4, eighth/quarter/half, max leap 5th, end on C4",
+  "tool_version": "1.23.1",
+  "tfjs": "2.8.6",
+  "backend": "cpu",
+  "node": "v24.6.0",
+  "temp": 1,
+  "n": 20,
+  "reject_n": 200,
+  "checkpoints": [
+    {
+      "checkpoint": "melody_rnn",
+      "sha256": "721cb2ab0990cf36be154873c7ca9655490b44362a04ef013b32e3a31fbc4332",
+      "chords": null,
+      "load_ms": 1770,
+      "masked_ms_per_tune": 3507,
+      "masked_mean_score": 0.501,
+      "masked_best": [
+        {
+          "seed": 12,
+          "total": 0.828,
+          "stepwise": 0.57,
+          "repetition": 1,
+          "ending": 1,
+          "eighths": 0,
+          "repeatedNote": 0.04,
+          "distinct": 4,
+          "span": 7,
+          "restShare": 0
+        },
+        {
+          "seed": 17,
+          "total": 0.796,
+          "stepwise": 0.84,
+          "repetition": 0.5,
+          "ending": 1,
+          "eighths": 0,
+          "repeatedNote": 0.21,
+          "distinct": 4,
+          "span": 5,
+          "restShare": 0
+        },
+        {
+          "seed": 7,
+          "total": 0.755,
+          "stepwise": 0.73,
+          "repetition": 0.25,
+          "ending": 1,
+          "eighths": 0.09,
+          "repeatedNote": 0.18,
+          "distinct": 5,
+          "span": 7,
+          "restShare": 0
+        },
+        {
+          "seed": 4,
+          "total": 0.684,
+          "stepwise": 0.83,
+          "repetition": 0.25,
+          "ending": 0.3,
+          "eighths": 0.08,
+          "repeatedNote": 0.26,
+          "distinct": 5,
+          "span": 7,
+          "restShare": 0
+        },
+        {
+          "seed": 8,
+          "total": 0.681,
+          "stepwise": 0.88,
+          "repetition": 0.5,
+          "ending": 0.3,
+          "eighths": 0.32,
+          "repeatedNote": 0.54,
+          "distinct": 4,
+          "span": 7,
+          "restShare": 0
+        }
+      ],
+      "reject_ms_per_tune": 1712,
+      "reject_accepted": 0,
+      "reject_n": 200,
+      "reject_violations": {
+        "duration": 185,
+        "barline": 106,
+        "pitch": 195,
+        "rest": 143,
+        "ending": 176,
+        "leap": 82
+      }
+    }
+  ]
+}

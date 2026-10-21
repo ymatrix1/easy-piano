@@ -1,0 +1,88 @@
+{
+  "id": "auld-lang-syne",
+  "title": "Auld Lang Syne",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "r:2. C4:4@1",
+      "LH": "r:1",
+      "ACC": "C3F3A3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 A1:4 C2:4"
+    },
+    {
+      "RH": "F4:4.@2 F4:8@2 F4:4@2 A4:4@4",
+      "LH": "F2:1",
+      "ACC": "C3F3A3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 A1:4 C2:4"
+    },
+    {
+      "RH": "G4:4.@3 F4:8@2 G4:4@3 A4:8@4 G4:8@3",
+      "LH": "C3:1",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "F4:4.@2 F4:8@2 A4:4@3 C5:4@5",
+      "LH": "F2:1",
+      "ACC": "C3F3A3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 A1:4 C2:4"
+    },
+    {
+      "RH": "D5:2.@5 D5:4@5",
+      "LH": "Bb2:1",
+      "ACC": "D3F3A#3:2 D3F3A#3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "A#1:4 F2:4 D2:4 F2:4"
+    },
+    {
+      "RH": "C5:4.@4 A4:8@2 A4:4@2 F4:4@1",
+      "LH": "F2:1",
+      "ACC": "C3F3A3:2 C3F3A3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "F1:4 C2:4 A1:4 C2:4"
+    },
+    {
+      "RH": "G4:4.@2 F4:8@1 G4:4@2 A4:8@3 G4:8@2",
+      "LH": "C3:1",
+      "ACC": "C3E3G3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G2:4 E2:4 G2:4"
+    },
+    {
+      "RH": "F4:4.@2 D4:8@1 D4:4@1 C4:4@1",
+      "LH": "Bb2:2 C3:2",
+      "ACC": "D3F3A#3:2 C3E3G3:2",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "A#1:4 F2:4 C2:4 G2:4"
+    },
+    {
+      "RH": "F4:2.@2 r:4",
+      "LH": "F2:1",
+      "ACC": "C3F3A3:1",
+      "DRUMS": "C2C#3:1",
+      "BASS": "F1:1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      5
+    ],
+    [
+      5,
+      9
+    ]
+  ]
+}
