@@ -74,5 +74,11 @@
   "next": "Próximo",
   "locked": "Bloqueado",
   "middleCLabel": "Dó",
-  "gateProgress": "Ganhe {need} estrelas em qualquer uma destas músicas ({have}/{need})"
+  "gateProgress": "Ganhe {need} estrelas em qualquer uma destas músicas ({have}/{need})",
+  "early": "Adiantado",
+  "late": "Atrasado",
+  "slowPractice": "Prática lenta",
+  "slowPracticeIntro": "Vamos praticar esta parte mais devagar",
+  "sectionTryAgain": "Tente esta parte de novo",
+  "sectionFullSpeed": "Agora na velocidade normal!"
 }

@@ -74,5 +74,11 @@
   "next": "Weiter",
   "locked": "Gesperrt",
   "middleCLabel": "C",
-  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})"
+  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})",
+  "early": "Zu früh",
+  "late": "Zu spät",
+  "slowPractice": "Langsam üben",
+  "slowPracticeIntro": "Üben wir diesen Teil langsamer",
+  "sectionTryAgain": "Versuch diesen Teil noch einmal",
+  "sectionFullSpeed": "Jetzt im vollen Tempo!"
 }

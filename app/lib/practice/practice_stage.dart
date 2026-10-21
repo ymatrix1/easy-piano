@@ -14,11 +14,13 @@ import '../input/midi_input.dart';
 import '../src/rust/api/practice.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
+import 'play_feedback.dart';
 
 /// FRB maps i64 to int on native and BigInt on web.
 int _int(Object v) => v is BigInt ? v.toInt() : v as int;
@@ -169,7 +171,16 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int>
   _targetFirstNote; // target index → first staff note index
   late final double _beatsPerBar;
-  late final double _usPerBeat;
+  late double _usPerBeat; // changes when training slows a section down
+  late final double _bpm;
+  late double _tempo; // tempo of the current run
+
+  /// Training: song beat where the current run starts (count-in ends here).
+  double _leadEndBeat = 0;
+
+  /// Training banner (slow practice intro, try again, full speed).
+  SectionEventView? _sectionEvent;
+  double _sectionEventSec = 0;
   late final List<TargetView> _initialTargets;
   final _scroll = ValueNotifier<double>(0);
   final _marks = ValueNotifier<int>(0);
@@ -177,6 +188,7 @@ class _PracticeStageState extends State<PracticeStage>
   final _hint = ValueNotifier<Set<int>>({});
   final _pointerPitch = <int, int>{};
   final _bursts = <HitBurst>[];
+  final _feedback = <FeedbackMark>[]; // play-along error animations
   List<int> _targetStates = const [];
   late final Ticker _ticker;
   late final AnimationController _pageAnim;
@@ -208,6 +220,8 @@ class _PracticeStageState extends State<PracticeStage>
     super.initState();
     final info = inspectSong(json: widget.songJson);
     _beatsPerBar = info.beatsPerBar.toDouble();
+    _bpm = info.bpm;
+    _tempo = widget.tempo;
     _usPerBeat = 60e6 / (info.bpm * widget.tempo);
     _session = PracticeSession.create(
       songJson: widget.songJson,
@@ -217,6 +231,7 @@ class _PracticeStageState extends State<PracticeStage>
       tempo: widget.tempo,
       passRatio: widget.stage.pass,
       failedAttempts: widget.failedAttempts,
+      training: true,
     );
     _initialTargets = _session.targets();
     _notes = [];
@@ -322,10 +337,10 @@ class _PracticeStageState extends State<PracticeStage>
   void _scheduleBacking(double fromBeat) {
     final now = widget.midi.now();
     double inSec(double beat) => (_startMs + beat * _msPerBeat - now) / 1000;
-    for (var b = fromBeat.ceilToDouble(); b < 0; b++) {
+    for (var b = fromBeat.ceilToDouble(); b < _leadEndBeat; b++) {
       pianoSynth.click(
         inSec(b),
-        accent: (b + _beatsPerBar) % _beatsPerBar == 0,
+        accent: (b - _leadEndBeat) % _beatsPerBar == 0,
       );
     }
     if (pianoSynth.metronome) {
@@ -485,9 +500,28 @@ class _PracticeStageState extends State<PracticeStage>
       final us = _usAt(widget.midi.now());
       _scroll.value = us < 0 ? us / _usPerBeat : f.playheadBeat;
     }
+    final section = _session.takeSectionEvent();
+    if (section != null) _onSection(section);
     final targets = _session.targets();
     final states = [for (final t in targets) t.state];
     final now = _nowSec;
+    if (_playAlong) {
+      for (final e in _session.takeFeedback()) {
+        final mark = switch (e.kind) {
+          0 when e.timing < 0 => FeedbackMark(FeedbackKind.early, now),
+          0 when e.timing > 0 => FeedbackMark(FeedbackKind.late, now),
+          1 => FeedbackMark(FeedbackKind.wrong, now, pitches: [e.pitch]),
+          2 => FeedbackMark(
+            FeedbackKind.missed,
+            now,
+            pitches: [...targets[e.target].pitches],
+          ),
+          _ => null,
+        };
+        if (mark != null) _feedback.add(mark);
+      }
+      _feedback.removeWhere((m) => m.age(now) > FeedbackMark.durationSec);
+    }
     var changed = false;
     for (var i = 0; i < states.length; i++) {
       if (states[i] != _targetStates[i]) {
@@ -517,6 +551,7 @@ class _PracticeStageState extends State<PracticeStage>
     // Repaint while bursts or the beam fade animate, or when marks change.
     if (changed ||
         _bursts.isNotEmpty ||
+        _feedback.isNotEmpty ||
         cursorMoved ||
         now - _cursorSinceSec < 0.25 ||
         (_hintSinceSec != null && now - _hintSinceSec! < 0.25)) {
@@ -553,6 +588,116 @@ class _PracticeStageState extends State<PracticeStage>
         if (mounted) widget.onFinished(_session.result());
       });
     }
+  }
+
+  /// Training: a section was judged. On a replay, restart the clock one
+  /// count-in before the section at the new tempo (reference: seek back to
+  /// the section start; practice runs at 75%).
+  void _onSection(SectionEventView e) {
+    if (e.replay || e.practice || e.intro || !e.passed) {
+      _sectionEvent = e;
+      _sectionEventSec = _nowSec;
+    }
+    if (!e.replay) return;
+    Sfx.play(
+      e.intro
+          ? SfxKind.open
+          : e.passed
+          ? SfxKind.win
+          : SfxKind.lose,
+    );
+    pianoSynth.stopAll();
+    _tempo = e.tempo;
+    _usPerBeat = 60e6 / (_bpm * e.tempo);
+    _leadEndBeat = e.beat;
+    // Practice intro: give the banner time before the count-in starts.
+    final introMs = e.intro ? 1500.0 : 0.0;
+    final from = e.beat - _countInBeats;
+    _startMs = widget.midi.now() + introMs - from * _msPerBeat;
+    _feedback.clear();
+    _bursts.clear();
+    _scroll.value = from;
+    if (introMs > 0) {
+      Future.delayed(Duration(milliseconds: introMs.round()), () {
+        if (mounted && !_finished && !_paused) _scheduleBacking(from);
+      });
+    } else {
+      _scheduleBacking(from);
+    }
+  }
+
+  /// Training banner. Practice intro (ours, timed like the reference's):
+  /// a badge pops in (0.6 s) while its label fades in, holds, then everything
+  /// fades out by [_introSec]. Try-again / full-speed banners are shorter.
+  static const _introSec = 2.2, _bannerSec = 1.4;
+
+  Widget _sectionBanner(SectionEventView e) {
+    final l = AppLocalizations.of(context);
+    final age = _nowSec - _sectionEventSec;
+    final total = e.intro ? _introSec : _bannerSec;
+    if (age > total) return const SizedBox.shrink();
+    final pop = Curves.elasticOut.transform((age / 0.6).clamp(0.0, 1.0));
+    final fadeIn = ((age - 0.2) / 0.3).clamp(0.0, 1.0);
+    final fadeOut = ((total - age) / 0.3).clamp(0.0, 1.0);
+    final (icon, text, color) = e.intro || e.practice
+        ? (
+            Icons.slow_motion_video_rounded,
+            e.intro ? l.slowPracticeIntro : l.slowPractice,
+            StagePalette.current,
+          )
+        : e.passed
+        ? (Icons.speed_rounded, l.sectionFullSpeed, StagePalette.done)
+        : (Icons.replay_rounded, l.sectionTryAgain, StagePalette.miss);
+    return IgnorePointer(
+      child: Align(
+        alignment: const Alignment(0, -0.2),
+        child: Opacity(
+          opacity: fadeOut,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Transform.scale(
+                scale: 0.2 + 0.8 * pop,
+                child: Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(blurRadius: 18, color: Colors.black26),
+                    ],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 52),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Opacity(
+                opacity: fadeIn,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    e.practice ? '$text · ${(e.tempo * 100).round()}%' : text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Color _noteColor(int i) {
@@ -720,7 +865,7 @@ class _PracticeStageState extends State<PracticeStage>
                       ? AppLocalizations.of(context).listenFirst
                       : _playAlong
                       ? AppLocalizations.of(context)
-                            .playAlongTempo((widget.tempo * 100).round())
+                            .playAlongTempo((_tempo * 100).round())
                       : widget.instruction ??
                             AppLocalizations.of(context).playFollowingNotes,
                   maxLines: 1,
@@ -895,6 +1040,16 @@ class _PracticeStageState extends State<PracticeStage>
                     return RepaintBoundary(
                       child: CustomPaint(
                         size: Size.infinite,
+                        foregroundPainter: _playAlong
+                            ? StaffFeedbackPainter(
+                                marks: _feedback,
+                                lineX: _playLine * c.maxWidth,
+                                clockSec: () => _nowSec,
+                                earlyLabel: AppLocalizations.of(context).early,
+                                lateLabel: AppLocalizations.of(context).late,
+                                repaint: _marks,
+                              )
+                            : null,
                         painter: StaffPainter(
                           notes: _notes,
                           playheadBeat: _scroll,
@@ -970,6 +1125,15 @@ class _PracticeStageState extends State<PracticeStage>
                             middleCLabel: AppLocalizations.of(context)
                                 .middleCLabel,
                           ),
+                          foregroundPainter: _playAlong
+                              ? KeyFeedbackPainter(
+                                  marks: _feedback,
+                                  lowPitch: _low,
+                                  highPitch: _high,
+                                  clockSec: () => _nowSec,
+                                  repaint: _marks,
+                                )
+                              : null,
                         ),
                       );
                     },
@@ -977,6 +1141,7 @@ class _PracticeStageState extends State<PracticeStage>
                 ),
             ],
           ),
+          if (_sectionEvent != null) _sectionBanner(_sectionEvent!),
           if (countIn)
             Align(
               alignment: const Alignment(0, -0.55),

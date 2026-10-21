@@ -321,3 +321,13 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Flutter audio plugin for native next to the Web Audio graph (smaller now, two engines that drift, plugin effects differ); native-only Rust engine with web staying on Web Audio (still two DSPs); pre-rendered audio per song (D14 reasons).
 - **Impact:** New crate `audio/` with flutter_rust_bridge API; `PianoSynth` becomes a thin event sender on every platform; mix constants move into the engine; the `?mixprobe` web probe is replaced by the CI parity test. Supersedes the Web Audio implementation part of D22 once stage 3 lands. Beans: epic piano-v8sj and its stage tasks.
 
+### D31. Play-along error feedback beyond the reference's red notes
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-21: "Accept D31 as written."
+- **Context:** In play-along the reference marks a miss only by turning the note red and shows nothing for a wrong key or an early / late hit ([teardown](research/simply-piano-teardown.md#play-along-error-feedback-and-training-mode)). Learners on a touch keyboard or a quiet digital piano get little sign of what went wrong.
+- **Decision:** Keep the reference's red / teal note colours and add three cues, each fading in 0.6 s: a red flash on the wrong key of the on-screen keyboard, a red outline on the keys of a missed note, and an "Early" / "Late" tag above the staff for hits more than 120 ms off. No staff marks for wrong or missed notes (a cross at the play bar was tried and dropped: it looked out of place next to the reference), no error sounds, no streak counter on screen. Training mode (section replay, 75% practice runs) follows the reference.
+- **Why:** The cues say which key was wrong and which way the timing was off without covering the notes or punishing with sound.
+- **Alternatives:** Reference only (colour); cross or shake at the play bar; error buzz; combo counter.
+- **Impact:** UI in `app/lib/practice/play_feedback.dart`; events from `core` (`Feedback`, `Timing`, `ON_TIME_US`). Bean piano-uv0e.
+

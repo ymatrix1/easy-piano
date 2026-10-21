@@ -262,4 +262,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Gana $need estrellas con cualquiera de estas canciones ($have/$need)';
   }
+
+  @override
+  String get early => 'Pronto';
+
+  @override
+  String get late => 'Tarde';
+
+  @override
+  String get slowPractice => 'Práctica lenta';
+
+  @override
+  String get slowPracticeIntro => 'Practiquemos esta parte más lento';
+
+  @override
+  String get sectionTryAgain => 'Intenta esta parte otra vez';
+
+  @override
+  String get sectionFullSpeed => '¡Ahora a velocidad normal!';
 }

@@ -62,13 +62,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  SectionEventView dco_decode_box_autoadd_section_event_view(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FeedbackView dco_decode_feedback_view(dynamic raw);
 
   @protected
   FrameView dco_decode_frame_view(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  int dco_decode_i_8(dynamic raw);
+
+  @protected
+  List<FeedbackView> dco_decode_list_feedback_view(dynamic raw);
 
   @protected
   List<NoteView> dco_decode_list_note_view(dynamic raw);
@@ -89,7 +101,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  SectionEventView? dco_decode_opt_box_autoadd_section_event_view(dynamic raw);
+
+  @protected
   ResultView dco_decode_result_view(dynamic raw);
+
+  @protected
+  SectionEventView dco_decode_section_event_view(dynamic raw);
 
   @protected
   SongInfo dco_decode_song_info(dynamic raw);
@@ -143,13 +161,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  SectionEventView sse_decode_box_autoadd_section_event_view(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FeedbackView sse_decode_feedback_view(SseDeserializer deserializer);
 
   @protected
   FrameView sse_decode_frame_view(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_8(SseDeserializer deserializer);
+
+  @protected
+  List<FeedbackView> sse_decode_list_feedback_view(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<NoteView> sse_decode_list_note_view(SseDeserializer deserializer);
@@ -170,7 +204,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  SectionEventView? sse_decode_opt_box_autoadd_section_event_view(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ResultView sse_decode_result_view(SseDeserializer deserializer);
+
+  @protected
+  SectionEventView sse_decode_section_event_view(SseDeserializer deserializer);
 
   @protected
   SongInfo sse_decode_song_info(SseDeserializer deserializer);
@@ -231,13 +273,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_section_event_view(
+    SectionEventView self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_feedback_view(FeedbackView self, SseSerializer serializer);
 
   @protected
   void sse_encode_frame_view(FrameView self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_8(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_feedback_view(
+    List<FeedbackView> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_note_view(List<NoteView> self, SseSerializer serializer);
@@ -267,7 +327,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_section_event_view(
+    SectionEventView? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_result_view(ResultView self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_section_event_view(
+    SectionEventView self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_song_info(SongInfo self, SseSerializer serializer);
