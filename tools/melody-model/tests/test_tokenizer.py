@@ -105,3 +105,21 @@ def test_decode_rejects_invalid(body, msg):
 def test_decode_needs_time_and_key():
     with pytest.raises(tk.InvalidSequence, match="TIME or KEY"):
         tk.decode([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1")])
+
+
+def test_tie_round_trip_and_validation():
+    bars = [{"RH": "C4:2 D4:2 {tie}"}, {"RH": "D4:2 E4:2"}]
+    steps = tk.encode_bars(bars)
+    assert "TIE" in [tk.show(x) for x in steps]
+    assert tk.decode(ok_prefix() + steps + [tk.step("END")])["bars"] == bars
+    with pytest.raises(tk.InvalidSequence, match="TIE"):
+        tk.decode(ok_prefix() + [tk.step("BAR"), tk.step("RH"), tk.step("REST", dur="1"), tk.step("TIE")])
+
+
+def test_style_and_source_tokens_in_spec():
+    song = {"time": "4/4", "key": "C", "bars": [{"RH": "C4:4 D4:4 E4:4 F4:4 G4:4 A4:4 B4:4 C5:4"}]}
+    spec = tk.spec_from_song(song)
+    spec.styles, spec.source = ["pop", "game"], "pdmx"
+    shown = [tk.show(x) for x in tk.encode_song(song, spec)]
+    assert shown[1:5] == ["SPEC", "STYLE_game", "STYLE_pop", "SRC_pdmx"]
+    assert tk.decode(tk.encode_song(song, spec))["bars"] == song["bars"]
