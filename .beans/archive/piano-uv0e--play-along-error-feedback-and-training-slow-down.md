@@ -29,4 +29,4 @@ staff_painter.dart rework (PR #56); mic input.
 - core: `Feedback`/`Timing` events (`take_feedback`), `Frame::streak`, training mode (`Settings::training`, `SectionEvent`, `take_section_event`): per-section grading, early fail, replay, 75% practice after 2 failures, full tempo again after a passed practice run; assists use the lowest tempo. 5 new unit tests.
 - bridge: `take_feedback`, `take_section_event`, `training` flag.
 - app: `play_feedback.dart` overlays (wrong-key flash, missed-key outline, early/late tag), training banners and clock restart in `practice_stage.dart`, l10n strings.
-- docs: teardown section with file:line, exercise-engine and practice-screen specs, D31 (proposed), ROADMAP.
+- docs: teardown section with file:line, exercise-engine and practice-screen specs, D31 (accepted), ROADMAP.
