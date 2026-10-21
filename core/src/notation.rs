@@ -19,7 +19,11 @@ pub struct Dur {
 }
 
 fn gcd(a: u32, b: u32) -> u32 {
-    if b == 0 { a } else { gcd(b, a % b) }
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
+    }
 }
 
 impl Dur {
@@ -27,9 +31,13 @@ impl Dur {
 
     pub fn new(num: u32, den: u32) -> Dur {
         let g = gcd(num, den).max(1);
-        Dur { num: num / g, den: den / g }
+        Dur {
+            num: num / g,
+            den: den / g,
+        }
     }
 
+    #[allow(clippy::should_implement_trait)] // inherent API, kept to avoid churn
     pub fn add(self, o: Dur) -> Dur {
         Dur::new(self.num * o.den + o.num * self.den, self.den * o.den)
     }
@@ -52,9 +60,19 @@ impl fmt::Display for Dur {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
-    Note { pitches: Vec<u8>, dur: Dur, fingers: Vec<u8>, annotation: Option<String> },
-    Rest { dur: Dur },
-    Directive { name: String, arg: Option<String> },
+    Note {
+        pitches: Vec<u8>,
+        dur: Dur,
+        fingers: Vec<u8>,
+        annotation: Option<String>,
+    },
+    Rest {
+        dur: Dur,
+    },
+    Directive {
+        name: String,
+        arg: Option<String>,
+    },
 }
 
 impl Event {
@@ -72,7 +90,11 @@ pub enum NotationError {
     BadDuration(String),
     BadPitch(String, PitchError),
     BadFinger(String),
-    FingerCount { token: String, pitches: usize, fingers: usize },
+    FingerCount {
+        token: String,
+        pitches: usize,
+        fingers: usize,
+    },
     UnclosedDirective(String),
 }
 
@@ -83,7 +105,11 @@ impl fmt::Display for NotationError {
             NotationError::BadDuration(t) => write!(f, "`{t}`: bad duration"),
             NotationError::BadPitch(t, e) => write!(f, "`{t}`: bad pitch ({e:?})"),
             NotationError::BadFinger(t) => write!(f, "`{t}`: fingers must be digits 1-5"),
-            NotationError::FingerCount { token, pitches, fingers } => {
+            NotationError::FingerCount {
+                token,
+                pitches,
+                fingers,
+            } => {
                 write!(f, "`{token}`: {fingers} finger(s) for {pitches} pitch(es)")
             }
             NotationError::UnclosedDirective(t) => write!(f, "`{t}`: unclosed `{{`"),
@@ -133,14 +159,18 @@ fn split_pitches(s: &str, token: &str) -> Result<Vec<u8>, NotationError> {
 /// Parses one token (note, chord, rest or directive).
 pub fn parse_token(token: &str) -> Result<Event, NotationError> {
     if let Some(inner) = token.strip_prefix('{') {
-        let inner = inner.strip_suffix('}').ok_or_else(|| NotationError::UnclosedDirective(token.into()))?;
+        let inner = inner
+            .strip_suffix('}')
+            .ok_or_else(|| NotationError::UnclosedDirective(token.into()))?;
         let (name, arg) = match inner.split_once(':') {
             Some((n, a)) => (n.trim().to_string(), Some(a.trim().to_string())),
             None => (inner.trim().to_string(), None),
         };
         return Ok(Event::Directive { name, arg });
     }
-    let (head, tail) = token.split_once(':').ok_or_else(|| NotationError::MissingDuration(token.into()))?;
+    let (head, tail) = token
+        .split_once(':')
+        .ok_or_else(|| NotationError::MissingDuration(token.into()))?;
     // tail = dur [@fingers] [(annotation)]
     let (tail, annotation) = match tail.split_once('(') {
         Some((t, a)) => (t, Some(a.trim_end_matches(')').to_string())),
@@ -158,15 +188,28 @@ pub fn parse_token(token: &str) -> Result<Event, NotationError> {
     let fingers: Vec<u8> = match fingers_s {
         Some(f) => f
             .chars()
-            .map(|c| c.to_digit(10).filter(|d| (1..=5).contains(d)).map(|d| d as u8))
+            .map(|c| {
+                c.to_digit(10)
+                    .filter(|d| (1..=5).contains(d))
+                    .map(|d| d as u8)
+            })
             .collect::<Option<Vec<_>>>()
             .ok_or_else(|| NotationError::BadFinger(token.into()))?,
         None => Vec::new(),
     };
     if !fingers.is_empty() && fingers.len() != pitches.len() {
-        return Err(NotationError::FingerCount { token: token.into(), pitches: pitches.len(), fingers: fingers.len() });
+        return Err(NotationError::FingerCount {
+            token: token.into(),
+            pitches: pitches.len(),
+            fingers: fingers.len(),
+        });
     }
-    Ok(Event::Note { pitches, dur, fingers, annotation })
+    Ok(Event::Note {
+        pitches,
+        dur,
+        fingers,
+        annotation,
+    })
 }
 
 /// Splits a bar string into tokens; `{...}` directives may contain spaces.
@@ -224,15 +267,29 @@ mod tests {
     fn chord_with_fingers() {
         assert_eq!(
             parse_token("C4E4G4:2@135"),
-            Ok(Event::Note { pitches: vec![60, 64, 67], dur: Dur::new(1, 2), fingers: vec![1, 3, 5], annotation: None })
+            Ok(Event::Note {
+                pitches: vec![60, 64, 67],
+                dur: Dur::new(1, 2),
+                fingers: vec![1, 3, 5],
+                annotation: None
+            })
         );
     }
 
     #[test]
     fn accidentals_rest_annotation() {
-        assert!(matches!(parse_token("F#4Bb4:8"), Ok(Event::Note { ref pitches, .. }) if pitches == &vec![66, 70]));
-        assert_eq!(parse_token("r:4"), Ok(Event::Rest { dur: Dur::new(1, 4) }));
-        assert!(matches!(parse_token("E4:4@3(accent)"), Ok(Event::Note { annotation: Some(ref a), .. }) if a == "accent"));
+        assert!(
+            matches!(parse_token("F#4Bb4:8"), Ok(Event::Note { ref pitches, .. }) if pitches == &vec![66, 70])
+        );
+        assert_eq!(
+            parse_token("r:4"),
+            Ok(Event::Rest {
+                dur: Dur::new(1, 4)
+            })
+        );
+        assert!(
+            matches!(parse_token("E4:4@3(accent)"), Ok(Event::Note { annotation: Some(ref a), .. }) if a == "accent")
+        );
     }
 
     #[test]
@@ -253,10 +310,26 @@ mod tests {
 
     #[test]
     fn errors_name_the_token() {
-        assert!(matches!(parse_token("C4"), Err(NotationError::MissingDuration(_))));
-        assert!(matches!(parse_token("H4:4"), Err(NotationError::BadPitch(..))));
-        assert!(matches!(parse_token("C4E4:4@1"), Err(NotationError::FingerCount { pitches: 2, fingers: 1, .. })));
-        assert!(matches!(parse_token("C4:4@6"), Err(NotationError::BadFinger(_))));
+        assert!(matches!(
+            parse_token("C4"),
+            Err(NotationError::MissingDuration(_))
+        ));
+        assert!(matches!(
+            parse_token("H4:4"),
+            Err(NotationError::BadPitch(..))
+        ));
+        assert!(matches!(
+            parse_token("C4E4:4@1"),
+            Err(NotationError::FingerCount {
+                pitches: 2,
+                fingers: 1,
+                ..
+            })
+        ));
+        assert!(matches!(
+            parse_token("C4:4@6"),
+            Err(NotationError::BadFinger(_))
+        ));
     }
 
     #[test]

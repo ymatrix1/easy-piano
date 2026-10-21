@@ -3,7 +3,9 @@
 //! (.musicxml/.xml). The reference corpus lives in git-ignored `references/melody-corpus/`.
 //! See docs/research/melody-similarity.md.
 
-use easy_piano_core::similarity::{melody_from_song, skyline, tokens, top_matches, MelodyNote, Token};
+use easy_piano_core::similarity::{
+    melody_from_song, skyline, tokens, top_matches, MelodyNote, Token,
+};
 use easy_piano_core::song::Song;
 use std::collections::BTreeMap;
 use std::fs;
@@ -11,12 +13,18 @@ use std::path::{Path, PathBuf};
 
 /// Calibrated in core/tests/similarity_calibration.rs (docs/research/melody-similarity.md).
 pub const DEFAULT_THRESHOLD: f64 = 0.5;
-const USAGE: &str = "usage: content similar <song.json|dir>... [--corpus <dir>]... [--threshold 0..1] [--top n]";
+const USAGE: &str =
+    "usage: content similar <song.json|dir>... [--corpus <dir>]... [--threshold 0..1] [--top n]";
 const CORPUS_EXT: [&str; 6] = ["json", "mid", "midi", "abc", "musicxml", "xml"];
 
 fn files(path: &Path, out: &mut Vec<PathBuf>) {
     if path.is_dir() {
-        let mut entries: Vec<_> = fs::read_dir(path).into_iter().flatten().flatten().map(|e| e.path()).collect();
+        let mut entries: Vec<_> = fs::read_dir(path)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
         entries.sort();
         for p in entries {
             files(&p, out);
@@ -27,24 +35,40 @@ fn files(path: &Path, out: &mut Vec<PathBuf>) {
 }
 
 fn ext(path: &Path) -> String {
-    path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase()
+    path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase()
 }
 
 /// Every melody in a file, named by song id, file name, or `file#tune` for multi-tune ABC.
 fn load(path: &Path) -> Result<Vec<(String, Vec<MelodyNote>)>, String> {
-    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("?").to_string();
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("?")
+        .to_string();
     match ext(path).as_str() {
         "json" => {
             let text = fs::read_to_string(path).map_err(|e| e.to_string())?;
             let song = Song::from_json(&text)?;
             Ok(vec![(song.id.clone(), melody_from_song(&song))])
         }
-        "mid" | "midi" => Ok(vec![(name, midi(&fs::read(path).map_err(|e| e.to_string())?)?)]),
+        "mid" | "midi" => Ok(vec![(
+            name,
+            midi(&fs::read(path).map_err(|e| e.to_string())?)?,
+        )]),
         "abc" => {
             let text = fs::read_to_string(path).map_err(|e| e.to_string())?;
-            Ok(abc_tunes(&text).into_iter().map(|(t, m)| (format!("{name}#{t}"), m)).collect())
+            Ok(abc_tunes(&text)
+                .into_iter()
+                .map(|(t, m)| (format!("{name}#{t}"), m))
+                .collect())
         }
-        "musicxml" | "xml" => Ok(vec![(name, musicxml(&fs::read_to_string(path).map_err(|e| e.to_string())?))]),
+        "musicxml" | "xml" => Ok(vec![(
+            name,
+            musicxml(&fs::read_to_string(path).map_err(|e| e.to_string())?),
+        )]),
         _ => Err("unsupported file type".into()),
     }
 }
@@ -106,7 +130,10 @@ pub fn midi(d: &[u8]) -> Result<Vec<MelodyNote>, String> {
                         let two = !matches!(s & 0xf0, 0xc0 | 0xd0);
                         let vel = if two { *d.get(i + 1).unwrap_or(&0) } else { 0 };
                         if s & 0xf0 == 0x90 && vel > 0 && s & 0x0f != 9 {
-                            let note = MelodyNote { pitch: b, onset: tick as f64 / division as f64 };
+                            let note = MelodyNote {
+                                pitch: b,
+                                onset: tick as f64 / division as f64,
+                            };
                             groups.entry((track, s & 0x0f)).or_default().push(note);
                         }
                         i += if two { 2 } else { 1 };
@@ -124,9 +151,18 @@ pub fn midi(d: &[u8]) -> Result<Vec<MelodyNote>, String> {
 fn melody_group(groups: Vec<Vec<MelodyNote>>) -> Vec<MelodyNote> {
     let top = skyline(groups.iter().flatten().copied().collect());
     let owns = |g: &Vec<MelodyNote>| {
-        top.iter().filter(|t| g.iter().any(|n| n.pitch == t.pitch && (n.onset - t.onset).abs() < 1e-6)).count()
+        top.iter()
+            .filter(|t| {
+                g.iter()
+                    .any(|n| n.pitch == t.pitch && (n.onset - t.onset).abs() < 1e-6)
+            })
+            .count()
     };
-    groups.into_iter().max_by_key(owns).map(skyline).unwrap_or_default()
+    groups
+        .into_iter()
+        .max_by_key(owns)
+        .map(skyline)
+        .unwrap_or_default()
 }
 
 // --- ABC: notes, accidentals (held to the bar line), octave marks, lengths, key signature,
@@ -134,14 +170,29 @@ fn melody_group(groups: Vec<Vec<MelodyNote>>) -> Vec<MelodyNote> {
 
 fn key_sharps(k: &str) -> i32 {
     let k: Vec<char> = k.split_whitespace().next().unwrap_or("C").chars().collect();
-    let tonic_len = 1 + k.iter().skip(1).take_while(|c| **c == '#' || **c == 'b').count();
+    let tonic_len = 1 + k
+        .iter()
+        .skip(1)
+        .take_while(|c| **c == '#' || **c == 'b')
+        .count();
     let tonic: String = k.iter().take(tonic_len).collect();
-    let mode: String = k.iter().skip(tonic_len).collect::<String>().to_ascii_lowercase();
+    let mode: String = k
+        .iter()
+        .skip(tonic_len)
+        .collect::<String>()
+        .to_ascii_lowercase();
     let minor = mode.starts_with('m') && !mode.starts_with("maj") && !mode.starts_with("mix");
-    let majors = ["Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#"];
-    let minors = ["Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#"];
+    let majors = [
+        "Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#",
+    ];
+    let minors = [
+        "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#",
+    ];
     let list = if minor { minors } else { majors };
-    list.iter().position(|t| *t == tonic).map(|p| p as i32 - 7).unwrap_or(0)
+    list.iter()
+        .position(|t| *t == tonic)
+        .map(|p| p as i32 - 7)
+        .unwrap_or(0)
 }
 
 fn sig_alter(sharps: i32, step: char) -> i32 {
@@ -250,7 +301,11 @@ pub fn abc_tunes(text: &str) -> Vec<(String, Vec<MelodyNote>)> {
                 }
                 '^' | '_' | '=' => {
                     let a = acc.unwrap_or(0);
-                    acc = Some(match c { '^' => a + 1, '_' => a - 1, _ => 0 });
+                    acc = Some(match c {
+                        '^' => a + 1,
+                        '_' => a - 1,
+                        _ => 0,
+                    });
                     i += 1;
                 }
                 'z' | 'x' | 'Z' => {
@@ -271,7 +326,10 @@ pub fn abc_tunes(text: &str) -> Vec<(String, Vec<MelodyNote>)> {
                             bar_acc.insert((step, oct), a);
                             a
                         }
-                        None => bar_acc.get(&(step, oct)).copied().unwrap_or_else(|| sig_alter(sharps, step)),
+                        None => bar_acc
+                            .get(&(step, oct))
+                            .copied()
+                            .unwrap_or_else(|| sig_alter(sharps, step)),
                     };
                     let pitch = (12 * (oct + 1) + base + alter).clamp(0, 127) as u8;
                     let d = abc_len(&s, &mut i) * unit;
@@ -319,18 +377,31 @@ pub fn musicxml(text: &str) -> Vec<MelodyNote> {
         };
         let Some(e) = body_end else { break };
         let body = &rest[p..e];
-        let dur = tag(body, "duration").and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.0) / divisions;
+        let dur = tag(body, "duration")
+            .and_then(|v| v.parse::<f64>().ok())
+            .unwrap_or(0.0)
+            / divisions;
         match kind {
-            "<divisions>" => divisions = tag(body, "divisions").and_then(|v| v.parse().ok()).unwrap_or(1.0),
+            "<divisions>" => {
+                divisions = tag(body, "divisions")
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(1.0)
+            }
             "<backup" => t -= dur,
             "<forward" => t += dur,
             _ if body.contains("<grace") => {}
             _ => {
                 let chord = body.contains("<chord");
                 let onset = if chord { last_onset } else { t };
-                if let (Some(step), Some(oct)) = (tag(body, "step"), tag(body, "octave").and_then(|o| o.parse::<i32>().ok())) {
+                if let (Some(step), Some(oct)) = (
+                    tag(body, "step"),
+                    tag(body, "octave").and_then(|o| o.parse::<i32>().ok()),
+                ) {
                     if let Some(base) = "C D EF G A B".find(step) {
-                        let alter = tag(body, "alter").and_then(|a| a.parse::<f64>().ok()).unwrap_or(0.0).round() as i32;
+                        let alter = tag(body, "alter")
+                            .and_then(|a| a.parse::<f64>().ok())
+                            .unwrap_or(0.0)
+                            .round() as i32;
                         let pitch = (12 * (oct + 1) + base as i32 + alter).clamp(0, 127) as u8;
                         notes.push(MelodyNote { pitch, onset });
                     }
@@ -373,7 +444,12 @@ struct Args {
 }
 
 fn parse_args(args: &[String]) -> Result<Args, String> {
-    let mut a = Args { inputs: Vec::new(), corpora: Vec::new(), threshold: DEFAULT_THRESHOLD, top: 3 };
+    let mut a = Args {
+        inputs: Vec::new(),
+        corpora: Vec::new(),
+        threshold: DEFAULT_THRESHOLD,
+        top: 3,
+    };
     let mut it = args.iter();
     while let Some(arg) = it.next() {
         if !arg.starts_with("--") {
@@ -393,7 +469,13 @@ fn parse_args(args: &[String]) -> Result<Args, String> {
                     .filter(|x| (0.0..=1.0).contains(x))
                     .ok_or(format!("bad --threshold `{val}` (0..1)"))?
             }
-            _ => a.top = val.parse::<usize>().ok().filter(|n| *n > 0).ok_or(format!("bad --top `{val}`"))?,
+            _ => {
+                a.top = val
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|n| *n > 0)
+                    .ok_or(format!("bad --top `{val}`"))?
+            }
         }
     }
     if a.inputs.is_empty() {
@@ -403,7 +485,11 @@ fn parse_args(args: &[String]) -> Result<Args, String> {
 }
 
 fn joined(paths: &[PathBuf]) -> String {
-    paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(", ")
+    paths
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Exit code: 0 all clear, 1 a song at or above threshold, 2 usage or input error.
@@ -432,7 +518,11 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("error: no song .json in {}", joined(&a.inputs));
         return 2;
     }
-    let corpora = if a.corpora.is_empty() { default_corpora() } else { a.corpora };
+    let corpora = if a.corpora.is_empty() {
+        default_corpora()
+    } else {
+        a.corpora
+    };
     // (name, canonical path to skip self-matches, tokens), built once.
     let mut corpus: Vec<(String, Option<PathBuf>, Vec<Token>)> = Vec::new();
     for dir in &corpora {
@@ -444,7 +534,10 @@ pub fn run(args: &[String]) -> i32 {
         files(dir, &mut fs_);
         for f in fs_.iter().filter(|f| CORPUS_EXT.contains(&ext(f).as_str())) {
             match load(f) {
-                Ok(ms) => corpus.extend(ms.into_iter().map(|(n, m)| (n, f.canonicalize().ok(), tokens(&m)))),
+                Ok(ms) => corpus.extend(
+                    ms.into_iter()
+                        .map(|(n, m)| (n, f.canonicalize().ok(), tokens(&m))),
+                ),
                 Err(e) => eprintln!("warning: {}: {e}", f.display()),
             }
         }
@@ -453,10 +546,16 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("error: empty corpus ({})", joined(&corpora));
         return 2;
     }
-    println!("corpus: {} melodies from {}", corpus.len(), joined(&corpora));
+    println!(
+        "corpus: {} melodies from {}",
+        corpus.len(),
+        joined(&corpora)
+    );
     let (mut over, mut errors) = (0, 0);
     for q in &queries {
-        let song = fs::read_to_string(q).map_err(|e| e.to_string()).and_then(|t| Song::from_json(&t));
+        let song = fs::read_to_string(q)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Song::from_json(&t));
         let song = match song {
             Ok(s) => s,
             Err(e) => {
@@ -474,13 +573,26 @@ pub fn run(args: &[String]) -> i32 {
             .collect();
         let matches = top_matches(&tokens(&mel), &others, a.top);
         let flag = matches.first().is_some_and(|m| m.score >= a.threshold);
-        println!("{} {} ({} notes)", if flag { "SIMILAR" } else { "ok" }, song.id, mel.len());
+        println!(
+            "{} {} ({} notes)",
+            if flag { "SIMILAR" } else { "ok" },
+            song.id,
+            mel.len()
+        );
         for m in &matches {
             let (qs, qe) = m.alignment.query_span;
             let (cs, ce) = m.alignment.cand_span;
             println!(
                 "  {:.2}  purity {:.2}  info {:.1}  ngram {:.2}  notes {}..{} ~ {}..{}  {}",
-                m.score, m.alignment.purity, m.alignment.info, m.ngram, qs, qe + 1, cs, ce + 1, m.name
+                m.score,
+                m.alignment.purity,
+                m.alignment.info,
+                m.ngram,
+                qs,
+                qe + 1,
+                cs,
+                ce + 1,
+                m.name
             );
         }
         over += flag as i32;
@@ -540,7 +652,9 @@ mod tests {
         }
         let mut d = b"MThd\0\0\0\x06\0\x01\0\x02\0\x60".to_vec();
         // Track 0: melody 72 74 76 on beats 0 1 2, plus drums.
-        d.extend(track(&[0x00, 0x90, 72, 100, 0x00, 0x99, 81, 100, 0x60, 0x90, 74, 100, 0x60, 0x90, 76, 100]));
+        d.extend(track(&[
+            0x00, 0x90, 72, 100, 0x00, 0x99, 81, 100, 0x60, 0x90, 74, 100, 0x60, 0x90, 76, 100,
+        ]));
         // Track 1: a single high accompaniment note on beat 0.5.
         d.extend(track(&[0x30, 0x91, 84, 100]));
         let m = midi(&d).unwrap();
@@ -573,7 +687,16 @@ mod tests {
         ] {
             assert!(parse_args(&s(bad)).is_err(), "{bad:?}");
         }
-        let a = parse_args(&s(&["a.json", "--threshold", "0.7", "--top", "5", "--corpus", "c"])).unwrap();
+        let a = parse_args(&s(&[
+            "a.json",
+            "--threshold",
+            "0.7",
+            "--top",
+            "5",
+            "--corpus",
+            "c",
+        ]))
+        .unwrap();
         assert_eq!((a.threshold, a.top, a.corpora.len()), (0.7, 5, 1));
     }
 
@@ -596,14 +719,27 @@ mod tests {
         assert_eq!(run(&s(&[&p("t.json"), "--corpus", &p("missing")])), 2);
         fs::create_dir_all(dir.join("empty")).unwrap();
         assert_eq!(run(&s(&[&p("t.json"), "--corpus", &p("empty")])), 2);
-        assert_eq!(run(&s(&[&p("t.json"), "--corpus", &p("corp"), "--threshold", "0.99"])), 0);
+        assert_eq!(
+            run(&s(&[
+                &p("t.json"),
+                "--corpus",
+                &p("corp"),
+                "--threshold",
+                "0.99"
+            ])),
+            0
+        );
         // Ode to Joy up a tone vs an ABC reference holding its first four bars in C: flagged.
         let ode = r#"{"id":"o","title":"O","composer":"Trad.","arranger":"A","source":"original",
             "source_url":null,"license":"CC0-1.0","composition_license":"public-domain","bpm":90,
             "time":"4/4","key":"D","bars":[{"RH":"F#4:4 F#4:4 G4:4 A4:4"},{"RH":"A4:4 G4:4 F#4:4 E4:4"},
             {"RH":"D4:4 D4:4 E4:4 F#4:4"},{"RH":"F#4:4 E4:4 E4:2"}]}"#;
         fs::write(dir.join("o.json"), ode).unwrap();
-        fs::write(dir.join("corp/ode.abc"), "X:2\nT:Ode\nL:1/4\nK:C\nEEFG|GFED|CCDE|E>DD2|\n").unwrap();
+        fs::write(
+            dir.join("corp/ode.abc"),
+            "X:2\nT:Ode\nL:1/4\nK:C\nEEFG|GFED|CCDE|E>DD2|\n",
+        )
+        .unwrap();
         assert_eq!(run(&s(&[&p("o.json"), "--corpus", &p("corp")])), 1);
         fs::write(dir.join("bad.json"), "{").unwrap();
         assert_eq!(run(&s(&[&p("bad.json"), "--corpus", &p("corp")])), 2);

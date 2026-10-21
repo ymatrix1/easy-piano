@@ -36,13 +36,58 @@ jobs:
             core
             tools/content-cli
 
+      - name: cargo fmt (core)
+        working-directory: core
+        run: cargo fmt --check
+
+      - name: cargo clippy (core)
+        working-directory: core
+        run: cargo clippy --all-targets -- -D warnings
+
       - name: cargo test (core)
         working-directory: core
         run: cargo test
 
+      - name: cargo fmt (content-cli)
+        working-directory: tools/content-cli
+        run: cargo fmt --check
+
+      - name: cargo clippy (content-cli)
+        working-directory: tools/content-cli
+        run: cargo clippy --all-targets -- -D warnings
+
       - name: Lint content
         working-directory: tools/content-cli
         run: cargo run -- lint ../../content
+
+  python:
+    name: Python (melody-model)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/melody-model
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: tools/melody-model/uv.lock
+
+      # No --extra train: torch stays out of CI.
+      - name: uv sync
+        run: uv sync --locked
+
+      - name: ruff check
+        run: uv run ruff check
+
+      - name: ruff format --check
+        run: uv run ruff format --check
+
+      # Slow/GPU-marked tests are deselected via addopts in pyproject.toml.
+      - name: pytest
+        run: uv run pytest
 
   flutter:
     name: Flutter analyze + test
@@ -64,6 +109,10 @@ jobs:
       - name: flutter pub get
         working-directory: app
         run: flutter pub get
+
+      - name: dart format
+        working-directory: app
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: flutter analyze
         working-directory: app

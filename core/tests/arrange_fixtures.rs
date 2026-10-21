@@ -16,12 +16,20 @@ fn rows(text: &str) -> Vec<Vec<f64>> {
 fn raw(text: &str) -> Vec<RawNote> {
     rows(text)
         .into_iter()
-        .map(|r| RawNote { pitch: r[0] as u8, start: r[1], dur: r[2], amp: r[3] as f32 })
+        .map(|r| RawNote {
+            pitch: r[0] as u8,
+            start: r[1],
+            dur: r[2],
+            amp: r[3] as f32,
+        })
         .collect()
 }
 
 fn truth() -> Vec<(u8, f64)> {
-    rows(include_str!("fixtures/truth_melody.txt")).into_iter().map(|r| (r[0] as u8, r[1])).collect()
+    rows(include_str!("fixtures/truth_melody.txt"))
+        .into_iter()
+        .map(|r| (r[0] as u8, r[1]))
+        .collect()
 }
 
 const SETS: [(&str, &str); 3] = [
@@ -46,8 +54,16 @@ fn cleanup_and_skyline_recover_the_melody() {
             cleaned.len(), after_clean.0, after_clean.1, after_clean.2,
             tune.len(), after_melody.0, after_melody.1, after_melody.2,
         );
-        assert!(after_melody.1 >= 0.95, "{name}: melody recall {:.2}", after_melody.1);
-        assert!(after_melody.2 >= 0.9, "{name}: melody F1 {:.2}", after_melody.2);
+        assert!(
+            after_melody.1 >= 0.95,
+            "{name}: melody recall {:.2}",
+            after_melody.1
+        );
+        assert!(
+            after_melody.2 >= 0.9,
+            "{name}: melody F1 {:.2}",
+            after_melody.2
+        );
         assert!(after_melody.2 > before.2, "{name}: no improvement");
     }
 }
@@ -57,10 +73,24 @@ fn beginner_version_fits_five_finger_c_position() {
     for (name, text) in SETS {
         let a = arrange(&raw(text), BPM, Level::Beginner);
         assert!(!a.is_empty(), "{name}");
-        assert!(a.iter().all(|n| (60..=67).contains(&n.pitch) && !n.left_hand), "{name}");
-        assert!(a.iter().all(|n| [0, 2, 4, 5, 7].contains(&(n.pitch % 12))), "{name}: outside C position");
-        assert!(a.iter().all(|n| n.beat.fract() == 0.0), "{name}: off-beat onset");
-        println!("{name:5} beginner: {} notes, first 8 pitches {:?}", a.len(), a.iter().take(8).map(|n| n.pitch).collect::<Vec<_>>());
+        assert!(
+            a.iter()
+                .all(|n| (60..=67).contains(&n.pitch) && !n.left_hand),
+            "{name}"
+        );
+        assert!(
+            a.iter().all(|n| [0, 2, 4, 5, 7].contains(&(n.pitch % 12))),
+            "{name}: outside C position"
+        );
+        assert!(
+            a.iter().all(|n| n.beat.fract() == 0.0),
+            "{name}: off-beat onset"
+        );
+        println!(
+            "{name:5} beginner: {} notes, first 8 pitches {:?}",
+            a.len(),
+            a.iter().take(8).map(|n| n.pitch).collect::<Vec<_>>()
+        );
     }
 }
 
@@ -71,8 +101,16 @@ fn intermediate_adds_one_left_hand_root_per_bar() {
         let lh: Vec<_> = a.iter().filter(|n| n.left_hand).collect();
         let bars = (a.iter().map(|n| n.beat).fold(0.0, f64::max) / 4.0).floor() as usize + 1;
         assert_eq!(lh.len(), bars, "{name}");
-        assert!(lh.iter().all(|n| (48..=59).contains(&n.pitch) && n.beat % 4.0 == 0.0), "{name}");
-        println!("{name:5} intermediate: {} RH, LH roots {:?}", a.len() - lh.len(), lh.iter().map(|n| n.pitch).collect::<Vec<_>>());
+        assert!(
+            lh.iter()
+                .all(|n| (48..=59).contains(&n.pitch) && n.beat % 4.0 == 0.0),
+            "{name}"
+        );
+        println!(
+            "{name:5} intermediate: {} RH, LH roots {:?}",
+            a.len() - lh.len(),
+            lh.iter().map(|n| n.pitch).collect::<Vec<_>>()
+        );
     }
 }
 

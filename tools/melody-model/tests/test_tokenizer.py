@@ -40,7 +40,13 @@ def test_chord_is_note_plus_chord_steps():
 def test_spec_from_song():
     song = {"time": "3/4", "key": "G", "bars": [{"RH": "D5:4@5 G4:8@1 A4:8@2 B4:4@3", "LH": "G2:2.@5"}]}
     spec = tk.spec_from_song(song)
-    assert (spec.range_lo, spec.range_hi, spec.durs, spec.hands, spec.bars) == ("G2", "D5", ["2.", "4", "8"], "BOTH", 1)
+    assert (spec.range_lo, spec.range_hi, spec.durs, spec.hands, spec.bars) == (
+        "G2",
+        "D5",
+        ["2.", "4", "8"],
+        "BOTH",
+        1,
+    )
 
 
 def test_unsupported_notation_raises():
@@ -64,7 +70,12 @@ SKILL_SPECS = sorted((ROOT / "content" / "skill-specs").glob("*.json"))
 
 
 def test_every_skill_spec_pattern_encodes():
-    patterns = [p for f in SKILL_SPECS for node in json.loads(f.read_text(encoding="utf-8"))["nodes"] for p in node.get("required", [])]
+    patterns = [
+        p
+        for f in SKILL_SPECS
+        for node in json.loads(f.read_text(encoding="utf-8"))["nodes"]
+        for p in node.get("required", [])
+    ]
     assert len(patterns) > 20
     for p in patterns:
         steps = tk.encode_pattern(p)
@@ -86,17 +97,26 @@ def ok_prefix():
     return [tk.step("BOS"), tk.step("TIME_4/4"), tk.step("KEY_C")]
 
 
-@pytest.mark.parametrize("body,msg", [
-    ([tk.step("NOTE", pitch="C4", dur="4")], "outside a hand"),
-    ([tk.step("BAR"), tk.step("RH"), (tk._IDS["kind"]["NOTE"], tk._IDS["pitch"]["C4"], 0, 0)], "needs pitch and dur"),
-    ([tk.step("BAR"), tk.step("RH"), tk.step("CHORD", pitch="E4")], "without a preceding NOTE"),
-    ([tk.step("BAR"), tk.step("RH"), tk.step("REST", pitch="C4", dur="4")], "only dur"),
-    ([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("RH")], "twice"),
-    ([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("BARS_8")], "after the first BAR"),
-    ([tk.step("BAR"), tk.step("RH")], "empty RH"),
-    ([tk.step("BAR"), tk.step("RH"), (999, 0, 0, 0)], "out of range"),
-    ([], "no bars"),
-])
+@pytest.mark.parametrize(
+    "body,msg",
+    [
+        ([tk.step("NOTE", pitch="C4", dur="4")], "outside a hand"),
+        (
+            [tk.step("BAR"), tk.step("RH"), (tk._IDS["kind"]["NOTE"], tk._IDS["pitch"]["C4"], 0, 0)],
+            "needs pitch and dur",
+        ),
+        ([tk.step("BAR"), tk.step("RH"), tk.step("CHORD", pitch="E4")], "without a preceding NOTE"),
+        ([tk.step("BAR"), tk.step("RH"), tk.step("REST", pitch="C4", dur="4")], "only dur"),
+        ([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("RH")], "twice"),
+        (
+            [tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("BARS_8")],
+            "after the first BAR",
+        ),
+        ([tk.step("BAR"), tk.step("RH")], "empty RH"),
+        ([tk.step("BAR"), tk.step("RH"), (999, 0, 0, 0)], "out of range"),
+        ([], "no bars"),
+    ],
+)
 def test_decode_rejects_invalid(body, msg):
     with pytest.raises(tk.InvalidSequence, match=msg):
         tk.decode(ok_prefix() + body + [tk.step("END")])
