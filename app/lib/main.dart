@@ -13,15 +13,23 @@ import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
 import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
+import 'ui/staff/music_font.dart';
 import 'ui/staff/staff_spike_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
   final dispatcher = WidgetsBinding.instance.platformDispatcher;
-  final appLocale = await AppLocale.load(dispatcher.locales);
-  final repo = await ContentRepo.load(locale: appLocale.current.tag);
+  // Independent boot steps run in parallel; the web splash stays up until
+  // the first frame (web/index.html).
+  final (_, appLocale, repo) = await (
+    RustLib.init(),
+    AppLocale.load(dispatcher.locales),
+    ContentRepo.load(),
+  ).wait;
+  repo.locale = appLocale.current.tag;
   runApp(EasyPianoApp(repo: repo, appLocale: appLocale));
+  // Non-critical assets load after the first frame.
+  SchedulerBinding.instance.addPostFrameCallback((_) => loadMusicFont());
 }
 
 class EasyPianoApp extends StatefulWidget {

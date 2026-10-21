@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'music_font.dart';
 import 'staff_note.dart';
 
 /// SMuFL code points (Bravura).
@@ -73,9 +74,11 @@ class StaffPainter extends CustomPainter {
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
-         repaint: repaintAlso == null
-             ? playheadBeat
-             : Listenable.merge([playheadBeat, repaintAlso]),
+         repaint: Listenable.merge([
+           playheadBeat,
+           musicFontReady,
+           ?repaintAlso,
+         ]),
        );
 
   final List<StaffNote> notes;
