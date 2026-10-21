@@ -127,6 +127,30 @@
       }
     }
   },
+  "early": "Early",
+  "@early": {
+    "description": "Play-along training / timing feedback"
+  },
+  "late": "Late",
+  "@late": {
+    "description": "Play-along training / timing feedback"
+  },
+  "slowPractice": "Slow practice",
+  "@slowPractice": {
+    "description": "Play-along training / timing feedback"
+  },
+  "slowPracticeIntro": "Let's practise this part slower",
+  "@slowPracticeIntro": {
+    "description": "Play-along training / timing feedback"
+  },
+  "sectionTryAgain": "Try this part again",
+  "@sectionTryAgain": {
+    "description": "Play-along training / timing feedback"
+  },
+  "sectionFullSpeed": "Now at full speed!",
+  "@sectionFullSpeed": {
+    "description": "Play-along training / timing feedback"
+  },
   "micInput": "Microphone",
   "micUseMidi": "Use MIDI / screen keys",
   "micExplainTitle": "Play with the microphone",

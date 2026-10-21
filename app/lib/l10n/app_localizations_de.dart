@@ -264,6 +264,24 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get early => 'Zu früh';
+
+  @override
+  String get late => 'Zu spät';
+
+  @override
+  String get slowPractice => 'Langsam üben';
+
+  @override
+  String get slowPracticeIntro => 'Üben wir diesen Teil langsamer';
+
+  @override
+  String get sectionTryAgain => 'Versuch diesen Teil noch einmal';
+
+  @override
+  String get sectionFullSpeed => 'Jetzt im vollen Tempo!';
+
+  @override
   String get micInput => 'Mikrofon';
 
   @override

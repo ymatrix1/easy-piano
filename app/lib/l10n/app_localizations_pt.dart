@@ -262,6 +262,24 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get early => 'Adiantado';
+
+  @override
+  String get late => 'Atrasado';
+
+  @override
+  String get slowPractice => 'Prática lenta';
+
+  @override
+  String get slowPracticeIntro => 'Vamos praticar esta parte mais devagar';
+
+  @override
+  String get sectionTryAgain => 'Tente esta parte de novo';
+
+  @override
+  String get sectionFullSpeed => 'Agora na velocidade normal!';
+
+  @override
   String get micInput => 'Microfone';
 
   @override

@@ -17,6 +17,7 @@ Play the stage-1 engine through cpal/Oboe/CoreAudio and wire PianoSynth to it on
 Same realistic sound on every platform from one Rust engine.
 
 ## Acceptance Criteria
+- [ ] Event API from Dart (note, sample time, velocity, part, live note on/off, part levels) via flutter_rust_bridge
 - [ ] Android, iOS and desktop play piano, band and metronome through the engine
 - [ ] Engine output stream is the audio clock used by play-along
 - [ ] Key-to-sound latency measured on one named Android and one named iOS device
