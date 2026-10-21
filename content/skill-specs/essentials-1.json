@@ -1,0 +1,104 @@
+{
+  "course": "essentials-1",
+  "nodes": [
+    {
+      "node": "rests",
+      "new_skill": "Rests: count silent beats and come back in on time.",
+      "required": [{ "rest": true }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "intervals",
+      "new_skill": "Skips: thirds, fourths and fifths inside the C position.",
+      "required": [{ "interval_min": 3 }],
+      "bars": [8, 8],
+      "bpm": [72, 88],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "lightly-row",
+      "new_skill": "First song with a simple left-hand C and G under the melody.",
+      "required": [{ "pitch": "C3", "hand": "LH" }, { "hands_together": true }],
+      "bars": [8, 16],
+      "bpm": [84, 100],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "left-hand",
+      "new_skill": "Left hand C position C3-G3 alone, then a three-note C chord.",
+      "required": [{ "pitch": "D3", "hand": "LH" }, { "pitch": "F3", "hand": "LH" }],
+      "bars": [8, 8],
+      "bpm": [68, 84],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "saints",
+      "new_skill": "Song with held dotted halves over left-hand notes.",
+      "required": [{ "rhythm": "2." }, { "hands_together": true }],
+      "bars": [8, 16],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: C position both hands, quarters, halves and rests.",
+      "required": [{ "rhythm": "2" }],
+      "bars": [8, 16],
+      "bpm": [80, 100],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "hands-together",
+      "new_skill": "Hands together: both hands start notes on the same beat.",
+      "required": [{ "hands_together": true }],
+      "bars": [8, 8],
+      "bpm": [68, 84],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "eighths",
+      "new_skill": "Eighth notes: two even notes per beat.",
+      "required": [{ "rhythm": "8", "hand": "RH", "min_bar_share": 0.5 }],
+      "bars": [8, 8],
+      "bpm": [76, 96],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "jingle",
+      "new_skill": "Song mixing eighths and quarters with left-hand support.",
+      "required": [{ "rhythm": "8" }, { "hands_together": true }],
+      "bars": [8, 16],
+      "bpm": [92, 108],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: eighths, skips and hands together in C position.",
+      "required": [{ "rhythm": "8" }, { "interval_min": 3 }],
+      "bars": [8, 16],
+      "bpm": [84, 104],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course review: everything in Essentials I at song tempo.",
+      "required": [{ "hands_together": true }, { "interval_min": 3 }],
+      "bars": [12, 16],
+      "bpm": [88, 104],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

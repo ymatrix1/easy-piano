@@ -1,0 +1,50 @@
+{
+  "course": "piano-basics",
+  "nodes": [
+    {
+      "node": "find-c",
+      "new_skill": "Find middle C and play it in time with the right thumb.",
+      "required": [{ "pitch": "C4", "hand": "RH" }],
+      "bars": [4, 4],
+      "bpm": [60, 76],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "c-d-e",
+      "new_skill": "Play C, D and E with fingers 1-2-3, stepwise.",
+      "required": [{ "pitch": "D4", "hand": "RH" }, { "pitch": "E4", "hand": "RH" }],
+      "bars": [4, 8],
+      "bpm": [64, 80],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "first-song",
+      "new_skill": "First short tune on C-D-E with quarters and halves.",
+      "required": [{ "rhythm": "2" }, { "rhythm": "4" }],
+      "bars": [4, 8],
+      "bpm": [70, 90],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "f-and-g",
+      "new_skill": "Add F and G: the full C position, five fingers.",
+      "required": [{ "pitch": "F4", "hand": "RH" }, { "pitch": "G4", "hand": "RH" }],
+      "bars": [4, 8],
+      "bpm": [64, 92],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "ode-to-joy",
+      "new_skill": "Review: a longer C-position melody, including a dotted quarter and eighth.",
+      "required": [{ "pitch": "G4", "hand": "RH" }, { "rhythm": "4." }],
+      "bars": [8, 8],
+      "bpm": [84, 100],
+      "hands": "RH",
+      "time": "4/4"
+    }
+  ]
+}

@@ -213,6 +213,30 @@ abstract class AppLocalizations {
   /// **'Free play'**
   String get freePlay;
 
+  /// Twelve comma-separated pitch-class names from C, in the UI language (letters or solfege). Used for note readouts.
+  ///
+  /// In en, this message translates to:
+  /// **'C,C♯,D,D♯,E,F,F♯,G,G♯,A,A♯,B'**
+  String get noteNames;
+
+  /// No description provided for @freePlayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play any key. Use a MIDI keyboard or tap the screen.'**
+  String get freePlayHint;
+
+  /// No description provided for @octaveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower octave'**
+  String get octaveDown;
+
+  /// No description provided for @octaveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher octave'**
+  String get octaveUp;
+
   /// No description provided for @freePlayDesc.
   ///
   /// In en, this message translates to:

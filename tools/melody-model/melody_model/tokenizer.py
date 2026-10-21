@@ -25,8 +25,11 @@ KEYS = tuple(_TONICS) + tuple(t + "m" for t in ("A", "E", "B", "F#", "C#", "G#",
 MAX_BARS = 64
 COURSES = ("none", "piano-basics", "essentials-1", "essentials-2", "essentials-3")
 HANDS = ("RH", "LH", "BOTH")
-# Required-pattern kinds mirror the skill-spec pattern keys (PR #38); values ride in pitch/dur fields.
-PATTERNS = ("rhythm", "interval", "accidental", "pitch", "rest", "chord", "hands_together")
+# Required-pattern keys of docs/specs/skill-specs.md (content/skill-specs/*.json); a test checks every
+# pattern there encodes. Values ride in the pitch/dur fields or in the kind itself.
+PATTERN_KEYS = ("rhythm", "interval_min", "accidental", "pitch", "hand", "min_bar_share", "rest", "chord", "hands_together")
+INTERVAL_NUMBERS = range(2, 9)  # second .. octave
+SHARES = (25, 50, 75, 100)  # min_bar_share, rounded up to a quarter
 SECTIONS = tuple("ABCDEFGH")
 
 KINDS = (
@@ -37,7 +40,9 @@ KINDS = (
     + tuple(f"BARS_{n}" for n in range(1, MAX_BARS + 1))
     + tuple(f"COURSE_{c}" for c in COURSES)
     + tuple(f"HANDS_{h}" for h in HANDS)
-    + tuple(f"PAT_{p}" for p in PATTERNS)
+    + ("PAT", "PAT_rhythm", "PAT_accidental", "PAT_pitch", "PAT_hand_RH", "PAT_hand_LH", "PAT_rest", "PAT_chord", "PAT_hands_together")
+    + tuple(f"PAT_interval_min_{n}" for n in INTERVAL_NUMBERS)
+    + tuple(f"PAT_share_{x}" for x in SHARES)
     + ("PLAN", "PLAN_END", "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT")
     + tuple(f"SEC_{s}" for s in SECTIONS)
     + ("FIM_PRE", "FIM_SUF", "FIM_MID")
@@ -75,7 +80,7 @@ class Spec:
     durs: list[str]
     hands: str
     course: str = "none"
-    patterns: list[Step] | None = None  # pre-built PAT_* steps
+    patterns: list[dict] | None = None  # skill-spec `required` patterns
 
 
 def spec_from_song(song: dict) -> Spec:
@@ -112,8 +117,39 @@ def encode_spec(spec: Spec) -> list[Step]:
            step("RANGE_LO", pitch=spec.range_lo), step("RANGE_HI", pitch=spec.range_hi)]
     out += [step("DUR_ALLOW", dur=d) for d in spec.durs]
     out.append(step(f"HANDS_{spec.hands}"))
-    out += spec.patterns or []
+    for pattern in spec.patterns or []:
+        out += encode_pattern(pattern)
     out.append(step("SPEC_END"))
+    return out
+
+
+def encode_pattern(pattern: dict) -> list[Step]:
+    """One skill-spec `required` pattern as PAT followed by one step per key."""
+    unknown = set(pattern) - set(PATTERN_KEYS)
+    if unknown:
+        raise Unsupported(f"pattern keys {sorted(unknown)}")
+    out = [step("PAT")]
+    for k in PATTERN_KEYS:  # fixed order
+        if k not in pattern:
+            continue
+        v = pattern[k]
+        if k == "rhythm":
+            out.append(step("PAT_rhythm", dur=v))
+        elif k == "interval_min":
+            out.append(step(f"PAT_interval_min_{v}"))
+        elif k == "accidental":
+            out.append(step("PAT_accidental", pitch=f"{v}4"))  # pitch class, carried at octave 4
+        elif k == "pitch":
+            out.append(step("PAT_pitch", pitch=v))
+        elif k == "hand":
+            out.append(step(f"PAT_hand_{v}"))
+        elif k == "min_bar_share":
+            share = next(x for x in SHARES if x >= round(float(v) * 100))
+            out.append(step(f"PAT_share_{share}"))
+        elif v is True:
+            out.append(step(f"PAT_{k}"))
+        else:
+            raise Unsupported(f"pattern {k}={v!r}")
     return out
 
 
@@ -146,21 +182,45 @@ def encode_song(song: dict, spec: Spec | None = None) -> list[Step]:
     return [step("BOS")] + encode_spec(spec) + encode_bars(song["bars"]) + [step("END")]
 
 
+class InvalidSequence(ValueError):
+    """Steps that do not form a valid song (model output is decoded through this)."""
+
+
+_PREFIX_KINDS = ("PAD", "BOS", "PAT", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW", "PLAN", "PLAN_END",
+                 "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT", "FIM_PRE", "FIM_SUF", "FIM_MID")
+_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_")
+
+
 def decode(steps: list[Step]) -> dict:
-    """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH."""
+    """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH.
+
+    Raises InvalidSequence on anything encode_song cannot produce: out-of-range
+    ids, notes outside a hand, missing or extra fields, a CHORD without a NOTE,
+    a hand twice in a bar, no time or key, no bars. Bar lengths are not checked
+    here (the rubric and lint do that).
+    """
     kinds = FIELDS["kind"]
     time = key = None
     bars: list[dict] = []
     events: list[Event] | None = None
     hand = None
 
+    def bad(msg):
+        raise InvalidSequence(msg)
+
     def flush():
         if events is not None:
+            if not events:
+                bad(f"empty {hand} in bar {len(bars)}")
             bars[-1][hand] = format_hand(events)
 
-    for s in steps:
+    for i, s in enumerate(steps):
+        if len(s) != 4 or not all(0 <= v < len(FIELDS[f]) for v, f in zip(s, FIELDS)):
+            bad(f"step {i}: ids out of range {s}")
         kind = kinds[s[0]]
         pitch, dur, finger = PITCHES[s[1]], DURS[s[2]], FINGERS[s[3]]
+        if kind == NONE:
+            bad(f"step {i}: no kind")
         if kind.startswith("TIME_"):
             time = kind[5:]
         elif kind.startswith("KEY_"):
@@ -170,15 +230,27 @@ def decode(steps: list[Step]) -> dict:
             events, hand = None, None
             bars.append({})
         elif kind in ("RH", "LH"):
+            if not bars:
+                bad(f"step {i}: {kind} before BAR")
+            if kind in bars[-1] or kind == hand:
+                bad(f"step {i}: {kind} twice in bar {len(bars)}")
             flush()
             events, hand = [], kind
         elif kind in ("NOTE", "REST", "CHORD"):
             if events is None:
-                raise ValueError(f"{kind} outside a hand")
+                bad(f"step {i}: {kind} outside a hand")
+            if kind == "NOTE" and (pitch == NONE or dur == NONE):
+                bad(f"step {i}: NOTE needs pitch and dur")
+            if kind == "REST" and (dur == NONE or pitch != NONE or finger != NONE):
+                bad(f"step {i}: REST takes only dur")
             if kind == "CHORD":
+                if pitch == NONE or dur != NONE:
+                    bad(f"step {i}: CHORD takes pitch (and finger), no dur")
                 if not events or events[-1].is_rest:
-                    raise ValueError("CHORD without a preceding NOTE")
+                    bad(f"step {i}: CHORD without a preceding NOTE")
                 prev = events[-1]
+                if bool(prev.fingers) != (finger != NONE):
+                    bad(f"step {i}: fingering on some chord notes only")
                 prev.pitches.append(_pitch(pitch))
                 if finger != NONE:
                     prev.fingers.append(int(finger))
@@ -188,7 +260,16 @@ def decode(steps: list[Step]) -> dict:
             events.append(Event(p, dur, f))
         elif kind == "END":
             break
+        elif kind in _PREFIX_KINDS or kind.startswith(_PREFIX_GROUPS):
+            if bars:
+                bad(f"step {i}: {kind} after the first BAR")
+        else:
+            bad(f"step {i}: unexpected {kind}")
     flush()
+    if time is None or key is None:
+        bad("no TIME or KEY")
+    if not bars or any(not b for b in bars):
+        bad("no bars, or an empty bar")
     return {"time": time, "key": key, "bars": bars}
 
 

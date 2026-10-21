@@ -58,3 +58,50 @@ def test_vocab_size_and_sequence_length():
     assert total < 400
     longest = max(len(tk.encode_song(json.loads(p.read_text(encoding="utf-8")))) for p in SONGS)
     assert longest <= 1024, longest
+
+
+SKILL_SPECS = sorted((ROOT / "content" / "skill-specs").glob("*.json"))
+
+
+def test_every_skill_spec_pattern_encodes():
+    patterns = [p for f in SKILL_SPECS for node in json.loads(f.read_text(encoding="utf-8"))["nodes"] for p in node.get("required", [])]
+    assert len(patterns) > 20
+    for p in patterns:
+        steps = tk.encode_pattern(p)
+        assert tk.show(steps[0]) == "PAT" and len(steps) == 1 + len(p)
+
+
+def test_pattern_keys_match_skill_spec_doc():
+    doc = (ROOT / "docs" / "specs" / "skill-specs.md").read_text(encoding="utf-8")
+    for key in tk.PATTERN_KEYS:
+        assert f"`{key}`" in doc, key
+
+
+def test_unknown_pattern_key_raises():
+    with pytest.raises(Unsupported):
+        tk.encode_pattern({"tempo": 3})
+
+
+def ok_prefix():
+    return [tk.step("BOS"), tk.step("TIME_4/4"), tk.step("KEY_C")]
+
+
+@pytest.mark.parametrize("body,msg", [
+    ([tk.step("NOTE", pitch="C4", dur="4")], "outside a hand"),
+    ([tk.step("BAR"), tk.step("RH"), (tk._IDS["kind"]["NOTE"], tk._IDS["pitch"]["C4"], 0, 0)], "needs pitch and dur"),
+    ([tk.step("BAR"), tk.step("RH"), tk.step("CHORD", pitch="E4")], "without a preceding NOTE"),
+    ([tk.step("BAR"), tk.step("RH"), tk.step("REST", pitch="C4", dur="4")], "only dur"),
+    ([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("RH")], "twice"),
+    ([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1"), tk.step("BARS_8")], "after the first BAR"),
+    ([tk.step("BAR"), tk.step("RH")], "empty RH"),
+    ([tk.step("BAR"), tk.step("RH"), (999, 0, 0, 0)], "out of range"),
+    ([], "no bars"),
+])
+def test_decode_rejects_invalid(body, msg):
+    with pytest.raises(tk.InvalidSequence, match=msg):
+        tk.decode(ok_prefix() + body + [tk.step("END")])
+
+
+def test_decode_needs_time_and_key():
+    with pytest.raises(tk.InvalidSequence, match="TIME or KEY"):
+        tk.decode([tk.step("BAR"), tk.step("RH"), tk.step("NOTE", pitch="C4", dur="1")])

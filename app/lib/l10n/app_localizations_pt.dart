@@ -79,6 +79,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get freePlay => 'Toque livre';
 
   @override
+  String get noteNames => 'Dó,Dó♯,Ré,Ré♯,Mi,Fá,Fá♯,Sol,Sol♯,Lá,Lá♯,Si';
+
+  @override
+  String get freePlayHint =>
+      'Toque qualquer tecla. Use um teclado MIDI ou toque na tela.';
+
+  @override
+  String get octaveDown => 'Oitava mais grave';
+
+  @override
+  String get octaveUp => 'Oitava mais aguda';
+
+  @override
   String get freePlayDesc => 'Toque o que quiser no teclado MIDI ou na tela.';
 
   @override
