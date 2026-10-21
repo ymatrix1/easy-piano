@@ -13,6 +13,7 @@ import 'src/rust/api/notation.dart' as core;
 import 'src/rust/frb_generated.dart';
 import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
+import 'ui/staff/music_font.dart';
 import 'ui/staff/staff_spike_page.dart';
 
 Future<void> main() async {
@@ -27,6 +28,8 @@ Future<void> main() async {
   ).wait;
   repo.locale = appLocale.current.tag;
   runApp(EasyPianoApp(repo: repo, appLocale: appLocale));
+  // Non-critical assets load after the first frame.
+  SchedulerBinding.instance.addPostFrameCallback((_) => loadMusicFont());
 }
 
 class EasyPianoApp extends StatefulWidget {
