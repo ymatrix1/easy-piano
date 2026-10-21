@@ -34,8 +34,8 @@ void main() {
     expect(g.clefRight, greaterThan(g.clefX + space * 2.7));
 
     final t = StaffPainter.systemLayout(Staves.treble, space);
-    expect(t.systemX, 0);
-    expect(t.clefX, space * 0.8);
+    expect(t.systemX, space * 0.6);
+    expect(t.clefX - t.systemX, closeTo(space, 0.01));
   });
 
   test('note cover hides the clef area and clears at the anchor', () {

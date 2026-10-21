@@ -208,15 +208,15 @@ class StaffPainter extends CustomPainter {
   }
 
   /// Horizontal system layout in staff spaces. A grand staff starts with a
-  /// brace just left of the system line and the clefs one space after it;
-  /// a single staff has no brace or line, so its clef sits near the edge.
+  /// brace just left of the system line; a single staff has no brace. The
+  /// clef sits one space after the line in both.
   static ({double systemX, double clefX, double clefRight}) systemLayout(
     Staves staves,
     double space,
   ) {
     final grand = staves == Staves.grand;
-    final systemX = grand ? space * 2.2 : 0.0;
-    final clefX = grand ? systemX + space * 1.0 : space * 0.8;
+    final systemX = space * (grand ? 2.2 : 0.6);
+    final clefX = systemX + space * 1.0;
     // Clef glyphs are ~2.7 spaces wide; keep ~0.7 space clear after them.
     return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
   }
@@ -239,13 +239,9 @@ class StaffPainter extends CustomPainter {
     return (solid: solid, end: math.max(solid + space, anchorX));
   }
 
-  /// Grand staff band padding beyond the outer staff lines, in spaces. The
-  /// clefs may overhang it, as in the reference.
   /// Grand staff: spaces between the treble bottom line and the bass top
   /// line (reference: about 2; 3 leaves room for middle-C ledgers).
   static const staffGap = 3.0;
-
-  static const trebleBandPad = 0.0, bassBandPad = 0.0;
 
   bool get _hasTreble => staves != Staves.bass;
   bool get _hasBass => staves != Staves.treble;
@@ -301,6 +297,10 @@ class StaffPainter extends CustomPainter {
     final staffTop = _hasTreble ? trebleBottomY - space * 4 : bassTopY;
     final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
     final sys = systemLayout(staves, space);
+    final staffSpans = [
+      if (_hasTreble) (trebleBottomY - space * 4, trebleBottomY),
+      if (_hasBass) (bassTopY, bassTopY + space * 4),
+    ];
 
     // Band, staff lines, clefs and brace. Painted again over the notes
     // near the clefs (see the cover below), so keep it free of notes.
@@ -310,34 +310,16 @@ class StaffPainter extends CustomPainter {
           ..color = dimmed
               ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
               : bandColor!;
-        if (staves == Staves.grand) {
-          // One band per staff, stage colour between them (reference look).
-          for (final (top, bot, padSp) in [
-            (staffTop, trebleBottomY, trebleBandPad),
-            (bassTopY, staffBottom, bassBandPad),
-          ]) {
-            final r = Rect.fromLTRB(
-              sys.systemX,
-              top - space * padSp,
-              size.width,
-              bot + space * padSp,
-            );
-            canvas.drawRect(r, band);
-          }
-        } else {
+        // One band per staff, stage colour between them (reference look).
+        for (final (top, bot) in staffSpans) {
           canvas.drawRect(
-            Rect.fromLTRB(
-              0,
-              staffTop - space * 2.2,
-              size.width,
-              staffBottom + space * 2.2,
-            ),
+            Rect.fromLTRB(sys.systemX, top, size.width, bot),
             band,
           );
         }
       }
 
-      // Staff lines; a grand staff frames each staff in a heavy rectangle.
+      // Staff lines.
       for (var i = 0; i < 5; i++) {
         if (_hasTreble) {
           canvas.drawLine(
@@ -373,25 +355,23 @@ class StaffPainter extends CustomPainter {
           staff,
         );
       }
+      // Each staff framed by a heavy rectangle.
+      final frame = Paint()
+        ..color = staff
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = ink.strokeWidth * 2;
+      final inset = frame.strokeWidth / 2;
+      for (final (top, bot) in staffSpans) {
+        canvas.drawRect(
+          Rect.fromLTRB(sys.systemX, top, size.width - inset, bot),
+          frame,
+        );
+      }
       if (staves == Staves.grand) {
-        // Each staff framed by a heavy rectangle; the brace sits left of it.
-        final frame = Paint()
-          ..color = staff
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ink.strokeWidth * 2;
-        final inset = frame.strokeWidth / 2;
-        for (final (top, bot) in [
-          (staffTop, trebleBottomY),
-          (bassTopY, staffBottom),
-        ]) {
-          canvas.drawRect(
-            Rect.fromLTRB(sys.systemX, top, size.width - inset, bot),
-            frame,
-          );
-        }
+        // Brace left of the frames.
         final x0 = sys.systemX - space * 1.9,
-            top = staffTop - space * trebleBandPad,
-            bot = staffBottom + space * bassBandPad,
+            top = staffTop,
+            bot = staffBottom,
             mid = (top + bot) / 2,
             w = space * 1.4;
         final brace = Path()
