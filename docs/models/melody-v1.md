@@ -4,7 +4,7 @@ Checked: 2026-10-21. Code: `tools/melody-model/`. Spec: [melody-model](../specs/
 
 ## Purpose
 
-Generate short original practice tunes for an Easy Piano course node, conditioned on the node's spec (meter, key, bars, range, taught durations, hands, required patterns, level, style). Generation runs offline in the content pipeline (D17). A tune ships as content only after it passes the rubric (`content check`), the similarity filter (`content similar`, threshold 0.5, against our songs and every training tune) and human review. A browser demo runs the same model with onnxruntime-web (PR #48).
+Generate short original practice tunes for an Easy Piano course node, conditioned on the node's spec (meter, key, bars, range, taught durations, hands, required patterns, level, style). Generation runs offline in the content pipeline (D17). A tune ships as content only after it passes the rubric (`content check`) and human review. The similarity check (`content similar` against our songs and every training tune) runs and reports matches, but does not block for now (D27, proposed); reviewers see its flags. A browser demo runs the same model with onnxruntime-web (PR #48).
 
 ## Model
 
@@ -51,7 +51,7 @@ Weights: proposed in D24, not decided yet. Generated tunes: CC0-1.0 (D17).
 - **Both gates, 10 lesson nodes, 16 candidates each** (`releases/melody-model-v1.eval-generation.json`): **123 / 160 pass the rubric (77%)**; **0 pass the similarity gate.**
   - Why none pass: every top match is a ~10-note fragment with low information (scale runs, repeated figures) scoring 1.00 against the 39,615-tune corpus.
   - The 0.5 threshold was calibrated on our 40 songs (PR #34), so the gate needs calibration for corpus size before any tune can ship.
-  - Until then no generated tune is usable as content.
+  - Blocking is therefore off for now (D27); matches are reported for human review.
   - Earlier rubric-only run, before the gates were made fail-closed: 108 / 155 (70%).
 - **Browser:** in Chrome desktop with the int8 model, an 8-bar tune takes about 0.3–0.4 s (PR #48 has the method).
 - **Blind listening test:** pending (30 generated tunes + 6 control songs).
@@ -66,7 +66,7 @@ Weights: proposed in D24, not decided yet. Generated tunes: CC0-1.0 (D17).
 ## Known risks
 
 - **Memorised copyrighted melodies.** Flagged PDMX tunes (pop, film, game, licence-conflict scores) are in training by the user's decision (D21), so the model may reproduce phrases from them.
-  - Mitigation: every generated tune must pass `content similar` against the training set and our songs before use.
+  - Mitigation: `content similar` runs on every generated tune and its matches go to the reviewer; automatic blocking is off until the gate is calibrated (D27). Human review (D17) is the gate meanwhile.
   - Per-tune provenance allows retraining without any corpus or flag.
 - **Untested licence positions:** NMD transcriptions (D18), CC-BY-SA data (Mutopia), CC-BY dataset terms (PDMX). See OQ10 and D24.
 - **Style labels** are keyword-based; 12,999 PDMX tunes have none (bean piano-oial).
