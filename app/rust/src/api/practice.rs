@@ -1,8 +1,11 @@
 //! Bridge over the core session engine for the practice screen.
 //! Logic stays in `easy_piano_core::session`; this file only adapts types.
 
-use easy_piano_core::session::{ChordState, Feedback, SectionEvent, Timing, HandFilter, Input, Mode, NoteEvent, Session, Settings, WAIT_HINT_AFTER_US};
 use easy_piano_core::session::companion_notes;
+use easy_piano_core::session::{
+    ChordState, Feedback, HandFilter, Input, Mode, NoteEvent, SectionEvent, Session, Settings,
+    Timing, WAIT_HINT_AFTER_US,
+};
 use easy_piano_core::song::Song;
 use flutter_rust_bridge::frb;
 
@@ -111,7 +114,12 @@ pub fn companion(song_json: String, hand: String) -> Result<Vec<NoteView>, Strin
     let song = Song::from_json(&song_json)?;
     Ok(companion_notes(&song, hand_filter(&hand))
         .into_iter()
-        .map(|n| NoteView { pitch: n.pitch, beat: n.start_beat, beats: n.beats, part_name: n.part.key().to_string() })
+        .map(|n| NoteView {
+            pitch: n.pitch,
+            beat: n.start_beat,
+            beats: n.beats,
+            part_name: n.part.key().to_string(),
+        })
         .collect())
 }
 
@@ -159,7 +167,11 @@ impl PracticeSession {
         }
         let settings = Settings {
             // one_note drills run as wait mode until a dedicated flow exists (spec).
-            mode: if mode == "play_along" { Mode::PlayAlong } else { Mode::Wait },
+            mode: if mode == "play_along" {
+                Mode::PlayAlong
+            } else {
+                Mode::Wait
+            },
             input: match input.as_str() {
                 "mic" => Input::Mic,
                 "touch" => Input::Touch,
@@ -170,11 +182,17 @@ impl PracticeSession {
             pass_ratio,
             failed_attempts,
             // Reference: hint after 1 s in one-note drills, 4 s in note sequences.
-            hint_after_us: if mode == "one_note" { 1_000_000 } else { WAIT_HINT_AFTER_US },
+            hint_after_us: if mode == "one_note" {
+                1_000_000
+            } else {
+                WAIT_HINT_AFTER_US
+            },
             drill: mode == "one_note",
             training: training && mode == "play_along",
         };
-        Ok(PracticeSession { inner: Session::new(&song, settings) })
+        Ok(PracticeSession {
+            inner: Session::new(&song, settings),
+        })
     }
 
     #[frb(sync)]
@@ -242,9 +260,22 @@ impl PracticeSession {
                 intro: false,
                 passed: true,
             },
-            SectionEvent::Replay { section, beat, tempo, practice, intro, passed } => {
-                SectionEventView { section: section as u32, replay: true, beat, tempo, practice, intro, passed }
-            }
+            SectionEvent::Replay {
+                section,
+                beat,
+                tempo,
+                practice,
+                intro,
+                passed,
+            } => SectionEventView {
+                section: section as u32,
+                replay: true,
+                beat,
+                tempo,
+                practice,
+                intro,
+                passed,
+            },
         })
     }
 
@@ -255,7 +286,11 @@ impl PracticeSession {
             .take_feedback()
             .into_iter()
             .map(|f| match f {
-                Feedback::Hit { target, delta_us, timing } => FeedbackView {
+                Feedback::Hit {
+                    target,
+                    delta_us,
+                    timing,
+                } => FeedbackView {
                     kind: 0,
                     target: target as u32,
                     pitch: 0,
@@ -317,4 +352,19 @@ impl PracticeSession {
 #[frb(sync)]
 pub fn check_generated(song_json: String, node_json: String) -> Vec<String> {
     easy_piano_core::rubric::check_generated(&song_json, &node_json)
+}
+
+/// Endless practice: the song's bars with `BASS` / `ACC` / `DRUMS` written in
+/// (`easy_piano_core::accompany`), as a JSON array. `hands` lists the hands
+/// the learner plays (`RH`, `LH`); those are never doubled.
+#[frb(sync)]
+pub fn accompany_bars(
+    song_json: String,
+    style: String,
+    hands: Vec<String>,
+) -> Result<String, String> {
+    let song = Song::from_json(&song_json)?;
+    let played: Vec<&str> = hands.iter().map(String::as_str).collect();
+    let out = easy_piano_core::accompany::accompany(&song, &style, &played);
+    serde_json::to_string(&out.bars).map_err(|e| e.to_string())
 }

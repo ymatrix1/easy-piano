@@ -20,7 +20,10 @@ pub fn start() -> Result<crate::api::audio::AudioInfo, String> {
         *guard = Some(Player::start()?);
     }
     let p = guard.as_ref().unwrap();
-    Ok(crate::api::audio::AudioInfo { sample_rate: p.rate(), latency_ms: p.latency_ms() })
+    Ok(crate::api::audio::AudioInfo {
+        sample_rate: p.rate(),
+        latency_ms: p.latency_ms(),
+    })
 }
 
 pub fn add_sample(kind: &str, key: u8, mp3: Vec<u8>) -> Result<(), String> {
@@ -45,10 +48,21 @@ pub fn add_sample(kind: &str, key: u8, mp3: Vec<u8>) -> Result<(), String> {
 }
 
 pub fn note(instrument: &str, part: &str, pitch: u8, start: f64, dur: f64, velocity: u8) {
-    let Some(instrument) = Instrument::from_key(instrument) else { return };
+    let Some(instrument) = Instrument::from_key(instrument) else {
+        return;
+    };
     with(|p| {
         let dur = p.frames(dur);
-        p.schedule_in(start, Sound::Note { instrument, part: Part::from_key(part), pitch, dur, velocity })
+        p.schedule_in(
+            start,
+            Sound::Note {
+                instrument,
+                part: Part::from_key(part),
+                pitch,
+                dur,
+                velocity,
+            },
+        )
     });
 }
 

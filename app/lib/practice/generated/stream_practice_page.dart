@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../content/content_repo.dart';
@@ -456,7 +458,8 @@ class _StreamPracticePageState extends State<StreamPracticePage> {
       feed.addListener(
         () => debugPrint(
           'practice stream: ${stream.chunks} chunks, last '
-          '${stream.chunkMs.last} ms, ended ${feed.ended}',
+          '${stream.chunkMs.last} ms, ended ${feed.ended}, parts '
+          '${(((jsonDecode(feed.json) as Map)['bars'] as List).last as Map).keys.join('+')}',
         ),
       );
       setState(() {

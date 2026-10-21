@@ -376,6 +376,7 @@ dependencies = [
  "easy_piano_audio",
  "easy_piano_core",
  "flutter_rust_bridge",
+ "serde_json",
 ]
 
 [[package]]

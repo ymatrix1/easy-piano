@@ -32,6 +32,19 @@ List<String> checkGenerated({
   nodeJson: nodeJson,
 );
 
+/// Endless practice: the song's bars with `BASS` / `ACC` / `DRUMS` written in
+/// (`easy_piano_core::accompany`), as a JSON array. `hands` lists the hands
+/// the learner plays (`RH`, `LH`); those are never doubled.
+String accompanyBars({
+  required String songJson,
+  required String style,
+  required List<String> hands,
+}) => RustLib.instance.api.crateApiPracticeAccompanyBars(
+  songJson: songJson,
+  style: style,
+  hands: hands,
+);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PracticeSession>>
 abstract class PracticeSession implements RustOpaqueInterface {
   /// `mode`: "wait" | "play_along" | "one_note"; `input`: "midi" | "mic" | "touch";

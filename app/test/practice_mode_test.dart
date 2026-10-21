@@ -281,6 +281,31 @@ void main() {
       },
     );
 
+    test('each chunk gets backing parts for the hands not played', () async {
+      final gen = _FakeGenerator([
+        [_cand('C4:4 D4:4 E4:4 D4:4')],
+      ]);
+      final calls = <(String, List<String>)>[];
+      final s = PracticeStream(
+        gen,
+        _settings(),
+        rubric: _rubric,
+        accompany: (song, style, hands) {
+          calls.add((style, hands));
+          final bars = (jsonDecode(song) as Map)['bars'] as List;
+          return jsonEncode([
+            for (final b in bars) {...b as Map, 'BASS': 'C2:1'},
+          ]);
+        },
+      );
+      final feed = await s.start();
+      final bars = (jsonDecode(feed.json) as Map)['bars'] as List;
+      expect(bars, hasLength(4), reason: 'only the new chunk is accompanied');
+      expect(bars.every((b) => (b as Map)['BASS'] == 'C2:1'), isTrue);
+      expect(calls.first.$1, 'jazz');
+      expect(calls.first.$2, ['RH']);
+    });
+
     test('note values must fill a bar', () {
       expect(fillsBar(['4'], '4/4'), isTrue);
       expect(fillsBar(['2.'], '4/4'), isFalse);
