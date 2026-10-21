@@ -12,7 +12,8 @@ import 'package:easy_piano/input/mic/note_detector.dart';
 const _tolerance = 0.05;
 
 void main(List<String> args) {
-  final dir = Directory(args.isEmpty ? '../tools/mic-fixtures' : args.first);
+  final paths = args.where((a) => !a.startsWith('-')).toList();
+  final dir = Directory(paths.isEmpty ? '../tools/mic-fixtures' : paths.first);
   final truth = jsonDecode(
     File('${dir.path}/truth.json').readAsStringSync(),
   ) as Map<String, dynamic>;
@@ -21,7 +22,18 @@ void main(List<String> args) {
   for (final entry in truth.entries) {
     final info = entry.value as Map<String, dynamic>;
     final (sr, samples) = _readWav(File('${dir.path}/${entry.key}'));
-    final det = NoteDetector(sampleRate: sr.toDouble());
+    double arg(String k, double d) => double.parse(
+      args
+          .firstWhere((a) => a.startsWith('--$k='), orElse: () => '=$d')
+          .split('=')
+          .last,
+    );
+    final det = NoteDetector(
+      sampleRate: sr.toDouble(),
+      fluxGamma: arg('gamma', 100),
+      fluxRatio: arg('ratio', 1.5),
+      fluxDelta: arg('delta', 3.0),
+    );
     final found = <DetectedNote>[];
     for (var i = 0; i < samples.length; i += 128) {
       final end = i + 128 < samples.length ? i + 128 : samples.length;

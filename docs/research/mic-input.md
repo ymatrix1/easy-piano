@@ -2,7 +2,7 @@
 
 Checked: 2026-10-20. Bean: piano-mlyf. Decision: [D18](../DECISIONS.md). Code: `app/lib/input/mic/`, `app/web/mic_worklet.js`, `app/tool/mic_eval.dart`, `tools/mic_fixtures.py`.
 
-Sources: app piano samples (`app/assets/piano`, midi-js-soundfonts, MIT); Klapuri, "Multiple fundamental frequency estimation by summing harmonic amplitudes" (ISMIR 2006) for the salience/removal idea; Bello et al., "A tutorial on onset detection in music signals" (2005) for spectral flux; [song-import.md](song-import.md) for Basic Pitch.
+Sources: app piano samples (`app/assets/piano`: Salamander Grand Piano V3, CC-BY 3.0, since PR #49; first run used the earlier midi-js-soundfonts set, MIT); Klapuri, "Multiple fundamental frequency estimation by summing harmonic amplitudes" (ISMIR 2006) for the salience/removal idea; Bello et al., "A tutorial on onset detection in music signals" (2005) for spectral flux; [song-import.md](song-import.md) for Basic Pitch.
 
 ## Question
 
@@ -29,28 +29,40 @@ Can a small, dependency-free detector find beginner-level piano notes and chords
 | melody | 2 | Ode to Joy, Twinkle Twinkle (PD), legato with repeated notes |
 | two-hands | 1 | Ode to Joy melody over held bass |
 
-Conditions: **clean** band-pass 120 Hz–7 kHz, 50 dB SNR; **room** + synthetic room tail (70 ms decay, direct-to-reverb +3 dB), 35 dB SNR; **noisy** same with 20 dB SNR. Notes come from the app's own samples, pitch-shifted ≤1.5 semitones, random velocity 0.5–1.
+Conditions: **clean** band-pass 120 Hz–7 kHz, 50 dB SNR; **room** + synthetic room tail (70 ms decay, direct-to-reverb +3 dB), 35 dB SNR; **noisy** same with 20 dB SNR. Notes come from the app's own piano samples (Salamander Grand, natural decay), pitch-shifted ≤1.5 semitones, random velocity 0.5–1.
 
 **Scoring** (`cd app && dart run tool/mic_eval.dart`): a detected note-on is a hit if pitch matches and onset is within ±50 ms of a truth note (each matched once). Onset error = detected onset − truth. Report delay = time the detector had the note − truth onset (pure algorithm, no audio I/O).
 
 ## Results
 
+Scored 2026-10-21 with the Salamander piano and flux settings γ=100, ratio 1.5, δ=3 (`NoteDetector` defaults):
+
 ```
 | Group | Notes | P | R | F1 | Onset error mean / p95 (ms) | Report delay p50 / p95 (ms) |
 |---|---|---|---|---|---|---|
-| all | 309 | 0.861 | 0.922 | 0.891 | 2.7 / 12 | 101 / 108 |
-| clean | 103 | 0.960 | 0.942 | 0.951 | 0.5 / 14 | 97 / 108 |
-| room | 103 | 0.826 | 0.922 | 0.872 | 3.2 / 13 | 101 / 109 |
-| noisy | 103 | 0.809 | 0.903 | 0.853 | 4.6 / 11 | 102 / 107 |
-| single | 93 | 0.818 | 0.968 | 0.887 | 2.2 / 6 | 99 / 103 |
-| chord | 93 | 0.929 | 0.849 | 0.888 | 0.4 / 16 | 98 / 107 |
-| melody | 87 | 0.838 | 0.954 | 0.892 | 5.2 / 13 | 103 / 111 |
-| two-hands | 36 | 0.892 | 0.917 | 0.904 | 3.7 / 15 | 101 / 112 |
+| all | 309 | 0.869 | 0.861 | 0.865 | 13.2 / 23 | 111 / 120 |
+| clean | 103 | 0.860 | 0.893 | 0.876 | 12.8 / 22 | 110 / 119 |
+| room | 103 | 0.921 | 0.903 | 0.912 | 13.5 / 23 | 111 / 120 |
+| noisy | 103 | 0.827 | 0.786 | 0.806 | 13.3 / 22 | 111 / 119 |
+| single | 93 | 0.781 | 0.882 | 0.828 | 12.9 / 15 | 110 / 112 |
+| chord | 93 | 0.859 | 0.785 | 0.820 | 9.8 / 15 | 109 / 112 |
+| melody | 87 | 0.965 | 0.943 | 0.953 | 15.7 / 23 | 112 / 121 |
+| two-hands | 36 | 0.935 | 0.806 | 0.866 | 15.7 / 27 | 111 / 125 |
 ```
 
-Against PRD targets (mono F1 ≥ 0.9, 3-note chords ≥ 0.75): single notes 0.887 (just under), melodies 0.892, chords 0.888 (above).
+Against PRD targets (mono F1 ≥ 0.9, 3-note chords ≥ 0.75): single notes 0.828 and melodies 0.953 (mono below/above), chords 0.820 (above).
 
-**Where it fails** (from `-v`):
+**Tuning history.** The first run (2026-10-20, midi-js samples, γ=1000, ratio 1.8, δ=4) scored F1 0.891. Re-scored on the Salamander piano with those settings it fell to 0.777, noisy recall 0.330: the stronger log compression let background noise raise the flux median so real attacks stayed under the threshold. Same failure a student saw with a real mic ("didn't hear enough notes"). Grid over γ ∈ {10, 30, 100, 300, 1000}, ratio ∈ {1.3–1.8}, δ ∈ {0.5–4} picked the current values (`dart run tool/mic_eval.dart --gamma= --ratio= --delta=`).
+
+| Settings | All F1 | Noisy R | Noisy F1 |
+|---|---|---|---|
+| γ1000 r1.8 δ4 (old) | 0.777 | 0.330 | 0.466 |
+| γ100 r1.5 δ3 (new) | 0.865 | 0.786 | 0.806 |
+| γ30 r1.5 δ1.5 | 0.867 | 0.864 | 0.840 (lower clean/chord precision) |
+
+Onset error now has a +13 ms bias: the Salamander files start with ~13 ms of silence. Calibration absorbs a constant offset.
+
+**Where it failed** (first run, midi-js samples, from `-v`; same classes remain):
 
 | Error | Count (of 138 clips) | Cause |
 |---|---|---|

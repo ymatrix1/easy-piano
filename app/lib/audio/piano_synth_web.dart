@@ -17,12 +17,7 @@ const _sampleNames = ['C', 'Eb', 'Gb', 'A'];
 
 /// A pitched instrument: asset folder, sample range and sustain loop.
 class _Instrument {
-  const _Instrument(
-    this.dir,
-    this.lowOctave,
-    this.highOctave, {
-    this.loop,
-  });
+  const _Instrument(this.dir, this.lowOctave, this.highOctave, {this.loop});
 
   final String dir;
   final int lowOctave;

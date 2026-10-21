@@ -33,6 +33,9 @@ class NoteDetector {
     this.maxPolyphony = 4,
     this.secondNoteRatio = 0.3,
     this.maxHold = 0.6,
+    this.fluxGamma = 100,
+    this.fluxRatio = 1.5,
+    this.fluxDelta = 3.0,
   }) : _fluxN = _pow2(sampleRate * 0.021),
        _pitchN = _pow2(sampleRate * 0.08) {
     _fluxHop = _fluxN ~/ 2;
@@ -49,6 +52,12 @@ class NoteDetector {
 
   /// A further chord note must reach this share of the strongest one's salience.
   final double secondNoteRatio;
+
+  /// Onset threshold: log compression of the flux spectrum, and flux must
+  /// exceed recent median × [fluxRatio] + [fluxDelta].
+  final double fluxGamma;
+  final double fluxRatio;
+  final double fluxDelta;
 
   /// Longest a detected note stays "on", in seconds.
   final double maxHold;
@@ -141,7 +150,7 @@ class NoteDetector {
     final lo = (60 * _fluxN / sampleRate).ceil();
     var flux = 0.0;
     for (var k = lo; k < mag.length; k++) {
-      final m = math.log(1 + 1000 * mag[k]);
+      final m = math.log(1 + fluxGamma * mag[k]);
       final d = m - _prevFlux[k];
       if (d > 0) flux += d;
       _prevFlux[k] = m;
@@ -150,7 +159,7 @@ class NoteDetector {
     if (_fluxHistory.length > 40) _fluxHistory.removeAt(0);
     final sorted = [..._fluxHistory]..sort();
     final median = sorted[sorted.length ~/ 2];
-    final threshold = median * 1.8 + 4.0;
+    final threshold = median * fluxRatio + fluxDelta;
     // Peak picking: report on the frame where flux stops rising.
     final end = start + _fluxN;
     if (flux > threshold && flux > _lastFlux) {

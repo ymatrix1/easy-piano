@@ -1,7 +1,8 @@
 """Renders the mic-detector fixture set (docs/research/mic-input.md).
 
-Clips are built from the app's own MIT-licensed piano samples
-(app/assets/piano, midi-js-soundfonts), never from third-party recordings.
+Clips are built from the app's own piano samples
+(app/assets/piano: Salamander Grand V3, CC-BY 3.0), never from other
+recordings.
 Each clip is degraded like a phone/laptop mic in a room: band-pass, a short
 synthetic reverb and background noise. Output (WAV + truth.json) goes to
 tools/mic-fixtures/ which is git-ignored; rerun to regenerate.
