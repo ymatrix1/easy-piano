@@ -38,13 +38,14 @@ void main() {
     expect(t.clefX, space * 0.8);
   });
 
-  test('note fade is clear of the clefs and opaque at the anchor', () {
-    const space = 14.0, width = 390.0;
+  test('note cover hides the clef area and clears at the anchor', () {
+    const space = 14.0;
     final g = StaffPainter.systemLayout(Staves.grand, space);
-    final f = StaffPainter.edgeFade(width, g.clefRight, 96, space).stops;
-    expect(f[0] * width, closeTo(g.clefRight, 0.01)); // alpha 0 at clef edge
-    expect(f[1] * width, lessThanOrEqualTo(96)); // opaque at anchor
-    expect(f[2] * width, closeTo(width - space * 3, 0.01));
-    expect(f[3], 1.0);
+    final play = StaffPainter.coverRange(g.clefRight, 104, space, wait: false);
+    expect(play.solid, closeTo(g.clefRight - space, 0.01));
+    expect(play.end, 104); // clear at the play bar
+    final wait = StaffPainter.coverRange(g.clefRight, 96, space, wait: true);
+    expect(wait.solid, 0);
+    expect(wait.end, lessThan(96)); // current note never covered
   });
 }

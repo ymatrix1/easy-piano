@@ -200,21 +200,22 @@ class StaffPainter extends CustomPainter {
     return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
   }
 
-  /// Gradient stops (fractions of [width]) for the note fade: transparent at
-  /// [clefRight], opaque 2 spaces later (never later than [anchorX], so the
-  /// note at the play bar or page start is always fully drawn), opaque until
-  /// 3 spaces before the right edge, transparent at the edge.
-  static ({List<double> stops}) edgeFade(
-    double width,
+  /// Horizontal extent of the background cover drawn over the notes:
+  /// opaque up to [solid], linear fade to clear at [end]. Play-along: solid
+  /// ends one space before the clefs' right edge and the fade ends at the
+  /// play bar. Wait mode: the fade runs from the left edge to half a
+  /// notehead before the page start, so the current note is never covered.
+  static ({double solid, double end}) coverRange(
     double clefRight,
     double anchorX,
-    double space,
-  ) {
-    final a = (clefRight / width).clamp(0.0, 1.0);
-    final b = (math.min(clefRight + space * 2, anchorX) / width).clamp(a, 1.0);
-    final d = 1.0;
-    final c = ((width - space * 3) / width).clamp(b, d);
-    return (stops: [a, b, c, d]);
+    double space, {
+    required bool wait,
+  }) {
+    if (wait) {
+      return (solid: 0.0, end: math.max(0.0, anchorX - space * 0.6));
+    }
+    final solid = math.max(0.0, clefRight - space);
+    return (solid: solid, end: math.max(solid + space, anchorX));
   }
 
   bool get _hasTreble => staves != Staves.bass;
@@ -272,97 +273,103 @@ class StaffPainter extends CustomPainter {
     final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
     final sys = systemLayout(staves, space);
 
-    if (bandColor != null) {
-      canvas.drawRect(
-        Rect.fromLTRB(
-          0,
-          staffTop - space * 2.2,
-          size.width,
-          staffBottom + space * 2.2,
-        ),
-        Paint()
-          ..color = dimmed
-              ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
-              : bandColor!,
-      );
-    }
+    // Band, staff lines, clefs and brace. Painted again over the notes
+    // near the clefs (see the cover below), so keep it free of notes.
+    void paintBackground() {
+      if (bandColor != null) {
+        canvas.drawRect(
+          Rect.fromLTRB(
+            0,
+            staffTop - space * 2.2,
+            size.width,
+            staffBottom + space * 2.2,
+          ),
+          Paint()
+            ..color = dimmed
+                ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
+                : bandColor!,
+        );
+      }
 
-    // Staff lines.
-    for (var i = 0; i < 5; i++) {
+      // Staff lines.
+      for (var i = 0; i < 5; i++) {
+        if (_hasTreble) {
+          canvas.drawLine(
+            Offset(sys.systemX, trebleBottomY - i * space),
+            Offset(size.width, trebleBottomY - i * space),
+            ink,
+          );
+        }
+        if (_hasBass) {
+          canvas.drawLine(
+            Offset(sys.systemX, bassTopY + i * space),
+            Offset(size.width, bassTopY + i * space),
+            ink,
+          );
+        }
+      }
+      // Clefs: G clef origin on G4 line, F clef origin on F3 line.
       if (_hasTreble) {
-        canvas.drawLine(
-          Offset(sys.systemX, trebleBottomY - i * space),
-          Offset(size.width, trebleBottomY - i * space),
-          ink,
+        _drawGlyph(
+          canvas,
+          Smufl.gClef,
+          glyphSize,
+          Offset(sys.clefX, trebleBottomY - space),
+          staff,
         );
       }
       if (_hasBass) {
+        _drawGlyph(
+          canvas,
+          Smufl.fClef,
+          glyphSize,
+          Offset(sys.clefX, bassTopY + space),
+          staff,
+        );
+      }
+      if (staves == Staves.grand) {
+        // System line, then the brace just left of it.
         canvas.drawLine(
-          Offset(sys.systemX, bassTopY + i * space),
-          Offset(size.width, bassTopY + i * space),
+          Offset(sys.systemX, staffTop),
+          Offset(sys.systemX, staffBottom),
           ink,
+        );
+        final x0 = sys.systemX - space * 1.25,
+            top = staffTop,
+            bot = staffBottom,
+            mid = (top + bot) / 2,
+            w = space * 0.9;
+        final brace = Path()
+          ..moveTo(x0 + w, top)
+          ..cubicTo(
+            x0,
+            top + (mid - top) * 0.15,
+            x0 + w,
+            mid - (mid - top) * 0.25,
+            x0,
+            mid,
+          )
+          ..cubicTo(
+            x0 + w,
+            mid + (bot - mid) * 0.25,
+            x0,
+            bot - (bot - mid) * 0.15,
+            x0 + w,
+            bot,
+          );
+        canvas.drawPath(
+          brace,
+          Paint()
+            ..color = staff
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = space * 0.35
+            ..strokeCap = StrokeCap.round,
         );
       }
     }
-    // Clefs: G clef origin on G4 line, F clef origin on F3 line.
-    if (_hasTreble) {
-      _drawGlyph(
-        canvas,
-        Smufl.gClef,
-        glyphSize,
-        Offset(sys.clefX, trebleBottomY - space),
-        staff,
-      );
-    }
-    if (_hasBass) {
-      _drawGlyph(
-        canvas,
-        Smufl.fClef,
-        glyphSize,
-        Offset(sys.clefX, bassTopY + space),
-        staff,
-      );
-    }
+
+    paintBackground();
     final clefRight = sys.clefRight;
-    if (staves == Staves.grand) {
-      // System line, then the brace just left of it.
-      canvas.drawLine(
-        Offset(sys.systemX, staffTop),
-        Offset(sys.systemX, staffBottom),
-        ink,
-      );
-      final x0 = sys.systemX - space * 1.25,
-          top = staffTop,
-          bot = staffBottom,
-          mid = (top + bot) / 2,
-          w = space * 0.9;
-      final brace = Path()
-        ..moveTo(x0 + w, top)
-        ..cubicTo(
-          x0,
-          top + (mid - top) * 0.15,
-          x0 + w,
-          mid - (mid - top) * 0.25,
-          x0,
-          mid,
-        )
-        ..cubicTo(
-          x0 + w,
-          mid + (bot - mid) * 0.25,
-          x0,
-          bot - (bot - mid) * 0.15,
-          x0 + w,
-          bot,
-        );
-      canvas.drawPath(
-        brace,
-        Paint()
-          ..color = staff
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = space * 0.35
-          ..strokeCap = StrokeCap.round,
-      );
-    }
     final bpb = beatsPerBar;
     if (bpb != null && bpb > 0) {
       final now0 = scrollBeat.value;
@@ -377,36 +384,40 @@ class StaffPainter extends CustomPainter {
       }
     }
 
-    // Play bar with a soft glow trail behind it (play-along only).
-    if (showPlayLine) {
-      // Spans the whole band (band is staff ± 2.2 spaces).
-      final top = staffTop - space * 2.2, bottom = staffBottom + space * 2.2;
-      final glowRect = Rect.fromLTRB(
-        anchorX - space * 2.6,
-        top,
-        anchorX,
-        bottom,
-      );
-      canvas.drawRect(
-        glowRect,
-        Paint()
-          ..shader = LinearGradient(
-            colors: [
-              playheadColor.withValues(alpha: 0),
-              playheadColor.withValues(alpha: 0.55),
-            ],
-          ).createShader(glowRect),
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(anchorX - 2.5, top, anchorX + 2.5, bottom),
-          const Radius.circular(3),
-        ),
-        Paint()
-          ..color = playheadColor
-          ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 4),
-      );
+    void paintPlayBar() {
+      // Play bar with a soft glow trail behind it (play-along only).
+      if (showPlayLine) {
+        // Spans the whole band (band is staff ± 2.2 spaces).
+        final top = staffTop - space * 2.2, bottom = staffBottom + space * 2.2;
+        final glowRect = Rect.fromLTRB(
+          anchorX - space * 2.6,
+          top,
+          anchorX,
+          bottom,
+        );
+        canvas.drawRect(
+          glowRect,
+          Paint()
+            ..shader = LinearGradient(
+              colors: [
+                playheadColor.withValues(alpha: 0),
+                playheadColor.withValues(alpha: 0.55),
+              ],
+            ).createShader(glowRect),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTRB(anchorX - 2.5, top, anchorX + 2.5, bottom),
+            const Radius.circular(3),
+          ),
+          Paint()
+            ..color = playheadColor
+            ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 4),
+        );
+      }
     }
+
+    paintPlayBar();
 
     // Waiting beam over the current note (wait stages).
     final beamA = waitBeamOpacity?.call() ?? 0;
@@ -440,16 +451,12 @@ class StaffPainter extends CustomPainter {
     final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final current = currentIndex?.call();
     double? lastX;
-    // Notes go on their own layer so a horizontal alpha mask can fade them
-    // in at the right edge and out before they reach the clef area.
-    final fade = edgeFade(size.width, clefRight, anchorX, space);
-    canvas.saveLayer(Offset.zero & size, Paint());
     for (var i = _lowerBound(firstBeat); i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       final x = anchorX + (n.beat - now) * pixelsPerBeat;
       lastX = x;
-      if (x + space * 2 < clefRight) continue; // faded out behind the clef
+      if (x + space * 2 < 0) continue; // off screen; the cover hides the rest
       final onBass = _onBass(n);
       final step = diatonicStep(n.pitch);
       final y = _noteY(n.pitch, onBass, l);
@@ -526,21 +533,31 @@ class StaffPainter extends CustomPainter {
       }
     }
 
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..blendMode = BlendMode.dstIn
-        ..shader = LinearGradient(
-          colors: const [
-            Color(0x00000000),
-            Color(0xFF000000),
-            Color(0xFF000000),
-            Color(0x00000000),
-          ],
-          stops: fade.stops,
-        ).createShader(Offset.zero & size),
-    );
-    canvas.restore();
+    // Cover: a copy of the background laid over the notes, opaque at the
+    // clefs and fading to clear at the play bar / page start, so passing
+    // notes ghost into the band and slide under crisp clefs.
+    final cover = coverRange(clefRight, anchorX, space, wait: !showPlayLine);
+    if (cover.end > 0) {
+      final rect = Rect.fromLTRB(0, 0, cover.end, size.height);
+      canvas.saveLayer(rect, Paint());
+      canvas.clipRect(rect);
+      paintBackground();
+      paintPlayBar();
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = LinearGradient(
+            colors: const [
+              Color(0xFF000000),
+              Color(0xFF000000),
+              Color(0x00000000),
+            ],
+            stops: [0, cover.solid / cover.end, 1],
+          ).createShader(rect),
+      );
+      canvas.restore();
+    }
 
     if (showEndCheck && lastX != null) {
       final c = Offset(lastX + space * 4, (staffTop + staffBottom) / 2);
