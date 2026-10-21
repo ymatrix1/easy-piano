@@ -1,14 +1,14 @@
 # Constrained melody generation
 
-Checked: 2026-10-16. Bean: piano-ze9t. Status: researched, not implemented.
+Checked: 2026-10-16, updated 2026-10-21. Bean: piano-ze9t. Status: partly superseded. The level rubric (D17, `core/src/rubric.rs`), similarity gate (PR #34), listening test (PR #33), Magenta spike (PR #39) and our own model (D20, PRs #41–#48) now exist; this page keeps the evaluation criteria and the rule-based option as a baseline.
 
 Sources:
 - Algorithmic composition basics: constraint programming, Markov models, genetic algorithms.
 - Magenta / magenta.js: <https://magenta.withgoogle.com/>, <https://github.com/magenta/magenta-js> (code Apache-2.0).
-- M(AI)DI / MusicLang: <https://maidi.readthedocs.io/en/latest/>, model card <https://huggingface.co/musiclang/musiclang-v2> (code GPL-3.0; model "specific licenses, contact us" for product use).
+- M(AI)DI / MusicLang: <https://maidi.readthedocs.io/en/latest/>, model card <https://huggingface.co/musiclang/musiclang-v2>. Code: [`MusicLang/maidi`](https://github.com/MusicLang/maidi) is Apache-2.0; [`MusicLang/musiclang_predict`](https://github.com/MusicLang/musiclang_predict) is GPL-3.0 (GitHub licence field, checked 2026-10-21). Model: "specific licenses, contact us" for product use (model card, not re-checked).
 - Anticipatory Music Transformer (not checked yet).
 
-No code or data was fetched for this doc.
+No code or data was fetched for this doc. Licence cells come from project pages; only the MusicLang code licences and the Magenta code licence were confirmed via the GitHub licence field (2026-10-21). Treat the rest as unverified.
 
 ## Question
 
@@ -44,8 +44,8 @@ They should also be deterministic for a given seed and be our own CC0 content.
 
 | Tool | What it does | License | Fit |
 |---|---|---|---|
-| **Magenta** (MusicVAE, MelodyRNN, ImprovRNN; magenta.js in the browser) | Sample, interpolate, continue melodies; ImprovRNN conditions on chords | Code Apache-2.0; checkpoint terms not confirmed | **Candidate for motif ideas, offline only.** It ignores hard constraints, so its output must pass our filter. The TensorFlow stack is ageing. |
-| **M(AI)DI / MusicLang** | Generate ideas and control the chord progression; continue songs; transitions | Code GPL-3.0; model needs a separate license for products | **Not for shipping.** Product use requires contacting the authors (as with MuScriptor's CC BY-NC). It is a heavy Python model and won't run in the app. At most a local reference, like MuScriptor. |
+| **Magenta** (MusicVAE, MelodyRNN, ImprovRNN; magenta.js in the browser) | Sample, interpolate, continue melodies; ImprovRNN conditions on chords | Code Apache-2.0; checkpoints have **no stated licence** ([magenta-feasibility.md](magenta-feasibility.md)) | Plain sampling ignores hard constraints (0/600 valid), but masked sampling passes every rule (PR #39). Blocked for shipped content by the missing weight licence. The TensorFlow stack is ageing. |
+| **M(AI)DI / MusicLang** | Generate ideas and control the chord progression; continue songs; transitions | `maidi` Apache-2.0, `musiclang_predict` GPL-3.0; model needs a separate licence for products | **Not for shipping.** Product use of the model requires contacting the authors (as with MuScriptor's CC BY-NC). It is a heavy Python model and won't run in the app. At most a local reference. |
 | Anticipatory Music Transformer | Infilling under constraints | Not checked | Follow-up |
 
 Takeaway: models are good at ideas and bad at rules. None replaces a rule-based generator.
@@ -79,11 +79,11 @@ Takeaway: models are good at ideas and bad at rules. None replaces a rule-based 
 
 | Step | Output |
 |---|---|
-| 1. Machine-readable level rubric (shared with piano-1zn6) | `content/levels/rubric.json` or Rust table |
+| 1. Machine-readable level rubric (shared with piano-1zn6) | **Done:** `core/src/rubric.rs`, `content/skill-specs/`, D17 |
 | 2. `content generate --level N --seed S` (constraints only) | Valid but plain melodies |
 | 3. Add harmony, motif and score | Ranked candidates |
-| 4. Listen test: 10 samples per level 1–3, rule-based vs. with Magenta motifs | Ratings table appended here |
-| 5. Proposed decision: generator role, LLM yes/no, Magenta yes/no | `docs/DECISIONS.md` |
+| 4. Listen test: 10 samples per level 1–3, rule-based vs. Magenta vs. our model | Tools done: `tools/listening-test/` (PR #33), similarity gate `content-cli similar` (PR #34); ratings pending |
+| 5. Proposed decision: generator role, LLM yes/no, Magenta yes/no | `docs/DECISIONS.md`; reconcile with D20 (own compound-token model, proposed), where the rule-based generator becomes the baseline and fallback |
 
 ## Fit
 
@@ -99,5 +99,6 @@ Takeaway: models are good at ideas and bad at rules. None replaces a rule-based 
 
 ## Follow-ups
 
-- piano-ze9t: run the spike above.
-- Check Magenta checkpoint terms and the Anticipatory Music Transformer license before step 4.
+- piano-ze9t: steps 2–3 (rule-based baseline) and step 4 ratings are still open.
+- Anticipatory Music Transformer licence: not checked.
+- Magenta checkpoint terms: answered (none stated), see magenta-feasibility.md.
