@@ -145,3 +145,16 @@ Masks at each step:
 | Unused fields | `<none>` |
 
 Candidates are ranked by mean log probability under the masked distributions. Chrome desktop timings: [melody-browser.md](../research/melody-browser.md).
+
+## Generation (`melody_model/generate.py`)
+
+```
+python -m melody_model.generate --run base1 --node essentials-1/rests -n 16 --key C --style folk --out data/melody/gen/rests
+```
+
+- Spec from the node: taught set (`content specs`: pitches per hand, durations, rest durations, accidentals, max interval, polyphony, times) and its skill spec (bars, bpm, hands, time, `required`). Level from the taught set (same scale as training), styles optional.
+- Masked decoding at every step: grammar (plan triples per bar, `PLAN_END`, `BAR`, hands in order, events, `END`), taught pitches per hand, no leap over the taught interval, taught durations that still fit the bar, chord size ≤ taught polyphony with rising chord notes; no ties, no fingering (the arranger fingers later).
+- Candidates become song JSON with D17 fields (`source: generated`, `license: CC0-1.0`, `generator.method: melody-model`, `spec_node`), are checked with `content check <content> <course/node> <files>` (the rubric, `core/src/rubric.rs`), and ranked by mean log-probability plus a bonus for ending on the tonic. Required patterns are not forced by masks; the rubric drops candidates that miss them.
+- `report.json` per run: candidates, rubric passes, kept files, errors.
+
+First try (2-minute smoke checkpoint, essentials-1/rests, 8 candidates): 5 passed the rubric; the 3 failures missed the required rest (and one leap, from a mask fallback since fixed).

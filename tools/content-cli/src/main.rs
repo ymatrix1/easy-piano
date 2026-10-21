@@ -1,5 +1,6 @@
 //! `content lint <content_dir>`: validates every content file and cross-reference.
 //! Exit code 1 on any error. Layout: docs/specs/content-format.md.
+//! `content check <content_dir> <course/node> <song.json>...`: rubric errors of outside songs (generated tunes)
 //! `content specs <content_dir> [--out <file>]`: cumulative taught set per journey
 //! node plus its skill spec (docs/specs/skill-specs.md).
 
@@ -242,6 +243,31 @@ fn specs_report(root: &Path) -> (Value, Lint) {
         })
         .collect();
     (Value::Array(nodes), lint)
+}
+
+/// `content check <content_dir> <course/node> <song.json>...`: rubric errors of
+/// outside songs (e.g. generated tunes) against one node's taught set and spec.
+/// Prints `{file: [errors]}` as JSON; exit 0 when every song passes, 1 otherwise.
+fn check_songs(root: &Path, node: &str, files: &[String]) -> i32 {
+    let mut lint = Lint::default();
+    let (songs, _) = load_songs(root);
+    let walk = taught_walk(&mut lint, root, &songs);
+    let specs = load_specs(&mut lint, root, &walk);
+    let (Some(w), Some(spec)) = (walk.iter().find(|w| format!("{}/{}", w.course, w.node) == node), specs.get(node)) else {
+        eprintln!("error: no node or spec `{node}`");
+        return 2;
+    };
+    let mut out = BTreeMap::new();
+    for f in files {
+        let errors = match fs::read_to_string(f).map_err(|e| e.to_string()).and_then(|t| Song::from_json(&t).map_err(|e| e.to_string())) {
+            Ok(song) => check(&song, &w.taught, spec),
+            Err(e) => vec![format!("not a song: {e}")],
+        };
+        out.insert(f.clone(), errors);
+    }
+    let all_pass = out.values().all(Vec::is_empty);
+    println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+    i32::from(!all_pass)
 }
 
 fn lint_dir(root: &Path) -> Lint {
@@ -593,8 +619,15 @@ fn main() {
     if args.get(1).map(String::as_str) == Some("similar") {
         std::process::exit(similar::run(&args[2..]));
     }
+    if args.get(1).map(String::as_str) == Some("check") {
+        let (Some(dir), Some(node)) = (args.get(2), args.get(3)) else {
+            eprintln!("usage: content check <content_dir> <course/node> <song.json>...");
+            std::process::exit(2);
+        };
+        std::process::exit(check_songs(Path::new(dir), node, &args[4..]));
+    }
     let (Some(cmd @ ("lint" | "specs")), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
-        eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]");
+        eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]\n       content check <content_dir> <course/node> <song.json>...");
         std::process::exit(2);
     };
     if cmd == "specs" {
