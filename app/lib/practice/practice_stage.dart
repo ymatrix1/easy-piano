@@ -568,8 +568,9 @@ class _PracticeStageState extends State<PracticeStage>
     }
   }
 
-  /// Note colour changes (hit, miss, current) cross-fade over this long.
-  static const _colorFadeSec = 0.3;
+  /// Note colour changes (hit, miss, current) tween linearly over this long
+  /// (reference: `Actions.color(c, 0.2f)` on note heads).
+  static const _colorFadeSec = 0.2;
   final _colorFade = <int, (Color from, Color to, double since)>{};
   double _colorFadeUntil = 0;
 
@@ -592,7 +593,7 @@ class _PracticeStageState extends State<PracticeStage>
 
   static Color _lerpFade(Color from, Color to, double since, double now) {
     final t = ((now - since) / _colorFadeSec).clamp(0.0, 1.0);
-    return Color.lerp(from, to, Curves.easeOut.transform(t))!;
+    return Color.lerp(from, to, t)!;
   }
 
   Color _targetNoteColor(int i) {
