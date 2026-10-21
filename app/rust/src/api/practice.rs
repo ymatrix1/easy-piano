@@ -211,3 +211,11 @@ impl PracticeSession {
         }
     }
 }
+
+/// Practice mode rubric gate (D28): errors for a generated tune against one
+/// node of `assets/content/practice.json` (its `practice` object). Empty means
+/// the tune may be shown. Logic in `easy_piano_core::rubric::check_generated`.
+#[frb(sync)]
+pub fn check_generated(song_json: String, node_json: String) -> Vec<String> {
+    easy_piano_core::rubric::check_generated(&song_json, &node_json)
+}

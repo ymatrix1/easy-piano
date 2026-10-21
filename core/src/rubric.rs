@@ -9,7 +9,7 @@
 use crate::notation::{parse_bar, Dur, Event};
 use crate::pitch::{parse_pitch, pitch_name};
 use crate::song::Song;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -124,7 +124,8 @@ fn hands_together(a: &Analysis) -> bool {
 }
 
 /// What a learner has been taught. Union of the songs seen so far.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct TaughtSet {
     /// MIDI pitches per graded hand.
     pub pitches: BTreeMap<String, BTreeSet<u8>>,
@@ -219,27 +220,36 @@ impl TaughtSet {
 }
 
 /// A musical feature a node's songs must show. Every key present must hold.
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Pattern {
     /// Duration label that must appear (`8`, `2.`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rhythm: Option<String>,
     /// With `rhythm`: share of bars (0..1) that contain it. Default: any bar.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub min_bar_share: Option<f64>,
     /// A melodic interval of at least this size, as an interval number
     /// (2 = second, 3 = third … 8 = octave).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub interval_min: Option<u8>,
     /// An accidental that must appear (`F#`, `Bb`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub accidental: Option<String>,
     /// A pitch that must appear (`A4`), in `hand` if given.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub pitch: Option<String>,
     /// Limits `pitch`, `chord`, `rhythm` to one hand (`RH` / `LH`).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hand: Option<String>,
     /// At least one rest in a graded hand.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rest: Option<bool>,
     /// At least one chord (2+ notes at once).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub chord: Option<bool>,
     /// Both hands start a note together somewhere.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hands_together: Option<bool>,
 }
 
@@ -340,7 +350,7 @@ impl Pattern {
 }
 
 /// Target for generated songs at one journey node.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NodeSpec {
     pub node: String,
@@ -423,6 +433,35 @@ pub fn check(song: &Song, taught: &TaughtSet, spec: &NodeSpec) -> Vec<String> {
             errs.push(format!("missing required pattern {}", p.describe()));
         }
     }
+    errs
+}
+
+/// What practice mode needs to judge a generated tune at one node (D28):
+/// the cumulative taught set and the node's spec, as `content practice-pack`
+/// writes them.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PracticeNode {
+    pub taught: TaughtSet,
+    pub spec: NodeSpec,
+}
+
+/// Rubric gate for a tune generated at run time. Empty = it may be shown.
+/// Fails closed: bad JSON, or a song not marked `source: generated` with a
+/// `melody-model` generator, is an error, never a pass.
+pub fn check_generated(song_json: &str, node_json: &str) -> Vec<String> {
+    let node: PracticeNode = match serde_json::from_str(node_json) {
+        Ok(n) => n,
+        Err(e) => return vec![format!("practice node: {e}")],
+    };
+    let song = match Song::from_json(song_json) {
+        Ok(s) => s,
+        Err(e) => return vec![format!("song: {e}")],
+    };
+    let mut errs = Vec::new();
+    if song.source != "generated" || song.generator.as_ref().map(|g| g.method.as_str()) != Some("melody-model") {
+        errs.push("practice tunes must be marked source `generated` by `melody-model`".to_string());
+    }
+    errs.extend(check(&song, &node.taught, &node.spec));
     errs
 }
 
@@ -657,5 +696,27 @@ mod tests {
         assert_eq!(accidental_class("Bb"), Some(10));
         assert_eq!(interval_semitones(3), Some(3));
         assert_eq!(interval_semitones(1), None);
+    }
+
+    #[test]
+    fn check_generated_round_trips_and_fails_closed() {
+        let t = taught_from(r#"[{"RH":"C4:4 D4:4 E4:4 F4:4"}]"#);
+        let node = serde_json::to_string(&PracticeNode { taught: t.clone(), spec: spec("RH", r#"[{"rhythm":"4"}]"#) }).unwrap();
+        let back: PracticeNode = serde_json::from_str(&node).unwrap();
+        assert_eq!(back.taught, t);
+        let mut ok: Value = json!({"id":"g","title":"G","composer":"m","arranger":"m","source":"x",
+            "license":"CC0-1.0","composition_license":"CC0-1.0","bpm":90,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:4 D4:4 E4:4 D4:4"},{"RH":"E4:4 F4:4 E4:4 D4:4"}]});
+        ok["source"] = json!("generated");
+        ok["generator"] = json!({"method": "melody-model"});
+        assert_eq!(check_generated(&ok.to_string(), &node), Vec::<String>::new());
+        let mut wide = ok.clone();
+        wide["bars"][0]["RH"] = json!("C4:4 D4:4 E4:4 G4:4");
+        assert!(check_generated(&wide.to_string(), &node).iter().any(|e| e.contains("G4")), "untaught pitch must fail");
+        let mut course = ok.clone();
+        course["source"] = json!("own");
+        assert!(!check_generated(&course.to_string(), &node).is_empty());
+        assert!(!check_generated("{", &node).is_empty());
+        assert!(!check_generated(&ok.to_string(), "{}").is_empty());
     }
 }

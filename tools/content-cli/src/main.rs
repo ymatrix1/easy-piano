@@ -4,8 +4,11 @@
 //! `content specs <content_dir> [--out <file>]`: cumulative taught set per journey
 //! node plus its skill spec (docs/specs/skill-specs.md).
 //! `content level <content_dir> ...`: song difficulty (docs/specs/difficulty.md).
+//! `content practice-pack <content_dir> [--out <file>]`: per-node rubric input and
+//! generation spec for the app's practice mode (docs/specs/practice-mode.md).
 
 mod level;
+mod practice;
 mod similar;
 
 use easy_piano_core::difficulty::Model;
@@ -642,12 +645,12 @@ fn main() {
         };
         std::process::exit(check_songs(Path::new(dir), node, &args[4..]));
     }
-    let (Some(cmd @ ("lint" | "specs")), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
+    let (Some(cmd @ ("lint" | "specs" | "practice-pack")), Some(dir)) = (args.get(1).map(String::as_str), args.get(2)) else {
         eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]\n       content check <content_dir> <course/node> <song.json>...");
         std::process::exit(2);
     };
-    if cmd == "specs" {
-        let (report, lint) = specs_report(Path::new(dir));
+    if cmd == "specs" || cmd == "practice-pack" {
+        let (report, lint) = if cmd == "specs" { specs_report(Path::new(dir)) } else { practice::pack(Path::new(dir)) };
         let text = serde_json::to_string_pretty(&report).unwrap_or_default();
         match (args.get(3).map(String::as_str), args.get(4)) {
             (Some("--out"), Some(out)) => {
