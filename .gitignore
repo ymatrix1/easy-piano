@@ -8,3 +8,6 @@ tools/mic-fixtures/
 
 # Melody model corpora (local only, never committed)
 /data/
+
+# Built by tools/build_audio_wasm.py
+app/web/audio_engine.wasm

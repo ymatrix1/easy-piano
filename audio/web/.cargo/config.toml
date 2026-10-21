@@ -1,0 +1,3 @@
+# SIMD in the worklet (Chrome 91+, Firefox 89+, Safari 16.4+).
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

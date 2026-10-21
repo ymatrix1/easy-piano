@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'audio/piano_synth.dart';
 import 'content/content_repo.dart';
 import 'home/home_page.dart';
 import 'input/midi_input.dart';
@@ -27,6 +28,8 @@ Future<void> main() async {
     ContentRepo.load(),
   ).wait;
   repo.locale = appLocale.current.tag;
+  // Mix and latency probes (web, D30) exist from boot, not first sound.
+  if (Uri.base.queryParameters.containsKey('mixprobe')) pianoSynth.enabled;
   runApp(EasyPianoApp(repo: repo, appLocale: appLocale));
   // Non-critical assets load after the first frame.
   SchedulerBinding.instance.addPostFrameCallback((_) => loadMusicFont());

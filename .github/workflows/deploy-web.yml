@@ -61,12 +61,18 @@ jobs:
           flutter pub get
           flutter_rust_bridge_codegen build-web --release
 
+      # The audio engine for the AudioWorklet (D30 stage 3).
+      - name: Build audio engine for web
+        run: python tools/build_audio_wasm.py
+
       - name: Build Flutter web
         working-directory: app
         run: flutter build web --release
 
       - name: Check COOP/COEP headers file is in the build
-        run: grep -q "Cross-Origin-Embedder-Policy" app/build/web/_headers
+        run: |
+          grep -q "Cross-Origin-Embedder-Policy" app/build/web/_headers
+          test -s app/build/web/audio_engine.wasm
 
       # Creates the Pages project on first run. Real failures (auth, network) still fail the job.
       - name: Ensure Pages project exists

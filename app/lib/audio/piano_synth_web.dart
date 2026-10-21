@@ -1,55 +1,70 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
-import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
 
 import 'piano_synth.dart';
+import 'piano_synth_webaudio.dart';
 import 'recording_synth.dart';
+import 'web_audio_probe.dart';
 
-PianoSynth createPianoSynth() => _WebPianoSynth();
+/// `?audio=webaudio` keeps the D22 Web Audio graph (before/after gates and
+/// the blind A/B listen of D30 stage 3).
+PianoSynth createPianoSynth() {
+  final synth = Uri.base.queryParameters['audio'] == 'webaudio'
+      ? createWebAudioPianoSynth()
+      : _WorkletPianoSynth();
+  // Until a practice screen registers its song: the parity fixture, set as
+  // CSV text in `window.epFixture` (audio/tests/fixtures/*_events.csv).
+  synth.debugRegisterMixProbe((s, _) => _playFixture(s), 24);
+  return synth;
+}
 
-/// Pitched samples every 3 semitones (C, Eb, Gb, A); the nearest one is
-/// pitch-shifted, at most 1.5 semitones.
-const _sampleNames = ['C', 'Eb', 'Gb', 'A'];
-
-/// A pitched instrument: asset folder, sample range and sustain loop.
-class _Instrument {
-  const _Instrument(this.dir, this.lowOctave, this.highOctave, {this.loop});
-
-  final String dir;
-  final int lowOctave;
-  final int highOctave;
-
-  /// (start, end) seconds of a steady stretch to loop for long notes;
-  /// null plays the sample once (it decays on its own).
-  final (double, double)? loop;
-
-  Iterable<(int, String)> get files sync* {
-    for (var octave = lowOctave; octave <= highOctave; octave++) {
-      for (var k = 0; k < _sampleNames.length; k++) {
-        if (octave == highOctave && k > 0) break; // top sample is a C
-        yield ((octave + 1) * 12 + 3 * k, '$dir/${_sampleNames[k]}$octave.mp3');
-      }
+void _playFixture(PianoSynth synth) {
+  final csv = globalContext.getProperty<JSString?>('epFixture'.toJS)?.toDart;
+  for (final line in const LineSplitter().convert(csv ?? '')) {
+    if (line.startsWith('#') || line.trim().isEmpty) continue;
+    final f = line.split(',');
+    final (pitch, at, dur, vel) = (
+      int.parse(f[2]),
+      double.parse(f[3]),
+      double.parse(f[4]),
+      int.parse(f[5]),
+    );
+    switch (f[0]) {
+      case 'drum':
+        synth.drum(pitch, at, velocity: vel);
+      case 'click':
+        synth.click(at, accent: pitch == 1);
+      case 'bass':
+        synth.bass(pitch, at, dur, velocity: vel);
+      case 'strings':
+        synth.pad(pitch, at, dur, velocity: vel);
+      case 'choir':
+        synth.choir(pitch, at, dur, velocity: vel);
+      default:
+        synth.schedule(pitch, at, dur, velocity: vel, force: true, part: f[1]);
     }
   }
 }
 
-/// Salamander Grand (CC-BY 3.0) and FluidR3 band instruments (MIT); see
-/// `app/assets/*/README.md`.
+/// Sample files per instrument: (engine code, folder, lowest octave, highest
+/// octave; the top octave has only its C). Same set as native.
 const _instruments = {
-  'piano': _Instrument('assets/piano', 1, 8),
-  'bass': _Instrument('assets/band/bass', 1, 4),
-  'strings': _Instrument('assets/band/strings', 3, 6, loop: (0.5, 2.9)),
-  'choir': _Instrument('assets/band/choir', 3, 6, loop: (0.5, 2.9)),
+  'piano': (0, 'assets/piano', 1, 8),
+  'bass': (1, 'assets/band/bass', 1, 4),
+  'strings': (2, 'assets/band/strings', 3, 6),
+  'choir': (3, 'assets/band/choir', 3, 6),
 };
+const _sampleNames = ['C', 'Eb', 'Gb', 'A'];
 
-/// Virtuosity Drums one-shots (CC0) by General MIDI percussion number.
-/// Several hits per drum play in turn (round robin) so repeated notes don't
-/// sound like a machine gun.
+/// Engine sample kinds (`audio/web/src/lib.rs`).
+const _kindDrum = 4, _kindSoftHat = 5, _kindClick = 6, _kindClickAccent = 7;
+
+/// Drum hits by General MIDI number, in round-robin order.
 const _drumFiles = {
   36: ['kick', 'kick_2', 'kick_3'],
   38: ['snare', 'snare_2', 'snare_3'],
@@ -58,11 +73,7 @@ const _drumFiles = {
   49: ['crash'],
 };
 
-/// A lighter closed hi-hat hit, used below this velocity (off-beat hats).
-const _softHatFile = 'hihat_closed_soft';
-const _softHatBelow = 72;
-
-/// Instrument each score part needs, for [PianoSynth.loadParts].
+/// Instrument each score part needs.
 const _partInstrument = {
   'BASS': 'bass',
   'PAD': 'strings',
@@ -70,36 +81,42 @@ const _partInstrument = {
   'DRUMS': 'drums',
 };
 
-class _Voice {
-  _Voice(this.source, this.gain);
-  final web.AudioBufferSourceNode source;
-  final web.GainNode gain;
-}
+/// Engine part codes (index into `Part::ALL`); anything else is `piano`.
+const _parts = {
+  'live': 0,
+  'piano': 1,
+  'ACC': 2,
+  'DRUMS': 3,
+  'BASS': 4,
+  'PAD': 5,
+  'CHOIR': 6,
+  'sfx': 7,
+};
+int _part(String key) => _parts[key] ?? 1;
 
-class _WebPianoSynth implements PianoSynth {
-  _WebPianoSynth([this._offline]);
+/// The engine module, fetched once and shared by every context.
+Future<JSArrayBuffer>? _wasm;
+
+/// Web: the Rust audio engine (D30) in an AudioWorklet
+/// (`web/audio_worklet.js`). The browser decodes the MP3s; this class only
+/// hands the engine PCM and timestamped events, like the native synth.
+class _WorkletPianoSynth implements PianoSynth {
+  _WorkletPianoSynth([this._offline]);
 
   static const _prefKey = 'easy_piano.sound';
+  static const _metronomeKey = 'easy_piano.metronome';
 
   /// Set for offline renders (mix measurements); null for live playback.
   final web.OfflineAudioContext? _offline;
   web.BaseAudioContext? _ctx;
+  web.AudioWorkletNode? _node;
+  Future<web.AudioWorkletNode?>? _starting;
 
-  /// Mix chain: part buses -> [_glue] compressor -> [_limiter] -> [_out].
-  /// Live key presses skip the dynamics (each adds a few ms of look-ahead)
-  /// and go straight to [_out] through the `live` bus.
-  web.GainNode? _out;
-  web.DynamicsCompressorNode? _glue;
-  web.ConvolverNode? _reverb;
-
-  /// instrument -> pitch -> decoded sample.
-  final _samples = <String, Map<int, web.AudioBuffer>>{};
-  final _drums = <int, List<web.AudioBuffer>>{};
-  final _drumTurn = <int, int>{};
-  web.AudioBuffer? _softHat;
+  /// Messages sent before the node exists, in order.
+  final _pending = <JSAny>[];
   final _loads = <String, Future<void>>{};
-  final _voices = <int, _Voice>{};
-  final _scheduled = <_Voice>[];
+  final _pongs = <int, Completer<void>>{};
+  var _nextPing = 0;
 
   @override
   bool get enabled {
@@ -117,8 +134,6 @@ class _WebPianoSynth implements PianoSynth {
     } catch (_) {}
     if (!value) stopAll();
   }
-
-  static const _metronomeKey = 'easy_piano.metronome';
 
   @override
   bool get metronome {
@@ -150,83 +165,66 @@ class _WebPianoSynth implements PianoSynth {
         web.AudioContext(
           web.AudioContextOptions(latencyHint: 'interactive'.toJS),
         );
-    // Soft clipper on the very end: no look-ahead (no latency), catches the
-    // learner's loud chords that skip the limiter.
-    final clip = ctx.createWaveShaper()
-      ..curve = _softClipCurve()
-      ..connect(ctx.destination);
-    final out = _out = ctx.createGain()
-      ..gain.value = 1.0
-      ..connect(clip);
-    // Brick-wall-ish limiter keeps peaks under about -1 dBFS.
-    final limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -3;
-    limiter.knee.value = 0;
-    limiter.ratio.value = 20;
-    limiter.attack.value = 0.001;
-    limiter.release.value = 0.1;
-    limiter.connect(out);
-    // Gentle bus compression glues the band together.
-    final glue = _glue = ctx.createDynamicsCompressor();
-    glue.threshold.value = -20;
-    glue.knee.value = 12;
-    glue.ratio.value = 2.5;
-    glue.attack.value = 0.01;
-    glue.release.value = 0.25;
-    glue.connect(limiter);
-    // Short hall from a generated impulse response (no asset to license).
-    final reverbReturn = ctx.createGain()
-      ..gain.value = 1.0
-      ..connect(glue);
-    _reverb = ctx.createConvolver()
-      ..buffer = _impulseResponse(ctx, 1.8)
-      ..connect(reverbReturn);
-    if (_offline == null && ctx.state == 'suspended') {
-      (ctx as web.AudioContext).resume();
-    }
+    _start(ctx);
     return ctx;
   }
 
-  /// Linear up to 0.7, then a smooth knee that never exceeds 0.98.
-  static JSFloat32Array _softClipCurve() {
-    const n = 2049;
-    final curve = Float32List(n);
-    for (var i = 0; i < n; i++) {
-      final x = i / (n - 1) * 2 - 1;
-      final a = x.abs();
-      final y = a <= 0.7 ? a : 0.7 + 0.28 * _tanh((a - 0.7) / 0.28);
-      curve[i] = x < 0 ? -y : y;
-    }
-    return curve.toJS;
+  Future<web.AudioWorkletNode?> _start(web.BaseAudioContext ctx) =>
+      _starting ??= () async {
+        try {
+          final wasm = await (_wasm ??= web.window
+              .fetch('audio_engine.wasm'.toJS)
+              .toDart
+              .then((r) => r.arrayBuffer().toDart));
+          await ctx.audioWorklet.addModule('audio_worklet.js').toDart;
+          final node = web.AudioWorkletNode(
+            ctx,
+            'piano-engine',
+            web.AudioWorkletNodeOptions(
+              numberOfInputs: 0,
+              outputChannelCount: [2.toJS].toJS,
+              processorOptions: JSObject()..setProperty('wasm'.toJS, wasm),
+            ),
+          );
+          node.port.onmessage = _onMessage.toJS;
+          node.connect(ctx.destination);
+          for (final m in _pending) {
+            node.port.postMessage(m);
+          }
+          _pending.clear();
+          return _node = node;
+        } catch (e) {
+          // No worklet or wasm: stay silent.
+          web.console.warn('audio engine did not start: $e'.toJS);
+          return null;
+        }
+      }();
+
+  void _onMessage(web.MessageEvent e) {
+    final pong = (e.data as JSObject?)?.getProperty<JSNumber?>('pong'.toJS);
+    if (pong != null) _pongs.remove(pong.toDartInt)?.complete();
   }
 
-  static double _tanh(double x) {
-    final e = math.exp(2 * x);
-    return (e - 1) / (e + 1);
+  void _send(List<Object> m) => _post(m.jsify()!);
+
+  void _post(JSAny msg, [List<JSObject> transfer = const []]) {
+    final node = _node;
+    if (node == null) {
+      _context();
+      _pending.add(msg);
+    } else if (transfer.isEmpty) {
+      node.port.postMessage(msg);
+    } else {
+      node.port.postMessage(msg, transfer.toJS);
+    }
   }
 
-  /// Stereo decaying noise, darker as it decays: a plain room/hall tail.
-  static web.AudioBuffer _impulseResponse(
-    web.BaseAudioContext ctx,
-    double seconds,
-  ) {
-    final rate = ctx.sampleRate;
-    final len = (rate * seconds).toInt();
-    final buf = ctx.createBuffer(2, len, rate);
-    final rnd = math.Random(11);
-    for (var c = 0; c < 2; c++) {
-      final data = Float32List(len);
-      var lp = 0.0;
-      for (var i = 0; i < len; i++) {
-        final t = i / rate;
-        // One-pole low-pass whose cutoff falls over time.
-        final a = 0.15 + 0.8 * math.exp(-t * 3);
-        lp += a * ((rnd.nextDouble() * 2 - 1) - lp);
-        data[i] = lp * math.exp(-t * 3.8) * (t < 0.01 ? t / 0.01 : 1);
-      }
-      buf.copyToChannel(data.toJS, c);
-    }
-    return buf;
+  /// Resolves once the worklet ran every message sent before it.
+  Future<void> _sync() {
+    final id = _nextPing++;
+    final done = _pongs[id] = Completer<void>();
+    _send(['ping', id]);
+    return done.future;
   }
 
   @override
@@ -243,79 +241,76 @@ class _WebPianoSynth implements PianoSynth {
   /// Wall time of the first piano load, for mix-probe reports.
   int? _loadMs;
 
-  Future<void> _loadInstrument(String name) =>
-      _loads[name] ??= _fetchInstrument(name);
+  Future<void> _loadInstrument(String name) => _loads[name] ??= _fetch(name);
 
-  Future<void> _fetchInstrument(String name) async {
+  Future<void> _fetch(String name) async {
     final watch = Stopwatch()..start();
     final ctx = _context();
+    if (await _start(ctx) == null) return;
+    final jobs = <Future<void>>[];
     if (name == 'click') {
-      // Recorded cross-stick for the metronome (Virtuosity Drums, CC0).
-      await Future.wait([
-        _decode(ctx, 'assets/band/drums/click.mp3').then((b) => _click = b),
-        _decode(
-          ctx,
-          'assets/band/drums/click_accent.mp3',
-        ).then((b) => _clickAccent = b),
-      ]);
-      return;
+      jobs
+        ..add(_add(ctx, _kindClick, 0, 'assets/band/drums/click.mp3'))
+        ..add(
+          _add(ctx, _kindClickAccent, 0, 'assets/band/drums/click_accent.mp3'),
+        );
+    } else if (name == 'drums') {
+      for (final MapEntry(key: gm, value: files) in _drumFiles.entries) {
+        // Decode in parallel, add in round-robin order.
+        final decoded = Future.wait([
+          for (final f in files) _decode(ctx, 'assets/band/drums/$f.mp3'),
+        ]);
+        jobs.add(
+          decoded.then((bufs) {
+            for (final b in bufs) {
+              if (b != null) _addBuffer(_kindDrum, gm, b);
+            }
+          }),
+        );
+      }
+      jobs.add(
+        _add(ctx, _kindSoftHat, 0, 'assets/band/drums/hihat_closed_soft.mp3'),
+      );
+    } else {
+      final (kind, dir, low, high) = _instruments[name]!;
+      for (var octave = low; octave <= high; octave++) {
+        for (var k = 0; k < _sampleNames.length; k++) {
+          if (octave == high && k > 0) break; // top sample is a C
+          final pitch = (octave + 1) * 12 + 3 * k;
+          jobs.add(
+            _add(ctx, kind, pitch, '$dir/${_sampleNames[k]}$octave.mp3'),
+          );
+        }
+      }
     }
-    if (name == 'drums') {
-      final hits = <int, List<web.AudioBuffer?>>{
-        for (final MapEntry(key: gm, value: files) in _drumFiles.entries)
-          gm: List.filled(files.length, null),
-      };
-      await Future.wait([
-        for (final MapEntry(key: gm, value: files) in _drumFiles.entries)
-          for (var i = 0; i < files.length; i++)
-            _decode(
-              ctx,
-              'assets/band/drums/${files[i]}.mp3',
-            ).then((b) => hits[gm]![i] = b),
-        _decode(
-          ctx,
-          'assets/band/drums/$_softHatFile.mp3',
-        ).then((b) => _softHat = b),
-      ]);
-      hits.forEach((gm, l) {
-        final ok = l.whereType<web.AudioBuffer>().toList();
-        if (ok.isNotEmpty) _drums[gm] = ok;
-      });
-      return;
-    }
-    final map = _samples.putIfAbsent(name, () => {});
-    final loop = _instruments[name]!.loop;
-    // All files of an instrument in parallel; decoding order doesn't matter.
-    await Future.wait([
-      for (final (pitch, path) in _instruments[name]!.files)
-        _decode(ctx, path).then((b) {
-          if (b == null) return;
-          if (loop != null) _crossfadeLoop(b, loop.$1, loop.$2);
-          map[pitch] = b;
-        }),
-    ]);
-    _nearestCache.clear();
+    await Future.wait(jobs);
+    _send(['commit']);
+    // A suspended live context (no user gesture yet) runs no worklet code,
+    // so only offline renders wait for the engine to take the samples.
+    if (_offline != null) await _sync();
     if (name == 'piano') _loadMs ??= watch.elapsedMilliseconds;
   }
 
-  /// Blends the end of the loop into the audio just before its start
-  /// (equal-power, 150 ms), so the jump from loop end back to loop start is
-  /// seamless: no click, no level dip.
-  static void _crossfadeLoop(web.AudioBuffer buf, double from, double to) {
-    final rate = buf.sampleRate;
-    final start = (from * rate).round();
-    final end = math.min((to * rate).round(), buf.length);
-    final fade = math.min((0.15 * rate).round(), start);
-    for (var c = 0; c < buf.numberOfChannels; c++) {
-      final data = buf.getChannelData(c).toDart;
-      for (var i = 0; i < fade; i++) {
-        final w = i / fade * math.pi / 2;
-        final tail = end - fade + i;
-        data[tail] =
-            data[tail] * math.cos(w) + data[start - fade + i] * math.sin(w);
-      }
-      buf.copyToChannel(data.toJS, c);
-    }
+  Future<void> _add(
+    web.BaseAudioContext ctx,
+    int kind,
+    int key,
+    String path,
+  ) async {
+    final b = await _decode(ctx, path);
+    if (b != null) _addBuffer(kind, key, b);
+  }
+
+  /// Hands decoded PCM to the engine (transferred, not copied); the
+  /// AudioBuffer is dropped, so only the engine's 16-bit copy stays.
+  void _addBuffer(int kind, int key, web.AudioBuffer b) {
+    final chans = [
+      for (var c = 0; c < b.numberOfChannels && c < 2; c++) b.getChannelData(c),
+    ];
+    _post(
+      ['sample'.toJS, kind.toJS, key.toJS, b.sampleRate.toJS, chans.toJS].toJS,
+      [for (final c in chans) c.getProperty<JSArrayBuffer>('buffer'.toJS)],
+    );
   }
 
   /// Decodes one bundled MP3; a missing file leaves a gap that neighbours
@@ -336,95 +331,37 @@ class _WebPianoSynth implements PianoSynth {
     }
   }
 
-  /// (instrument, pitch) -> nearest decoded sample; cleared on every load.
-  final _nearestCache = <(String, int), int?>{};
-
-  int? _nearest(String inst, int pitch) {
-    final key = (inst, pitch);
-    if (_nearestCache.containsKey(key)) return _nearestCache[key];
-    int? best;
-    for (final s in _samples[inst]?.keys ?? const <int>[]) {
-      if (best == null || (s - pitch).abs() < (best - pitch).abs()) best = s;
-    }
-    return _nearestCache[key] = best;
-  }
-
-  /// Velocity -> gain: a gentle curve so soft notes stay audible.
-  static double _velGain(int velocity) =>
-      math.pow(velocity.clamp(1, 127) / 127, 1.5).toDouble();
-
-  /// Starts [inst] at [pitch]. Piano gets a velocity-keyed low-pass (soft
-  /// notes are darker, like a real hammer); looped instruments sustain.
-  _Voice? _start(
-    String inst,
-    int pitch,
-    double when,
-    int velocity,
-    web.AudioNode dest, {
-    double attack = 0.002,
-  }) {
-    final ctx = _context();
-    final sample = _nearest(inst, pitch);
-    if (sample == null) return null;
-    final spec = _instruments[inst]!;
-    final src = ctx.createBufferSource()
-      ..buffer = _samples[inst]![sample]
-      ..playbackRate.value = math.pow(2, (pitch - sample) / 12).toDouble();
-    if (spec.loop case (final from, final to)) {
-      src
-        ..loop = true
-        ..loopStart = from
-        ..loopEnd = to;
-    }
-    final gain = ctx.createGain();
-    final level = _velGain(velocity);
-    if (attack > 0.005) {
-      gain.gain.setValueAtTime(0, when);
-      gain.gain.linearRampToValueAtTime(level, when + attack);
-    } else {
-      gain.gain.setValueAtTime(level, when);
-    }
-    if (inst == 'piano') {
-      final v = velocity.clamp(1, 127) / 127;
-      final tone = ctx.createBiquadFilter()
-        ..type = 'lowpass'
-        ..Q.value = 0.5
-        ..frequency.value = 1200 + 14000 * v * v;
-      src.connect(tone);
-      tone.connect(gain);
-    } else {
-      src.connect(gain);
-    }
-    gain.connect(dest);
-    src.start(when);
-    return _Voice(src, gain);
-  }
-
-  /// Damper-style release: [tau] is the fade time constant.
-  void _release(_Voice v, double when, {double tau = 0.12}) {
-    v.gain.gain.cancelScheduledValues(when);
-    v.gain.gain.setTargetAtTime(0, when, tau);
-    v.source.stop(when + tau * 8);
-  }
+  static int _vel(int v) => v.clamp(1, 127);
 
   @override
   void noteOn(int pitch, {int velocity = 90}) {
     if (!enabled) return;
     load();
-    final ctx = _context();
-    final old = _voices.remove(pitch);
-    if (old != null) _release(old, ctx.currentTime, tau: 0.05);
-    final v = _start('piano', pitch, ctx.currentTime, velocity, _bus('live'));
-    if (v != null) _voices[pitch] = v;
+    _context();
+    _send(['on', pitch, _vel(velocity)]);
   }
 
   @override
   void noteOff(int pitch) {
-    final v = _voices.remove(pitch);
-    if (v != null) _release(v, _context().currentTime);
+    if (_ctx != null) _send(['off', pitch]);
   }
 
-  double _at(double startSec) => _context().currentTime + math.max(0, startSec);
+  void _note(
+    String inst,
+    String part,
+    int pitch,
+    double at,
+    double dur,
+    int v,
+  ) => _send([
+    'note',
+    _instruments[inst]!.$1,
+    _part(part),
+    pitch,
+    at,
+    dur,
+    _vel(v),
+  ]);
 
   @override
   void schedule(
@@ -436,189 +373,36 @@ class _WebPianoSynth implements PianoSynth {
     String part = 'piano',
   }) {
     if (!enabled && !force) return;
-    final at = _at(startSec);
-    final v = _start('piano', pitch, at, velocity, _bus(part));
-    if (v == null) return;
-    _release(v, at + durSec);
-    _scheduled.add(v);
-  }
-
-  final _clicks = <web.AudioScheduledSourceNode>[];
-  web.AudioBuffer? _click;
-  web.AudioBuffer? _clickAccent;
-
-  @override
-  void click(double startSec, {bool accent = false}) {
-    final ctx = _context();
-    final at = _at(startSec);
-    final sample = accent ? _clickAccent : _click;
-    if (sample != null) {
-      final src = ctx.createBufferSource()..buffer = sample;
-      src.connect(_out!);
-      src.start(at);
-      _clicks.add(src);
-      return;
-    }
-    // Fallback until the samples decode: a short beep.
-    final osc = ctx.createOscillator()
-      ..type = 'square'
-      ..frequency.value = accent ? 1600 : 1100;
-    final gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, at);
-    gain.gain.linearRampToValueAtTime(accent ? 0.25 : 0.15, at + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
-    osc.connect(gain);
-    gain.connect(_out!);
-    osc.start(at);
-    osc.stop(at + 0.06);
-    _clicks.add(osc);
-  }
-
-  /// One gain node per part, between the voices and the mix chain.
-  final _buses = <String, web.GainNode>{};
-
-  /// Default mix, from offline measurements of Ode to Joy play-along
-  /// (docs/specs/content-format.md). `live` is the learner's own keys.
-  static const _defaultLevels = {
-    'live': 1.0,
-    'piano': 1.0,
-    'ACC': 1.0,
-    'DRUMS': 0.19,
-    'BASS': 1.1,
-    'PAD': 0.37,
-    'CHOIR': 0.67,
-  };
-
-  /// Reverb send per part: pads and voices sit further back than drums.
-  static const _reverbSends = {
-    'live': 0.12,
-    'piano': 0.14,
-    'ACC': 0.16,
-    'DRUMS': 0.08,
-    'BASS': 0.03,
-    'PAD': 0.35,
-    'CHOIR': 0.40,
-  };
-
-  web.GainNode _bus(String part) {
-    final existing = _buses[part];
-    if (existing != null) return existing;
-    final ctx = _context();
-    final bus = ctx.createGain()..gain.value = _defaultLevels[part] ?? 1.0;
-    bus.connect(part == 'live' ? _out! : _glue!);
-    final send = ctx.createGain()..gain.value = _reverbSends[part] ?? 0.1;
-    bus.connect(send);
-    send.connect(_reverb!);
-    return _buses[part] = bus;
+    _note('piano', part, pitch, startSec, durSec, velocity);
   }
 
   @override
-  void setPartLevel(String part, double level) {
-    final base = _defaultLevels[part] ?? 1.0;
-    _bus(part).gain.value = base * level.clamp(0.0, 2.0);
-  }
-
-  /// Band voices, kept so [stopAll] can silence them.
-  final _band = <_Voice>[];
-
-  /// Sounding open hi-hat; a closed hi-hat chokes it, like a real foot pedal.
-  _Voice? _openHat;
+  void click(double startSec, {bool accent = false}) =>
+      _send(['click', startSec, accent]);
 
   @override
-  void drum(int gmPitch, double startSec, {int velocity = 80}) {
-    final hits = _drums[gmPitch];
-    if (hits == null) return;
-    final turn = _drumTurn[gmPitch] = (_drumTurn[gmPitch] ?? -1) + 1;
-    final soft = _softHat;
-    final buf = gmPitch == 42 && velocity < _softHatBelow && soft != null
-        ? soft
-        : hits[turn % hits.length];
-    final ctx = _context();
-    final at = _at(startSec);
-    if (gmPitch == 42 || gmPitch == 46) {
-      final open = _openHat;
-      if (open != null) _release(open, at, tau: 0.02);
-      _openHat = null;
-    }
-    final src = ctx.createBufferSource()..buffer = buf;
-    final gain = ctx.createGain()..gain.value = _velGain(velocity);
-    src.connect(gain);
-    gain.connect(_bus('DRUMS'));
-    src.start(at);
-    final v = _Voice(src, gain);
-    if (gmPitch == 46) _openHat = v;
-    _band.add(v);
-  }
-
-  /// A sampled band note held for [durSec], then released over [tau].
-  void _bandNote(
-    String inst,
-    String part,
-    int pitch,
-    double startSec,
-    double durSec,
-    int velocity, {
-    double attack = 0.002,
-    double tau = 0.06,
-  }) {
-    final at = _at(startSec);
-    final v = _start(inst, pitch, at, velocity, _bus(part), attack: attack);
-    if (v == null) return;
-    _release(v, at + math.max(0.05, durSec), tau: tau);
-    _band.add(v);
-  }
+  void drum(int gmPitch, double startSec, {int velocity = 80}) =>
+      _send(['drum', gmPitch, startSec, _vel(velocity)]);
 
   @override
   void bass(int pitch, double startSec, double durSec, {int velocity = 80}) =>
-      _bandNote('bass', 'BASS', pitch, startSec, durSec, velocity);
+      _note('bass', 'BASS', pitch, startSec, durSec, velocity);
 
   @override
   void pad(int pitch, double startSec, double durSec, {int velocity = 80}) =>
-      _bandNote(
-        'strings',
-        'PAD',
-        pitch,
-        startSec,
-        durSec,
-        velocity,
-        attack: 0.12,
-        tau: 0.25,
-      );
+      _note('strings', 'PAD', pitch, startSec, durSec, velocity);
 
   @override
   void choir(int pitch, double startSec, double durSec, {int velocity = 80}) =>
-      _bandNote(
-        'choir',
-        'CHOIR',
-        pitch,
-        startSec,
-        durSec,
-        velocity,
-        attack: 0.15,
-        tau: 0.25,
-      );
+      _note('choir', 'CHOIR', pitch, startSec, durSec, velocity);
+
+  @override
+  void setPartLevel(String part, double level) =>
+      _send(['level', _part(part), level]);
 
   @override
   void stopAll() {
-    for (final o in _clicks) {
-      try {
-        o.stop();
-      } catch (_) {}
-    }
-    _clicks.clear();
-    final ctx = _ctx;
-    if (ctx == null) return;
-    for (final v in [..._voices.values, ..._scheduled, ..._band]) {
-      try {
-        v.gain.gain.cancelScheduledValues(ctx.currentTime);
-        v.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
-        v.source.stop(ctx.currentTime + 0.1);
-      } catch (_) {}
-    }
-    _voices.clear();
-    _scheduled.clear();
-    _band.clear();
-    _openHat = null;
+    if (_ctx != null) _send(['stop']);
   }
 
   @override
@@ -638,6 +422,18 @@ class _WebPianoSynth implements PianoSynth {
       }).toJS,
     );
     globalContext.setProperty(
+      'epMeasureLatency'.toJS,
+      (() => (() async {
+        await load();
+        return probeKeyLatency(
+          _ctx! as web.AudioContext,
+          _node!,
+          () => noteOn(60, velocity: 100),
+          () => noteOff(60),
+        );
+      }()).then((m) => jsonEncode({...m, 'loadMs': _loadMs}).toJS).toJS).toJS,
+    );
+    globalContext.setProperty(
       'epMeasureMix'.toJS,
       (() => _measureMix(
         schedule,
@@ -648,65 +444,53 @@ class _WebPianoSynth implements PianoSynth {
 
   static const _probeParts = ['piano', 'ACC', 'DRUMS', 'BASS', 'PAD', 'CHOIR'];
 
+  /// Same report as the Web Audio probe, rendered through the engine in an
+  /// OfflineAudioContext (each render loads its own samples first, so
+  /// `*RenderMs` is rendering only).
   Future<Map<String, Object>> _measureMix(
     void Function(PianoSynth synth, double leadSec) schedule,
     double durSec,
   ) async {
-    await loadParts(_partInstrument.keys);
-    const rate = 44100;
     final out = <String, Object>{'durSec': durSec, 'loadMs': _loadMs ?? -1};
     for (final solo in [null, ..._probeParts]) {
-      final off = web.OfflineAudioContext(
-        web.OfflineAudioContextOptions(
-          numberOfChannels: 2,
-          length: (durSec * rate).ceil(),
-          sampleRate: rate,
-        ),
-      );
-      final synth = _WebPianoSynth(off).._copySamplesFrom(this);
-      if (solo != null) {
-        for (final p in _probeParts) {
-          if (p != solo) synth.setPartLevel(p, 0);
+      final watch = Stopwatch();
+      final buf = await _renderOffline(durSec, (synth) {
+        if (solo != null) {
+          for (final p in _probeParts) {
+            if (p != solo) synth.setPartLevel(p, 0);
+          }
         }
-      }
-      schedule(synth, 0.5);
-      final buf = await off.startRendering().toDart;
-      out[solo ?? 'mix'] = _levels(buf);
+        schedule(synth, 0.5);
+      }, watch);
+      out['${solo ?? 'mix'}RenderMs'] = watch.elapsedMilliseconds;
+      out[solo ?? 'mix'] = probeLevels(buf);
     }
-    out['click'] = _levels(await _renderOffline(0.5, (s) => s.click(0.1)));
-    out['clickAccent'] = _levels(
+    out['click'] = probeLevels(await _renderOffline(0.5, (s) => s.click(0.1)));
+    out['clickAccent'] = probeLevels(
       await _renderOffline(0.5, (s) => s.click(0.1, accent: true)),
     );
-    // Headroom of the learner's own keys (no limiter): a loud two-hand chord.
-    out['liveChord'] = _levels(
+    out['liveChord'] = probeLevels(
       await _renderOffline(3, (synth) {
         for (final p in [36, 48, 52, 55, 60, 64, 67, 72]) {
           synth.schedule(p, 0.1, 2, velocity: 127, force: true, part: 'live');
         }
       }),
     );
-    // Loop seams: a held pad note crosses the loop point twice; report the
-    // loudest 10 ms window jump in dB (a click shows as a spike).
     // C4 is an exact sample, so seams fall at 0.1 + 2.9 s and every 2.4 s.
     final pad = await _renderOffline(8, (synth) => synth.pad(60, 0.1, 7));
-    out['padBodyJumpDb'] = _maxJumpDb(pad, fromSec: 1, toSec: 2.9);
-    out['padSeamJumpDb'] = math.max(
-      _maxJumpDb(pad, fromSec: 2.95, toSec: 3.06),
-      _maxJumpDb(pad, fromSec: 5.35, toSec: 5.46),
-    );
-    // A click is a sample step much larger than the waveform's usual steps.
-    out['padBodyStep'] = _maxStep(pad, 1, 2.9);
-    out['padSeamStep'] = math.max(
-      _maxStep(pad, 2.99, 3.01),
-      _maxStep(pad, 5.39, 5.41),
-    );
+    out['padBodyJumpDb'] = probeMaxJumpDb(pad, fromSec: 1, toSec: 2.9);
+    out['padSeamJumpDb'] = [
+      probeMaxJumpDb(pad, fromSec: 2.95, toSec: 3.06),
+      probeMaxJumpDb(pad, fromSec: 5.35, toSec: 5.46),
+    ].reduce((a, b) => a > b ? a : b);
     return out;
   }
 
   Future<web.AudioBuffer> _renderOffline(
     double seconds,
-    void Function(_WebPianoSynth synth) play,
-  ) {
+    void Function(_WorkletPianoSynth synth) play, [
+    Stopwatch? watch,
+  ]) async {
     const rate = 44100;
     final off = web.OfflineAudioContext(
       web.OfflineAudioContextOptions(
@@ -715,92 +499,13 @@ class _WebPianoSynth implements PianoSynth {
         sampleRate: rate,
       ),
     );
-    play(_WebPianoSynth(off).._copySamplesFrom(this));
-    return off.startRendering().toDart;
-  }
-
-  /// Largest sample-to-sample step on channel 0 between two times.
-  static double _maxStep(web.AudioBuffer buf, double fromSec, double toSec) {
-    final data = buf.getChannelData(0).toDart;
-    final from = (fromSec * buf.sampleRate).round();
-    final to = math.min(data.length, (toSec * buf.sampleRate).round());
-    var worst = 0.0;
-    for (var i = from + 1; i < to; i++) {
-      worst = math.max(worst, (data[i] - data[i - 1]).abs());
-    }
-    return worst;
-  }
-
-  /// Largest level change between neighbouring 10 ms windows, in dB.
-  static double _maxJumpDb(
-    web.AudioBuffer buf, {
-    required double fromSec,
-    required double toSec,
-  }) {
-    final data = buf.getChannelData(0).toDart;
-    final win = (buf.sampleRate * 0.01).round();
-    double? prev;
-    var worst = 0.0;
-    for (
-      var i = (fromSec * buf.sampleRate).round();
-      i + win < math.min(data.length, (toSec * buf.sampleRate).round());
-      i += win
-    ) {
-      var e = 0.0;
-      for (var k = i; k < i + win; k++) {
-        e += data[k] * data[k];
-      }
-      final db = 10 * math.log(e / win + 1e-12) / math.ln10;
-      if (prev != null) worst = math.max(worst, (db - prev).abs());
-      prev = db;
-    }
-    return worst;
-  }
-
-  void _copySamplesFrom(_WebPianoSynth other) {
-    other._samples.forEach((k, v) => _samples[k] = {...v});
-    _drums.addAll(other._drums);
-    _softHat = other._softHat;
-    _click = other._click;
-    _clickAccent = other._clickAccent;
-    for (final k in [...other._samples.keys, 'drums']) {
-      _loads[k] = Future.value();
-    }
-  }
-
-  /// RMS over the whole render, RMS over 50 ms windows above -60 dBFS
-  /// (ignores silence), and sample peak, all in dBFS.
-  static Map<String, double> _levels(web.AudioBuffer buf) {
-    final chans = [
-      for (var c = 0; c < buf.numberOfChannels; c++)
-        buf.getChannelData(c).toDart,
-    ];
-    final n = buf.length;
-    final win = (buf.sampleRate * 0.05).round();
-    var sum = 0.0, peak = 0.0, gatedSum = 0.0;
-    var gatedN = 0;
-    for (var start = 0; start < n; start += win) {
-      final end = math.min(n, start + win);
-      var ws = 0.0;
-      for (final ch in chans) {
-        for (var i = start; i < end; i++) {
-          final v = ch[i];
-          ws += v * v;
-          if (v.abs() > peak) peak = v.abs();
-        }
-      }
-      sum += ws;
-      final count = (end - start) * chans.length;
-      if (ws / count > 1e-6) {
-        gatedSum += ws;
-        gatedN += count;
-      }
-    }
-    double db(double x) => x <= 0 ? -120 : 10 * math.log(x) / math.ln10;
-    return {
-      'rmsDb': db(sum / (n * chans.length)),
-      'gatedRmsDb': gatedN == 0 ? -120 : db(gatedSum / gatedN),
-      'peakDb': db(peak * peak),
-    };
+    final synth = _WorkletPianoSynth(off);
+    await synth.loadParts(_partInstrument.keys);
+    play(synth);
+    await synth._sync();
+    watch?.start();
+    final buf = await off.startRendering().toDart;
+    watch?.stop();
+    return buf;
   }
 }

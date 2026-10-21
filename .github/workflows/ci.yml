@@ -64,6 +64,13 @@ jobs:
         working-directory: audio
         run: cargo test
 
+      - name: cargo fmt, clippy, test (audio/web worklet engine)
+        working-directory: audio/web
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
       - name: cargo fmt (content-cli)
         working-directory: tools/content-cli
         run: cargo fmt --check

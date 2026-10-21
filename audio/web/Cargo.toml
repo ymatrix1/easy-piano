@@ -1,0 +1,21 @@
+[package]
+name = "easy_piano_audio_web"
+version = "0.1.0"
+edition = "2021"
+description = "The Easy Piano audio engine (D30) as a bare wasm module for the web AudioWorklet (app/web/audio_worklet.js). No decoding or output: the browser decodes MP3s and plays the rendered frames."
+license = "MPL-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+easy_piano_audio = { path = "..", default-features = false }
+# The reverb's FFT with wasm SIMD.
+rustfft = { version = "6", default-features = false, features = ["wasm_simd"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
