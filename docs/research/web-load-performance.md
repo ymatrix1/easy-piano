@@ -33,9 +33,17 @@ Two causes:
 
 ## Results (after)
 
-See the PR preview numbers below (same browser, same method).
+`https://fix-web-load-speed.easy-piano.pages.dev` (PR #61), same browser and method.
 
-AFTER_TABLE
+| Metric | Before | After |
+|---|---|---|
+| Requests | 142 | 16 |
+| Transferred | 1.51 MB | 1.36 MB |
+| Content | ~125 files, 1.82 to 7.07 s | bundle.json, 20 KB gzip, 1.51 to 1.93 s |
+| Last boot resource done | 7.31 s | 2.21 s |
+| Screen while waiting | blank navy | branded splash until first frame |
+
+Single run each, unthrottled; not a Lighthouse score.
 
 ## Implications
 

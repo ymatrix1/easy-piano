@@ -1,10 +1,11 @@
 ---
 # piano-ndp2
 title: 'Web load: splash until first frame, bundle content'
-status: in-progress
+status: completed
 type: bug
+priority: normal
 created_at: 2026-10-21T20:53:12Z
-updated_at: 2026-10-21T20:53:12Z
+updated_at: 2026-10-21T20:56:51Z
 ---
 
 ## Context
@@ -21,3 +22,6 @@ Fast, reliable first load on web previews and production.
 
 ## Out of Scope
 Font subsetting (Bravura 373 KB), renderer switch, service worker.
+
+## Summary of Changes
+Splash waits for first frame with failure/reload; content bundled into one request; parallel boot. Requests 142 to 16, last boot resource 7.3 s to 2.2 s (PR #61).
