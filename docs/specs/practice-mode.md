@@ -21,12 +21,13 @@ Status: web implemented (epic `piano-c6v1`, beans `piano-urcd`, `piano-movl`, `p
 - [x] Tunes are generated on device for the chosen node.
 - [x] Model files are verified by sha256 against the bundled release manifest before use, cached or not (D24).
 - [x] Every tune passes `rubric::check_generated` for the node's taught set and spec before it is shown; failures are dropped, never displayed.
-- [x] Retry: up to 4 rounds of 4 candidates (`PracticeService.maxAttempts`, `candidatesPerAttempt`), then the friendly error.
+- [x] Retry: up to 4 rounds of 4 candidates (`PracticeService.maxAttempts`, `candidatesPerAttempt`), each bounded by `roundTimeout` (60 s), then the friendly error.
 - [x] Tunes are marked `source: generated`, `generator.method: melody-model` and show the **Generated** badge. `check_generated` refuses any song without those marks.
 - [x] No stars, no level or gate progress: the page never returns a result to `HomePage` and never touches `Progress`.
 - [x] Nothing is saved or shared: the tune lives in page state only.
 - [x] No copy check, no human review (user's decision in D28).
 - [ ] Native platforms (no ONNX runtime wired yet).
+- [ ] Nodes whose required pattern needs an accidental (`essentials-3/flats`, `essentials-3/amazing-grace`) get no passing tune yet ([timing note](../research/practice-mode-timing.md)).
 
 ## Pipeline
 

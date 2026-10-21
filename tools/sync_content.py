@@ -29,7 +29,7 @@ for p in sorted(SRC.rglob("*.json")):
     files.append(rel.as_posix())
 pack = DST / "practice.json"
 cli = ["cargo", "run", "-q", "--manifest-path", str(ROOT / "tools" / "content-cli" / "Cargo.toml"), "--"]
-res = subprocess.run([*cli, "practice-pack", str(SRC), "--out", str(pack)], capture_output=True, text=True)
+res = subprocess.run([*cli, "practice-pack", str(SRC), "--out", str(pack)], capture_output=True, text=True, check=False)
 if res.returncode != 0:
     sys.exit(f"content practice-pack failed ({res.returncode}): {res.stderr.strip()[-800:]}")
 files.append("practice.json")

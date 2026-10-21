@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import '../../src/rust/api/practice.dart' as rust;
@@ -110,6 +111,7 @@ class PracticeService {
     this.rubric = coreRubric,
     this.maxAttempts = 4,
     this.candidatesPerAttempt = 4,
+    this.roundTimeout = const Duration(seconds: 60),
     int? seed,
   }) : _seed = seed ?? DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
 
@@ -117,6 +119,9 @@ class PracticeService {
   final RubricCheck rubric;
   final int maxAttempts;
   final int candidatesPerAttempt;
+
+  /// A round that takes longer counts as failed (slow device, stuck runtime).
+  final Duration roundTimeout;
   int _seed;
 
   /// Song JSON for a candidate: marked generated (D17 fields), never written
@@ -154,11 +159,15 @@ class PracticeService {
     String? lastError;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       final seed = _seed++;
-      final cands = await generator.generate(
-        gen,
-        n: candidatesPerAttempt,
-        seed: seed,
-      );
+      final List<Candidate> cands;
+      try {
+        cands = await generator
+            .generate(gen, n: candidatesPerAttempt, seed: seed)
+            .timeout(roundTimeout);
+      } on TimeoutException {
+        lastError = 'round timed out';
+        continue;
+      }
       for (final (i, c) in cands.indexed) {
         final song = songJson(c, node, seed, i);
         final errors = rubric(song, node.rubricJson);
