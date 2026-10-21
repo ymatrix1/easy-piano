@@ -1,4 +1,4 @@
-"""Fit the song difficulty model (docs/specs/difficulty.md, D24).
+"""Fit the song difficulty model (docs/specs/difficulty.md, D26).
 
 Skill scores come from Rust (`content level`), so Python never re-implements
 features. The fit is a cumulative-logit ordinal model with non-negative skill
@@ -47,7 +47,7 @@ MIN_WEIGHT = 0.25
 PRIOR_SPACING = 0.6
 SEED = 7
 FOLDS = 5
-# Expected level at the first and last course node: an assumption (spec, D24), not fitted.
+# Expected level at the first and last course node: an assumption (spec, D26), not fitted.
 COURSE_LEVELS = [1, 6]
 # Fixed starting point, so a run does not depend on the previous weights file.
 PRIOR = {"weights": [1.0] * 8, "thresholds": [0.4 + 0.6 * i for i in range(9)]}

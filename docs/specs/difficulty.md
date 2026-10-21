@@ -1,6 +1,6 @@
 # Song difficulty (level evaluator)
 
-Status: proposed ([D24](../DECISIONS.md)). Code: `core/src/difficulty.rs`, `tools/content-cli/src/level.rs` (`content level`, lint warning), `tools/difficulty/calibrate.py`. Weights: `core/data/difficulty-weights.json`. Beans: epic piano-7m8d.
+Status: proposed ([D26](../DECISIONS.md)). Code: `core/src/difficulty.rs`, `tools/content-cli/src/level.rs` (`content level`, lint warning), `tools/difficulty/calibrate.py`. Weights: `core/data/difficulty-weights.json`. Beans: epic piano-7m8d.
 
 How hard is a song, why, and which journey node fits it. Users: melody-model labels and generated-tune checks, personal song import (D11), placement (OQ9), authors (lint).
 
@@ -65,7 +65,7 @@ Evaluation (all in the weights file's `fit` block, with command, seed, row count
 
 Course τ is circular (the fit uses node order); read it with the baselines and the PDMX check. PDMX tunes are only scored, never committed; only the fitted numbers are.
 
-**Assumption, proposed (D24):** the expected level ramps linearly from `course_levels[0]` at the first course node to `course_levels[1]` (1 → 6) at the last. It sets the anchors and the lint yardstick; it is not fitted and needs the user's sign-off.
+**Assumption, proposed (D26):** the expected level ramps linearly from `course_levels[0]` at the first course node to `course_levels[1]` (1 → 6) at the last. It sets the anchors and the lint yardstick; it is not fitted and needs the user's sign-off.
 
 Run: `python tools/difficulty/calibrate.py [--data <melody data dir>] [--dry-run]`. Current metrics are in the weights file's `fit` block.
 

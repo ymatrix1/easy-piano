@@ -1,4 +1,4 @@
-//! Song difficulty (docs/specs/difficulty.md, D24).
+//! Song difficulty (docs/specs/difficulty.md, D26).
 //!
 //! `features` measures a song per hand and per bar (graded hands only), `skills`
 //! folds those into 8 scores in 0..1, and `Model` maps the scores to a level
