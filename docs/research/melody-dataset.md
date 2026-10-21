@@ -50,3 +50,4 @@ no-composer 16,014 · untagged 12,482 · licence-conflict 8,981 · genre 1,874 �
 
 - 50-tune gate (bean piano-qpyc) on this dataset hash before training.
 - Tuplet support; composer death-year table.
+- Style labels for the 12,999 untagged PDMX tunes (deferred until after the first training run, user 2026-10-20): better keyword rules, then CLaMP 2 zero-shot or our own classifier, labels stored as `styles_guessed`. Bean piano-oial.
