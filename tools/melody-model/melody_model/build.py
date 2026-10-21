@@ -182,7 +182,9 @@ def work(job):
                     meta = {**meta, "sha256": sha256(Path(src).read_bytes())}
             scores = list(parsed.scores) if isinstance(parsed, m21.stream.Opus) else [parsed]
             melody_only = kind == "mid" or (kind == "mxl" and meta.get("n_tracks") != "1")
-            songs = [convert_score(sc, melody_only=melody_only, part=meta.get("track", 0)) for sc in scores[:1]]
+            if len(scores) != 1:
+                raise Unsupported(f"{len(scores)} scores in one file")  # an Opus of movements: not one tune
+            songs = [convert_score(scores[0], melody_only=melody_only, part=meta.get("track", 0))]
         return corpus, tune_id, meta, songs, []
     except Unsupported as e:
         return corpus, tune_id, meta, [], [_reason(str(e))]
@@ -192,6 +194,16 @@ def work(job):
 
 def _reason(msg: str) -> str:
     return re.sub(r"\d+(/\d+)?", "N", msg)
+
+
+def phrase_cut(song: dict) -> int | None:
+    """Bar count to keep for a tune over MAX_BARS: the last phrase end (stable cadence on a
+    4-bar boundary) within bars 32..MAX_BARS, so a cut never falls mid-phrase."""
+    labels = plan({**song, "bars": song["bars"][:MAX_BARS]})
+    for n in range(MAX_BARS, MAX_BARS // 2 - 1, -1):
+        if n % 4 == 0 and labels[n - 1][1] == "STABLE":
+            return n
+    return None
 
 
 def record(corpus, tune_id, meta, song, split) -> dict:
@@ -234,8 +246,12 @@ def main(argv):
                 st["reject: " + e] += 1
             for song in songs:
                 if len(song["bars"]) > MAX_BARS:
-                    st[f"truncated to {MAX_BARS} bars"] += 1
-                    song["bars"] = song["bars"][:MAX_BARS]
+                    cut = phrase_cut(song)
+                    if cut is None:
+                        st["reject: too long, no phrase end in bars 32-64"] += 1
+                        continue
+                    st["cut at a phrase end (over 64 bars)"] += 1
+                    song["bars"] = song["bars"][:cut]
                 ok, why = playable(song)
                 if not ok:
                     st["reject: " + why] += 1

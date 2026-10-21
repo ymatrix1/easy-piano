@@ -87,9 +87,27 @@ def test_tie_sum_without_single_duration_stays_tied():
     assert convert.convert_score(s)["bars"][0]["RH"] == "C4:4 {tie} C4:16 D4:8. E4:2"
 
 
-def test_tie_to_a_different_pitch_is_dropped():
+def test_tie_to_a_different_pitch_is_rejected():
     s = score(([[n("C4", 2, "start"), n("D4", 2, "stop")]], T()), key=m21.key.Key("C"))
+    with pytest.raises(Unsupported, match="different pitch"):
+        convert.convert_score(s)
+
+
+def test_dangling_tie_on_last_note_is_dropped():
+    s = score(([[n("C4", 2), n("D4", 2, "start")]], T()), key=m21.key.Key("C"))
     assert convert.convert_score(s)["bars"][0]["RH"] == "C4:2 D4:2"
+
+
+def test_key_signature_and_key_with_same_sharps_is_not_a_change():
+    s = score(([[n("C4", 4)], [m21.key.Key("C"), n("D4", 4)]], T()), key=m21.key.KeySignature(0))
+    assert convert.convert_score(s)["key"] in ("C", "Am")
+
+
+def test_lenient_errors_are_unsupported(tmp_path):
+    bad = tmp_path / "bad.musicxml"
+    bad.write_text("<score-partwise", encoding="utf-8")
+    _, errors = convert.convert_file_lenient(bad)
+    assert errors and all(isinstance(e, Unsupported) for e in errors)
 
 
 XML_CHORD = """<?xml version="1.0" encoding="UTF-8"?>
@@ -158,7 +176,7 @@ def test_parse_error_becomes_unsupported(tmp_path):
     bad = tmp_path / "bad.musicxml"
     bad.write_text("<score-partwise><part id='P1'><measure", encoding="utf-8")
     songs, errors = convert.convert_file_lenient(bad)
-    assert songs == [] and errors[0].startswith("parse error")
+    assert songs == [] and str(errors[0]).startswith("parse error")
 
 
 def test_real_mutopia_midi():

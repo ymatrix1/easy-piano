@@ -9,7 +9,8 @@ raise Unsupported (counted and skipped by the dataset builder):
   same-signature mode changes (C -> Am), ambiguous keys
 - tuplets and durations outside DURATIONS, double accidentals
 - ties are kept as `{tie}` (content grammar): across barlines, and inside a bar
-  when the tied sum is not one duration; otherwise merged into one note
+  when the tied sum is not one duration; otherwise merged into one note;
+  a tie into a different pitch is rejected
 - parser failures
 
 Hands: two parts are assigned by mean pitch (higher = RH); one part is LH
@@ -44,26 +45,26 @@ def convert_file(path: str | Path) -> list[dict]:
     """All tunes in a file (ABC files can hold many); raises on the first unsupported tune."""
     songs, errors = convert_file_lenient(path)
     if errors:
-        raise Unsupported(errors[0])
+        raise errors[0]
     return songs
 
 
-def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[str]]:
-    """Like convert_file but collects per-tune errors instead of raising."""
+def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[Unsupported]]:
+    """Like convert_file but collects per-tune errors (always Unsupported) instead of raising."""
     path = Path(path)
     try:
         parsed = m21.converter.parse(str(path), forceSource=True, quantizePost=path.suffix.lower() in (".mid", ".midi"))
     except Exception as e:  # music21 raises many types on malformed input
-        return [], [f"parse error: {type(e).__name__}"]
+        return [], [Unsupported(f"parse error: {type(e).__name__}")]
     scores = list(parsed.scores) if isinstance(parsed, m21.stream.Opus) else [parsed]
     songs, errors = [], []
     for s in scores:
         try:
             songs.append(convert_score(s))
         except Unsupported as e:
-            errors.append(str(e))
+            errors.append(e)
         except Exception as e:
-            errors.append(f"parse error: {type(e).__name__}")
+            errors.append(Unsupported(f"parse error: {type(e).__name__}"))
     return songs, errors
 
 
@@ -139,11 +140,14 @@ def _time_sig(score) -> str:
 
 def _key_name(score) -> str:
     sigs = list(score.parts[0].recurse().getElementsByClass(m21.key.KeySignature))
-    stated = {(k.sharps, k.mode if isinstance(k, m21.key.Key) else None) for k in sigs}
-    if len(stated) > 1:
+    # a bare KeySignature says nothing about mode, so it agrees with a Key of the same sharps
+    sharps = {k.sharps for k in sigs}
+    modes = {k.mode for k in sigs if isinstance(k, m21.key.Key)}
+    if len(sharps) > 1 or len(modes) > 1:
         raise Unsupported("key changes")
-    if sigs and isinstance(sigs[0], m21.key.Key):
-        k = sigs[0]
+    stated = next((k for k in sigs if isinstance(k, m21.key.Key)), None)
+    if stated is not None:
+        k = stated
     else:
         analyzed = score.analyze("key")
         if analyzed.correlationCoefficient < MIN_KEY_CONFIDENCE:
@@ -226,11 +230,16 @@ def _bar_events(voice, bar_no: int) -> list[Event]:
 
 
 def _check_ties(bars: list[list[Event]]) -> None:
-    """A tie must lead into a note of the same pitches; otherwise it is dropped."""
+    """A tie must lead into a note of the same pitches. A tie on the very last note
+    (dangling, common in exports) is dropped; a tie into another pitch is an error."""
     flat = [e for bar in bars for e in bar]
     for e, nxt in zip(flat, flat[1:] + [None]):
-        if e.tie and (nxt is None or nxt.pitches != e.pitches):
+        if not e.tie:
+            continue
+        if nxt is None:
             e.tie = False
+        elif nxt.pitches != e.pitches:
+            raise Unsupported("tie into a different pitch")
 
 
 def _at_section_end(m, measures, n) -> bool:
