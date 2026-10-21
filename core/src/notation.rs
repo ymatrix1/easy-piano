@@ -236,6 +236,15 @@ mod tests {
     }
 
     #[test]
+    fn tie_directive_is_accepted_and_has_zero_length() {
+        // the melody-model converter writes `{tie}` after a note tied into the next one
+        let bar = parse_bar("C4:2 D4:2 {tie}").unwrap();
+        assert_eq!(bar.len(), 3);
+        let total = bar.iter().fold(Dur::ZERO, |a, e| a.add(e.dur()));
+        assert_eq!(total, Dur::new(1, 1));
+    }
+
+    #[test]
     fn directives_have_zero_length_and_may_hold_spaces() {
         let bar = parse_bar(r#"{chord: "C major"} C4:2 r:2"#).unwrap();
         assert_eq!(bar.len(), 3);

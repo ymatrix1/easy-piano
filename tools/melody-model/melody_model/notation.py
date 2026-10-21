@@ -2,7 +2,8 @@
 
 Covers the subset the model handles: spelled pitches with '', '#' or 'b',
 rests, chords, denominator durations with dots, per-pitch fingering.
-Directives, annotations, 'n' naturals and n/d durations raise Unsupported.
+The `{tie}` directive (zero length, after a note: tied into the next note) is
+supported; other directives, annotations, 'n' naturals and n/d durations raise Unsupported.
 """
 
 from __future__ import annotations
@@ -48,6 +49,7 @@ class Event:
     pitches: list[Pitch]  # empty = rest
     dur: str
     fingers: list[int] = field(default_factory=list)  # empty = no fingering
+    tie: bool = False  # tied into the next note (written as a following `{tie}` token)
 
     @property
     def is_rest(self) -> bool:
@@ -76,6 +78,11 @@ def parse_pitch(text: str) -> Pitch:
 def parse_hand(text: str) -> list[Event]:
     events = []
     for tok in text.split():
+        if tok == "{tie}":
+            if not events or events[-1].is_rest or events[-1].tie:
+                raise Unsupported("{tie} must follow a note")
+            events[-1].tie = True
+            continue
         m = _TOKEN_RE.match(tok)
         if not m:
             raise Unsupported(f"token {tok!r}")
@@ -97,4 +104,6 @@ def format_hand(events: list[Event]) -> str:
         head = "r" if e.is_rest else "".join(p.name for p in e.pitches)
         fing = "@" + "".join(str(f) for f in e.fingers) if e.fingers else ""
         out.append(f"{head}:{e.dur}{fing}")
+        if e.tie:
+            out.append("{tie}")
     return " ".join(out)
