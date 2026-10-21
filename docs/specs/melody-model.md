@@ -89,11 +89,15 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 - One JSON line per source tune: `id, corpus, split, license, title, composer, time, key, bars, plan, flags`.
 - `plan`: per bar `(section A–H, STABLE|OPEN, UP|DOWN|FLAT)` (`labels.py`).
 - `flags` (D21): PDMX clean-data risks (`genre`, `untagged`, `no-composer`, `pop-name`, `pop-title`, `arrangement`) and any flags of a local dataset.
-- **Default training set = unflagged tunes only** (`flags == []`). Flagged tunes need an explicit `--include-flagged` in the training script, and weights trained with them must not ship unless a decision entry allows it (D21).
+- Flagged tunes **are** used in training (D21; user, 2026-10-20: "no i want to use the flagged tunes"). Known risk: weights may memorise copyrighted melodies. Flags and provenance let any corpus or flag be dropped and the model retrained.
+- Provenance per tune: `source_url`, `sha256` (source file, or the tune's ABC text for NMD), `license`, `composition_license`, `arranger`, `flags`.
+- Deterministic: fixed job order, results consumed in order, first tune of a duplicate group kept (own songs first). `stats.json` records corpora, music21 version and the sha256 of `tunes.jsonl`; tunes over 64 bars are truncated and counted.
+- PDMX downloads are checked against pinned sha256 (`download.PDMX_SHA256`).
+- Review gate: `melody_model.train` refuses to run until `python -m melody_model.gate approve …` records the user's approval of a 50-tune sample for the current `tunes.jsonl` hash.
 - Filters (`filters.py`): PDMX hard rejects (licence conflict, duplicates, length), NMD named composer, playability (range ≤ 24 semitones per hand, leap ≤ 12, ≤ 16 events/bar, chord size), vocab coverage, transposition-invariant dedupe.
 - Split 90/5/5 by source tune (or by group for local datasets), deterministic.
 - Phrase windows (4/8/16 bars, step 4) and spelled transposition run at training time (`augment.py`).
 
 ### Local MIDI datasets
 
-Any folder of `.mid` files can be plugged in without code changes: add an entry to `data/melody/local-datasets.json` (git-ignored; template `tools/melody-model/local-datasets.example.json`) with `name`, `path`, `source`, `license`, `flags`, and optionally `timing` (`score`: tempo-mapped, quantized by music21; `performed`: tempo estimated from onsets, `timed.py`), `track` and `group_by` (`file`/`folder`). Local datasets are opt-in: `python -m melody_model.build --corpora own nottingham mutopia pdmx <name>`. None are registered by default.
+Any folder of `.mid` files can be plugged in without code changes: add an entry to `data/melody/local-datasets.json` (git-ignored; template `tools/melody-model/local-datasets.example.json`) with `name`, `path`, `source`, `license`, `flags`, and optionally `timing` (`score`: tempo-mapped, quantized by music21; `performed`: tempo estimated from onsets, `timed.py`), `track` (part/track index or name), `meter` (performed only: `2/4`, `3/4`, `4/4`) and `group_by` (`file`/`folder`). Bad types or values are rejected; licence and source are recorded as given. Local datasets are opt-in: `python -m melody_model.build --corpora own nottingham mutopia pdmx <name>`. None are registered by default.

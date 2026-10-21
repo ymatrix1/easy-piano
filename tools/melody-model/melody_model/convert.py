@@ -67,13 +67,21 @@ def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[str]]:
     return songs, errors
 
 
-def convert_score(score: m21.stream.Score, melody_only: bool = False) -> dict:
-    """melody_only: read only the first part, as RH (voice + piano scores, MIDI)."""
+def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int | str = 0) -> dict:
+    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI)."""
     parts = list(score.parts)
     if not parts:
         raise Unsupported("no parts")
     if melody_only:
-        parts = parts[:1]
+        if isinstance(part, str):
+            named = [p for p in parts if p.partName == part]
+            if not named:
+                raise Unsupported(f"no part named {part!r}")
+            parts = named[:1]
+        elif not 0 <= part < len(parts):
+            raise Unsupported(f"no part {part}")
+        else:
+            parts = [parts[part]]
     elif len(parts) > 2:
         raise Unsupported(f"{len(parts)} parts")
     time = _time_sig(score)
@@ -115,7 +123,7 @@ def _time_sig(score) -> str:
     # ABC headers can stack M: fields; the last one in a measure wins
     per_measure = {}
     for ts in score.parts[0].recurse().getElementsByClass(m21.meter.TimeSignature):
-        per_measure[ts.measureNumber] = ts
+        per_measure[ts.measureNumber or 0] = ts
     if not per_measure:
         raise Unsupported("no time signature")
     main = per_measure[min(per_measure)]

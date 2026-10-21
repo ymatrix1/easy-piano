@@ -165,11 +165,18 @@ def _pitch(midi: int, names) -> Pitch:
     return Pitch(name[0], name[1:], octave)
 
 
-def performed_song(path: str | Path, track: str | int = 0, key: str | None = None) -> dict:
-    """One melody track of a performed MIDI file, tempo estimated from its onsets."""
+def performed_song(path: str | Path, track: str | int = 0, key: str | None = None, meter: str = "4/4") -> dict:
+    """One melody track of a performed MIDI file, tempo estimated from its onsets.
+
+    meter: the dataset's stated meter ("2/4", "3/4" or "4/4"); bar 1 starts at the
+    first onset. Performed MIDI carries no reliable meter, so it is given, not guessed.
+    """
+    beats_per_bar, unit = (int(x) for x in meter.split("/"))
+    if unit != 4:
+        raise Unsupported(f"performed meter {meter}")
     notes = midi_notes(path, track)
     beats = estimate_beats(notes)
-    song = notes_to_song(notes, beats, [0], 4, key or guess_key(notes))
+    song = notes_to_song(notes, beats, [0], beats_per_bar, key or guess_key(notes))
     song.update(title=Path(path).stem, composer="")
     return song
 

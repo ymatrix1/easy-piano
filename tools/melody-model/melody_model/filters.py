@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 
-from .labels import melody, signature
+from .labels import melody
 from .notation import parse_hand
 
 # --- PDMX pop screen (docs/research/melody-corpora.md) ---------------------
@@ -107,12 +107,19 @@ def playable(song: dict) -> tuple[bool, str]:
 
 
 def dedupe_key(song: dict, bars: int = 16) -> str:
-    """Transposition-invariant hash of the first bars' melody rhythm + intervals."""
-    sig = []
+    """Transposition-invariant hash of the first bars' melody: rhythm + pitch relative to the tune's first note.
+
+    Pitches are relative to the first note of the tune, not of each bar, so tunes
+    whose bars share a shape but move to other degrees do not collide.
+    """
+    line = []
     for b in song["bars"][:bars]:
-        sig.extend(signature(melody(b)))
-    first = next((x[1] for x in sig if x[1] is not None), 0)
-    norm = [(d, None if n is None else n - first) for d, n in sig]
+        for e in melody(b):
+            top = max(e.pitches, key=lambda p: p.midi).midi if e.pitches else None
+            line.append((e.dur, top))
+        line.append("|")
+    first = next((x[1] for x in line if x != "|" and x[1] is not None), 0)
+    norm = [x if x == "|" else (x[0], None if x[1] is None else x[1] - first) for x in line]
     return hashlib.sha1(repr((song["time"], norm)).encode()).hexdigest()
 
 

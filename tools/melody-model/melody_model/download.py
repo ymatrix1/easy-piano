@@ -29,6 +29,12 @@ UA = {"User-Agent": "easy-piano-melody-model/0.1 (+https://github.com/ymatrix1/e
 NMD_FILES = ("jigs", "hpps", "morris", "playford", "reelsa-c", "reelsd-g", "reelsh-l",
              "reelsm-q", "reelsr-t", "reelsu-z", "slip", "waltzes", "xmas")  # Ashover excluded (user, 2026-10-20)
 PDMX_RECORD = "https://zenodo.org/records/15571083/files"
+# sha256 of the Zenodo files, checked 2026-10-20 (their md5 matched the Zenodo API checksums)
+PDMX_SHA256 = {
+    "PDMX.csv": "fc2187e7e09185f4b28be57b6478a96a1243a037f8fd13624f17de2d8bfd44bd",
+    "mxl.tar.gz": "01949cc0d9215e2f30924eadc8b1dd148aca90c02e2cf1999bb83df5ffe4d7a4",
+}
+NMD_URL = "https://abc.sourceforge.net/NMD/nmd/{name}.txt"
 MUTOPIA_TREE = "https://api.github.com/repos/MutopiaProject/MutopiaProject/git/trees/master?recursive=1"
 MUTOPIA_RAW = "https://raw.githubusercontent.com/MutopiaProject/MutopiaProject/master/"
 MUTOPIA_SITE = "https://www.mutopiaproject.org/"
@@ -56,6 +62,14 @@ def fetch(url: str, dest: Path) -> str:
     return h.hexdigest()
 
 
+def file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(1 << 20):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def get_text(url: str) -> str:
     with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
         return r.read().decode("utf-8", "replace")
@@ -71,9 +85,9 @@ def write_manifest(corpus: str, entries: list[dict], note: str) -> None:
 def nottingham() -> None:
     entries = []
     for name in NMD_FILES:
-        url = f"https://abc.sourceforge.net/NMD/nmd/{name}.txt"
+        url = NMD_URL.format(name=name)
         sha = fetch(url, RAW / "nottingham" / f"{name}.abc")
-        entries.append({"path": f"{name}.abc", "url": url, "license": "traditional; no licence stated", "sha256": sha})
+        entries.append({"path": f"{name}.abc", "url": url, "license": "no licence stated; used under D18 (risk accepted)", "sha256": sha})
         time.sleep(1)
     write_manifest("nottingham", entries, "Nottingham Music Database, original ABC; Ashover collection excluded")
 
@@ -87,7 +101,9 @@ def pdmx() -> None:
             print(f"downloading {name} ...", flush=True)
             sha = fetch(f"{PDMX_RECORD}/{name}?download=1", dest)
         else:
-            sha = hashlib.sha256(dest.read_bytes()).hexdigest() if dest.stat().st_size < 1 << 30 else "skipped-large"
+            sha = file_sha256(dest)
+        if sha != PDMX_SHA256[name]:
+            raise SystemExit(f"pdmx {name}: sha256 {sha} does not match the pinned {PDMX_SHA256[name]}")
         entries.append({"path": name, "url": f"{PDMX_RECORD}/{name}", "license": "dataset CC-BY-4.0; files PD/CC0", "sha256": sha})
     if not (d / "mxl").exists():
         print("extracting mxl.tar.gz ...", flush=True)
