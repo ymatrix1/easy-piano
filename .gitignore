@@ -5,3 +5,6 @@ target/
 *.mp4
 *.mov
 tools/mic-fixtures/
+
+# Melody model corpora (local only, never committed)
+/data/

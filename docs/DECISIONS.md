@@ -191,15 +191,6 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** CC-BY-SA like hand arrangements (attribution for machine output is muddled); no provenance field (cannot audit a model or method later); rubric as a guideline only (drift from the curriculum); runtime generation in the app ("endless practice", but untestable content, model size, and no review).
 - **Impact:** Song format gains optional `generator` and `spec_node` (schema, `content-format.md`); lint runs the rubric; new `content specs` command and `docs/specs/skill-specs.md`. Next: `compose-song` skill, method spike with blind listening test (epic piano-bovj).
 
-### D18. Web mic input: Dart onset + harmonic-salience detector, calibrated offset, app sound muted
-
-- **Status:** proposed
-- **Context:** Students without MIDI (acoustic or non-MIDI digital piano) can't play. Core already grades `Input::Mic` with its own window. The input spec planned Rust YIN/MPM in a native audio thread, which doesn't exist yet; web is the shipping platform and Piano Basics uses chords.
-- **Decision:** On web, capture with `getUserMedia` (no echo cancellation/noise suppression/AGC) and an AudioWorklet; detect notes in pure Dart (`NoteDetector`: spectral-flux onsets, then greedy harmonic-salience picking on the energy that is new since the onset, up to 4 notes). Emit the MIDI path's `NoteEvent` with the onset time minus a per-device calibrated offset; the session runs with `Input::Mic`. In mic mode the app's own piano, metronome and backing are silent after the count-in. Calibration uses a visual cue.
-- **Why:** Handles beginner chords, which YIN/MPM can't; no model download or runtime; deterministic and unit-testable in Dart; works in the existing web build without new FFI. Muting is simpler and more reliable than echo cancellation, which distorts piano tones. Grading stays in Rust `core` (rule 7); the detector only produces input events.
-- **Alternatives:** Rust YIN/MPM in core via wasm (mono only; per-chunk FFI); Basic Pitch ONNX (Apache-2.0, chords, but ~20 MB runtime+model and ~0.5–1 s windows); browser echo cancellation instead of muting (smears notes, still leaks); audio click calibration (the mic hears the speaker click).
-- **Impact:** New `app/lib/input/mic/`, `app/web/mic_worklet.js`, fixture generator `tools/mic_fixtures.py` (output git-ignored) and scorer `app/tool/mic_eval.dart`. Fixture F1 0.865 overall on the Salamander piano (room 0.912, noisy 0.806); bass below C3 weak; real-device latency and real recordings still to measure ([research](research/mic-input.md)). Native platforms keep a stub until the native audio engine.
-
 ### D22. Sampled instruments for piano and backing band (proposed)
 
 - **Status:** proposed
@@ -208,3 +199,21 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Real recordings are the only way to stop sounding synthetic; these three sets are the best openly licensed ones we found, and fit 20% of the 15 MB budget. Humanize stays a few ms and seeded, so the band stays locked to the audio clock and plays the same every time.
 - **Alternatives:** Better synthesis (still synthetic, much work); VSCO-2 CE strings (CC0, more work to loop, bigger); Salamander velocity layers (~8 MB more); pre-rendered backing audio per song (D14 reasons); humanize in Rust core (it is playback colour, not timing or grading logic, so it stays next to the synth).
 - **Impact:** New assets `app/assets/piano/` (replaced) and `app/assets/band/` with licence files. CC-BY needs an in-app credit (bean). Native platforms stay silent until the native audio engine (bean). `content-format.md` mix table and `practice-screen.md` updated. Menu SFX and metronome click remain synthesized.
+
+### D23. Native audio output via WASAPI exclusive (Windows), gated on web latency
+
+- **Status:** proposed
+- **Context:** Browser audio output on the test PC costs 40 ms `outputLatency` on top of a 10 ms buffer, and `latencyHint` tuning changes nothing. `cpal` shared mode is stuck at the 10 ms system period. WASAPI exclusive: 2 of 5 test devices streamed at 3.0 and 3.3 ms periods; the driver reported a 3 ms minimum period on all 5. See [native-audio-latency.md](research/native-audio-latency.md). D1 sets the gate at 30 ms p95 MIDI to frame.
+- **Decision:** Do not start native audio until the web MIDI p95 is measured on a real keyboard. If web p95 ≤ 30 ms, native audio stays a later improvement. If it is over, add an `audio/` Rust crate that plays the piano through WASAPI exclusive (PCM16, 48 kHz) on Windows with a shared-mode fallback, and CoreAudio/Oboe via `cpal` elsewhere, chosen after per-platform measurement.
+- **Why:** Shared-mode paths (browser, `cpal`) cannot go below 10 ms; exclusive can. The cost is a native sampler, a bridge call for note on/off and per-platform backends, so it should be justified by a measured miss.
+- **Alternatives:** `miniaudio` (same exclusive backend, permissive licence, not yet measured); `flutter_soloud` (smallest change, not yet measured); stay web-only and advise wired or ASIO-class audio devices; Oboe or CoreAudio directly instead of `cpal`.
+- **Impact:** New `audio/` crate and a `PianoSynth` native implementation. Samples decoded to PCM at load. Exclusive mode blocks other apps from the device while held. Needs a Windows loopback test, an Android device and an Apple device before backends are final.
+
+### D24. Web mic input: Dart onset + harmonic-salience detector, calibrated offset, app sound muted
+
+- **Status:** proposed
+- **Context:** Students without MIDI (acoustic or non-MIDI digital piano) can't play. Core already grades `Input::Mic` with its own window. The input spec planned Rust YIN/MPM in a native audio thread, which doesn't exist yet; web is the shipping platform and Piano Basics uses chords.
+- **Decision:** On web, capture with `getUserMedia` (no echo cancellation/noise suppression/AGC) and an AudioWorklet; detect notes in pure Dart (`NoteDetector`: spectral-flux onsets, then greedy harmonic-salience picking on the energy that is new since the onset, up to 4 notes). Emit the MIDI path's `NoteEvent` with the onset time minus a per-device calibrated offset; the session runs with `Input::Mic`. In mic mode the app's own piano, metronome and backing are silent after the count-in. Calibration uses a visual cue.
+- **Why:** Handles beginner chords, which YIN/MPM can't; no model download or runtime; deterministic and unit-testable in Dart; works in the existing web build without new FFI. Muting is simpler and more reliable than echo cancellation, which distorts piano tones. Grading stays in Rust `core` (rule 7); the detector only produces input events.
+- **Alternatives:** Rust YIN/MPM in core via wasm (mono only; per-chunk FFI); Basic Pitch ONNX (Apache-2.0, chords, but ~20 MB runtime+model and ~0.5–1 s windows); browser echo cancellation instead of muting (smears notes, still leaks); audio click calibration (the mic hears the speaker click).
+- **Impact:** New `app/lib/input/mic/`, `app/web/mic_worklet.js`, fixture generator `tools/mic_fixtures.py` (output git-ignored) and scorer `app/tool/mic_eval.dart`. Fixture F1 0.865 overall on the Salamander piano (room 0.912, noisy 0.806); bass below C3 weak; real-device latency and real recordings still to measure ([research](research/mic-input.md)). Native platforms keep a stub until the native audio engine.
