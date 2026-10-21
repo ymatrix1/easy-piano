@@ -6,6 +6,9 @@ import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/free_play_page.dart';
+import '../practice/generated/generated_practice_page.dart';
+import '../practice/generated/practice_service.dart';
+import '../practice/generated/tune_generator.dart';
 import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -64,6 +67,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// One generator per app session, so the model loads once (D28).
+  late final PracticeService? _practice = widget.repo.melodyManifest == null
+      ? null
+      : PracticeService(createTuneGenerator(widget.repo.melodyManifest!));
+
+  void _openPractice(CourseDef course, JourneyNode node) {
+    final def = widget.repo.practice['${course.id}/${node.id}'];
+    if (def == null || _practice == null) return;
+    _push(
+      (_) => GeneratedPracticePage(
+        node: def,
+        title: widget.repo.t(node.title),
+        service: _practice,
+        midi: widget.midi,
+      ),
+    );
+  }
+
   void _push(WidgetBuilder b) =>
       Navigator.of(context).push(MaterialPageRoute(builder: b));
 
@@ -71,7 +92,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final progress = Progress(widget.repo, _stars);
     final tabs = [
-      LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
+      LearnTab(
+        repo: widget.repo,
+        progress: progress,
+        onPlay: _playLevel,
+        onPractice: _practice == null ? null : _openPractice,
+      ),
       SafeArea(
         bottom: false,
         child: PracticeTab(

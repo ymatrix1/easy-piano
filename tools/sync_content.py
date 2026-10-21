@@ -33,6 +33,9 @@ res = subprocess.run([*cli, "practice-pack", str(SRC), "--out", str(pack)], capt
 if res.returncode != 0:
     sys.exit(f"content practice-pack failed ({res.returncode}): {res.stderr.strip()[-800:]}")
 files.append("practice.json")
+# Release manifest: the app's trust root for the model download (sha256, D24).
+shutil.copy2(ROOT / "tools" / "melody-model" / "releases" / "melody-model-v1.json", DST / "melody-model-v1.json")
+files.append("melody-model-v1.json")
 web = ROOT / "app" / "web" / "melody"
 web.mkdir(parents=True, exist_ok=True)
 shutil.copy2(ROOT / "tools" / "melody-model" / "web" / "melody.js", web / "melody.js")

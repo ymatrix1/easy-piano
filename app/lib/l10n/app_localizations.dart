@@ -554,6 +554,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Earn {need} stars from any of these songs ({have}/{need})'**
   String gateProgress(int need, int have);
+
+  /// No description provided for @practiceTune.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice tune'**
+  String get practiceTune;
+
+  /// No description provided for @generatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get generatedBadge;
+
+  /// No description provided for @practiceLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting the tune maker ready…'**
+  String get practiceLoading;
+
+  /// No description provided for @practiceDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {percent}%'**
+  String practiceDownload(int percent);
+
+  /// No description provided for @practiceGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing a tune for this lesson…'**
+  String get practiceGenerating;
+
+  /// No description provided for @practiceAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Another one'**
+  String get practiceAnother;
+
+  /// No description provided for @practiceAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get practiceAgain;
+
+  /// No description provided for @practiceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make a tune that fits this lesson. Try again.'**
+  String get practiceFailed;
+
+  /// No description provided for @practiceNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice tunes only work in the browser for now.'**
+  String get practiceNotYet;
+
+  /// No description provided for @practiceModelError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the tune maker. Check your connection and try again.'**
+  String get practiceModelError;
+
+  /// No description provided for @practiceNotesHit.
+  ///
+  /// In en, this message translates to:
+  /// **'{hit} of {total} notes'**
+  String practiceNotesHit(int hit, int total);
+
+  /// No description provided for @practiceNoStars.
+  ///
+  /// In en, this message translates to:
+  /// **'A new tune made for this lesson. Practice only: no stars.'**
+  String get practiceNoStars;
+
+  /// No description provided for @practiceWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for me'**
+  String get practiceWait;
+
+  /// No description provided for @practicePlayAlong.
+  ///
+  /// In en, this message translates to:
+  /// **'Play along'**
+  String get practicePlayAlong;
 }
 
 class _AppLocalizationsDelegate

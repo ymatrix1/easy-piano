@@ -126,5 +126,36 @@
         "type": "int"
       }
     }
-  }
+  },
+  "practiceTune": "Practice tune",
+  "generatedBadge": "Generated",
+  "practiceLoading": "Getting the tune maker ready…",
+  "practiceDownload": "Downloading {percent}%",
+  "@practiceDownload": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "practiceGenerating": "Writing a tune for this lesson…",
+  "practiceAnother": "Another one",
+  "practiceAgain": "Play again",
+  "practiceFailed": "Couldn't make a tune that fits this lesson. Try again.",
+  "practiceNotYet": "Practice tunes only work in the browser for now.",
+  "practiceModelError": "Couldn't load the tune maker. Check your connection and try again.",
+  "practiceNotesHit": "{hit} of {total} notes",
+  "@practiceNotesHit": {
+    "placeholders": {
+      "hit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "practiceNoStars": "A new tune made for this lesson. Practice only: no stars.",
+  "practiceWait": "Wait for me",
+  "practicePlayAlong": "Play along"
 }

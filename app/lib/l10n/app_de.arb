@@ -74,5 +74,19 @@
   "next": "Weiter",
   "locked": "Gesperrt",
   "middleCLabel": "C",
-  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})"
+  "gateProgress": "Sammle {need} Sterne mit beliebigen dieser Lieder ({have}/{need})",
+  "practiceTune": "Übungsstück",
+  "generatedBadge": "Generiert",
+  "practiceLoading": "Der Melodie-Macher wird vorbereitet…",
+  "practiceDownload": "Download {percent}%",
+  "practiceGenerating": "Ein Stück für diese Lektion wird geschrieben…",
+  "practiceAnother": "Noch eins",
+  "practiceAgain": "Nochmal spielen",
+  "practiceFailed": "Kein passendes Stück für diese Lektion gefunden. Versuch es nochmal.",
+  "practiceNotYet": "Übungsstücke gibt es vorerst nur im Browser.",
+  "practiceModelError": "Der Melodie-Macher konnte nicht geladen werden. Prüfe deine Verbindung und versuch es nochmal.",
+  "practiceNotesHit": "{hit} von {total} Noten",
+  "practiceNoStars": "Ein neues Stück für diese Lektion. Nur zum Üben: keine Sterne.",
+  "practiceWait": "Warte auf mich",
+  "practicePlayAlong": "Mitspielen"
 }

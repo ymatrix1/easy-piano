@@ -46,6 +46,9 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [ ] Piano Basics 2–4, Pop Chords 1
 - [x] Localization: en, pt-BR, es, fr, de UI and content strings, language picker ([i18n](specs/i18n.md))
 - [ ] Polyphonic mic research result
+- [x] Practice mode on web: generated tunes per node, rubric-gated, labelled, no stars (D28, [spec](specs/practice-mode.md))
+- [ ] Practice mode on Android/iOS/desktop (native ONNX runtime)
+- [ ] Publish the `melody-model-v1` release and point `MELODY_MODEL_URL` at a CORS/CORP-friendly mirror
 
 ## Phase 5: My songs (D11)
 

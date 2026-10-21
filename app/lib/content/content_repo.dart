@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../practice/generated/practice_service.dart';
+
 /// One stage of a level (docs/specs/content-format.md).
 class StageDef {
   const StageDef({
@@ -151,6 +153,8 @@ class ContentRepo {
     required this.scenes,
     required Map<String, Map<String, String>> stringsByLocale,
     this.locale = 'en',
+    this.practice = const {},
+    this.melodyManifest,
   }) : _byLocale = stringsByLocale;
 
   final List<CourseDef> courses;
@@ -158,6 +162,12 @@ class ContentRepo {
   final Map<String, LevelDef> levels;
   final Map<String, String> songJson;
   final Map<String, Map<String, dynamic>> scenes;
+
+  /// Practice mode per `course/node` (`practice.json`, docs/specs/practice-mode.md).
+  final Map<String, PracticeNodeDef> practice;
+
+  /// Melody model release manifest (`melody-model-v1.json`), or null.
+  final String? melodyManifest;
 
   /// Content strings per locale tag (`en`, `pt-BR`, ...), from `strings/<tag>.json`.
   final Map<String, Map<String, String>> _byLocale;
@@ -242,6 +252,10 @@ class ContentRepo {
       scenes: scenes,
       stringsByLocale: byLocale,
       locale: locale,
+      practice: files['practice.json'] == null
+          ? const {}
+          : PracticeNodeDef.parsePack(files['practice.json']!),
+      melodyManifest: files['melody-model-v1.json'],
     );
   }
 

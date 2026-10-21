@@ -74,5 +74,19 @@
   "next": "Siguiente",
   "locked": "Bloqueado",
   "middleCLabel": "Do",
-  "gateProgress": "Gana {need} estrellas con cualquiera de estas canciones ({have}/{need})"
+  "gateProgress": "Gana {need} estrellas con cualquiera de estas canciones ({have}/{need})",
+  "practiceTune": "Melodía de práctica",
+  "generatedBadge": "Generada",
+  "practiceLoading": "Preparando el creador de melodías…",
+  "practiceDownload": "Descargando {percent}%",
+  "practiceGenerating": "Escribiendo una melodía para esta lección…",
+  "practiceAnother": "Otra",
+  "practiceAgain": "Tocar otra vez",
+  "practiceFailed": "No se pudo crear una melodía para esta lección. Inténtalo de nuevo.",
+  "practiceNotYet": "Por ahora las melodías de práctica solo funcionan en el navegador.",
+  "practiceModelError": "No se pudo cargar el creador de melodías. Revisa tu conexión e inténtalo de nuevo.",
+  "practiceNotesHit": "{hit} de {total} notas",
+  "practiceNoStars": "Una melodía nueva para esta lección. Solo práctica: sin estrellas.",
+  "practiceWait": "Espérame",
+  "practicePlayAlong": "Tocar a la vez"
 }

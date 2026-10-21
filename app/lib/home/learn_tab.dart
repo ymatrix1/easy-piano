@@ -16,11 +16,15 @@ class LearnTab extends StatefulWidget {
     required this.repo,
     required this.progress,
     required this.onPlay,
+    this.onPractice,
   });
 
   final ContentRepo repo;
   final Progress progress;
   final Future<void> Function(String levelId) onPlay;
+
+  /// Opens practice mode (generated tunes) for a node; null hides the button.
+  final void Function(CourseDef course, JourneyNode node)? onPractice;
 
   @override
   State<LearnTab> createState() => _LearnTabState();
@@ -43,9 +47,16 @@ class _LearnTabState extends State<LearnTab> {
         progress: widget.progress,
         course: course,
         node: node,
+        canPractice:
+            widget.onPractice != null &&
+            widget.repo.practice['${course.id}/${node.id}']?.gen != null,
       ),
     );
-    if (level != null) await widget.onPlay(level);
+    if (level == _TaskSheet.practice) {
+      widget.onPractice?.call(course, node);
+    } else if (level != null) {
+      await widget.onPlay(level);
+    }
   }
 
   @override
@@ -765,12 +776,17 @@ class _TaskSheet extends StatelessWidget {
     required this.progress,
     required this.course,
     required this.node,
+    this.canPractice = false,
   });
+
+  /// Popped instead of a level id to open practice mode.
+  static const practice = ' practice';
 
   final ContentRepo repo;
   final Progress progress;
   final CourseDef course;
   final JourneyNode node;
+  final bool canPractice;
 
   @override
   Widget build(BuildContext context) {
@@ -827,6 +843,16 @@ class _TaskSheet extends StatelessWidget {
                       fontSize: 20,
                       height: 54,
                     ),
+                    if (canPractice) ...[
+                      const SizedBox(height: 10),
+                      GameButton(
+                        label: AppLocalizations.of(context).practiceTune
+                            .toUpperCase(),
+                        icon: Icons.auto_awesome,
+                        tone: GameTone.purple,
+                        onTap: () => Navigator.of(context).pop(practice),
+                      ),
+                    ],
                   ],
                 ),
               ),

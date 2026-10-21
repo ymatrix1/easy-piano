@@ -1,6 +1,8 @@
 """Download onnxruntime-web into web/vendor/ (git-ignored) and check each file's sha256.
 
-    python tools/melody-model/web/fetch_ort.py
+    python tools/melody-model/web/fetch_ort.py [--dest <dir>]
+
+`--dest app/web/melody/vendor` stages the same files for the app's practice mode.
 
 The demo imports only these vendored files and points `ort.env.wasm.wasmPaths` at vendor/, so nothing
 executable comes from a CDN at run time. Keep VERSION equal to the onnxruntime pin in requirements.txt
@@ -23,9 +25,10 @@ VENDOR = Path(__file__).resolve().parent / "vendor"
 
 
 def main() -> int:
-    VENDOR.mkdir(exist_ok=True)
+    dest = Path(sys.argv[sys.argv.index("--dest") + 1]) if "--dest" in sys.argv else VENDOR
+    dest.mkdir(parents=True, exist_ok=True)
     for name, want in FILES.items():
-        path = VENDOR / name
+        path = dest / name
         data = path.read_bytes() if path.exists() else urllib.request.urlopen(URL + name, timeout=60).read()
         got = hashlib.sha256(data).hexdigest()
         if got != want:

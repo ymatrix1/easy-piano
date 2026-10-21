@@ -1,4 +1,18 @@
 {
   "@@locale": "pt_BR",
-  "gateProgress": "Ganhe {need} estrelas em qualquer uma destas músicas ({have}/{need})"
+  "gateProgress": "Ganhe {need} estrelas em qualquer uma destas músicas ({have}/{need})",
+  "practiceTune": "Melodia de treino",
+  "generatedBadge": "Gerada",
+  "practiceLoading": "Preparando o criador de melodias…",
+  "practiceDownload": "Baixando {percent}%",
+  "practiceGenerating": "Escrevendo uma melodia para esta lição…",
+  "practiceAnother": "Outra",
+  "practiceAgain": "Tocar de novo",
+  "practiceFailed": "Não deu para criar uma melodia para esta lição. Tente de novo.",
+  "practiceNotYet": "Por enquanto, as melodias de treino só funcionam no navegador.",
+  "practiceModelError": "Não deu para carregar o criador de melodias. Confira a conexão e tente de novo.",
+  "practiceNotesHit": "{hit} de {total} notas",
+  "practiceNoStars": "Uma melodia nova para esta lição. Só treino: sem estrelas.",
+  "practiceWait": "Espere por mim",
+  "practicePlayAlong": "Tocar junto"
 }

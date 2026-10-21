@@ -260,6 +260,56 @@ class AppLocalizationsPt extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Ganhe $need estrelas em qualquer uma destas músicas ($have/$need)';
   }
+
+  @override
+  String get practiceTune => 'Melodia de treino';
+
+  @override
+  String get generatedBadge => 'Gerada';
+
+  @override
+  String get practiceLoading => 'A preparar o criador de melodias…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'A transferir $percent%';
+  }
+
+  @override
+  String get practiceGenerating => 'A escrever uma melodia para esta lição…';
+
+  @override
+  String get practiceAnother => 'Outra';
+
+  @override
+  String get practiceAgain => 'Tocar de novo';
+
+  @override
+  String get practiceFailed =>
+      'Não foi possível criar uma melodia para esta lição. Tenta de novo.';
+
+  @override
+  String get practiceNotYet =>
+      'Por agora, as melodias de treino só funcionam no navegador.';
+
+  @override
+  String get practiceModelError =>
+      'Não foi possível carregar o criador de melodias. Verifica a ligação e tenta de novo.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit de $total notas';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'Uma melodia nova para esta lição. Só treino: sem estrelas.';
+
+  @override
+  String get practiceWait => 'Espera por mim';
+
+  @override
+  String get practicePlayAlong => 'Tocar junto';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -270,4 +320,54 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String gateProgress(int need, int have) {
     return 'Ganhe $need estrelas em qualquer uma destas músicas ($have/$need)';
   }
+
+  @override
+  String get practiceTune => 'Melodia de treino';
+
+  @override
+  String get generatedBadge => 'Gerada';
+
+  @override
+  String get practiceLoading => 'Preparando o criador de melodias…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'Baixando $percent%';
+  }
+
+  @override
+  String get practiceGenerating => 'Escrevendo uma melodia para esta lição…';
+
+  @override
+  String get practiceAnother => 'Outra';
+
+  @override
+  String get practiceAgain => 'Tocar de novo';
+
+  @override
+  String get practiceFailed =>
+      'Não deu para criar uma melodia para esta lição. Tente de novo.';
+
+  @override
+  String get practiceNotYet =>
+      'Por enquanto, as melodias de treino só funcionam no navegador.';
+
+  @override
+  String get practiceModelError =>
+      'Não deu para carregar o criador de melodias. Confira a conexão e tente de novo.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit de $total notas';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'Uma melodia nova para esta lição. Só treino: sem estrelas.';
+
+  @override
+  String get practiceWait => 'Espere por mim';
+
+  @override
+  String get practicePlayAlong => 'Tocar junto';
 }

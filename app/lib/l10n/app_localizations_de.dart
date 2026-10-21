@@ -262,4 +262,54 @@ class AppLocalizationsDe extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Sammle $need Sterne mit beliebigen dieser Lieder ($have/$need)';
   }
+
+  @override
+  String get practiceTune => 'Übungsstück';
+
+  @override
+  String get generatedBadge => 'Generiert';
+
+  @override
+  String get practiceLoading => 'Der Melodie-Macher wird vorbereitet…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'Download $percent%';
+  }
+
+  @override
+  String get practiceGenerating =>
+      'Ein Stück für diese Lektion wird geschrieben…';
+
+  @override
+  String get practiceAnother => 'Noch eins';
+
+  @override
+  String get practiceAgain => 'Nochmal spielen';
+
+  @override
+  String get practiceFailed =>
+      'Kein passendes Stück für diese Lektion gefunden. Versuch es nochmal.';
+
+  @override
+  String get practiceNotYet => 'Übungsstücke gibt es vorerst nur im Browser.';
+
+  @override
+  String get practiceModelError =>
+      'Der Melodie-Macher konnte nicht geladen werden. Prüfe deine Verbindung und versuch es nochmal.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit von $total Noten';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'Ein neues Stück für diese Lektion. Nur zum Üben: keine Sterne.';
+
+  @override
+  String get practiceWait => 'Warte auf mich';
+
+  @override
+  String get practicePlayAlong => 'Mitspielen';
 }

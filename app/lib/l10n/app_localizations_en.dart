@@ -259,4 +259,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String gateProgress(int need, int have) {
     return 'Earn $need stars from any of these songs ($have/$need)';
   }
+
+  @override
+  String get practiceTune => 'Practice tune';
+
+  @override
+  String get generatedBadge => 'Generated';
+
+  @override
+  String get practiceLoading => 'Getting the tune maker ready…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'Downloading $percent%';
+  }
+
+  @override
+  String get practiceGenerating => 'Writing a tune for this lesson…';
+
+  @override
+  String get practiceAnother => 'Another one';
+
+  @override
+  String get practiceAgain => 'Play again';
+
+  @override
+  String get practiceFailed =>
+      'Couldn\'t make a tune that fits this lesson. Try again.';
+
+  @override
+  String get practiceNotYet =>
+      'Practice tunes only work in the browser for now.';
+
+  @override
+  String get practiceModelError =>
+      'Couldn\'t load the tune maker. Check your connection and try again.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit of $total notes';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'A new tune made for this lesson. Practice only: no stars.';
+
+  @override
+  String get practiceWait => 'Wait for me';
+
+  @override
+  String get practicePlayAlong => 'Play along';
 }
