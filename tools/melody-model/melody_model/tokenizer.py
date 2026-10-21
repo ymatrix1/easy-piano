@@ -44,6 +44,7 @@ KINDS = (
     + tuple(f"HANDS_{h}" for h in HANDS)
     + tuple(f"STYLE_{x}" for x in STYLES)
     + tuple(f"SRC_{x}" for x in SOURCES)
+    + tuple(f"LEVEL_{n}" for n in range(1, 6))
     + ("PAT", "PAT_rhythm", "PAT_accidental", "PAT_pitch", "PAT_hand_RH", "PAT_hand_LH", "PAT_rest", "PAT_chord", "PAT_hands_together")
     + tuple(f"PAT_interval_min_{n}" for n in INTERVAL_NUMBERS)
     + tuple(f"PAT_share_{x}" for x in SHARES)
@@ -87,6 +88,7 @@ class Spec:
     patterns: list[dict] | None = None  # skill-spec `required` patterns
     styles: list[str] | None = None  # STYLES; dropped at random in training
     source: str | None = None  # SOURCES; omitted at generation
+    level: int | None = None  # 1-5 (difficulty.level_of)
 
 
 def spec_from_song(song: dict) -> Spec:
@@ -122,6 +124,8 @@ def encode_spec(spec: Spec) -> list[Step]:
     out += [step(f"STYLE_{x}") for x in sorted(spec.styles or [])]
     if spec.source:
         out.append(step(f"SRC_{spec.source}"))
+    if spec.level:
+        out.append(step(f"LEVEL_{spec.level}"))
     out += [step(f"COURSE_{spec.course}"), step(f"TIME_{spec.time}"),
            step(f"KEY_{spec.key}"), step(f"BARS_{spec.bars}"),
            step("RANGE_LO", pitch=spec.range_lo), step("RANGE_HI", pitch=spec.range_hi)]
@@ -200,7 +204,7 @@ class InvalidSequence(ValueError):
 
 _PREFIX_KINDS = ("PAD", "BOS", "PAT", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW", "PLAN", "PLAN_END",
                  "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT", "FIM_PRE", "FIM_SUF", "FIM_MID")
-_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_")
+_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_", "LEVEL_")
 
 
 def decode(steps: list[Step]) -> dict:

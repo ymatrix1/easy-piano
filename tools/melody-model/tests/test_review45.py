@@ -106,7 +106,7 @@ def test_train_refuses_without_gate(tmp_path, monkeypatch):
     from melody_model import train
     monkeypatch.setattr(gate, "GATE", tmp_path / "gate.json")
     with pytest.raises(SystemExit, match="no review gate"):
-        train.main([])
+        train.main(["--name", "t"])
 
 
 def test_gate_tied_to_dataset_hash(tmp_path, monkeypatch):

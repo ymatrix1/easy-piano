@@ -105,3 +105,16 @@ python -m melody_model.sample --corpus pdmx --n 50         # review sample (gate
 ### Local MIDI datasets
 
 Any folder of `.mid` files can be plugged in without code changes: add an entry to `data/melody/local-datasets.json` (git-ignored; template `tools/melody-model/local-datasets.example.json`) with `name`, `path`, `source`, `license`, `flags`, and optionally `timing` (`score`: tempo-mapped, quantized by music21; `performed`: tempo estimated from onsets, `timed.py`), `track` (part/track index or name), `meter` (performed only: `2/4`, `3/4`, `4/4`) and `group_by` (`file`/`folder`). Bad types or values are rejected; licence and source are recorded as given. Local datasets are opt-in: `python -m melody_model.build --corpora own nottingham mutopia pdmx <name>`. None are registered by default.
+
+## Training (`melody_model/train.py`, step 4)
+
+```
+python -m melody_model.train --name base --steps 20000      # refuses to run without the review gate
+```
+
+- Model (`model.py`): compound decoder, sum of four field embeddings, pre-norm blocks with RoPE attention, cascaded heads kind → pitch → dur → finger (teacher-forced in training). Default 6 layers, d 384, 6 heads, ctx 1,024: 11.09M params.
+- Samples (`samples.py`), drawn on the fly from `tunes.jsonl` train split: phrase window (whole tune or 4/8/16 bars), plan relettered from A, random spelled transposition (−6…+11), 30% easier variant (`simplify.py`: RH-first, coarser rhythm grid, range folded to one octave), spec computed from the result plus `LEVEL_1…5` (`difficulty.level_of`, dropped 20%), 0–3 patterns it satisfies (`difficulty.patterns_of`), styles (dropped 20%), source. 25% FIM (1–4 middle bars). Loss: plan and bars after `SPEC_END` (left to right), middle bars after `FIM_MID` (FIM).
+- Batches by token budget (32,768 padded tokens; similar-length samples grouped). AdamW (0.9, 0.95), weight decay 0.1, lr 3e-4, 500 warm-up steps, cosine to 10%, bf16, grad clip 1.0.
+- Output in git-ignored `data/melody/runs/<name>/`: `config.json` (args, params, dataset and vocab sha256, gate), `log.jsonl`, `ckpt.pt` (best validation loss), `summary.json`.
+
+Smoke runs (RTX 4070 SUPER, 2026-10-20, dataset `e4279fef…`): 2 min, 8 workers → 1,087 steps, 19.4M tokens, ~160k tokens/s, 3.8 GB peak, validation loss 2.17 → 1.40 (kind 0.35, pitch 0.79, dur 0.25, finger 0.003; fingering is almost always absent in the data).
