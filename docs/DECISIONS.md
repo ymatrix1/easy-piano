@@ -29,6 +29,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D21](#d21-train-the-melody-model-on-everything-we-can-flagged-and-style-tagged) | 2026-10-20 | Train on everything we can, flagged and style-tagged; supersedes part of D19 | accepted |
 | [D24](#d24-melody-model-weights-licence-storage-and-training-data-disclosure) | 2026-10-21 | Melody-model weights: licence, storage, disclosure | proposed |
 | [D25](#d25-melody-model-decoding-masks-cover-the-taught-set-the-rubric-covers-patterns-and-fingering) | 2026-10-21 | Melody-model decoding: masks vs rubric | proposed |
+| [D26](#d26-explainable-song-difficulty-level-from-skill-scores-and-a-monotonic-ordinal-model) | 2026-10-21 | Explainable song difficulty level from skill scores and a monotonic ordinal model | proposed |
 
 ## Accepted
 
@@ -275,3 +276,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** A per-step mask cannot know that a later bar will add a required note; forcing patterns early distorts melodies. Filtering costs only extra samples (16 candidates per node, 70% pass).
 - **Alternatives:** Pattern-aware constrained decoding (force a required pitch or rhythm in the last bars when still missing); a learned fingering head.
 - **Impact:** More samples per node; pass rate reported per run. Follow-up: steer decoding toward missing patterns near the end of a tune.
+
+### D26. Explainable song difficulty level from skill scores and a monotonic ordinal model
+
+- **Status:** proposed
+- **Context:** Several features need to know how hard a song is: melody-model training labels (today a crude `level_of` heuristic on range, fastest note, black keys, hands, chords, density), checks on generated tunes, personal song import with simplification (D11) and placement (OQ9). The rubric (D17) answers "uses only what was taught", not "how hard". D18-D25 are on main, hence D26.
+- **Decision:** A pure Rust module `core/src/difficulty.rs` computes features per hand and per bar, groups them into 8 skill scores in 0..1 (reading, hand position, intervals, rhythm, key, coordination, texture, speed) and maps them to a level 1-10 with a cumulative-logit ordinal model whose weights are non-negative. Weights live in `core/data/difficulty-weights.json`, fitted by `tools/difficulty/calibrate.py` from course order, node envelopes, simplified-vs-original pairs and (when present locally) PDMX `complexity` as weak labels. Output: level, `node_fit` (earliest journey node whose taught set the song fits, computed with the rubric's own taught-set check), skill scores, hardest bars, plain reasons, and what exceeds a given node. `content level` exposes it; lint warns when a course song's level is far from its node. Spec: [specs/difficulty.md](specs/difficulty.md).
+- **Why:** Skill scores are explainable ("hard because of 16ths and hand shifts") and map to course concepts. Non-negative weights over features that only grow with difficulty make the level monotonic: more of any difficulty never lowers it, which a learner and an author can trust. An ordinal model fits 10 ordered levels with few parameters, so ~40 course songs can calibrate it. One Rust implementation serves the app, the CLI and Python (via the CLI), so labels, checks and the app never disagree.
+- **Alternatives:** Keep `level_of` (unexplained, not tied to the course); hand-set thresholds per feature (no calibration, brittle); gradient-boosted or neural regressor on PDMX (opaque, not monotonic, PDMX labels are coarse 0-3 and uploader-set); level = node index from the rubric alone (only defined for songs inside the course's taught set, says nothing above Essentials III).
+- **Impact:** New core module, weights JSON, `content level` command, lint warning, calibration script. Follow-ups: replace the melody model's `level_of` (bean piano-9aw0), use in import and placement. Weights must be refitted when course content changes a lot; lint's warning shows drift.

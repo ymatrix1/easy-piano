@@ -1,0 +1,111 @@
+{
+  "weights": [
+    3.1639,
+    1.1113,
+    0.3208,
+    1.4192,
+    5.1912,
+    0.3657,
+    0.25,
+    0.25
+  ],
+  "thresholds": [
+    -0.4365,
+    1.4291,
+    2.4288,
+    3.3298,
+    5.3301,
+    7.6821,
+    10.6821,
+    11.2821,
+    11.8821
+  ],
+  "course_levels": [
+    1,
+    6
+  ],
+  "skills": [
+    "reading",
+    "hand_position",
+    "intervals",
+    "rhythm",
+    "key",
+    "coordination",
+    "texture",
+    "speed"
+  ],
+  "fit": {
+    "date": "2026-10-21",
+    "command": "python tools/difficulty/calibrate.py --data C:/dev/easy-piano/.claude/worktrees/skill-specs-e4792e/data/melody",
+    "seed": 7,
+    "signals": [
+      "course anchors",
+      "course order pairs",
+      "node envelopes (train songs only)",
+      "simplified pairs",
+      "pdmx complexity"
+    ],
+    "course_songs": 40,
+    "note": "Course tau is measured against node index, which the fit also uses (anchors, pairs). Cross-validated scores and baselines that never saw course order are given for comparison; pdmx.spearman_course_only is the one check against labels the fit did not use.",
+    "cv_folds": 5,
+    "kendall_tau_cv": {
+      "tau": 0.588,
+      "ci95": [
+        0.391,
+        0.748
+      ]
+    },
+    "baselines": {
+      "uniform_skill_sum": {
+        "tau": 0.433,
+        "ci95": [
+          0.205,
+          0.615
+        ]
+      },
+      "speed_skill_only": {
+        "tau": 0.26,
+        "ci95": [
+          0.05,
+          0.444
+        ]
+      },
+      "reading_skill_only": {
+        "tau": 0.499,
+        "ci95": [
+          0.252,
+          0.702
+        ]
+      }
+    },
+    "kendall_tau_fitted": {
+      "tau": 0.655,
+      "ci95": [
+        0.466,
+        0.793
+      ]
+    },
+    "course_level_mae_fitted": 0.903,
+    "simplified_easier_cv": "21/21",
+    "simplified_easier_fitted": "21/21",
+    "pdmx": {
+      "tunes_sampled": 2598,
+      "tunes_scored": 2368,
+      "per_complexity": {
+        "0": 838,
+        "1": 946,
+        "2": 584
+      },
+      "tunes_jsonl_sha256": "e4279fefbee09d47f4c14e38dc8780975e55da758a881c08510e8bcbad0691e4",
+      "pdmx_csv_sha256": "fc2187e7e09185f4b28be57b6478a96a1243a037f8fd13624f17de2d8bfd44bd",
+      "spearman_course_only": 0.556,
+      "spearman_fitted": 0.578,
+      "kendall_tau_fitted": 0.444,
+      "mean_level_by_complexity": {
+        "0": 4.66,
+        "1": 4.91,
+        "2": 6.99
+      }
+    }
+  }
+}
