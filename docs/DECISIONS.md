@@ -19,9 +19,13 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 | [D11](#d11-personal-song-import-with-level-based-simplification) | 2026-10-16 | Personal song import with level-based simplification | accepted |
 | [D12](#d12-skill-backbone-with-profile-variants) | 2026-10-16 | Skill backbone with profile variants (audience, taste, locale) | accepted |
 | [D13](#d13-one-polished-arena-style-theme-main-menu-with-nav-bar-and-two-level-course-trail) | 2026-10-16 | One polished arena-style theme, main menu, two-level course trail | proposed |
+| [D14](#d14-backing-band-parts-drums-bass-in-song-files) | 2026-10-16 | Backing band parts in song files | proposed |
+| [D15](#d15-web-hosting-on-cloudflare-pages) | 2026-10-16 | Web hosting on Cloudflare Pages | proposed |
+| [D16](#d16-ui-strings-in-gen-l10n-arb-files-content-strings-in-contentstrings-five-launch-languages) | 2026-10-19 | UI strings in ARB, content strings in content/strings, five languages | proposed |
+| [D17](#d17-generated-practice-songs-cc0-provenance-rubric-human-review) | 2026-10-20 | Generated practice songs: CC0, provenance, rubric, human review | proposed |
 | [D18](#d18-nottingham-music-database-minus-ashover-in-the-melody-model-training-set) | 2026-10-20 | NMD (minus Ashover) in melody-model training | accepted |
-| [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted |
-| [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | accepted |
+| [D19](#d19-approved-training-corpora-for-the-melody-model) | 2026-10-20 | Approved melody-model training corpora | accepted; superseded in part by D21 |
+| [D20](#d20-melody-model-design-compound-tokens-form-plan-fim-constrained-search) | 2026-10-20 | Melody model design | proposed |
 | [D21](#d21-allow-pop-film-and-game-material-in-melody-model-training-flagged-and-separable) | 2026-10-20 | Pop/film/game in training, flagged (supersedes part of D19) | accepted |
 
 ## Accepted
@@ -199,14 +203,14 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Status:** accepted
 - **Decided by:** user, 2026-10-20 (PR #37 review)
 - **Context:** The practice-tune model (bean epic piano-bovj) needs simple folk melodies. The Nottingham Music Database (NMD, ~1,000 traditional tunes in ABC) is the closest match to beginner style, but the original files carry [no licence grant](https://abc.sourceforge.net/NMD/), the [jukedeck clean-up](https://github.com/jukedeck/nottingham-dataset) is GPLv3, and the NMD page states the Ashover collection's IPR "reside with Mick Peat".
-- **Decision:** Train on the **original** NMD ABC files only, **excluding the Ashover collection** and tunes credited to a named composer (`S:` line starting "By", "Composed", …). Never use the jukedeck GPLv3 files. NMD stays a separate corpus in the dataset manifest (`corpus: "nottingham"`) so it can be dropped and the model retrained.
-- **Why:** Musically the best fit; the tunes are traditional, and ABC transcriptions of traditional melodies are treated as uncopyrightable facts. **Risk accepted:** that position is untested legally and there is no explicit grant.
+- **Decision:** Train on the **original** NMD ABC files only, **excluding the Ashover collection** and tunes credited to a named composer (`S:` line starting, case-insensitive, with "by", "composed", "written", "words and music" or "music by"). Never use the jukedeck GPLv3 files. NMD stays a separate corpus in the dataset manifest (`corpus: "nottingham"`) so it can be dropped and the model retrained.
+- **Why:** Musically the best fit; the tunes are traditional, and ABC transcriptions of traditional melodies are treated as uncopyrightable facts. **Risk accepted:** treating these transcriptions as uncopyrightable is an **untested position** (no court ruling we know of), and there is no explicit grant.
 - **Alternatives:** Skip NMD (smaller, less beginner-like data); use jukedeck GPLv3 files (would raise the question whether weights inherit GPL); ask the maintainers for a licence (slow, may not answer).
 - **Impact:** Provenance record lists NMD with this risk. If challenged, drop `corpus: "nottingham"` and retrain; generated tunes are checked for similarity to the training set either way.
 
 ### D19. Approved training corpora for the melody model
 
-- **Status:** accepted
+- **Status:** accepted; **superseded in part by [D21](#d21-allow-pop-film-and-game-material-in-melody-model-training-flagged-and-separable)** (the pop/film/game exclusion and the PDMX screen as hard rejects)
 - **Decided by:** user, 2026-10-20 (PR #37)
 - **Context:** Model weights ship in the open-source app, so training data must be clean. Licence review: [melody-corpora.md](research/melody-corpora.md).
 - **Decision:** Train only on OpenScore Lieder (composer death-year checked), Mutopia (PD / CC-BY / CC-BY-SA pieces, attribution kept), our own songs, PDMX `no_license_conflict` after the pop screen and a 50-tune sample approved by the user, and NMD per D18. Excluded: Essen (CCARH licence), Meertens (NC), The Session (no-LLM clause), music21 sets of unverified origin, IMSLP, all pop/film/game material. PD rule: public domain in both the EU/UK/Brazil life+70 regime (composer died ≤ 1955) and the US (published before 1931), or traditional.
@@ -216,10 +220,9 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 ### D20. Melody model design: compound tokens, form plan, FIM, constrained search
 
-- **Status:** accepted
-- **Decided by:** user, 2026-10-20 (planning, relayed to session melody-model)
+- **Status:** proposed (approved in planning and relayed to this session; awaiting the user's direct confirmation)
 - **Context:** We need original practice tunes conditioned on a course node's spec, generated in the browser.
-- **Decision:** Small decoder-only transformer (5–15M params) exported to ONNX int8 for onnxruntime-web. Compound tokens (one step = pitch, duration, finger, kind) with a spec prefix; two-level generation (bar-level form plan: section letter, cadence, contour; then notes); fill-in-the-middle training on the same decoder; constrained search at inference (masking, many samples, ranking by spec coverage, cadence, repetition, melody score, similarity < 0.6) with the rubric as a hard gate; later preference tuning (DPO) on blind listening ratings. Spec: [melody-model.md](specs/melody-model.md).
+- **Decision:** Small decoder-only transformer (5–15M params) exported to ONNX int8 for onnxruntime-web. Compound tokens (one step = pitch, duration, finger, kind) with a spec prefix; two-level generation (bar-level form plan: section letter, cadence, contour; then notes); fill-in-the-middle training on the same decoder; constrained search at inference (masking, many samples, ranking by spec coverage, cadence, repetition, melody score, similarity < 0.6) with the rubric as a hard gate; later preference tuning (DPO) on blind listening ratings. Spec: `docs/specs/melody-model.md` (added by PR #41).
 - **Why:** Short sequences and a small model keep browser inference fast; the plan gives tunes form; FIM allows bar-level edits; search plus rubric guarantees level fit.
 - **Alternatives:** Magenta.js MusicVAE (pretrained on non-clean data); rules-only generator (dull); a large model behind a server (breaks local-first, D8).
 - **Impact:** Steps: corpora, converters + tokenizer, dataset, training on the user's GPU, ONNX + browser demo, evaluation.
@@ -227,10 +230,9 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 ### D21. Allow pop, film and game material in melody-model training, flagged and separable
 
 - **Status:** accepted
-- **Decided by:** user, 2026-10-20 ("you can revert no issue")
+- **Decided by:** user, 2026-10-20 ("you can revert no issue"; then "no i want to use the flagged tunes")
 - **Context:** D19 excluded pop/film/game material. The user wants modern styles in the model and accepted the risk after being told the weights ship in the open-source app.
-- **Decision:** Supersedes D19's exclusion of pop, film and game material. PDMX screen rules (genre, untagged, no composer, pop name/title, third-party arrangement) no longer drop tunes; each tune keeps `flags` in the dataset. Other corpora (POP909, NES-MDB, Lakh) may be added later, each its own corpus and flagged `pop`. Hard rejects stay: PDMX licence conflict, duplicates. Every generated tune must pass the similarity gate (`content-cli similar` < 0.6 against training set and pop corpus) before it ships.
+- **Decision:** Supersedes D19's exclusion of pop, film and game material. PDMX screen rules (genre, untagged, no composer, pop name/title, third-party arrangement) no longer drop tunes; each tune keeps `flags` in the dataset, and **flagged tunes are used in training**. No other pop, film or game corpora are added (user, 2026-10-20). Hard rejects stay: PDMX licence conflict, duplicates. Every generated tune must pass the similarity gate (`content-cli similar` < 0.6 against the training set and a local pop corpus) before it ships.
 - **Why:** Modern-sounding practice tunes; the user owns the legal call.
-- **Alternatives:** Keep D19 (clean only, style tokens trained on clean data); pop only as a similarity negative set.
-- **Default:** the training set and any **shipped** weights use unflagged tunes only (`flags == []`); training with flagged tunes is opt-in (`--include-flagged`) and its weights do not ship unless a later decision entry allows it. The user also said, about the shipped model, "no pop songs" and declined POP909 and NES-MDB (2026-10-20).
-- **Impact:** **Risk:** weights trained on copyrighted melodies may not be clean, and generated tunes may echo them. Mitigations: flags allow a clean retrain (exclude flagged tunes); the similarity gate; OQ10 (weights licence) now also covers copyrighted training data. Dataset 2026-10-20: PDMX 28,537 kept, 8,314 unflagged.
+- **Alternatives:** Keep D19 (clean only; style tokens trained on clean data); pop only as a similarity negative set; train on flagged data but ship only weights trained without it.
+- **Impact:** **Known risk:** the weights may memorise copyrighted melodies from flagged tunes, so they may not be clean, and generated tunes may echo them. Mitigations: per-tune provenance and flags allow dropping any corpus or flag and retraining; the similarity gate; [OQ10](OPEN-QUESTIONS.md). Counts: `python -m melody_model.build` writes `data/melody/dataset/stats.json`, summarised in `docs/research/melody-dataset.md` (PR #45).

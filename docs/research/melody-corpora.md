@@ -4,7 +4,7 @@ Checked: 2026-10-20
 
 Sources: licence files and READMEs fetched from each project (each licence claim links its source in the table); PDMX `PDMX.csv` metadata (Zenodo 15571083, counted locally 2026-10-20); `docs/research/score-formats-and-sources.md`; `.agents/rules/content-and-licensing.md`. Decisions: [D18](../DECISIONS.md) (NMD), [D19](../DECISIONS.md) (corpora), [D20](../DECISIONS.md) (model design).
 
-Question: which symbolic melody corpora can we train a small model on, given that the trained weights ship in an open-source app and must be clean (no pop, no non-commercial or "no ML" terms)?
+Question: which symbolic melody corpora can we train a small model on, given that the trained weights ship in an open-source app and should be clean (no non-commercial or "no ML" terms)? Pop/film/game material was first excluded, then allowed as flagged tunes (D21).
 
 ## Criteria
 
@@ -27,7 +27,7 @@ A corpus is **use** only when all hold:
 | [The Session data](https://github.com/adactio/TheSession-data) | ~50k tune settings | ABC / JSON | traditional Irish | ODbL **plus a "Prohibition on LLM Use" clause** ([LICENSE.md](https://github.com/adactio/TheSession-data/blob/main/LICENSE.md)) | Forbidden in spirit (our model is a transformer LM over tokens) | **exclude** |
 | music21 bundled corpus (Bach chorales etc.) | ~370 chorales + misc | MusicXML / kern | PD | per set; origin and licence **not verified** per set ([corpus folder](https://github.com/cuthbertLab/music21/tree/master/music21/corpus)); Bach chorale encodings are commonly traced to CCARH/Humdrum (unverified) | Unknown | **exclude** until each set's licence is verified |
 | IMSLP | huge | mostly PDF scans; some MusicXML | per work | per file; many scans of copyrighted editions | Needs OMR; licence per file | **exclude for now** (cost, mixed licences) |
-| Lakh MIDI, POP909, Wikifonia, MuseScore non-PD | – (not checked) | MIDI / MusicXML | copyrighted pop | – | – | **exclude** (decided: no pop). Lakh only allowed as local negative corpus for similarity check (PR #34), never for training |
+| Lakh MIDI, Wikifonia, MuseScore non-PD | – (not checked) | MIDI / MusicXML | copyrighted pop | – | – | **not added** (user, 2026-10-20: no further pop/film/game corpora; D21). Lakh only allowed as local negative corpus for similarity check (PR #34), never for training |
 | Our own songs (`content/songs/`) | 40 | song JSON | PD tunes, our arrangements | ours (project licence) | Allowed | **use** (small, but exact target format and level labels) |
 
 ## Additional candidates (checked 2026-10-20, not yet approved)
@@ -57,20 +57,27 @@ All numbers in this section are estimates made before the dataset build; measure
 
 Without PDMX the clean set is small (est. ~2k tunes, ~15k fragments after phrase cuts, ×12 transpositions). Enough for a ~5M-param model with heavy augmentation; PDMX makes 10–15M realistic.
 
-## PDMX pop screen
+## PDMX screen
 
-Uploader tags are not proof. Rules applied by `tools/melody-model` (dataset step), in order:
+Uploader tags are not proof. Since [D21](../DECISIONS.md) the risk rules below **flag** a tune instead of dropping it, and flagged tunes are used in training (user, 2026-10-20). Hard rejects: licence conflict, duplicates, length. Rules as implemented in `tools/melody-model/melody_model/filters.py`:
 
 | Rule | Why |
 |---|---|
 | `subset:no_license_conflict` and `subset:deduplicated` | public and internal licence agree |
-| Genre tags only from classical, folk, religious, world | pop/rock/soundtrack/game uploads mostly carry those tags |
-| **Composer missing** (161,919 of 222,856 in the subset, counted): **exclude**, unless `is_original` (uploader's own composition, dedicated CC0/PD by its author) | no composer = no way to check the composition's PD status |
-| Composer present: must resolve to a person who died ≤ 1955 (life+70) with the work published before 1931 (US), via a committed composer → death-year table; otherwise exclude | jurisdiction rule above |
-| Name/title blocklist (film, game, anime, pop names and titles) | catches mis-tagged uploads the table misses |
-| Arrangements: keep only the melody part (first part); exclude scores whose title/subtitle says "arr.", "arranged by", "version", "cover", "easy piano" unless the uploader is the arranger (`is_original`) | a PD composition does not clear a modern arrangement; the melody line is the composition, the accompaniment belongs to the arranger |
+| Genre tags outside classical, folk, religious, world: flag `genre`; no genre and not `is_original`: flag `untagged` | pop/rock/soundtrack/game uploads mostly carry those tags |
+| **Composer missing** (161,919 of 222,856 in the subset, counted): flag `no-composer`, unless `is_original` | no composer = no way to check the composition's PD status |
+| Composer present: death-year / US-publication check via a composer table: **not implemented yet** (follow-up) | jurisdiction rule above |
+| Name/title blocklist (film, game, anime, pop names and titles): flag `pop-name` / `pop-title` | catches mis-tagged uploads |
+| Arrangements: title/subtitle says "arr.", "arranged", "arrangement", "version", "easy piano", "simplified" and not `is_original`: flag `arrangement`; multi-track scores keep only the first part | a PD composition does not clear a modern arrangement; the melody line is the composition, the accompaniment belongs to the arranger |
 | Similarity check (`content-cli similar`, threshold 0.6) against a local pop corpus in `references/melody-corpus/` | catches copies the metadata hides |
-| **50-tune random sample** of the filtered set shown to the user; training waits for approval | human check of the screen |
+| **50-tune gate** (below); training refuses to start without the recorded approval | human check of the conversion and screen |
+
+### 50-tune gate
+
+- Sample: `python -m melody_model.sample --corpus pdmx --n 50 --seed 1` from all kept PDMX tunes (flagged included), after the final dataset build.
+- **Fail** if any sampled tune is (a) mis-converted (notes, rhythm, meter or key differ from the source score), or (b) not what its metadata says (wrong title/composer, or a modern copyrighted work carrying no flag). Musical taste is not a fail.
+- **Pass** = 0 fails. On a fail: fix the converter or screen, rebuild, resample with the next seed.
+- Approval is recorded with `python -m melody_model.gate approve` (seed, size, dataset hash, date, approver's words) in `data/melody/gate.json`; `melody_model.train` refuses to run without it for the current dataset hash.
 
 Local pop corpus coverage today: **none** (`references/melody-corpus/` does not exist, checked 2026-10-20), so the similarity check currently compares only against our 40 songs. Follow-up: user places a local negative set (e.g. a Lakh MIDI subset) there; it is never used for training.
 
@@ -88,7 +95,7 @@ Local pop corpus coverage today: **none** (`references/melody-corpus/` does not 
 | OpenScore Lieder | composers passing the death-year / US-publication check |
 | Mutopia | pieces licensed PD, CC-BY or CC-BY-SA; attribution kept |
 | Own songs (`content/songs/`) | all |
-| PDMX | `no_license_conflict` subset after the pop screen above, **and** after the user approves a 50-tune sample |
+| PDMX | `no_license_conflict` subset, flagged tunes included (D21), after the 50-tune gate |
 | Nottingham Music Database | original NMD ABC files, **excluding the Ashover collection** and tunes credited to a named composer ([D18](../DECISIONS.md)) |
 
 Everything else in the table above stays excluded.
