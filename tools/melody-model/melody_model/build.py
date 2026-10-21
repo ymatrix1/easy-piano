@@ -44,9 +44,19 @@ def sha256(data: bytes) -> str:
 def jobs_own():
     for p in sorted((ROOT / "content" / "songs").glob("*.json")):
         s = json.loads(p.read_text(encoding="utf-8"))
-        yield ("own", p.stem, "json", str(p), {
-            "license": s["license"], "composition_license": s.get("composition_license"), "arranger": s.get("arranger"),
-            "source_url": s.get("source_url") or f"content/songs/{p.name}", "sha256": sha256(p.read_bytes())})
+        yield (
+            "own",
+            p.stem,
+            "json",
+            str(p),
+            {
+                "license": s["license"],
+                "composition_license": s.get("composition_license"),
+                "arranger": s.get("arranger"),
+                "source_url": s.get("source_url") or f"content/songs/{p.name}",
+                "sha256": sha256(p.read_bytes()),
+            },
+        )
 
 
 def jobs_nottingham():
@@ -56,10 +66,20 @@ def jobs_nottingham():
             if not block.lstrip().startswith("X:"):
                 continue
             x = re.match(r"\s*X:\s*(\d+)", block).group(1)
-            yield ("nottingham", f"{f.stem}-{x}", "abc", block, {
-                "license": "no licence stated; used under D18 (risk accepted)", "composition_license": "traditional",
-                "arranger": "Nottingham Music Database (E. Foxley)", "source_url": NMD_URL.format(name=f.stem),
-                "sha256": sha256(block.encode("utf-8")), "skip": None if nmd_ok(block) else "nmd named composer"})
+            yield (
+                "nottingham",
+                f"{f.stem}-{x}",
+                "abc",
+                block,
+                {
+                    "license": "no licence stated; used under D18 (risk accepted)",
+                    "composition_license": "traditional",
+                    "arranger": "Nottingham Music Database (E. Foxley)",
+                    "source_url": NMD_URL.format(name=f.stem),
+                    "sha256": sha256(block.encode("utf-8")),
+                    "skip": None if nmd_ok(block) else "nmd named composer",
+                },
+            )
 
 
 def jobs_pdmx(limit: int | None):
@@ -70,12 +90,20 @@ def jobs_pdmx(limit: int | None):
         for row in csv.DictReader(fh):
             ok, why = pdmx_ok(row)
             tune_id = row["mxl"].rsplit("/", 1)[-1].removesuffix(".mxl")
-            meta = {"license": row["license"], "composition_license": "unverified (uploader tag)",
-                    "arranger": row["artist_name"] if row["artist_name"] != "NA" else "",
-                    "source_url": f"https://zenodo.org/records/15571083 {row['mxl']}",
-                    "title": row["title"], "composer": row["composer_name"], "n_tracks": row["n_tracks"],
-                    "genres": row["genres"], "tags": row["tags"], "groups": row["groups"],
-                    "skip": None if ok else why, "flags": pdmx_flags(row)}
+            meta = {
+                "license": row["license"],
+                "composition_license": "unverified (uploader tag)",
+                "arranger": row["artist_name"] if row["artist_name"] != "NA" else "",
+                "source_url": f"https://zenodo.org/records/15571083 {row['mxl']}",
+                "title": row["title"],
+                "composer": row["composer_name"],
+                "n_tracks": row["n_tracks"],
+                "genres": row["genres"],
+                "tags": row["tags"],
+                "groups": row["groups"],
+                "skip": None if ok else why,
+                "flags": pdmx_flags(row),
+            }
             if not ok:
                 yield ("pdmx", tune_id, "skip", "", meta)
                 continue
@@ -90,10 +118,22 @@ def jobs_mutopia():
     if not man.exists():
         return
     for e in json.loads(man.read_text(encoding="utf-8"))["files"]:
-        yield ("mutopia", e["path"].removesuffix(".mid"), "mid", str(RAW / "mutopia" / e["path"]), {
-            "license": e["license"], "composition_license": "public-domain (Mutopia header)", "arranger": "Mutopia typesetter",
-            "source_url": e["url"], "sha256": e["sha256"], "title": e["title"], "composer": e["composer"],
-            "style": e.get("style", "")})
+        yield (
+            "mutopia",
+            e["path"].removesuffix(".mid"),
+            "mid",
+            str(RAW / "mutopia" / e["path"]),
+            {
+                "license": e["license"],
+                "composition_license": "public-domain (Mutopia header)",
+                "arranger": "Mutopia typesetter",
+                "source_url": e["url"],
+                "sha256": e["sha256"],
+                "title": e["title"],
+                "composer": e["composer"],
+                "style": e.get("style", ""),
+            },
+        )
 
 
 LOCAL = ROOT / "data" / "melody" / "local-datasets.json"
@@ -130,6 +170,7 @@ def load_local() -> list[dict]:
         if e.get("meter", "4/4") not in METERS:
             raise SystemExit(f"{where}: meter must be one of {METERS}")
         from .tokenizer import STYLES
+
         if not isinstance(e.get("styles", []), list) or not set(e.get("styles", [])) <= set(STYLES):
             raise SystemExit(f"{where}: styles must be a list from {STYLES}")
         if e.get("group_by", "file") not in ("file", "folder"):
@@ -151,11 +192,24 @@ def jobs_local(entry: dict):
     for f in files:
         rel = f.relative_to(root)
         group = rel.parent.as_posix() if entry.get("group_by") == "folder" else rel.as_posix()
-        yield (entry["name"], rel.with_suffix("").as_posix(), kind, str(f), {
-            "license": entry["license"], "composition_license": entry.get("composition_license", ""),
-            "arranger": entry.get("arranger", ""), "source_url": entry["source"], "sha256": sha256(f.read_bytes()),
-            "flags": list(entry["flags"]), "group": group, "track": entry.get("track", 0), "meter": entry.get("meter", "4/4"),
-            "styles": list(entry.get("styles", []))})
+        yield (
+            entry["name"],
+            rel.with_suffix("").as_posix(),
+            kind,
+            str(f),
+            {
+                "license": entry["license"],
+                "composition_license": entry.get("composition_license", ""),
+                "arranger": entry.get("arranger", ""),
+                "source_url": entry["source"],
+                "sha256": sha256(f.read_bytes()),
+                "flags": list(entry["flags"]),
+                "group": group,
+                "track": entry.get("track", 0),
+                "meter": entry.get("meter", "4/4"),
+                "styles": list(entry.get("styles", [])),
+            },
+        )
 
 
 def work(job):
@@ -165,14 +219,24 @@ def work(job):
         return corpus, tune_id, meta, [], [meta["skip"]]
     try:
         import music21 as m21
+
         from .convert import convert_score
+
         if kind == "performed":
             from .timed import performed_song
+
             return corpus, tune_id, meta, [performed_song(src, meta["track"], meter=meta["meter"])], []
         if kind == "json":
             s = json.loads(Path(src).read_text(encoding="utf-8"))
-            songs = [{"title": s["title"], "composer": s.get("composer", ""), "time": s["time"], "key": s["key"],
-                      "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]]}]
+            songs = [
+                {
+                    "title": s["title"],
+                    "composer": s.get("composer", ""),
+                    "time": s["time"],
+                    "key": s["key"],
+                    "bars": [{h: b[h] for h in ("RH", "LH") if h in b} for b in s["bars"]],
+                }
+            ]
         else:
             if kind == "abc":
                 parsed = m21.converter.parseData(src, format="abc")
@@ -207,25 +271,44 @@ def phrase_cut(song: dict) -> int | None:
 
 
 def record(corpus, tune_id, meta, song, split) -> dict:
-    return {"id": f"{corpus}:{tune_id}", "corpus": corpus, "split": split,
-            "source_url": meta.get("source_url", ""), "sha256": meta.get("sha256", ""),
-            "license": meta.get("license", ""), "composition_license": meta.get("composition_license", ""),
-            "arranger": meta.get("arranger", ""), "flags": meta.get("flags", []),
-            "styles": styles_for(corpus, {**meta, "title": song.get("title") or meta.get("title", "")}),
-            "title": song.get("title") or meta.get("title", ""), "composer": song.get("composer") or meta.get("composer", ""),
-            "time": song["time"], "key": song["key"], "bars": song["bars"], "plan": plan(song)}
+    return {
+        "id": f"{corpus}:{tune_id}",
+        "corpus": corpus,
+        "split": split,
+        "source_url": meta.get("source_url", ""),
+        "sha256": meta.get("sha256", ""),
+        "license": meta.get("license", ""),
+        "composition_license": meta.get("composition_license", ""),
+        "arranger": meta.get("arranger", ""),
+        "flags": meta.get("flags", []),
+        "styles": styles_for(corpus, {**meta, "title": song.get("title") or meta.get("title", "")}),
+        "title": song.get("title") or meta.get("title", ""),
+        "composer": song.get("composer") or meta.get("composer", ""),
+        "time": song["time"],
+        "key": song["key"],
+        "bars": song["bars"],
+        "plan": plan(song),
+    }
 
 
 def main(argv):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--corpora", nargs="+", default=list(BUILTIN),
-                    help="built-in corpora and/or names from data/melody/local-datasets.json (local ones are opt-in)")
+    ap.add_argument(
+        "--corpora",
+        nargs="+",
+        default=list(BUILTIN),
+        help="built-in corpora and/or names from data/melody/local-datasets.json (local ones are opt-in)",
+    )
     ap.add_argument("--limit", type=int, default=None, help="max PDMX candidates (smoke runs)")
     ap.add_argument("--jobs", type=int, default=28)
     args = ap.parse_args(argv)
 
-    gens = {"own": jobs_own, "nottingham": jobs_nottingham, "mutopia": jobs_mutopia,
-            "pdmx": lambda: jobs_pdmx(args.limit)}
+    gens = {
+        "own": jobs_own,
+        "nottingham": jobs_nottingham,
+        "mutopia": jobs_mutopia,
+        "pdmx": lambda: jobs_pdmx(args.limit),
+    }
     for entry in load_local():
         gens[entry["name"]] = lambda e=entry: jobs_local(e)
     unknown = [c for c in args.corpora if c not in gens]
@@ -281,9 +364,13 @@ def main(argv):
             if i % 5000 == 0:
                 print(f"{i}/{len(jobs)} {time.time() - t0:.0f}s", flush=True)
     import music21
+
     summary = {c: dict(sorted(s.items())) for c, s in sorted(stats.items())}
-    summary["_build"] = {"corpora": order, "music21": music21.__version__,
-                         "tunes_sha256": sha256((OUT / "tunes.jsonl").read_bytes())}
+    summary["_build"] = {
+        "corpora": order,
+        "music21": music21.__version__,
+        "tunes_sha256": sha256((OUT / "tunes.jsonl").read_bytes()),
+    }
     (OUT / "stats.json").write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=1))
     print(f"elapsed {time.time() - t0:.0f}s")

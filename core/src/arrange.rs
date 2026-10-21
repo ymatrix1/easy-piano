@@ -51,7 +51,11 @@ pub struct CleanConfig {
 
 impl Default for CleanConfig {
     fn default() -> Self {
-        Self { min_dur: 0.06, onset_slack: 0.06, amp_ratio: 0.8 }
+        Self {
+            min_dur: 0.06,
+            onset_slack: 0.06,
+            amp_ratio: 0.8,
+        }
     }
 }
 
@@ -120,9 +124,21 @@ pub fn note_f1(found: &[RawNote], truth: &[(u8, f64)], tol: f64) -> (f64, f64, f
             hits += 1;
         }
     }
-    let p = if found.is_empty() { 0.0 } else { hits as f64 / found.len() as f64 };
-    let r = if truth.is_empty() { 0.0 } else { hits as f64 / truth.len() as f64 };
-    let f1 = if p + r == 0.0 { 0.0 } else { 2.0 * p * r / (p + r) };
+    let p = if found.is_empty() {
+        0.0
+    } else {
+        hits as f64 / found.len() as f64
+    };
+    let r = if truth.is_empty() {
+        0.0
+    } else {
+        hits as f64 / truth.len() as f64
+    };
+    let f1 = if p + r == 0.0 {
+        0.0
+    } else {
+        2.0 * p * r / (p + r)
+    };
     (p, r, f1)
 }
 
@@ -177,7 +193,11 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
     let cleaned = clean(raw, &CleanConfig::default());
     // Melody comes only from the right-hand register; lower notes are accompaniment
     // and feed the left hand, so a bass note can never become "melody" in a gap.
-    let upper: Vec<RawNote> = cleaned.iter().copied().filter(|n| n.pitch >= RH_LOW).collect();
+    let upper: Vec<RawNote> = cleaned
+        .iter()
+        .copied()
+        .filter(|n| n.pitch >= RH_LOW)
+        .collect();
     let tune = melody(if upper.is_empty() { &cleaned } else { &upper }, 0.06);
     match level {
         Level::Beginner => {
@@ -196,8 +216,17 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
                 if out.last().is_some_and(|l| l.beat == b) {
                     continue;
                 }
-                let p = fold(snap_to_c_major(n.pitch as i32 + shift + 12 * best_oct), 60, 67);
-                out.push(ArrangedNote { pitch: p as u8, beat: b, beats: 1.0, left_hand: false });
+                let p = fold(
+                    snap_to_c_major(n.pitch as i32 + shift + 12 * best_oct),
+                    60,
+                    67,
+                );
+                out.push(ArrangedNote {
+                    pitch: p as u8,
+                    beat: b,
+                    beats: 1.0,
+                    left_hand: false,
+                });
             }
             fill_durations(&mut out, &[1.0, 2.0, 4.0]);
             out
@@ -210,10 +239,17 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
                     continue;
                 }
                 let p = fold(n.pitch as i32, RH_LOW as i32, INTERMEDIATE_RH_HIGH) as u8;
-                out.push(ArrangedNote { pitch: p, beat: b, beats: 0.5, left_hand: false });
+                out.push(ArrangedNote {
+                    pitch: p,
+                    beat: b,
+                    beats: 0.5,
+                    left_hand: false,
+                });
             }
             fill_durations(&mut out, &[0.5, 1.0, 1.5, 2.0, 3.0, 4.0]);
-            let bars = out.last().map_or(0, |l| (l.beat / 4.0).floor() as usize + 1);
+            let bars = out
+                .last()
+                .map_or(0, |l| (l.beat / 4.0).floor() as usize + 1);
             for bar in 0..bars {
                 let (b0, b1) = (bar as f64 * 4.0, bar as f64 * 4.0 + 4.0);
                 // Lowest cleaned note sounding in the bar, else the bar's lowest melody note.
@@ -230,10 +266,19 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
                     });
                 if let Some(r) = root {
                     let p = fold(r as i32, 48, 59) as u8;
-                    out.push(ArrangedNote { pitch: p, beat: b0, beats: 4.0, left_hand: true });
+                    out.push(ArrangedNote {
+                        pitch: p,
+                        beat: b0,
+                        beats: 4.0,
+                        left_hand: true,
+                    });
                 }
             }
-            out.sort_by(|a, b| a.beat.total_cmp(&b.beat).then(a.left_hand.cmp(&b.left_hand)));
+            out.sort_by(|a, b| {
+                a.beat
+                    .total_cmp(&b.beat)
+                    .then(a.left_hand.cmp(&b.left_hand))
+            });
             out
         }
         Level::Advanced => {
@@ -263,7 +308,11 @@ pub fn arrange(raw: &[RawNote], bpm: f64, level: Level) -> Vec<ArrangedNote> {
 fn fill_durations(notes: &mut [ArrangedNote], allowed: &[f64]) {
     for i in 0..notes.len() {
         let gap = notes.get(i + 1).map_or(4.0, |n| n.beat - notes[i].beat);
-        notes[i].beats = allowed.iter().copied().filter(|&a| a <= gap + 1e-9).fold(allowed[0], f64::max);
+        notes[i].beats = allowed
+            .iter()
+            .copied()
+            .filter(|&a| a <= gap + 1e-9)
+            .fold(allowed[0], f64::max);
     }
 }
 
@@ -272,7 +321,12 @@ mod tests {
     use super::*;
 
     fn n(pitch: u8, start: f64, dur: f64, amp: f32) -> RawNote {
-        RawNote { pitch, start, dur, amp }
+        RawNote {
+            pitch,
+            start,
+            dur,
+            amp,
+        }
     }
 
     #[test]
@@ -284,7 +338,11 @@ mod tests {
     #[test]
     fn keeps_loud_octave_and_non_harmonic_notes() {
         // Bass C3 under melody C4: the C4 is louder, so it is a real note.
-        let raw = [n(48, 0.0, 1.0, 0.45), n(60, 0.0, 0.6, 0.7), n(64, 0.0, 0.6, 0.3)];
+        let raw = [
+            n(48, 0.0, 1.0, 0.45),
+            n(60, 0.0, 0.6, 0.7),
+            n(64, 0.0, 0.6, 0.3),
+        ];
         assert_eq!(clean(&raw, &CleanConfig::default()).len(), 3);
     }
 
@@ -302,14 +360,22 @@ mod tests {
 
     #[test]
     fn skyline_keeps_highest_of_cluster() {
-        let raw = [n(48, 0.0, 1.0, 0.5), n(64, 0.02, 0.5, 0.7), n(65, 0.6, 0.5, 0.7)];
+        let raw = [
+            n(48, 0.0, 1.0, 0.5),
+            n(64, 0.02, 0.5, 0.7),
+            n(65, 0.6, 0.5, 0.7),
+        ];
         let m = melody(&raw, 0.06);
         assert_eq!(m.iter().map(|n| n.pitch).collect::<Vec<_>>(), vec![64, 65]);
     }
 
     #[test]
     fn skyline_ignores_bass_under_held_melody_note() {
-        let raw = [n(64, 0.0, 1.0, 0.7), n(36, 0.3, 0.2, 0.5), n(65, 1.0, 0.5, 0.7)];
+        let raw = [
+            n(64, 0.0, 1.0, 0.7),
+            n(36, 0.3, 0.2, 0.5),
+            n(65, 1.0, 0.5, 0.7),
+        ];
         let m = melody(&raw, 0.06);
         assert_eq!(m.iter().map(|n| n.pitch).collect::<Vec<_>>(), vec![64, 65]);
     }
@@ -326,7 +392,10 @@ mod tests {
         let a = arrange(&raw, 120.0, Level::Intermediate);
         let rh: Vec<u8> = a.iter().filter(|n| !n.left_hand).map(|n| n.pitch).collect();
         assert!(rh.iter().all(|&p| (60..=84).contains(&p)), "{rh:?}");
-        assert!(a.iter().any(|n| n.left_hand && n.pitch == 48), "bass C2 becomes LH root C3");
+        assert!(
+            a.iter().any(|n| n.left_hand && n.pitch == 48),
+            "bass C2 becomes LH root C3"
+        );
     }
 
     #[test]
@@ -354,7 +423,11 @@ mod tests {
 
     #[test]
     fn f1_counts_pitch_and_onset_matches() {
-        let found = [n(60, 0.0, 0.5, 1.0), n(62, 0.5, 0.5, 1.0), n(72, 0.0, 0.1, 0.3)];
+        let found = [
+            n(60, 0.0, 0.5, 1.0),
+            n(62, 0.5, 0.5, 1.0),
+            n(72, 0.0, 0.1, 0.3),
+        ];
         let truth = [(60, 0.01), (62, 0.52)];
         let (p, r, f1) = note_f1(&found, &truth, 0.05);
         assert!((p - 2.0 / 3.0).abs() < 1e-9 && r == 1.0 && (f1 - 0.8).abs() < 1e-9);

@@ -63,26 +63,38 @@ def test_playable_rejects_big_leap():
 
 
 def pdmx_row(**kw):
-    row = {"subset:no_license_conflict": "True", "subset:deduplicated": "True", "genres": "classical",
-           "is_original": "False", "composer_name": "Johann Sebastian Bach", "artist_name": "NA",
-           "title": "Minuet", "song_name": "NA", "subtitle": "NA", "song_length.bars": "32"}
+    row = {
+        "subset:no_license_conflict": "True",
+        "subset:deduplicated": "True",
+        "genres": "classical",
+        "is_original": "False",
+        "composer_name": "Johann Sebastian Bach",
+        "artist_name": "NA",
+        "title": "Minuet",
+        "song_name": "NA",
+        "subtitle": "NA",
+        "song_length.bars": "32",
+    }
     row.update(kw)
     return row
 
 
-@pytest.mark.parametrize("kw,ok", [
-    ({}, True),
-    ({"genres": "pop"}, False),
-    ({"genres": "NA"}, False),
-    ({"genres": "NA", "is_original": "True"}, True),
-    ({"composer_name": "NA"}, False),
-    ({"title": "Minuet (arr. for easy piano)"}, False),
-    ({"title": "Minuet (arr. for easy piano)", "is_original": "True"}, True),
-    ({"composer_name": "Joe Hisaishi"}, False),
-    ({"title": "Hedwig's Theme"}, False),
-    ({"title": "Sonata Op. 13"}, True),
-    ({"subset:no_license_conflict": "False"}, False),
-])
+@pytest.mark.parametrize(
+    "kw,ok",
+    [
+        ({}, True),
+        ({"genres": "pop"}, False),
+        ({"genres": "NA"}, False),
+        ({"genres": "NA", "is_original": "True"}, True),
+        ({"composer_name": "NA"}, False),
+        ({"title": "Minuet (arr. for easy piano)"}, False),
+        ({"title": "Minuet (arr. for easy piano)", "is_original": "True"}, True),
+        ({"composer_name": "Joe Hisaishi"}, False),
+        ({"title": "Hedwig's Theme"}, False),
+        ({"title": "Sonata Op. 13"}, True),
+        ({"subset:no_license_conflict": "False"}, False),
+    ],
+)
 def test_pdmx_screen(kw, ok):
     """ok == no clean-data flags (D21 keeps flagged tunes, separable)."""
     row = pdmx_row(**kw)

@@ -52,8 +52,16 @@ T = m21.clef.TrebleClef
 B = m21.clef.BassClef
 
 
-@pytest.mark.parametrize("key,name", [(m21.key.Key("G"), "G"), (m21.key.Key("B-"), "Bb"),
-                                      (m21.key.Key("D"), "D"), (m21.key.Key("a"), "Am"), (m21.key.Key("d"), "Dm")])
+@pytest.mark.parametrize(
+    "key,name",
+    [
+        (m21.key.Key("G"), "G"),
+        (m21.key.Key("B-"), "Bb"),
+        (m21.key.Key("D"), "D"),
+        (m21.key.Key("a"), "Am"),
+        (m21.key.Key("d"), "Dm"),
+    ],
+)
 def test_keys_with_sharps_flats_and_minor(key, name, tmp_path):
     tonic = key.tonic.name
     s = score(([[n(tonic + "4", 4)]], T()), key=key)
@@ -71,19 +79,28 @@ def test_tie_inside_bar_is_merged(tmp_path):
 
 
 def test_tie_chain_of_three_is_merged(tmp_path):
-    s = score(([[n("C4", 1, "start"), n("C4", 1, "continue"), n("C4", 1, "stop"), n("D4", 1)]], T()), key=m21.key.Key("C"))
+    s = score(
+        ([[n("C4", 1, "start"), n("C4", 1, "continue"), n("C4", 1, "stop"), n("D4", 1)]], T()),
+        key=m21.key.Key("C"),
+    )
     assert via_xml(s, tmp_path)["bars"][0]["RH"] == "C4:2. D4:4"
 
 
 def test_tie_across_barline_is_kept(tmp_path):
-    s = score(([[n("C4", 2), n("D4", 2, "start")], [n("D4", 2, "stop"), n("E4", 2)]], T()), key=m21.key.Key("C"))
+    s = score(
+        ([[n("C4", 2), n("D4", 2, "start")], [n("D4", 2, "stop"), n("E4", 2)]], T()), key=m21.key.Key("C")
+    )
     song = convert.convert_score(s)
     assert [b["RH"] for b in song["bars"]] == ["C4:2 D4:2 {tie}", "D4:2 E4:2"]
-    assert via_xml(convert.song_to_score(song), tmp_path)["bars"] == song["bars"]  # MusicXML round trip keeps the tie
+    assert (
+        via_xml(convert.song_to_score(song), tmp_path)["bars"] == song["bars"]
+    )  # MusicXML round trip keeps the tie
 
 
 def test_tie_sum_without_single_duration_stays_tied():
-    s = score(([[n("C4", 1, "start"), n("C4", 0.25, "stop"), n("D4", 0.75), n("E4", 2)]], T()), key=m21.key.Key("C"))
+    s = score(
+        ([[n("C4", 1, "start"), n("C4", 0.25, "stop"), n("D4", 0.75), n("E4", 2)]], T()), key=m21.key.Key("C")
+    )
     assert convert.convert_score(s)["bars"][0]["RH"] == "C4:4 {tie} C4:16 D4:8. E4:2"
 
 
@@ -141,7 +158,7 @@ def test_chord_level_fingering_with_wrong_count_is_dropped():
 
 def test_multi_voice_bar_reads_top_voice():
     low, high = m21.stream.Voice(), m21.stream.Voice()
-    low.append([n("C4", 2), n("D4", 2)])   # voice 1 is the lower one
+    low.append([n("C4", 2), n("D4", 2)])  # voice 1 is the lower one
     high.append([n("E5", 2), n("F5", 2)])
     s = score(([[low, high]], T()), key=m21.key.Key("C"))
     assert convert.convert_score(s)["bars"][0]["RH"] == "E5:2 F5:2"
@@ -154,8 +171,18 @@ def test_same_signature_mode_change_is_rejected():
 
 
 def test_meter_change_is_rejected():
-    s = score(([[n("C4", 4)], [m21.meter.TimeSignature("3/4"), n("D4", 3)], [m21.meter.TimeSignature("4/4"), n("E4", 4)],
-                [m21.meter.TimeSignature("6/4"), n("F4", 6)]], T()), key=m21.key.Key("C"))
+    s = score(
+        (
+            [
+                [n("C4", 4)],
+                [m21.meter.TimeSignature("3/4"), n("D4", 3)],
+                [m21.meter.TimeSignature("4/4"), n("E4", 4)],
+                [m21.meter.TimeSignature("6/4"), n("F4", 6)],
+            ],
+            T(),
+        ),
+        key=m21.key.Key("C"),
+    )
     with pytest.raises(Unsupported, match="time"):
         convert.convert_score(s)
 

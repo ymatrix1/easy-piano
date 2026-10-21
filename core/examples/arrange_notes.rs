@@ -25,11 +25,22 @@ fn main() {
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
         .map(|l| {
             let r: Vec<f64> = l.split_whitespace().map(|x| x.parse().unwrap()).collect();
-            RawNote { pitch: r[0] as u8, start: r[1], dur: r[2], amp: r[3] as f32 }
+            RawNote {
+                pitch: r[0] as u8,
+                start: r[1],
+                dur: r[2],
+                amp: r[3] as f32,
+            }
         })
         .collect();
     let bpm: f64 = bpm.parse().expect("bpm");
     for n in arrange(&notes, bpm, level) {
-        println!("{} {} {} {}", n.pitch, n.beat, n.beats, if n.left_hand { "L" } else { "R" });
+        println!(
+            "{} {} {} {}",
+            n.pitch,
+            n.beat,
+            n.beats,
+            if n.left_hand { "L" } else { "R" }
+        );
     }
 }
