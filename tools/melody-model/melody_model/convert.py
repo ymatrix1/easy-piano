@@ -15,7 +15,8 @@ raise Unsupported (counted and skipped by the dataset builder):
 Hands: two parts are assigned by mean pitch (higher = RH); one part is LH
 when it has a bass clef or sits below G3 on average. In multi-voice bars the
 voice with the highest mean pitch is read. Chord pitches are written low to
-high with per-note fingering; chord-level fingering without note order is dropped.
+high; chord fingering is kept only when stored per note (music21 loses the
+note order of chord-level fingering, so that is dropped).
 
 LilyPond: there is no .ly parser. Mutopia ships a MIDI rendered by LilyPond from
 the same source under the same licence, read with quantizePost (pitch spelling
@@ -268,18 +269,13 @@ def _finger_of(obj) -> int | None:
 
 
 def _chord_fingers(el) -> list[int | None]:
-    """Finger per chord note, in the chord's written note order, or Nones.
+    """Finger per chord note, or Nones.
 
-    MusicXML stores <fingering> inside each <note>; music21 keeps it on the note or
-    collects it on the chord in written note order. Anything else has no note order.
+    Only fingering stored on the note objects is trusted. music21 sorts chord notes
+    on import but keeps chord-level fingering in written order, so that list cannot
+    be matched to pitches: it is dropped (the arranger re-fingers chords anyway).
     """
-    per_note = [_finger_of(n) for n in el.notes]
-    if all(per_note):
-        return per_note
-    fs = [a.fingerNumber for a in el.articulations if isinstance(a, m21.articulations.Fingering)]
-    if len(fs) == len(el.notes) and all(isinstance(f, int) and 1 <= f <= 5 for f in fs):
-        return fs
-    return [None] * len(el.notes)
+    return [_finger_of(n) for n in el.notes]
 
 
 def _rests(ql: Fraction) -> list[Event]:
