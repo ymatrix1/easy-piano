@@ -337,24 +337,20 @@ class StaffPainter extends CustomPainter {
         }
       }
 
-      // Staff lines; on a grand staff each staff's outer lines are heavier.
-      final outer = Paint()
-        ..color = staff
-        ..strokeWidth = ink.strokeWidth * 2;
+      // Staff lines; a grand staff frames each staff in a heavy rectangle.
       for (var i = 0; i < 5; i++) {
-        final p = staves == Staves.grand && (i == 0 || i == 4) ? outer : ink;
         if (_hasTreble) {
           canvas.drawLine(
             Offset(sys.systemX, trebleBottomY - i * space),
             Offset(size.width, trebleBottomY - i * space),
-            p,
+            ink,
           );
         }
         if (_hasBass) {
           canvas.drawLine(
             Offset(sys.systemX, bassTopY + i * space),
             Offset(size.width, bassTopY + i * space),
-            p,
+            ink,
           );
         }
       }
@@ -378,12 +374,21 @@ class StaffPainter extends CustomPainter {
         );
       }
       if (staves == Staves.grand) {
-        // System line, then the brace just left of it.
-        canvas.drawLine(
-          Offset(sys.systemX, staffTop),
-          Offset(sys.systemX, staffBottom),
-          ink,
-        );
+        // Each staff framed by a heavy rectangle; the brace sits left of it.
+        final frame = Paint()
+          ..color = staff
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = ink.strokeWidth * 2;
+        final inset = frame.strokeWidth / 2;
+        for (final (top, bot) in [
+          (staffTop, trebleBottomY),
+          (bassTopY, staffBottom),
+        ]) {
+          canvas.drawRect(
+            Rect.fromLTRB(sys.systemX, top, size.width - inset, bot),
+            frame,
+          );
+        }
         final x0 = sys.systemX - space * 1.9,
             top = staffTop - space * trebleBandPad,
             bot = staffBottom + space * bassBandPad,
