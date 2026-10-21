@@ -97,6 +97,8 @@ Checked 2026-10-21, local jadx sources (`references/simply_piano_jadx_deobf_33_7
 | Cover alpha, static/wait stage | Linear 1→0 from x=0 to play line minus half a notehead | same, `f32361g` branch `:204-208` |
 | Dim cover | Second copy at max alpha 127, starts transparent, `fadeIn(0.2f)` when a highlight overlay opens | `:226-231`, `p350nj/C9674v0.java:193` |
 | Page slide (wait) | Notes group `moveTo(x - shift, y, 1.0f)`, linear, when the current note passes ~70% of the width | `p350nj/C9674v0.java:417,462` |
+| Play line x | staffAreaLeft 129 + clefImageXDiffFromStaffAreaLeft 30 + rhythmLineXDiffFromClefImageLeft 480 = 639 px on a 1080 px tall layout (scale 1.0 at ≥1080 px height, 0.67 at ≥720, 0.5 below) ≈ 0.27-0.33 of the width | `resources/assets/LevelUIConfig.json`, `p380oj/C10043y.java:83`, `p380oj/EnumC10012i0.java` |
+| Static notes start | 60 px left of the play line (`staticUINotesContainerXDiffFromRhythmLine: -60`) | `LevelUIConfig.json` |
 | Right edge | No fade-in found; notes are clipped at the edge | - |
 | Labels | Instruction labels `fadeIn/fadeOut(0.2f)` | `p350nj/C9674v0.java:213,234` |
 

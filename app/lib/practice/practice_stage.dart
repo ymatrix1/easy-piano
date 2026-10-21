@@ -150,18 +150,26 @@ class _PracticeStageState extends State<PracticeStage>
 
   static const _maxPpb = 120.0; // pixels per beat
   static const _minPpb = 70.0;
-  static const _waitAnchorBase = 0.10; // page start, as a fraction of the width
   static const _pageTurnAt =
       0.60; // next note past this fraction → slide (reference)
-  static const _playLineBase = 0.12; // play bar right after the clef
+
+  /// Play bar well right of the clefs, as in the reference (rhythm line 480
+  /// design px after the clef on a 1080 px tall layout ≈ 0.28 of the
+  /// width); passed notes ghost under the cover in the gap.
+  static const _playLineBase = 0.28;
+
+  /// Wait-mode page start sits a little left of the play bar (reference:
+  /// static notes 60 design px before the rhythm line).
+  static const _waitAnchorGap = 0.03;
 
   /// Never start notes under the clef: on narrow screens a fraction of the
-  /// width is less than the clef's own width.
+  /// width is less than the clef's own width. The extra 48 px keeps a clear
+  /// gap between clef and play bar on phones.
   static const _clefClearPx = 96.0;
-  double get _waitAnchor =>
-      math.max(_waitAnchorBase, _clefClearPx / _staffWidth);
   double get _playLine =>
-      math.max(_playLineBase, (_clefClearPx + 8) / _staffWidth);
+      math.max(_playLineBase, (_clefClearPx + 48) / _staffWidth);
+  double get _waitAnchor =>
+      math.max(_playLine - _waitAnchorGap, (_clefClearPx + 24) / _staffWidth);
 
   late final PracticeSession _session;
   late final List<StaffNote> _notes;

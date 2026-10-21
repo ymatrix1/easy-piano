@@ -277,18 +277,42 @@ class StaffPainter extends CustomPainter {
     // near the clefs (see the cover below), so keep it free of notes.
     void paintBackground() {
       if (bandColor != null) {
-        canvas.drawRect(
-          Rect.fromLTRB(
-            0,
-            staffTop - space * 2.2,
-            size.width,
-            staffBottom + space * 2.2,
-          ),
-          Paint()
-            ..color = dimmed
-                ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
-                : bandColor!,
-        );
+        final band = Paint()
+          ..color = dimmed
+              ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
+              : bandColor!;
+        if (staves == Staves.grand) {
+          // One band per staff, stage colour between them, each framed by a
+          // stronger border line (reference look).
+          final pad = space * 0.6;
+          final border = Paint()
+            ..color = staff
+            ..strokeWidth = math.max(2.0, space * 0.2);
+          for (final (top, bot) in [
+            (staffTop, trebleBottomY),
+            (bassTopY, staffBottom),
+          ]) {
+            final r = Rect.fromLTRB(
+              sys.systemX,
+              top - pad,
+              size.width,
+              bot + pad,
+            );
+            canvas.drawRect(r, band);
+            canvas.drawLine(r.topLeft, r.topRight, border);
+            canvas.drawLine(r.bottomLeft, r.bottomRight, border);
+          }
+        } else {
+          canvas.drawRect(
+            Rect.fromLTRB(
+              0,
+              staffTop - space * 2.2,
+              size.width,
+              staffBottom + space * 2.2,
+            ),
+            band,
+          );
+        }
       }
 
       // Staff lines.
