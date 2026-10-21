@@ -1,8 +1,8 @@
 # Native audio output latency (Windows)
 
-Checked: 2026-10-20. Bean: piano-73n9 (context). Setup: Windows 11 Pro, 48 kHz, five active output devices (USB audio, three NVIDIA HDMI endpoints, Steam Streaming Speakers, Voicemod virtual), Rust 1.91. Browser: Chrome 152 inside the Claude desktop pane. Probe code was throwaway (not committed): `cpal` 0.15 for shared mode, `windows` 0.58 crate for IAudioClient / IAudioClient3 and exclusive mode. Output was silence; only buffer timing was measured.
+Checked: 2026-10-20. Bean: piano-79tp. Setup: Windows 11 Pro, 48 kHz, five active output devices (USB audio, three NVIDIA HDMI endpoints, Steam Streaming Speakers, Voicemod virtual), Rust 1.91. Browser numbers: Chrome 152 inside the Claude desktop app's embedded browser pane on the same PC; **not representative** of a normal Chrome/Edge window (not re-measured there). Probe code was throwaway (not committed): `cpal` 0.15 for shared mode, `windows` 0.58 crate for IAudioClient / IAudioClient3 and exclusive mode. Output was silence; only buffer timing was measured.
 
-Sources: [WASAPI exclusive mode](https://learn.microsoft.com/windows/win32/coreaudio/exclusive-mode-streams), [IAudioClient3](https://learn.microsoft.com/windows/win32/api/audioclient/nn-audioclient-iaudioclient3), `cpal` and `miniaudio` project docs.
+Sources: [WASAPI exclusive mode](https://learn.microsoft.com/windows/win32/coreaudio/exclusive-mode-streams), [IAudioClient3](https://learn.microsoft.com/windows/win32/api/audioclient/nn-audioclient-iaudioclient3), [`cpal`](https://github.com/RustAudio/cpal) (Apache-2.0), [`miniaudio`](https://github.com/mackron/miniaudio) (public domain / MIT-0), [`flutter_soloud`](https://pub.dev/packages/flutter_soloud).
 
 ## Question
 
@@ -18,10 +18,24 @@ Callback timing is measured per path. These are buffer periods, not end-to-end k
 | Browser Web Audio, `latencyHint` 0 | `baseLatency` 10 ms | n/a | Identical to `'interactive'` (5 runs each) |
 | `cpal` WASAPI shared, requested 64 / 128 / 256 / 480 frames | 480 frames = 10 ms | 10.1 / 10.6 ms | Requested size ignored; 10 ms is the system period |
 | WASAPI shared via IAudioClient3 | min period 10 ms on all 5 devices | not streamed | These drivers expose no smaller shared period |
-| WASAPI exclusive, USB audio | 144 frames = 3.00 ms | 3.02 / 6.16 ms | 1000 callbacks, one 6 ms outlier |
-| WASAPI exclusive, HDMI monitor audio | 160 frames = 3.33 ms | 3.34 / 3.46 ms | 901 callbacks |
+| WASAPI exclusive, USB audio (streamed) | 144 frames = 3.00 ms | 3.02 / 6.16 ms | 1000 callbacks, one 6 ms outlier |
+| WASAPI exclusive, HDMI monitor audio PHL 242V8 (streamed) | 160 frames = 3.33 ms | 3.34 / 3.46 ms | 901 callbacks |
 
-Exclusive-mode format support (all five devices): PCM16 at 48 kHz supported. Float (the shared mix format) and PCM24 are rejected on most. Min exclusive period reported by the driver: 3 ms on all five.
+Exclusive mode was only **streamed on 2 of 5** devices. On all 5, the driver reported a 3 ms minimum exclusive period and accepted PCM16 at 48 kHz.
+
+| Device | Exclusive PCM16 48k accepted | PCM24 48k accepted | Streamed |
+|---|---|---|---|
+| USB HIFI AUDIO | yes | no | **streamed** |
+| PHL 242V8 (NVIDIA HDMI) | yes | yes | **streamed** |
+| ARZOPA-27 (NVIDIA HDMI) | yes | yes | not streamed |
+| Steam Streaming Speakers | yes | no | not streamed |
+| Voicemod virtual device | yes | no | not streamed |
+
+Float (the shared mix format) was rejected for exclusive mode on all five.
+
+## Web MIDI spike, same session
+
+Run by the user on the PR 36 preview in their own browser with a Keystation Mini 32: input to frame n=97, p50 3.1 ms, p95 5.8 ms, max 25.2 ms. Passes D1's 30 ms gate. It excludes audio output.
 
 ## Not measured
 
