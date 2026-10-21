@@ -20,6 +20,8 @@ Same realistic sound on every platform from one Rust engine.
 - [ ] Web plays through the worklet engine; Web Audio graph removed
 - [ ] Same parity numbers as stage 1 measured in the browser
 - [ ] Live key latency on web not worse than today (measured, same device and browser)
+- [ ] Audio-thread CPU and first-load time not worse than today, measured on a named low-end device (browser keeps decoding MP3s; engine gets PCM)
+- [ ] Fallback if any web gate fails: web keeps the Web Audio graph and matches native via the stage-1 parity test; record the outcome in D30
 - [ ] Blind A/B listen vs current web by the user
 
 ## Out of Scope
