@@ -48,7 +48,11 @@ Weights: proposed in D24, not decided yet. Generated tunes: CC0-1.0 (D17).
 
 ## Evaluation
 
-- **Rubric pass rate:** before the gates were made fail-closed, 108 / 155 candidates passed the rubric (70%), across 10 lesson nodes from Piano Basics to Essentials III, 16 candidates each. Results with both gates: `releases/melody-model-v1.eval-generation.json`.
+- **Both gates, 10 lesson nodes, 16 candidates each** (`releases/melody-model-v1.eval-generation.json`): **123 / 160 pass the rubric (77%)**; **0 pass the similarity gate.**
+  - Why none pass: every top match is a ~10-note fragment with low information (scale runs, repeated figures) scoring 1.00 against the 39,615-tune corpus.
+  - The 0.5 threshold was calibrated on our 40 songs (PR #34), so the gate needs calibration for corpus size before any tune can ship.
+  - Until then no generated tune is usable as content.
+  - Earlier rubric-only run, before the gates were made fail-closed: 108 / 155 (70%).
 - **Browser:** in Chrome desktop with the int8 model, an 8-bar tune takes about 0.3–0.4 s (PR #48 has the method).
 - **Blind listening test:** pending (30 generated tunes + 6 control songs).
 
