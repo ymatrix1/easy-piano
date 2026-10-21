@@ -33,6 +33,7 @@ class _FakeApi implements RustLibApi {
     required double tempo,
     required double passRatio,
     required int failedAttempts,
+    required bool training,
   }) => _FakeSession();
 
   @override
@@ -68,7 +69,14 @@ class _FakeSession implements PracticeSession {
     wrong: 0,
     done: false,
     hintActive: false,
+    streak: 0,
   );
+
+  @override
+  SectionEventView? takeSectionEvent() => null;
+
+  @override
+  List<FeedbackView> takeFeedback() => const [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -311,3 +311,23 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
   - **No human review and no copy check in practice mode, by decision.** Known risk, accepted by the user: a learner may be shown a phrase memorised from flagged training data (D21). Course content keeps review (D17) and the similarity report (D27).
   - Phone latency must be measured before shipping on mobile.
   - Implementation: bean piano-c6v1.
+
+### D30. One Rust audio engine for every platform, web included (proposed)
+
+- **Status:** proposed
+- **Context:** D22 put the sampled piano, band, mix and effects in the Web Audio graph (`app/lib/audio/piano_synth_web.dart`). Android, iOS and desktop use a silent stub. A second engine for native (plugin or Rust) would have to be kept in step with the web one by hand and would drift. Rule 7 wants one audio clock. Decoded samples also use a lot of memory (29 piano files at up to 16 s, float32 stereo, roughly 160 MB in the browser today), too much for phones.
+- **Decision:** All sound is made by one Rust crate in `audio/` (already planned in ARCHITECTURE): sampler (nearest sample, pitch shift, loop crossfade, drum round robin), per-part buses, reverb, bus compressor, limiter and soft clipper, and the audio clock. Dart keeps deciding what to play (`backing.dart` expression) and sends timestamped events (note, sample time, velocity, part). Native builds output through cpal/Oboe/CoreAudio; web compiles the same crate to wasm inside an AudioWorklet (COOP/COEP are already served), and Web Audio only carries the rendered output. Samples are held compactly (16-bit, trimmed tails, loaded per range as needed). Delivered in three stages: (1) offline engine with a CI parity test against the D22 web measurements; (2) native output with measured latency; (3) web worklet replaces the Web Audio graph, only if key latency, audio-thread CPU and first-load time are measured no worse than today; otherwise web keeps Web Audio and matches native through the parity test. Not expected to be faster on web: the gains are one clock, identical sound and lower memory.
+- **Why:** Web and native sound identical because they run the same code; one clock for grading and playback; the mix can be tested in CI by rendering a song, without devices; memory fits phones.
+- **Alternatives:** Flutter audio plugin for native next to the Web Audio graph (smaller now, two engines that drift, plugin effects differ); native-only Rust engine with web staying on Web Audio (still two DSPs); pre-rendered audio per song (D14 reasons).
+- **Impact:** New crate `audio/` with flutter_rust_bridge API; `PianoSynth` becomes a thin event sender on every platform; mix constants move into the engine; the `?mixprobe` web probe is replaced by the CI parity test. Supersedes the Web Audio implementation part of D22 once stage 3 lands. Beans: epic piano-v8sj and its stage tasks.
+
+### D31. Play-along error feedback beyond the reference's red notes
+
+- **Status:** accepted
+- **Decided by:** user, 2026-10-21: "Accept D31 as written."
+- **Context:** In play-along the reference marks a miss only by turning the note red and shows nothing for a wrong key or an early / late hit ([teardown](research/simply-piano-teardown.md#play-along-error-feedback-and-training-mode)). Learners on a touch keyboard or a quiet digital piano get little sign of what went wrong.
+- **Decision:** Keep the reference's red / teal note colours and add three cues, each fading in 0.6 s: a red flash on the wrong key of the on-screen keyboard, a red outline on the keys of a missed note, and an "Early" / "Late" tag above the staff for hits more than 120 ms off. No staff marks for wrong or missed notes (a cross at the play bar was tried and dropped: it looked out of place next to the reference), no error sounds, no streak counter on screen. Training mode (section replay, 75% practice runs) follows the reference.
+- **Why:** The cues say which key was wrong and which way the timing was off without covering the notes or punishing with sound.
+- **Alternatives:** Reference only (colour); cross or shake at the play bar; error buzz; combo counter.
+- **Impact:** UI in `app/lib/practice/play_feedback.dart`; events from `core` (`Feedback`, `Timing`, `ON_TIME_US`). Bean piano-uv0e.
+
