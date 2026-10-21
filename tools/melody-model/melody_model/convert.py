@@ -8,8 +8,9 @@ raise Unsupported (counted and skipped by the dataset builder):
 - meter changes (shorter bars before repeats excepted), key changes including
   same-signature mode changes (C -> Am), ambiguous keys
 - tuplets and durations outside DURATIONS, double accidentals
-- ties across a barline, or tied notes whose sum is not one duration
-  (the format has no tie; a re-attack would change the music)
+- ties are kept as `{tie}` (content grammar): across barlines, and inside a bar
+  when the tied sum is not one duration; otherwise merged into one note;
+  a tie into a different pitch is rejected
 - parser failures
 
 Hands: two parts are assigned by mean pitch (higher = RH); one part is LH
@@ -44,36 +45,44 @@ def convert_file(path: str | Path) -> list[dict]:
     """All tunes in a file (ABC files can hold many); raises on the first unsupported tune."""
     songs, errors = convert_file_lenient(path)
     if errors:
-        raise Unsupported(errors[0])
+        raise errors[0]
     return songs
 
 
-def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[str]]:
-    """Like convert_file but collects per-tune errors instead of raising."""
+def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[Unsupported]]:
+    """Like convert_file but collects per-tune errors (always Unsupported) instead of raising."""
     path = Path(path)
     try:
         parsed = m21.converter.parse(str(path), forceSource=True, quantizePost=path.suffix.lower() in (".mid", ".midi"))
     except Exception as e:  # music21 raises many types on malformed input
-        return [], [f"parse error: {type(e).__name__}"]
+        return [], [Unsupported(f"parse error: {type(e).__name__}")]
     scores = list(parsed.scores) if isinstance(parsed, m21.stream.Opus) else [parsed]
     songs, errors = [], []
     for s in scores:
         try:
             songs.append(convert_score(s))
         except Unsupported as e:
-            errors.append(str(e))
+            errors.append(e)
         except Exception as e:
-            errors.append(f"parse error: {type(e).__name__}")
+            errors.append(Unsupported(f"parse error: {type(e).__name__}"))
     return songs, errors
 
 
-def convert_score(score: m21.stream.Score, melody_only: bool = False) -> dict:
-    """melody_only: read only the first part, as RH (voice + piano scores, MIDI)."""
+def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int | str = 0) -> dict:
+    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI)."""
     parts = list(score.parts)
     if not parts:
         raise Unsupported("no parts")
     if melody_only:
-        parts = parts[:1]
+        if isinstance(part, str):
+            named = [p for p in parts if p.partName == part]
+            if not named:
+                raise Unsupported(f"no part named {part!r}")
+            parts = named[:1]
+        elif not 0 <= part < len(parts):
+            raise Unsupported(f"no part {part}")
+        else:
+            parts = [parts[part]]
     elif len(parts) > 2:
         raise Unsupported(f"{len(parts)} parts")
     time = _time_sig(score)
@@ -115,7 +124,7 @@ def _time_sig(score) -> str:
     # ABC headers can stack M: fields; the last one in a measure wins
     per_measure = {}
     for ts in score.parts[0].recurse().getElementsByClass(m21.meter.TimeSignature):
-        per_measure[ts.measureNumber] = ts
+        per_measure[ts.measureNumber or 0] = ts
     if not per_measure:
         raise Unsupported("no time signature")
     main = per_measure[min(per_measure)]
@@ -131,11 +140,14 @@ def _time_sig(score) -> str:
 
 def _key_name(score) -> str:
     sigs = list(score.parts[0].recurse().getElementsByClass(m21.key.KeySignature))
-    stated = {(k.sharps, k.mode if isinstance(k, m21.key.Key) else None) for k in sigs}
-    if len(stated) > 1:
+    # a bare KeySignature says nothing about mode, so it agrees with a Key of the same sharps
+    sharps = {k.sharps for k in sigs}
+    modes = {k.mode for k in sigs if isinstance(k, m21.key.Key)}
+    if len(sharps) > 1 or len(modes) > 1:
         raise Unsupported("key changes")
-    if sigs and isinstance(sigs[0], m21.key.Key):
-        k = sigs[0]
+    stated = next((k for k in sigs if isinstance(k, m21.key.Key)), None)
+    if stated is not None:
+        k = stated
     else:
         analyzed = score.analyze("key")
         if analyzed.correlationCoefficient < MIN_KEY_CONFIDENCE:
@@ -193,39 +205,41 @@ def _hand_bars(part, bar_ql: Fraction) -> list[list[Event]]:
                 raise Unsupported(f"bar {i + 1} lasts {total} quarters, expected {bar_ql}")
         bars.append(events)
         i += 1
+    _check_ties(bars)
     return bars
 
 
 def _bar_events(voice, bar_no: int) -> list[Event]:
-    """Notes and rests of one bar; tie chains inside the bar are merged into one note."""
+    """Notes and rests of one bar. Ties become `Event.tie`; a tie chain inside the bar
+    whose sum is one duration is merged into one note."""
     events: list[Event] = []
-    tied = False  # previous element starts or continues a tie
-    pending_ql = Fraction(0)
     for el in voice.notesAndRests:
         if el.duration.isGrace or isinstance(el, m21.harmony.ChordSymbol):
             continue
-        tie = el.tie.type if el.tie is not None and not el.isRest else None
-        ql = Fraction(el.duration.quarterLength).limit_denominator(64)
-        if tie in ("stop", "continue") and not tied:
-            raise Unsupported(f"tie across barline (bar {bar_no})")
-        if tied:
-            if tie not in ("stop", "continue"):
-                raise Unsupported(f"broken tie (bar {bar_no})")
-            prev = events[-1]
-            if [p.midi for p in prev.pitches] != sorted(p.midi for p in el.pitches):
-                raise Unsupported(f"tie between different pitches (bar {bar_no})")
-            pending_ql += ql
-            d = _QL_TO_DUR.get(pending_ql)
-            if d is None and tie == "stop":
-                raise Unsupported(f"tie sum {pending_ql} quarters (bar {bar_no})")
-            prev.dur = d
-        else:
-            events.append(_event(el, allow_any_duration=tie == "start"))
-            pending_ql = ql
-        tied = tie in ("start", "continue")
-    if tied:
-        raise Unsupported(f"tie across barline (bar {bar_no})")
+        e = _event(el)
+        e.tie = el.tie is not None and not el.isRest and el.tie.type in ("start", "continue")
+        prev = events[-1] if events else None
+        if prev is not None and prev.tie and prev.pitches == e.pitches:
+            ql = Fraction(dur_beats(prev.dur, 4) + dur_beats(e.dur, 4)).limit_denominator(64)
+            d = _QL_TO_DUR.get(ql)
+            if d is not None:
+                prev.dur, prev.tie = d, e.tie
+                continue
+        events.append(e)
     return events
+
+
+def _check_ties(bars: list[list[Event]]) -> None:
+    """A tie must lead into a note of the same pitches. A tie on the very last note
+    (dangling, common in exports) is dropped; a tie into another pitch is an error."""
+    flat = [e for bar in bars for e in bar]
+    for e, nxt in zip(flat, flat[1:] + [None]):
+        if not e.tie:
+            continue
+        if nxt is None:
+            e.tie = False
+        elif nxt.pitches != e.pitches:
+            raise Unsupported("tie into a different pitch")
 
 
 def _at_section_end(m, measures, n) -> bool:
@@ -236,11 +250,10 @@ def _at_section_end(m, measures, n) -> bool:
     return ends or isinstance(nxt, m21.bar.Repeat)
 
 
-def _event(el, allow_any_duration: bool = False) -> Event:
-    """allow_any_duration: first note of a tie chain; the chain's sum is checked instead."""
+def _event(el) -> Event:
     ql = Fraction(el.duration.quarterLength).limit_denominator(64)
     dur = _QL_TO_DUR.get(ql)
-    if dur is None and not allow_any_duration:
+    if dur is None:
         raise Unsupported(f"duration {ql} quarters")
     if el.isRest:
         return Event([], dur)
@@ -299,6 +312,7 @@ def song_to_score(song: dict) -> m21.stream.Score:
         if not any(hand in b for b in song["bars"]):
             continue
         part = m21.stream.Part(id=hand)
+        tied_in = False  # previous note was tied into this one
         for i, bar in enumerate(song["bars"]):
             m = m21.stream.Measure(number=i + 1)
             if i == 0:
@@ -312,6 +326,9 @@ def song_to_score(song: dict) -> m21.stream.Score:
                     el = m21.note.Note(names[0], quarterLength=ql) if len(names) == 1 else m21.chord.Chord(names, quarterLength=ql)
                     for f in e.fingers:  # music21 writes chord fingerings to the notes in this order
                         el.articulations.append(m21.articulations.Fingering(f))
+                    if e.tie or tied_in:
+                        el.tie = m21.tie.Tie("continue" if e.tie and tied_in else "start" if e.tie else "stop")
+                tied_in = e.tie
                 m.append(el)
             part.append(m)
         score.append(part)

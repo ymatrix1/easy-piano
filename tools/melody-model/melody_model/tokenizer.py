@@ -25,6 +25,8 @@ KEYS = tuple(_TONICS) + tuple(t + "m" for t in ("A", "E", "B", "F#", "C#", "G#",
 MAX_BARS = 64
 COURSES = ("none", "piano-basics", "essentials-1", "essentials-2", "essentials-3")
 HANDS = ("RH", "LH", "BOTH")
+STYLES = ("classical", "folk", "religious", "world", "children", "pop", "rock", "soundtrack", "game", "jazz", "electronic", "chinese")
+SOURCES = ("own", "nottingham", "mutopia", "pdmx", "local")
 # Required-pattern keys of docs/specs/skill-specs.md (content/skill-specs/*.json); a test checks every
 # pattern there encodes. Values ride in the pitch/dur fields or in the kind itself.
 PATTERN_KEYS = ("rhythm", "interval_min", "accidental", "pitch", "hand", "min_bar_share", "rest", "chord", "hands_together")
@@ -33,13 +35,15 @@ SHARES = (25, 50, 75, 100)  # min_bar_share, rounded up to a quarter
 SECTIONS = tuple("ABCDEFGH")
 
 KINDS = (
-    (NONE, "PAD", "BOS", "END", "BAR", "RH", "LH", "NOTE", "CHORD", "REST")
+    (NONE, "PAD", "BOS", "END", "BAR", "RH", "LH", "NOTE", "CHORD", "REST", "TIE")
     + ("SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW")
     + tuple(f"TIME_{t}" for t in TIME_SIGS)
     + tuple(f"KEY_{k}" for k in KEYS)
     + tuple(f"BARS_{n}" for n in range(1, MAX_BARS + 1))
     + tuple(f"COURSE_{c}" for c in COURSES)
     + tuple(f"HANDS_{h}" for h in HANDS)
+    + tuple(f"STYLE_{x}" for x in STYLES)
+    + tuple(f"SRC_{x}" for x in SOURCES)
     + ("PAT", "PAT_rhythm", "PAT_accidental", "PAT_pitch", "PAT_hand_RH", "PAT_hand_LH", "PAT_rest", "PAT_chord", "PAT_hands_together")
     + tuple(f"PAT_interval_min_{n}" for n in INTERVAL_NUMBERS)
     + tuple(f"PAT_share_{x}" for x in SHARES)
@@ -81,6 +85,8 @@ class Spec:
     hands: str
     course: str = "none"
     patterns: list[dict] | None = None  # skill-spec `required` patterns
+    styles: list[str] | None = None  # STYLES; dropped at random in training
+    source: str | None = None  # SOURCES; omitted at generation
 
 
 def spec_from_song(song: dict) -> Spec:
@@ -112,7 +118,11 @@ def spec_from_song(song: dict) -> Spec:
 def encode_spec(spec: Spec) -> list[Step]:
     if spec.bars > MAX_BARS:
         raise Unsupported(f"{spec.bars} bars > {MAX_BARS}")
-    out = [step("SPEC"), step(f"COURSE_{spec.course}"), step(f"TIME_{spec.time}"),
+    out = [step("SPEC")]
+    out += [step(f"STYLE_{x}") for x in sorted(spec.styles or [])]
+    if spec.source:
+        out.append(step(f"SRC_{spec.source}"))
+    out += [step(f"COURSE_{spec.course}"), step(f"TIME_{spec.time}"),
            step(f"KEY_{spec.key}"), step(f"BARS_{spec.bars}"),
            step("RANGE_LO", pitch=spec.range_lo), step("RANGE_HI", pitch=spec.range_hi)]
     out += [step("DUR_ALLOW", dur=d) for d in spec.durs]
@@ -162,6 +172,8 @@ def encode_events(events: list[Event]) -> list[Step]:
         for i, p in enumerate(e.pitches):
             f = str(e.fingers[i]) if e.fingers else NONE
             out.append(step("NOTE" if i == 0 else "CHORD", pitch=p.name, dur=e.dur if i == 0 else NONE, finger=f))
+        if e.tie:
+            out.append(step("TIE"))
     return out
 
 
@@ -188,7 +200,7 @@ class InvalidSequence(ValueError):
 
 _PREFIX_KINDS = ("PAD", "BOS", "PAT", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW", "PLAN", "PLAN_END",
                  "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT", "FIM_PRE", "FIM_SUF", "FIM_MID")
-_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_")
+_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_")
 
 
 def decode(steps: list[Step]) -> dict:
@@ -258,6 +270,10 @@ def decode(steps: list[Step]) -> dict:
             p = [] if kind == "REST" else [_pitch(pitch)]
             f = [int(finger)] if finger != NONE else []
             events.append(Event(p, dur, f))
+        elif kind == "TIE":
+            if events is None or not events or events[-1].is_rest or events[-1].tie or (pitch, dur, finger) != (NONE, NONE, NONE):
+                bad(f"step {i}: TIE must follow a note and carry no fields")
+            events[-1].tie = True
         elif kind == "END":
             break
         elif kind in _PREFIX_KINDS or kind.startswith(_PREFIX_GROUPS):

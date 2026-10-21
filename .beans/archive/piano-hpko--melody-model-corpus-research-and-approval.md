@@ -4,6 +4,7 @@ title: 'Melody model: corpus research and approval'
 status: completed
 type: task
 priority: normal
+parent: piano-bovj
 tags:
     - melody-gen
 created_at: 2026-10-20T22:16:51Z
