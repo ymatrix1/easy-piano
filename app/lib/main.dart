@@ -17,10 +17,15 @@ import 'ui/staff/staff_spike_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
   final dispatcher = WidgetsBinding.instance.platformDispatcher;
-  final appLocale = await AppLocale.load(dispatcher.locales);
-  final repo = await ContentRepo.load(locale: appLocale.current.tag);
+  // Independent boot steps run in parallel; the web splash stays up until
+  // the first frame (web/index.html).
+  final (_, appLocale, repo) = await (
+    RustLib.init(),
+    AppLocale.load(dispatcher.locales),
+    ContentRepo.load(),
+  ).wait;
+  repo.locale = appLocale.current.tag;
   runApp(EasyPianoApp(repo: repo, appLocale: appLocale));
 }
 
