@@ -146,21 +146,45 @@ def encode_song(song: dict, spec: Spec | None = None) -> list[Step]:
     return [step("BOS")] + encode_spec(spec) + encode_bars(song["bars"]) + [step("END")]
 
 
+class InvalidSequence(ValueError):
+    """Steps that do not form a valid song (model output is decoded through this)."""
+
+
+_PREFIX_KINDS = ("PAD", "BOS", "SPEC", "SPEC_END", "RANGE_LO", "RANGE_HI", "DUR_ALLOW", "PLAN", "PLAN_END",
+                 "CAD_STABLE", "CAD_OPEN", "CON_UP", "CON_DOWN", "CON_FLAT", "FIM_PRE", "FIM_SUF", "FIM_MID")
+_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_")
+
+
 def decode(steps: list[Step]) -> dict:
-    """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH."""
+    """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH.
+
+    Raises InvalidSequence on anything encode_song cannot produce: out-of-range
+    ids, notes outside a hand, missing or extra fields, a CHORD without a NOTE,
+    a hand twice in a bar, no time or key, no bars. Bar lengths are not checked
+    here (the rubric and lint do that).
+    """
     kinds = FIELDS["kind"]
     time = key = None
     bars: list[dict] = []
     events: list[Event] | None = None
     hand = None
 
+    def bad(msg):
+        raise InvalidSequence(msg)
+
     def flush():
         if events is not None:
+            if not events:
+                bad(f"empty {hand} in bar {len(bars)}")
             bars[-1][hand] = format_hand(events)
 
-    for s in steps:
+    for i, s in enumerate(steps):
+        if len(s) != 4 or not all(0 <= v < len(FIELDS[f]) for v, f in zip(s, FIELDS)):
+            bad(f"step {i}: ids out of range {s}")
         kind = kinds[s[0]]
         pitch, dur, finger = PITCHES[s[1]], DURS[s[2]], FINGERS[s[3]]
+        if kind == NONE:
+            bad(f"step {i}: no kind")
         if kind.startswith("TIME_"):
             time = kind[5:]
         elif kind.startswith("KEY_"):
@@ -170,15 +194,27 @@ def decode(steps: list[Step]) -> dict:
             events, hand = None, None
             bars.append({})
         elif kind in ("RH", "LH"):
+            if not bars:
+                bad(f"step {i}: {kind} before BAR")
+            if kind in bars[-1] or kind == hand:
+                bad(f"step {i}: {kind} twice in bar {len(bars)}")
             flush()
             events, hand = [], kind
         elif kind in ("NOTE", "REST", "CHORD"):
             if events is None:
-                raise ValueError(f"{kind} outside a hand")
+                bad(f"step {i}: {kind} outside a hand")
+            if kind == "NOTE" and (pitch == NONE or dur == NONE):
+                bad(f"step {i}: NOTE needs pitch and dur")
+            if kind == "REST" and (dur == NONE or pitch != NONE or finger != NONE):
+                bad(f"step {i}: REST takes only dur")
             if kind == "CHORD":
+                if pitch == NONE or dur != NONE:
+                    bad(f"step {i}: CHORD takes pitch (and finger), no dur")
                 if not events or events[-1].is_rest:
-                    raise ValueError("CHORD without a preceding NOTE")
+                    bad(f"step {i}: CHORD without a preceding NOTE")
                 prev = events[-1]
+                if bool(prev.fingers) != (finger != NONE):
+                    bad(f"step {i}: fingering on some chord notes only")
                 prev.pitches.append(_pitch(pitch))
                 if finger != NONE:
                     prev.fingers.append(int(finger))
@@ -188,7 +224,16 @@ def decode(steps: list[Step]) -> dict:
             events.append(Event(p, dur, f))
         elif kind == "END":
             break
+        elif kind in _PREFIX_KINDS or kind.startswith(_PREFIX_GROUPS):
+            if bars:
+                bad(f"step {i}: {kind} after the first BAR")
+        else:
+            bad(f"step {i}: unexpected {kind}")
     flush()
+    if time is None or key is None:
+        bad("no TIME or KEY")
+    if not bars or any(not b for b in bars):
+        bad("no bars, or an empty bar")
     return {"time": time, "key": key, "bars": bars}
 
 
