@@ -10,5 +10,19 @@ crate-type = ["cdylib", "staticlib"]
 flutter_rust_bridge = "=2.13.0"
 easy_piano_core = { path = "../../core" }
 
+# Native sound (D30 stage 2). Web keeps Web Audio until stage 3.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+easy_piano_audio = { path = "../../audio", features = ["decode", "output"] }
+
+# cpal finds the JavaVM and Context through ndk-context (set in android.rs).
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+ndk-context = "0.1"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# Dependencies (the audio engine above all) are optimized even in debug
+# builds: an unoptimized engine can't keep up with the audio callback.
+[profile.dev.package."*"]
+opt-level = 3

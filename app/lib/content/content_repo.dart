@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// One stage of a level (docs/specs/content-format.md).
@@ -247,13 +248,23 @@ class ContentRepo {
 
   static Future<ContentRepo> load({String locale = 'en'}) async {
     const base = 'assets/content';
+    // One request for all content (written by tools/sync_content.py); falls
+    // back to per-file loads, in parallel, for an older asset sync.
+    try {
+      final bundle = jsonDecode(
+        await rootBundle.loadString('$base/bundle.json', cache: false),
+      ) as Map<String, dynamic>;
+      return fromFiles(bundle.cast<String, String>(), locale: locale);
+    } on FlutterError {
+      // No bundle.json in the assets.
+    }
     final index = jsonDecode(
       await rootBundle.loadString('$base/index.json'),
     ) as Map<String, dynamic>;
-    final files = <String, String>{};
-    for (final f in index['files'] as List) {
-      files[f as String] = await rootBundle.loadString('$base/$f');
-    }
-    return fromFiles(files, locale: locale);
+    final paths = [for (final f in index['files'] as List) f as String];
+    final texts = await Future.wait(
+      paths.map((f) => rootBundle.loadString('$base/$f')),
+    );
+    return fromFiles(Map.fromIterables(paths, texts), locale: locale);
   }
 }

@@ -1,4 +1,4 @@
-import 'piano_synth_stub.dart'
+import 'piano_synth_native.dart'
     if (dart.library.js_interop) 'piano_synth_web.dart'
     as impl;
 
