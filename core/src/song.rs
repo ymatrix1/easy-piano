@@ -29,6 +29,20 @@ pub struct Song {
     /// Journey node this song targets, `"course/node"`; lint then runs the rubric.
     #[serde(default)]
     pub spec_node: Option<String>,
+    /// Regions where the composition is still protected (D33): the app must not
+    /// offer the song there before `until`.
+    #[serde(default)]
+    pub restricted_in: Vec<Restriction>,
+}
+
+/// A region where a song may not be offered yet.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Restriction {
+    /// ISO 3166-1 alpha-2 code, e.g. `US`.
+    pub region: String,
+    /// First day the song may be offered there, `YYYY-MM-DD`.
+    pub until: String,
 }
 
 /// Provenance of a generated song (docs/specs/skill-specs.md).
@@ -193,6 +207,20 @@ impl Song {
         }) {
             errs.push(format!("spec_node `{n}` must be `course/node`"));
         }
+        for r in &self.restricted_in {
+            if r.region.len() != 2 || !r.region.bytes().all(|b| b.is_ascii_uppercase()) {
+                errs.push(format!(
+                    "restricted_in region `{}` must be an ISO 3166-1 alpha-2 code",
+                    r.region
+                ));
+            }
+            if !is_iso_date(&r.until) {
+                errs.push(format!(
+                    "restricted_in until `{}` must be YYYY-MM-DD",
+                    r.until
+                ));
+            }
+        }
         if !matches!(self.source.as_str(), "original" | "generated")
             && self.source_url.as_deref().unwrap_or("").is_empty()
         {
@@ -308,6 +336,17 @@ impl Song {
     }
 }
 
+/// `YYYY-MM-DD` with a month 1-12 and a day 1-31.
+fn is_iso_date(s: &str) -> bool {
+    let parts: Vec<&str> = s.split('-').collect();
+    let num = |p: &str, len: usize| p.len() == len && p.bytes().all(|b| b.is_ascii_digit());
+    if parts.len() != 3 || !num(parts[0], 4) || !num(parts[1], 2) || !num(parts[2], 2) {
+        return false;
+    }
+    let (m, d): (u32, u32) = (parts[1].parse().unwrap(), parts[2].parse().unwrap());
+    (1..=12).contains(&m) && (1..=31).contains(&d)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -358,6 +397,24 @@ mod tests {
             .iter()
             .any(|e| e.contains("license `All rights reserved`")));
         assert!(errs.iter().any(|e| e.contains("source_url required")));
+    }
+
+    #[test]
+    fn restricted_regions_need_a_code_and_a_date() {
+        let ok = song(
+            r#"[{"RH":"C4:1"}]"#,
+            r#","restricted_in":[{"region":"US","until":"2036-01-01"}]"#,
+        );
+        let s = Song::from_json(&ok).unwrap();
+        assert_eq!(s.validate(), Vec::<String>::new());
+        assert_eq!(s.restricted_in[0].region, "US");
+        let bad = song(
+            r#"[{"RH":"C4:1"}]"#,
+            r#","restricted_in":[{"region":"usa","until":"2036-13-01"}]"#,
+        );
+        let errs = Song::from_json(&bad).unwrap().validate();
+        assert!(errs.iter().any(|e| e.contains("region `usa`")));
+        assert!(errs.iter().any(|e| e.contains("until `2036-13-01`")));
     }
 
     #[test]

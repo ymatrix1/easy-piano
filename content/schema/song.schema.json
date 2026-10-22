@@ -170,6 +170,28 @@
       "type": "string",
       "pattern": "^[a-z0-9-]+/[a-z0-9-]+$",
       "description": "Journey node `course/node` this song targets; lint runs the rubric."
+    },
+    "restricted_in": {
+      "type": "array",
+      "description": "Regions where the composition is still protected (D33); the app must not offer the song there before `until`.",
+      "items": {
+        "type": "object",
+        "required": [
+          "region",
+          "until"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "region": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "until": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          }
+        }
+      }
     }
   },
   "additionalProperties": false

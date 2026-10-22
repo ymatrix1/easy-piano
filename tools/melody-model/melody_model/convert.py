@@ -70,8 +70,11 @@ def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[Unsupported
     return songs, errors
 
 
-def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int | str = 0) -> dict:
-    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI)."""
+def convert_score(
+    score: m21.stream.Score, melody_only: bool = False, part: int | str = 0, key: str | None = None
+) -> dict:
+    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI).
+    key: use this key name instead of reading it from the score."""
     parts = list(score.parts)
     if not parts:
         raise Unsupported("no parts")
@@ -102,7 +105,7 @@ def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int 
         "title": (md.title if md else None) or "",
         "composer": (md.composer if md else None) or "",
         "time": time,
-        "key": _key_name(score),
+        "key": key or _key_name(score),
         "bars": bars,
     }
 

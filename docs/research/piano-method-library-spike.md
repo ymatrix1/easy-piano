@@ -68,6 +68,8 @@ If the existing content schema cannot express method/study ordering or provenanc
 
 ## Follow-ups
 
+- 2026-10-22: the user picked Mikrokosmos first; Book 1 is imported ([mikrokosmos-import](mikrokosmos-import.md), D33).
+
 - Confirm the initial pilot method and target learner level.
 - Review the existing content schema and progress store when implementation is approved.
 - Validate the exact score files, editions, and intended distribution territories before adding content.

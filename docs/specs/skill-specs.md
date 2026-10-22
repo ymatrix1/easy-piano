@@ -63,7 +63,7 @@ Pattern keys:
 | `hand` | limits `rhythm`, `interval_min`, `pitch`, `chord`, `accidental` to `RH` or `LH` |
 | `rest`, `chord`, `hands_together` | `true`: at least one rest / chord / shared onset |
 
-Specs cover every node of piano-basics and essentials-1..3. A test in `content-cli` fails if a journey node has no spec.
+Specs cover every node of piano-basics and essentials-1..3. A test in `content-cli` fails if a main-path journey node has no spec; Methods courses (`methods` section) need none.
 
 ## Rubric (`easy_piano_core::rubric`)
 

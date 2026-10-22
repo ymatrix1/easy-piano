@@ -35,9 +35,14 @@ void main() {
 
   test('sections and planned modules load', () {
     final repo = ContentRepo.fromFiles(files);
-    expect(repo.sections.map((s) => s.id), ['basic', 'main']);
+    expect(repo.sections.map((s) => s.id), ['basic', 'main', 'methods']);
     final planned = repo.courses.where((c) => c.planned).toList();
-    for (final id in ['essentials-1', 'essentials-2', 'essentials-3']) {
+    for (final id in [
+      'essentials-1',
+      'essentials-2',
+      'essentials-3',
+      'mikrokosmos-1',
+    ]) {
       final course = repo.courses.firstWhere((c) => c.id == id);
       expect(course.planned, isFalse);
       for (final node in course.nodes) {

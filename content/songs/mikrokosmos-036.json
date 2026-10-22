@@ -1,0 +1,141 @@
+{
+  "id": "mikrokosmos-036",
+  "title": "Mikrokosmos 36: Free Canon",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/36.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 132,
+  "time": "3/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:2 A4:4",
+      "LH": "r:2 r:4"
+    },
+    {
+      "RH": "C5:4 A4:4 D5:4",
+      "LH": "r:4 r:4 A3:4"
+    },
+    {
+      "RH": "C5:4 r:4 A4:4",
+      "LH": "C4:4 A3:4 D4:4"
+    },
+    {
+      "RH": "C5:4 A4:4 G4:4",
+      "LH": "C4:4 r:4 A3:4"
+    },
+    {
+      "RH": "A4:4 r:4 B4:4",
+      "LH": "C4:4 A3:4 G3:4"
+    },
+    {
+      "RH": "C5:4 B4:4 C5:4",
+      "LH": "A3:4 r:4 B3:4"
+    },
+    {
+      "RH": "G4:4 r:4 A4:4",
+      "LH": "C4:4 B3:4 C4:4"
+    },
+    {
+      "RH": "B4:4 A4:4 G4:4",
+      "LH": "G3:4 r:4 A3:4"
+    },
+    {
+      "RH": "D5:4 r:4 D5:4",
+      "LH": "Bb3:4 A3:4 G3:4"
+    },
+    {
+      "RH": "A4:2. {tie}",
+      "LH": "r:4 r:4 D4:4"
+    },
+    {
+      "RH": "A4:4 B4:4 C5:4",
+      "LH": "A3:2. {tie}"
+    },
+    {
+      "RH": "B4:4 G4:2 {tie}",
+      "LH": "A3:4 B3:4 C4:4"
+    },
+    {
+      "RH": "G4:4 A4:4 Bb4:4",
+      "LH": "B3:2 G3:4 {tie}"
+    },
+    {
+      "RH": "A4:2 G4:4",
+      "LH": "G3:4 A3:4 Bb3:4"
+    },
+    {
+      "RH": "r:4 C5:4 G4:4",
+      "LH": "A3:2 G3:4"
+    },
+    {
+      "RH": "r:2.",
+      "LH": "D4:2. {tie}"
+    },
+    {
+      "RH": "D5:2. {tie}",
+      "LH": "D4:2."
+    },
+    {
+      "RH": "D5:2. {tie}",
+      "LH": "D4:4 C4:4 A3:4"
+    },
+    {
+      "RH": "D5:4 C5:4 A4:4",
+      "LH": "G3:4 A3:2 {tie}"
+    },
+    {
+      "RH": "G4:4 A4:4 C5:4",
+      "LH": "A3:4 C4:4 A3:4"
+    },
+    {
+      "RH": "D5:2. {tie}",
+      "LH": "r:2."
+    },
+    {
+      "RH": "D5:4 C5:4 A4:4",
+      "LH": "D4:2. {tie}"
+    },
+    {
+      "RH": "G4:4 A4:2 {tie}",
+      "LH": "D4:4 C4:4 A3:4"
+    },
+    {
+      "RH": "A4:4 C5:4 G4:4",
+      "LH": "G3:4 A3:2 {tie}"
+    },
+    {
+      "RH": "A4:2. {tie}",
+      "LH": "A3:4 C4:4 G3:4"
+    },
+    {
+      "RH": "A4:4 C5:4 D5:4",
+      "LH": "A3:2. {tie}"
+    },
+    {
+      "RH": "C5:4 A4:2",
+      "LH": "A3:4 C4:4 D4:4"
+    },
+    {
+      "RH": "C5:2 B4:4",
+      "LH": "C4:4 G3:2"
+    },
+    {
+      "RH": "A4:2. {tie}",
+      "LH": "A3:2. {tie}"
+    },
+    {
+      "RH": "A4:4 r:4 r:4",
+      "LH": "A3:4 r:4 r:4"
+    }
+  ]
+}
