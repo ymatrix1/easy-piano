@@ -52,5 +52,17 @@ class _UnsupportedMicInput implements MicInput {
   Set<int> expected = const {};
 
   @override
+  bool blind = false;
+
+  @override
+  bool modelEnabled = false;
+
+  @override
+  bool get modelActive => false;
+
+  @override
+  double? get modelFrameMs => null;
+
+  @override
   double now() => _watch.elapsedMicroseconds / 1000.0;
 }

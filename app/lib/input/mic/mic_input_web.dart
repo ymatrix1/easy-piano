@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
@@ -25,6 +26,12 @@ class _WebMicInput implements MicInput {
   web.AudioWorkletNode? _node;
   NoteDetector? _detector;
   int? _baseFrame;
+
+  /// Trained note model (web/mic_model_worker.js). The DSP [_detector] runs
+  /// until the worker reports ready, and again if it fails or falls behind.
+  web.Worker? _worker;
+  bool _modelReady = false;
+  int? _modelBaseFrame;
 
   /// performance.now() minus context time (ms); see [nextClockOffset].
   double _clockOffset = double.infinity;
@@ -59,8 +66,64 @@ class _WebMicInput implements MicInput {
   @override
   set expected(Set<int> pitches) {
     _expected = pitches;
-    _detector?.expected = pitches;
+    _applyExpected();
   }
+
+  bool _blind = false;
+
+  @override
+  bool get blind => _blind;
+
+  @override
+  set blind(bool value) {
+    _blind = value;
+    _applyExpected();
+  }
+
+  /// The notes the detectors see: none while [blind].
+  Set<int> get _effectiveExpected => _blind ? const {} : _expected;
+
+  void _applyExpected() {
+    _detector?.expected = _effectiveExpected;
+    _postExpected();
+  }
+
+  void _postExpected() {
+    final w = _worker;
+    if (w == null) return;
+    final msg = JSObject()
+      ..['type'] = 'expected'.toJS
+      ..['pitches'] = [for (final p in _effectiveExpected) p.toJS].toJS;
+    w.postMessage(msg);
+  }
+
+  static const _modelKey = 'easy_piano.mic_model';
+
+  @override
+  bool get modelEnabled {
+    try {
+      final query = Uri.base.queryParameters['mic'];
+      if (query == 'dsp') return false;
+      return web.window.localStorage.getItem(_modelKey) != 'off';
+    } catch (_) {
+      return true;
+    }
+  }
+
+  @override
+  set modelEnabled(bool value) {
+    try {
+      value
+          ? web.window.localStorage.removeItem(_modelKey)
+          : web.window.localStorage.setItem(_modelKey, 'off');
+    } catch (_) {}
+  }
+
+  @override
+  bool get modelActive => _modelReady;
+
+  @override
+  double? modelFrameMs;
 
   /// Slow peak follower; input is scaled so quiet mics still reach the
   /// detector's thresholds (gain capped at 8×, adapts over ~10 s so it
@@ -229,12 +292,13 @@ class _WebMicInput implements MicInput {
       node.connect(sink);
       sink.connect(ctx.destination);
       _detector = NoteDetector(sampleRate: ctx.sampleRate)
-        ..expected = _expected;
+        ..expected = _effectiveExpected;
       _baseFrame = null;
       _clockOffset = double.infinity;
       node.port.onmessage = _onChunk.toJS;
       _node = node;
       await ctx.resume().toDart;
+      if (modelEnabled) _startModel(ctx.sampleRate.toDouble());
     } catch (_) {
       if (gen != _generation) return false;
       stop();
@@ -260,16 +324,94 @@ class _WebMicInput implements MicInput {
     }
     level = math.min(1, peak * 4);
     _envelope = math.max(peak, _envelope * 0.9995);
+    final worker = _worker;
+    if (_modelReady && worker != null) {
+      // Same slow gain as the DSP path (target peak 0.3, at most 8x, no gate):
+      // a quiet laptop mic would otherwise sit below what the model was
+      // trained on (recall at -60 dBFS: 0.61 without, 0.84 with).
+      final modelGain = math.min(8.0, 0.3 / math.max(_envelope, 0.01));
+      _modelBaseFrame ??= frame;
+      final msg = JSObject()
+        ..['type'] = 'chunk'.toJS
+        ..['sampleRate'] = ctx.sampleRate.toJS
+        ..['samples'] = Float32List.fromList([
+          for (final s in samples) s * modelGain,
+        ]).toJS;
+      worker.postMessage(msg);
+      return;
+    }
     final gain = math.min(8.0, 0.3 / math.max(_envelope, 0.01));
     final gated = peak < 0.004;
     final notes = det.process([
       for (final s in samples) gated ? 0.0 : s * gain,
     ]);
-    if (notes.isEmpty) return;
+    _deliver(notes, _baseFrame!);
+  }
+
+  void _startModel(double sampleRate) {
+    try {
+      final w = web.Worker(
+        'mic_model_worker.js'.toJS,
+        web.WorkerOptions(type: 'module'),
+      );
+      _worker = w;
+      w.onmessage = ((web.MessageEvent e) {
+        if (_worker != w) return;
+        final data = e.data as JSObject;
+        final type = data.getProperty<JSString>('type'.toJS).toDart;
+        switch (type) {
+          case 'ready':
+            _modelBaseFrame = null;
+            _modelReady = true;
+            _postExpected();
+          case 'notes':
+            final base = _modelBaseFrame;
+            if (base == null) return;
+            final list = data.getProperty<JSArray>('notes'.toJS).toDart;
+            _deliver([
+              for (final item in list)
+                DetectedNote(
+                  (item as JSObject)
+                      .getProperty<JSNumber>('pitch'.toJS)
+                      .toDartInt,
+                  item.getProperty<JSBoolean>('on'.toJS).toDart,
+                  item.getProperty<JSNumber>('time'.toJS).toDartDouble,
+                  item.getProperty<JSNumber>('detectedAt'.toJS).toDartDouble,
+                ),
+            ], base);
+          case 'stats':
+            modelFrameMs = data
+                .getProperty<JSNumber>('meanMs'.toJS)
+                .toDartDouble;
+          case 'error' || 'slow':
+            _stopModel(); // back to the DSP detector
+        }
+      }).toJS;
+      w.onerror = ((web.Event _) => _stopModel()).toJS;
+      final init = JSObject()
+        ..['type'] = 'init'.toJS
+        ..['sampleRate'] = sampleRate.toJS;
+      w.postMessage(init);
+    } catch (_) {
+      _stopModel();
+    }
+  }
+
+  void _stopModel() {
+    _modelReady = false;
+    _modelBaseFrame = null;
+    modelFrameMs = null;
+    _worker?.terminate();
+    _worker = null;
+  }
+
+  void _deliver(List<DetectedNote> notes, int baseFrame) {
+    final ctx = _ctx;
+    if (ctx == null || notes.isEmpty) return;
     final offset = offsetMs ?? 0;
     for (final n in notes) {
       final t = onsetToPerfMs(
-        baseFrame: _baseFrame!,
+        baseFrame: baseFrame,
         sampleRate: ctx.sampleRate,
         onsetSec: n.time,
         clockOffsetMs: _clockOffset,
@@ -301,6 +443,7 @@ class _WebMicInput implements MicInput {
     _node?.port.onmessage = null;
     _node?.disconnect();
     _node = null;
+    _stopModel();
     if (_stream != null) _stopTracks(_stream!);
     _stream = null;
     _ctx?.close();

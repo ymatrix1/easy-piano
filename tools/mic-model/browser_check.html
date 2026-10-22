@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>mic model check</title>
+<pre id="out">loading…</pre>
+<script>
+const q = new URLSearchParams(location.search);
+const clip = q.get('clip') || 'salamander__room__melody_ode.wav';
+const expected = (q.get('expected') || '').split(',').filter(Boolean).map(Number);
+const out = document.getElementById('out');
+window.result = { notes: [], stats: [], state: 'loading' };
+(async () => {
+  const buf = await (await fetch('/fx/' + clip)).arrayBuffer();
+  const dv = new DataView(buf);
+  const sr = dv.getUint32(24, true);
+  const n = (buf.byteLength - 44) / 2;
+  const x = new Float32Array(n);
+  for (let i = 0; i < n; i++) x[i] = dv.getInt16(44 + i * 2, true) / 32768;
+  const w = new Worker('mic_model_worker.js', { type: 'module' });
+  const t0 = performance.now();
+  w.onmessage = (e) => {
+    const m = e.data;
+    if (m.type === 'ready') {
+      result.loadMs = performance.now() - t0;
+      result.state = 'playing';
+      if (expected.length) w.postMessage({ type: 'expected', pitches: expected });
+      let i = 0;
+      const timer = setInterval(() => {
+        if (i >= n) { clearInterval(timer); setTimeout(() => { result.state = 'done'; out.textContent = JSON.stringify(result); }, 1500); return; }
+        const chunk = x.slice(i, i + 512);
+        i += 512;
+        w.postMessage({ type: 'chunk', samples: chunk, sampleRate: sr });
+      }, 512 / sr * 1000);
+    } else if (m.type === 'notes') result.notes.push(...m.notes);
+    else if (m.type === 'stats') result.stats.push(m);
+    else { result.state = m.type; result.message = m.message; out.textContent = JSON.stringify(result); }
+  };
+  w.postMessage({ type: 'init', sampleRate: sr, modelBase: q.get('model') || undefined });
+})().catch((e) => { result.state = 'page-error'; result.message = String(e); out.textContent = String(e); });
+</script>
