@@ -1,0 +1,7 @@
+{
+ "steps": 20000,
+ "best_val_loss": 0.8747165761888027,
+ "tokens": 356903319,
+ "elapsed_s": 2211.2,
+ "peak_mem_gb": 3.76
+}

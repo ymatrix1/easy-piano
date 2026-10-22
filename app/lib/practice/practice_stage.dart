@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show setEquals;
@@ -22,6 +23,7 @@ import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
+import 'generated/song_feed.dart';
 import 'play_feedback.dart';
 
 /// FRB maps i64 to int on native and BigInt on web.
@@ -84,6 +86,7 @@ class PracticeStage extends StatefulWidget {
     this.onToggleKeyboard,
     this.midiLabel,
     this.onConnectMidi,
+    this.feed,
   });
 
   final StageDef stage;
@@ -117,6 +120,10 @@ class PracticeStage extends StatefulWidget {
   /// Connected MIDI device name, or null when none; tapping connects.
   final String? midiLabel;
   final VoidCallback? onConnectMidi;
+
+  /// Streaming practice: the song grows while it plays; [songJson] is its
+  /// first part. The stage ends only after the feed ends.
+  final SongFeed? feed;
 
   @override
   State<PracticeStage> createState() => _PracticeStageState();
@@ -199,7 +206,7 @@ class _PracticeStageState extends State<PracticeStage>
   /// Training banner (slow practice intro, try again, full speed).
   SectionEventView? _sectionEvent;
   double _sectionEventSec = 0;
-  late final List<TargetView> _initialTargets;
+  late List<TargetView> _initialTargets;
   final _scroll = ValueNotifier<double>(0);
   final _marks = ValueNotifier<int>(0);
   final _pressed = ValueNotifier<Set<int>>({});
@@ -252,23 +259,12 @@ class _PracticeStageState extends State<PracticeStage>
       failedAttempts: widget.failedAttempts,
       training: true,
     );
-    _initialTargets = _session.targets();
     _notes = [];
     _noteTarget = [];
     _targetFirstNote = [];
-    for (var i = 0; i < _initialTargets.length; i++) {
-      final t = _initialTargets[i];
-      _targetFirstNote.add(_notes.length);
-      for (var k = 0; k < t.pitches.length; k++) {
-        final p = t.pitches[k];
-        final f = k < t.fingers.length && t.fingers[k] > 0
-            ? t.fingers[k]
-            : null;
-        _notes.add(StaffNote(p, t.beat, t.beats, leftHand: p < 60, finger: f));
-        _noteTarget.add(i);
-      }
-    }
-    _targetStates = [for (final t in _initialTargets) t.state];
+    _initialTargets = const [];
+    _addTargets(_session.targets());
+    widget.feed?.addListener(_onFeed);
     _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
@@ -304,9 +300,62 @@ class _PracticeStageState extends State<PracticeStage>
     _introStartSec = _nowSec;
   }
 
+  /// Adds staff notes for targets past the ones already drawn.
+  void _addTargets(List<TargetView> all) {
+    for (var i = _initialTargets.length; i < all.length; i++) {
+      final t = all[i];
+      _targetFirstNote.add(_notes.length);
+      for (var k = 0; k < t.pitches.length; k++) {
+        final p = t.pitches[k];
+        final f = k < t.fingers.length && t.fingers[k] > 0
+            ? t.fingers[k]
+            : null;
+        _notes.add(StaffNote(p, t.beat, t.beats, leftHand: p < 60, finger: f));
+        _noteTarget.add(i);
+      }
+    }
+    final old = _initialTargets.length;
+    _targetStates = [..._targetStates, for (final t in all.skip(old)) t.state];
+    _initialTargets = all;
+  }
+
+  /// Streaming: new bars arrived. Extends the session and, in play-along,
+  /// schedules the new bars' backing and metronome clicks.
+  void _onFeed() {
+    if (!mounted || _finished) return;
+    // Song time where the new bars start: everything before it is scheduled.
+    final before = _scheduledBars * _beatsPerBar;
+    try {
+      _session.extend(songJson: widget.feed!.json);
+    } catch (_) {
+      return; // a bad push never stops the stage; the next one may fit
+    }
+    _addTargets(_session.targets());
+    _scheduledBars = _barCount(widget.feed!.json);
+    if (_playAlong) {
+      // New bars may bring backing parts (endless practice accompaniment).
+      _backing = _companionNotes();
+      if (!_paused && !_demo) {
+        pianoSynth.loadParts({for (final n in _backing) n.part}).then((_) {
+          if (mounted && !_finished && !_paused) _scheduleBacking(before);
+        });
+      }
+    }
+    _marks.value++;
+    setState(() {});
+  }
+
+  /// Streaming: bars of the song whose backing is already scheduled.
+  late int _scheduledBars = _barCount(widget.songJson);
+
+  static int _barCount(String json) =>
+      ((jsonDecode(json) as Map<String, dynamic>)['bars'] as List).length;
+
+  bool get _streaming => widget.feed != null && !widget.feed!.ended;
+
   List<BackingNote> _companionNotes() => [
     for (final n in companion(
-      songJson: widget.songJson,
+      songJson: widget.feed?.json ?? widget.songJson,
       hand: widget.stage.hand,
     ))
       BackingNote(n.pitch, n.beat, n.beats, n.partName),
@@ -319,7 +368,7 @@ class _PracticeStageState extends State<PracticeStage>
   /// Wait mode fits the whole exercise on one page when it can.
   void _fitPage(double width) {
     _staffWidth = width;
-    if (_playAlong) return;
+    if (_playAlong || widget.feed != null) return;
     final usable = (0.92 - _waitAnchor) * width;
     _ppb = (usable / _totalBeats).clamp(_minPpb, _maxPpb);
   }
@@ -487,8 +536,9 @@ class _PracticeStageState extends State<PracticeStage>
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
       // Reference: slide so the next note returns to the left margin, but
       // never past the point where the end of the piece is already in view.
-      final lastVisible =
-          _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
+      final lastVisible = _streaming
+          ? nextBeat
+          : _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
       final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
       if (end <= _scroll.value + 0.01) return;
       _pageTween = Tween(begin: _scroll.value, end: end).animate(
@@ -604,9 +654,12 @@ class _PracticeStageState extends State<PracticeStage>
     } else {
       _frame = f;
     }
-    final over = _playAlong
-        ? _usAt(widget.midi.now()) > _int(_session.endUs())
-        : f.done;
+    widget.feed?.onDemand?.call(_totalBeats - _scroll.value);
+    final over =
+        !_streaming &&
+        (_playAlong
+            ? _usAt(widget.midi.now()) > _int(_session.endUs())
+            : f.done);
     if (over) {
       _finished = true;
       _ticker.stop();
@@ -832,6 +885,7 @@ class _PracticeStageState extends State<PracticeStage>
   void dispose() {
     if (widget.micMode) micInput.expected = const {};
     pianoSynth.stopAll();
+    widget.feed?.removeListener(_onFeed);
     _ticker.dispose();
     _pageAnim.dispose();
     _sub?.cancel();
@@ -872,6 +926,43 @@ class _PracticeStageState extends State<PracticeStage>
     ),
   );
 
+  /// Endless practice has no end to measure against: count hit notes and
+  /// the current streak instead of a progress bar.
+  Widget _pill(double value, bool showCount) {
+    if (widget.feed == null) return _progressPill(value, showCount);
+    final f = _frame;
+    Widget stat(IconData icon, int n) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: StagePalette.text),
+        const SizedBox(width: 4),
+        Text(
+          '$n',
+          style: const TextStyle(
+            color: StagePalette.text,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          stat(Icons.music_note_rounded, f?.hits ?? 0),
+          const SizedBox(width: 14),
+          stat(Icons.local_fire_department_rounded, f?.streak ?? 0),
+        ],
+      ),
+    );
+  }
+
   Widget _topBar() {
     final f = _frame;
     final total = _initialTargets.isEmpty ? 1 : _initialTargets.length;
@@ -889,7 +980,7 @@ class _PracticeStageState extends State<PracticeStage>
         final narrow = box.maxWidth < 720;
         final progress = _paused && _playAlong
             ? _tempoSelector()
-            : _progressPill(pillValue, waitPill);
+            : _pill(pillValue, waitPill);
         final row = Row(
           children: [
             // Paused: resume / restart / exit take the pause button's place in
@@ -1069,7 +1160,7 @@ class _PracticeStageState extends State<PracticeStage>
                         : SizedBox(
                             height: 16,
                             width: double.infinity,
-                            child: _progressPill(pillValue, waitPill),
+                            child: _pill(pillValue, waitPill),
                           ),
                   ],
                 )

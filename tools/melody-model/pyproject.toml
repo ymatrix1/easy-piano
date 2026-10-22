@@ -10,7 +10,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # Heavy; CI does not install this. `uv sync --extra train` (CUDA wheels: see PyTorch index docs).
-train = ["torch>=2.4"]
+train = ["torch>=2.4", "safetensors==0.6.2"]
+# ONNX export, int8 quantization and parity (melody_model/export.py). onnxruntime pinned to the
+# onnxruntime-web version in web/fetch_ort.py so Python and browser run the same kernels.
+export = ["onnx==1.23.2", "onnxruntime==1.30.0", "onnxscript==0.7.2"]
 
 [dependency-groups]
 dev = ["pytest==9.1.1", "ruff"]

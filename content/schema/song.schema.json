@@ -129,7 +129,8 @@
             "pd-variation",
             "llm",
             "magenta",
-            "hand"
+            "hand",
+            "melody-model"
           ]
         },
         "tool": {
