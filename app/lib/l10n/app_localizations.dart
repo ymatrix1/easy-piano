@@ -717,24 +717,6 @@ abstract class AppLocalizations {
   /// **'The microphone is in use by another app. Close it and try again.'**
   String get micBusy;
 
-  /// No description provided for @midiUnavailableApp.
-  ///
-  /// In en, this message translates to:
-  /// **'MIDI input is not available on this device.'**
-  String get midiUnavailableApp;
-
-  /// No description provided for @micUnavailableApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone input is not available on this device.'**
-  String get micUnavailableApp;
-
-  /// No description provided for @micDeniedApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone access was blocked. Allow it in the app\'s system settings and try again.'**
-  String get micDeniedApp;
-
   /// No description provided for @micQuietTip.
   ///
   /// In en, this message translates to:
@@ -938,6 +920,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Game'**
   String get styleGame;
+
+  /// No description provided for @midiUnavailableApp.
+  ///
+  /// In en, this message translates to:
+  /// **'MIDI input is not available on this device.'**
+  String get midiUnavailableApp;
+
+  /// No description provided for @micUnavailableApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone input is not available on this device.'**
+  String get micUnavailableApp;
+
+  /// No description provided for @micDeniedApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access was blocked. Allow it in the app\'s system settings and try again.'**
+  String get micDeniedApp;
 }
 
 class _AppLocalizationsDelegate
