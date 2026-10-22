@@ -7,7 +7,7 @@ Status: draft, implementing. Behaviour and layout are modeled on the reference a
 | Zone | Content |
 |---|---|
 | Top bar | Round pause button (left), instruction text ("Play the following notes"), progress pill (right): repeats done / total in wait mode, thin song progress line in play-along |
-| Staff area | Vivid violet background; a white band behind the staff; black notation. Staff layout comes from the level's `ui` field: `treble` or `bass` draws a **single staff** (beginner levels), `both` draws the grand staff. It does not depend on which hand plays |
+| Staff area | Vivid violet background; a white band behind the staff; black notation. Staff layout comes from the level's `ui` field: `treble` or `bass` draws a **single staff** (beginner levels), `both` draws the grand staff, except that a grand staff with no notes on one staff for the whole stage (e.g. a right-hand stage of a two-hand piece) draws only the other staff. Streamed practice keeps the grand staff, since later bars may fill either |
 | Finger badges | Plain finger numbers above notes; only the **current** note gets a badge (hand pictogram with the finger highlighted in the reference; ours: rounded badge with the number) |
 | Keyboard | Optional. Soft look: small gaps between white keys, rounded fronts, shadows instead of outlines, felt strip on top. Wide realistic keyboard across the bottom (C2–C6, middle C centred), "C" label on middle C, the next key highlighted. Height is 24% of the screen, 150–260 px. Shown by default when the level's `keyboard` is true and the screen is at least 560 px tall; a top-bar button toggles it |
 
