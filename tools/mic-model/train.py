@@ -77,6 +77,7 @@ def main():
         help="channel widths c1,c2,c3,ct; one model per config, trained on the same batches",
     )
     ap.add_argument("--train-pianos", nargs="+", default=["salamander", "kw"])
+    ap.add_argument("--no-maestro", action="store_true", help="synthetic piano only (no CC BY-NC-SA audio)")
     args = ap.parse_args()
     dev = "cuda"
     torch.backends.cudnn.benchmark = True
@@ -92,7 +93,9 @@ def main():
         sched = torch.optim.lr_scheduler.OneCycleLR(opt, args.lr, total_steps=args.steps, pct_start=0.05)
         runs.append((tag, c, model, opt, sched, out))
     dl = DataLoader(
-        gen.Stream(train_pianos=tuple(args.train_pianos), seed=1),
+        gen.Stream(
+            train_pianos=tuple(args.train_pianos), maestro_split=None if args.no_maestro else "train", seed=1
+        ),
         batch_size=args.batch,
         num_workers=args.workers,
         prefetch_factor=4,
