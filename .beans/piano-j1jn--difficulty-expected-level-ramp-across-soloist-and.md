@@ -15,8 +15,9 @@ The proposed linear ramp (D26) maps the whole courses.json walk to levels 1..6, 
 Content level warnings that guide authors in late courses.
 
 ## Acceptance Criteria
-- [ ] Proposed rule for expected level per track/course depth (decision update, proposed)
-- [ ] level.rs ramp implemented and tested; calibration rerun if needed
+- [x] Proposed rule for expected level per track/course depth (decision update, proposed)
+- [x] level.rs ramp implemented and tested
+- [ ] Calibration rerun with track songs; raise course_levels[1] above 6
 - [ ] Lint warnings reviewed for the 27 new courses
 
 ## Out of Scope

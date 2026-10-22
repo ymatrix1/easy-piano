@@ -3,7 +3,7 @@
 Covers the subset the model handles: spelled pitches with '', '#' or 'b',
 rests, chords, denominator durations with dots, per-pitch fingering.
 The `{tie}` directive (zero length, after a note: tied into the next note) is
-supported; other directives, annotations, 'n' naturals and n/d durations raise Unsupported.
+supported; `{chord:"X"}` symbols are display-only and dropped; other directives, annotations, 'n' naturals and n/d durations raise Unsupported.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ DURATIONS = ("1", "1.", "2", "2.", "2..", "4", "4.", "4..", "8", "8.", "16", "16
 
 _STEP_SEMITONES = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 _PITCH_RE = re.compile(r"([A-G])(#|b)?(\d)")
+_CHORD_SYMBOL_RE = re.compile(r'^\{chord:"[^"\s]+"\}$')
 _TOKEN_RE = re.compile(r"^(?P<pitches>(?:[A-G](?:#|b)?\d)+|r):(?P<dur>\d+\.*)(?:@(?P<fingers>[1-5]+))?$")
 
 
@@ -78,6 +79,8 @@ def parse_pitch(text: str) -> Pitch:
 def parse_hand(text: str) -> list[Event]:
     events = []
     for tok in text.split():
+        if _CHORD_SYMBOL_RE.match(tok):
+            continue  # display-only label; no notes
         if tok == "{tie}":
             if not events or events[-1].is_rest or events[-1].tie:
                 raise Unsupported("{tie} must follow a note")
