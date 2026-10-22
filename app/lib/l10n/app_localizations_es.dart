@@ -371,4 +371,117 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get micQuietTip =>
       'Funciona mejor en silencio: hablar, teclear o música cerca pueden oírse como notas.';
+
+  @override
+  String get generatedBadge => 'Generada';
+
+  @override
+  String get practiceLoading => 'Preparando el creador de melodías…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'Descargando $percent%';
+  }
+
+  @override
+  String get practiceGenerating => 'Escribiendo una melodía para esta lección…';
+
+  @override
+  String get practiceAgain => 'Tocar otra vez';
+
+  @override
+  String get practiceFailed =>
+      'No se pudo crear una melodía para esta lección. Inténtalo de nuevo.';
+
+  @override
+  String get practiceNotYet =>
+      'Por ahora las melodías de práctica solo funcionan en el navegador.';
+
+  @override
+  String get practiceModelError =>
+      'No se pudo cargar el creador de melodías. Revisa tu conexión e inténtalo de nuevo.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit de $total notas';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'Una melodía nueva para esta lección. Solo práctica: sin estrellas.';
+
+  @override
+  String get practiceWait => 'Espérame';
+
+  @override
+  String get practicePlayAlong => 'Tocar a la vez';
+
+  @override
+  String get endlessPractice => 'Práctica sin fin';
+
+  @override
+  String get endlessPracticeDesc =>
+      'Música nueva para tu nivel, escrita mientras tocas. Elige el nivel y las reglas.';
+
+  @override
+  String get setupLevel => 'Nivel';
+
+  @override
+  String get setupHands => 'Manos';
+
+  @override
+  String setupTempo(int bpm) {
+    return 'Tempo · $bpm ppm';
+  }
+
+  @override
+  String get setupNoteValues => 'Figuras';
+
+  @override
+  String get setupMode => 'Modo';
+
+  @override
+  String get handRight => 'Derecha';
+
+  @override
+  String get handLeft => 'Izquierda';
+
+  @override
+  String get handBoth => 'Ambas';
+
+  @override
+  String get noteValuesInvalid =>
+      'Con estas figuras no se puede llenar un compás. Añade una más larga o más corta.';
+
+  @override
+  String get streamEnded => 'No se pudo escribir más música con estos ajustes.';
+
+  @override
+  String get setupStyle => 'Estilo';
+
+  @override
+  String levelN(int level) {
+    return 'Nivel $level';
+  }
+
+  @override
+  String get styleAny => 'Cualquiera';
+
+  @override
+  String get styleClassical => 'Clásica';
+
+  @override
+  String get styleFolk => 'Folclórica';
+
+  @override
+  String get styleChildren => 'Infantil';
+
+  @override
+  String get stylePop => 'Pop';
+
+  @override
+  String get styleJazz => 'Jazz';
+
+  @override
+  String get styleGame => 'Videojuego';
 }

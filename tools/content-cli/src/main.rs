@@ -1,10 +1,14 @@
 //! `content lint <content_dir>`: validates every content file and cross-reference.
 //! Exit code 1 on any error. Layout: docs/specs/content-format.md.
+//! `content check <content_dir> <course/node> <song.json>...`: rubric errors of outside songs (generated tunes)
 //! `content specs <content_dir> [--out <file>]`: cumulative taught set per journey
 //! node plus its skill spec (docs/specs/skill-specs.md).
 //! `content level <content_dir> ...`: song difficulty (docs/specs/difficulty.md).
+//! `content practice-pack <content_dir> [--out <file>]`: per-node rubric input and
+//! generation spec for the app's practice mode (docs/specs/practice-mode.md).
 
 mod level;
+mod practice;
 mod similar;
 
 use easy_piano_core::difficulty::Model;
@@ -333,6 +337,38 @@ fn specs_report(root: &Path) -> (Value, Lint) {
         })
         .collect();
     (Value::Array(nodes), lint)
+}
+
+/// `content check <content_dir> <course/node> <song.json>...`: rubric errors of
+/// outside songs (e.g. generated tunes) against one node's taught set and spec.
+/// Prints `{file: [errors]}` as JSON; exit 0 when every song passes, 1 otherwise.
+fn check_songs(root: &Path, node: &str, files: &[String]) -> i32 {
+    let mut lint = Lint::default();
+    let (songs, _) = load_songs(root);
+    let walk = taught_walk(&mut lint, root, &songs);
+    let specs = load_specs(&mut lint, root, &walk);
+    let (Some(w), Some(spec)) = (
+        walk.iter()
+            .find(|w| format!("{}/{}", w.course, w.node) == node),
+        specs.get(node),
+    ) else {
+        eprintln!("error: no node or spec `{node}`");
+        return 2;
+    };
+    let mut out = BTreeMap::new();
+    for f in files {
+        let errors = match fs::read_to_string(f)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Song::from_json(&t).map_err(|e| e.to_string()))
+        {
+            Ok(song) => check(&song, &w.taught, spec),
+            Err(e) => vec![format!("not a song: {e}")],
+        };
+        out.insert(f.clone(), errors);
+    }
+    let all_pass = out.values().all(Vec::is_empty);
+    println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+    i32::from(!all_pass)
 }
 
 fn lint_dir(root: &Path) -> Lint {
@@ -703,16 +739,25 @@ fn main() {
     if args.get(1).map(String::as_str) == Some("similar") {
         std::process::exit(similar::run(&args[2..]));
     }
-    let (Some(cmd @ ("lint" | "specs")), Some(dir)) =
+    if args.get(1).map(String::as_str) == Some("check") {
+        let (Some(dir), Some(node)) = (args.get(2), args.get(3)) else {
+            eprintln!("usage: content check <content_dir> <course/node> <song.json>...");
+            std::process::exit(2);
+        };
+        std::process::exit(check_songs(Path::new(dir), node, &args[4..]));
+    }
+    let (Some(cmd @ ("lint" | "specs" | "practice-pack")), Some(dir)) =
         (args.get(1).map(String::as_str), args.get(2))
     else {
-        eprintln!(
-            "usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]"
-        );
+        eprintln!("usage: content lint <content_dir>\n       content specs <content_dir> [--out <file>]\n       content practice-pack <content_dir> [--out <file>]\n       content check <content_dir> <course/node> <song.json>...");
         std::process::exit(2);
     };
-    if cmd == "specs" {
-        let (report, lint) = specs_report(Path::new(dir));
+    if cmd == "specs" || cmd == "practice-pack" {
+        let (report, lint) = if cmd == "specs" {
+            specs_report(Path::new(dir))
+        } else {
+            practice::pack(Path::new(dir))
+        };
         let text = serde_json::to_string_pretty(&report).unwrap_or_default();
         match (args.get(3).map(String::as_str), args.get(4)) {
             (Some("--out"), Some(out)) => {
@@ -746,6 +791,40 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn check_songs_reports_each_file_and_fails_closed() {
+        let content = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content");
+        let dir = std::env::temp_dir().join(format!("content-check-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let good = content
+            .join("songs/cdefg-drill.json")
+            .to_string_lossy()
+            .into_owned();
+        let bad = dir.join("bad.json");
+        fs::write(&bad, "{not json").unwrap();
+        let bad = bad.to_string_lossy().into_owned();
+        assert_eq!(
+            check_songs(
+                &content,
+                "piano-basics/f-and-g",
+                std::slice::from_ref(&good)
+            ),
+            0
+        );
+        assert_eq!(
+            check_songs(&content, "piano-basics/f-and-g", &[good.clone(), bad]),
+            1,
+            "an unparsable song fails"
+        );
+        assert_eq!(
+            check_songs(&content, "no-such/node", &[good]),
+            2,
+            "unknown node is an error, not a pass"
+        );
+        fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn missing_locale_strings_warn_but_do_not_fail() {
