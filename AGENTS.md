@@ -64,7 +64,7 @@ Skills live in `.agents/skills/`; `.claude/skills` points there.
 - In `tools/melody-model/` (uv): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest`. Training deps: `uv sync --extra train` (not in CI). Fix formatting with `uv run ruff format`.
 - In `tools/mic-model/` (uv, CUDA torch wheels, not in CI): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest` (needs node for the web parity tests). Data setup: `uv run python fetch_pianos.py`, `pianos.py extract`, `fetch_maestro.py`
 - `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze` and `flutter test` in `app/` when app code changes
-- Before running or building the app: `python tools/sync_content.py` (copies `content/` into app assets), `python tools/sync_web_model.py` (fetches the pinned onnxruntime-web wasm for the mic note model into `app/web/vendor/`, git-ignored), and `flutter_rust_bridge_codegen generate` after changing `app/rust/src/api/`
+- Before running or building the app: `python tools/sync_content.py` (copies `content/` into app assets), and `flutter_rust_bridge_codegen generate` after changing `app/rust/src/api/`
 
 ## Tools
 

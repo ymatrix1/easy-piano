@@ -15,7 +15,7 @@ Can a small, dependency-free detector find beginner-level piano notes and chords
 | YIN / MPM | No (mono only) | Tiny | Algorithm, own code | Fails Piano Basics chords |
 | Basic Pitch (Spotify) | Yes | ~20 MB ONNX runtime + model on web, ~0.5–1 s windows | Apache-2.0 | Later, for "My songs" (D11), too heavy/slow for live grading |
 | Harmonic-salience matcher + onset gating (chosen) | Up to 4 notes | ~400 lines Dart, no deps | Own code | Ship now, measure, revisit |
-| Own small onset+frame CNN, ONNX in a Web Worker (see [Trained model](#trained-model-2026-10-22-bean-piano-goe3)) | Polyphonic, 88 keys | 21k parameters, 102 KiB model, onnxruntime-web 1.27.0 (13.5 MB wasm, loaded on demand) | Own code and weights; MIT runtime; training data licences in the section | Beats DSP on every held-out set; DSP stays as fallback |
+| Own small onset+frame CNN, ONNX in a Web Worker (see [Trained model](#trained-model-2026-10-22-bean-piano-goe3)) | Polyphonic, 88 keys | 21k parameters, 102 KiB model, onnxruntime-web 1.30.0 (13.5 MB wasm, shared with practice mode, loaded on demand) | Own code and weights; MIT runtime; training data licences in the section | Beats DSP on every held-out set; DSP stays as fallback |
 
 ## Reference app (structure only)
 
@@ -285,7 +285,7 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 | speech: false notes/min | | 322.5 | 12.8 | 12.8 |
 | report delay p50 / p95 (ms), all | | 99 / 111 | 128 / 143 | 128 / 136 |
 
-**Compute.** `onnxruntime-web` 1.27.0 (single-thread wasm) in a module Web Worker, desktop Chrome in the Claude desktop browser pane: **0.65-0.84 ms per 16 ms frame on average, 1.3-1.8 ms worst**, measured on the standalone test page and inside the built app (`tools/mic-model/browser_check.py`). The worker output matches Python exactly on the two clips compared (15/15 and 3/3 notes, equal times to the millisecond). **Not measured:** any phone or low-end device. The first load downloads the 13.5 MB wasm after the mic starts; the DSP detector listens until the model is ready. A worker that falls 40 frames behind real time, errors, or cannot load switches back to DSP.
+**Compute.** `onnxruntime-web` single-thread wasm in a module Web Worker, desktop Chrome in the Claude desktop browser pane: **about 1 ms per 16 ms frame on average, 1.3-2.5 ms worst**. Version 1.27.0 gave 0.65-0.84 ms on the standalone test page and 0.76-0.84 ms inside the built app; the shipped version 1.30.0 (shared with practice mode) gave 0.96-1.07 ms on the standalone page only (`tools/mic-model/browser_check.py`); the built app was not re-run on 1.30.0. The worker output matches Python exactly on the clips compared (15/15 and 3/3 notes on 1.27.0, 15/15 on 1.30.0, equal times to the millisecond). **Not measured:** any phone or low-end device. The first load downloads the 13.5 MB wasm after the mic starts; the DSP detector listens until the model is ready. A worker that falls 40 frames behind real time, errors, or cannot load switches back to DSP.
 
 ### What the numbers say, and what they don't
 

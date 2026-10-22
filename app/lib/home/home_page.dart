@@ -6,6 +6,9 @@ import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
 import '../practice/free_play_page.dart';
+import '../practice/generated/practice_service.dart';
+import '../practice/generated/stream_practice_page.dart';
+import '../practice/generated/tune_generator.dart';
 import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -64,6 +67,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// One generator per app session, so the model loads once (D28).
+  late final TuneGenerator? _generator = widget.repo.melodyManifest == null
+      ? null
+      : createTuneGenerator(widget.repo.melodyManifest!);
+
   void _push(WidgetBuilder b) =>
       Navigator.of(context).push(MaterialPageRoute(builder: b));
 
@@ -76,6 +84,19 @@ class _HomePageState extends State<HomePage> {
         bottom: false,
         child: PracticeTab(
           onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
+          onEndless: _generator == null || widget.repo.practice.isEmpty
+              ? null
+              : () => _push(
+                  (_) => StreamSetupPage(
+                    repo: widget.repo,
+                    generator: _generator,
+                    midi: widget.midi,
+                    initialNode: switch (progress.next) {
+                      (final c, final n) => '${c.id}/${n.id}',
+                      null => null,
+                    },
+                  ),
+                ),
         ),
       ),
       ProfileTab(

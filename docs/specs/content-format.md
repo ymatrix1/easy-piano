@@ -65,7 +65,7 @@ Songs made by a generator ([D17](../DECISIONS.md), [skill-specs](skill-specs.md)
 
 | Field | Rule |
 |---|---|
-| `generator.method` | required; `rules`, `pd-variation`, `llm`, `magenta` or `hand` |
+| `generator.method` | required; `rules`, `pd-variation`, `llm`, `magenta`, `hand` or `melody-model` (our own model, [melody-model](melody-model.md)) |
 | `generator.source_song` | required for `pd-variation`: id of the PD song varied |
 | `tool`, `model`, `seed`, `prompt_ref` | optional, free text / integer |
 | `spec_node` | optional on any song, `course/node`; lint then runs the rubric against that node |

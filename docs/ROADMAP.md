@@ -8,7 +8,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] Spike: Flutter web, Web MIDI/touch → colored key, first-load size ~2.5 MB gz ([results](research/web-midi-spike.md))
 - [x] Measure Web MIDI p95 latency with a real keyboard (p95 8.1 ms, n=200, Keystation)
 - [x] Spike: flutter_rust_bridge wasm on web (D2), Rust core in browser ([results](research/web-midi-spike.md))
-- [ ] Android/iOS build smoke test
+- [ ] Android/iOS build smoke test (Android done, CI job `android`; iOS open)
 - [x] Spike: staff rendering with Bravura, smooth scroll ([results](research/staff-render-spike.md))
 - [ ] Research: Simply Piano numeric stats (stage mix, note ranges, bpm per course)
 - [ ] Research: scene briefs for Piano Basics 1 reference videos via `agy`
@@ -47,6 +47,9 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [ ] Piano Basics 2–4, Pop Chords 1
 - [x] Localization: en, pt-BR, es, fr, de UI and content strings, language picker ([i18n](specs/i18n.md))
 - [x] Polyphonic mic research result (own trained model, synthetic + MAESTRO evidence; real devices pending, piano-m4r9)
+- [x] Endless practice on web: generated music streamed while you play, level and rules picked by the learner, rubric-gated, labelled, no stars (D28, [spec](specs/practice-mode.md))
+- [ ] Practice mode on Android/iOS/desktop (native ONNX runtime)
+- [x] Publish the `melody-model-v1` release; deploy serves its files same-origin
 
 ## Phase 5: My songs (D11)
 

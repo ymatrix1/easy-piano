@@ -722,6 +722,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Best in a quiet room: talking, typing or music nearby can be heard as notes.'**
   String get micQuietTip;
+
+  /// No description provided for @generatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get generatedBadge;
+
+  /// No description provided for @practiceLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting the tune maker ready…'**
+  String get practiceLoading;
+
+  /// No description provided for @practiceDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {percent}%'**
+  String practiceDownload(int percent);
+
+  /// No description provided for @practiceGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing a tune for this lesson…'**
+  String get practiceGenerating;
+
+  /// No description provided for @practiceAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get practiceAgain;
+
+  /// No description provided for @practiceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make a tune that fits this lesson. Try again.'**
+  String get practiceFailed;
+
+  /// No description provided for @practiceNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice tunes only work in the browser for now.'**
+  String get practiceNotYet;
+
+  /// No description provided for @practiceModelError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the tune maker. Check your connection and try again.'**
+  String get practiceModelError;
+
+  /// No description provided for @practiceNotesHit.
+  ///
+  /// In en, this message translates to:
+  /// **'{hit} of {total} notes'**
+  String practiceNotesHit(int hit, int total);
+
+  /// No description provided for @practiceNoStars.
+  ///
+  /// In en, this message translates to:
+  /// **'A new tune made for this lesson. Practice only: no stars.'**
+  String get practiceNoStars;
+
+  /// No description provided for @practiceWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for me'**
+  String get practiceWait;
+
+  /// No description provided for @practicePlayAlong.
+  ///
+  /// In en, this message translates to:
+  /// **'Play along'**
+  String get practicePlayAlong;
+
+  /// No description provided for @endlessPractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless practice'**
+  String get endlessPractice;
+
+  /// No description provided for @endlessPracticeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'New music written for your level while you play. Pick the level and the rules.'**
+  String get endlessPracticeDesc;
+
+  /// No description provided for @setupLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get setupLevel;
+
+  /// No description provided for @setupHands.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands'**
+  String get setupHands;
+
+  /// No description provided for @setupTempo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tempo · {bpm} bpm'**
+  String setupTempo(int bpm);
+
+  /// No description provided for @setupNoteValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Note values'**
+  String get setupNoteValues;
+
+  /// No description provided for @setupMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get setupMode;
+
+  /// No description provided for @handRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get handRight;
+
+  /// No description provided for @handLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get handLeft;
+
+  /// No description provided for @handBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get handBoth;
+
+  /// No description provided for @noteValuesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'These note values can\'t fill a bar. Add a longer or shorter one.'**
+  String get noteValuesInvalid;
+
+  /// No description provided for @streamEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t write more music with these settings.'**
+  String get streamEnded;
+
+  /// No description provided for @setupStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get setupStyle;
+
+  /// No description provided for @levelN.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String levelN(int level);
+
+  /// No description provided for @styleAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get styleAny;
+
+  /// No description provided for @styleClassical.
+  ///
+  /// In en, this message translates to:
+  /// **'Classical'**
+  String get styleClassical;
+
+  /// No description provided for @styleFolk.
+  ///
+  /// In en, this message translates to:
+  /// **'Folk'**
+  String get styleFolk;
+
+  /// No description provided for @styleChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Children\'s'**
+  String get styleChildren;
+
+  /// No description provided for @stylePop.
+  ///
+  /// In en, this message translates to:
+  /// **'Pop'**
+  String get stylePop;
+
+  /// No description provided for @styleJazz.
+  ///
+  /// In en, this message translates to:
+  /// **'Jazz'**
+  String get styleJazz;
+
+  /// No description provided for @styleGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get styleGame;
 }
 
 class _AppLocalizationsDelegate

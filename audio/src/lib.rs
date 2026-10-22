@@ -8,6 +8,8 @@ pub mod decode;
 pub mod dsp;
 pub mod engine;
 pub mod mix;
+#[cfg(feature = "output")]
+pub mod output;
 
 pub use bank::{Instrument, Sample, SampleBank};
 pub use engine::{Engine, Event, Sound};

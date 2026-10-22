@@ -10,7 +10,8 @@
 import { Decoder, FRONT_CTX, Frontend, HOP, LOOKAHEAD, NBANDS, Resampler, SR } from './mic_model_core.js';
 
 const MODEL_BASE = './models/piano_net'; // .onnx + .json (state dims)
-const ORT_DIR = new URL('./vendor/ort/', import.meta.url).href;
+// Shared with practice mode (tools/melody-model/web/fetch_ort.py stages it): one wasm download for both.
+const ORT_DIR = new URL('./melody/vendor/', import.meta.url).href;
 const MAX_BACKLOG_FRAMES = 40; // ~0.64 s behind real time: tell the main thread to fall back
 
 let ort;

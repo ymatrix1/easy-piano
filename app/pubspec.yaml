@@ -55,6 +55,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   integration_test:
     sdk: flutter
+  crypto: ^3.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -69,14 +70,12 @@ flutter:
   uses-material-design: true
 
   fonts:
-    - family: Bravura
-      fonts:
-        - asset: assets/fonts/Bravura.otf
     - family: Audiowide
       fonts:
         - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
 
   assets:
+    - assets/fonts/Bravura.otf # lazy, see lib/ui/staff/music_font.dart
     - assets/piano/
     - assets/band/bass/
     - assets/band/strings/

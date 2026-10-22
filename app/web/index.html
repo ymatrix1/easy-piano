@@ -75,20 +75,41 @@
     <p>Tuning the piano…</p>
   </div>
   <script>
-    // Hide on Flutter's first frame; fall back to the view appearing (the
-    // event doesn't fire in background tabs).
+    // Hide only on Flutter's first frame. The <flutter-view> element appears
+    // as soon as the engine starts, long before main() finishes loading the
+    // Rust core and content, so hiding on it left a blank screen. If boot
+    // fails or stalls, say so and offer a reload instead of spinning forever.
     (function () {
       var s = document.getElementById('splash');
+      var msg = s.querySelector('p');
       function hide() {
         if (!s.isConnected || s.classList.contains('done')) return;
         s.classList.add('done');
         setTimeout(function () { s.remove(); }, 400);
       }
+      function fail(why) {
+        if (!s.isConnected || s.classList.contains('done')) return;
+        console.error('Easy Piano failed to load:', why);
+        msg.innerHTML = 'Couldn’t load. <a href="" style="color:#2EE6FF">Reload</a>';
+        s.querySelector('.bar').style.visibility = 'hidden';
+      }
       window.addEventListener('flutter-first-frame', hide);
-      new MutationObserver(function (_, obs) {
-        if (document.querySelector('flutter-view')) { obs.disconnect(); setTimeout(hide, 300); }
-      }).observe(document.body, { childList: true, subtree: true });
+      window.addEventListener('error', function (e) { fail(e.message); });
+      window.addEventListener('unhandledrejection', function (e) { fail(e.reason); });
+      if (!window.crossOriginIsolated) console.warn('Not cross-origin isolated: check COOP/COEP headers.');
+      // Visible-time budget: hidden tabs don't render, so don't count them.
+      var waited = 0;
+      var t = setInterval(function () {
+        if (!s.isConnected) return clearInterval(t);
+        if (!document.hidden) waited++;
+        if (waited === 8) msg.textContent = 'Almost there…';
+        if (waited === 45) { clearInterval(t); fail('timeout'); }
+      }, 1000);
     })();
+  </script>
+  <script>
+    // Practice mode runtime (melody model), imported on first use.
+    window.epMelodyImport = function () { return import('./melody/practice.js'); };
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

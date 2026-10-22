@@ -189,5 +189,69 @@
   },
   "micNotFound": "No microphone found. Plug one in or pick another input.",
   "micBusy": "The microphone is in use by another app. Close it and try again.",
-  "micQuietTip": "Best in a quiet room: talking, typing or music nearby can be heard as notes."
+  "micQuietTip": "Best in a quiet room: talking, typing or music nearby can be heard as notes.",
+  "generatedBadge": "Generated",
+  "practiceLoading": "Getting the tune maker ready…",
+  "practiceDownload": "Downloading {percent}%",
+  "@practiceDownload": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "practiceGenerating": "Writing a tune for this lesson…",
+  "practiceAgain": "Play again",
+  "practiceFailed": "Couldn't make a tune that fits this lesson. Try again.",
+  "practiceNotYet": "Practice tunes only work in the browser for now.",
+  "practiceModelError": "Couldn't load the tune maker. Check your connection and try again.",
+  "practiceNotesHit": "{hit} of {total} notes",
+  "@practiceNotesHit": {
+    "placeholders": {
+      "hit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "practiceNoStars": "A new tune made for this lesson. Practice only: no stars.",
+  "practiceWait": "Wait for me",
+  "practicePlayAlong": "Play along",
+  "endlessPractice": "Endless practice",
+  "endlessPracticeDesc": "New music written for your level while you play. Pick the level and the rules.",
+  "setupLevel": "Level",
+  "setupHands": "Hands",
+  "setupTempo": "Tempo · {bpm} bpm",
+  "setupNoteValues": "Note values",
+  "setupMode": "Mode",
+  "handRight": "Right",
+  "handLeft": "Left",
+  "handBoth": "Both",
+  "noteValuesInvalid": "These note values can't fill a bar. Add a longer or shorter one.",
+  "streamEnded": "Couldn't write more music with these settings.",
+  "@setupTempo": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "setupStyle": "Style",
+  "levelN": "Level {level}",
+  "styleAny": "Any",
+  "styleClassical": "Classical",
+  "styleFolk": "Folk",
+  "styleChildren": "Children's",
+  "stylePop": "Pop",
+  "styleJazz": "Jazz",
+  "styleGame": "Game",
+  "@levelN": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  }
 }

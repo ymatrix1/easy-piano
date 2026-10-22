@@ -1,0 +1,85 @@
+{
+ "run": "base1",
+ "date": "2026-10-21",
+ "candidates_per_node": 16,
+ "device": "cuda (RTX 4070 SUPER)",
+ "similarity_corpus": "content/songs + 39,615 training tunes (simcorpus)",
+ "nodes": [
+  {
+   "node": "essentials-1/eighths",
+   "candidates": 16,
+   "rubric_pass": 8,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-1/hands-together",
+   "candidates": 16,
+   "rubric_pass": 16,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-1/intervals",
+   "candidates": 16,
+   "rubric_pass": 15,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-1/rests",
+   "candidates": 16,
+   "rubric_pass": 14,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-2/f-position",
+   "candidates": 16,
+   "rubric_pass": 10,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-2/shifting",
+   "candidates": 16,
+   "rubric_pass": 8,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-3/sharps",
+   "candidates": 16,
+   "rubric_pass": 11,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "essentials-3/waltz",
+   "candidates": 16,
+   "rubric_pass": 13,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "piano-basics/c-d-e",
+   "candidates": 16,
+   "rubric_pass": 14,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  },
+  {
+   "node": "piano-basics/f-and-g",
+   "candidates": 16,
+   "rubric_pass": 14,
+   "similarity_pass": 0,
+   "similarity_threshold": 0.5
+  }
+ ],
+ "totals": {
+  "candidates": 160,
+  "rubric_pass": 123,
+  "similarity_pass": 0
+ },
+ "note": "Every rubric-passing tune was flagged SIMILAR: top matches are ~10-note fragments with low information (info 3.8-4.8) scoring 1.00 against a 39,615-tune corpus. The checker's 0.5 threshold was calibrated on 40 songs; it needs calibration for corpus size before this gate can pass anything."
+}

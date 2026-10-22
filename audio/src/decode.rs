@@ -3,6 +3,7 @@
 
 use crate::bank::{Instrument, Sample, SampleBank, CLICK_FILES, DRUM_FILES, SOFT_HAT_FILE};
 use std::path::Path;
+use std::sync::Arc;
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::formats::FormatOptions;
@@ -54,10 +55,10 @@ pub fn decode_mp3(bytes: Vec<u8>) -> Result<(Vec<Vec<f32>>, u32), String> {
     Ok((channels, rate))
 }
 
-fn load(path: &Path, looped: Option<(f32, f32)>) -> Option<Sample> {
+fn load(path: &Path, looped: Option<(f32, f32)>) -> Option<Arc<Sample>> {
     let bytes = std::fs::read(path).ok()?;
     let (ch, rate) = decode_mp3(bytes).ok()?;
-    Some(Sample::from_channels(&ch, rate, looped))
+    Some(Arc::new(Sample::from_channels(&ch, rate, looped)))
 }
 
 impl SampleBank {
@@ -76,7 +77,7 @@ impl SampleBank {
         }
         let drums = app_dir.join("assets/band/drums");
         for (gm, files) in DRUM_FILES {
-            let hits: Vec<Sample> = files
+            let hits: Vec<Arc<Sample>> = files
                 .iter()
                 .filter_map(|f| load(&drums.join(format!("{f}.mp3")), None))
                 .collect();

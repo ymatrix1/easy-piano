@@ -16,9 +16,9 @@ D28 (user, 2026-10-21): the app may generate tunes at runtime in a practice mode
 Endless level-fit practice for the learner's current node, on device.
 
 ## Acceptance Criteria
-- [ ] Practice mode entry per node; tunes marked as generated, outside course levels and star gates
-- [ ] Model download (cached, sha256-verified per D24) and on-device inference (onnxruntime-web first)
-- [ ] Spec from the node's taught set; masked decoding; rubric check in core before showing
+- [x] Practice mode entry per node; tunes marked as generated, outside course levels and star gates
+- [x] Model download (cached, sha256-verified per D24) and on-device inference (onnxruntime-web first)
+- [x] Spec from the node's taught set; masked decoding; rubric check in core before showing
 - [ ] Phone latency measured; fallback if too slow
 
 ## Out of Scope

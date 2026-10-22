@@ -79,6 +79,7 @@ KINDS = (
     + tuple(f"HANDS_{h}" for h in HANDS)
     + tuple(f"STYLE_{x}" for x in STYLES)
     + tuple(f"SRC_{x}" for x in SOURCES)
+    + tuple(f"LEVEL_{n}" for n in range(1, 6))
     + (
         "PAT",
         "PAT_rhythm",
@@ -96,7 +97,7 @@ KINDS = (
     + tuple(f"SEC_{s}" for s in SECTIONS)
     + ("FIM_PRE", "FIM_SUF", "FIM_MID")
 )
-PITCHES = (NONE,) + tuple(f"{letter}{a}{o}" for o in OCTAVES for letter in LETTERS for a in ACCIDENTALS)
+PITCHES = (NONE,) + tuple(f"{n}{a}{o}" for o in OCTAVES for n in LETTERS for a in ACCIDENTALS)
 DURS = (NONE,) + DURATIONS
 FINGERS = (NONE, "1", "2", "3", "4", "5")
 
@@ -132,6 +133,7 @@ class Spec:
     patterns: list[dict] | None = None  # skill-spec `required` patterns
     styles: list[str] | None = None  # STYLES; dropped at random in training
     source: str | None = None  # SOURCES; omitted at generation
+    level: int | None = None  # 1-5 (difficulty.level_of)
 
 
 def spec_from_song(song: dict) -> Spec:
@@ -174,6 +176,8 @@ def encode_spec(spec: Spec) -> list[Step]:
     out += [step(f"STYLE_{x}") for x in sorted(spec.styles or [])]
     if spec.source:
         out.append(step(f"SRC_{spec.source}"))
+    if spec.level:
+        out.append(step(f"LEVEL_{spec.level}"))
     out += [
         step(f"COURSE_{spec.course}"),
         step(f"TIME_{spec.time}"),
@@ -277,10 +281,10 @@ _PREFIX_KINDS = (
     "FIM_SUF",
     "FIM_MID",
 )
-_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_")
+_PREFIX_GROUPS = ("COURSE_", "BARS_", "HANDS_", "PAT_", "SEC_", "STYLE_", "SRC_", "LEVEL_")
 
 
-def decode(steps: list[Step]) -> dict:
+def decode(steps: list[Step], require_end: bool = True) -> dict:
     """Steps to {"time", "key", "bars"}; inverse of encode_song for RH/LH.
 
     Raises InvalidSequence on anything encode_song cannot produce: out-of-range
@@ -358,17 +362,22 @@ def decode(steps: list[Step]) -> dict:
                 bad(f"step {i}: TIE must follow a note and carry no fields")
             events[-1].tie = True
         elif kind == "END":
+            ended = True
             break
         elif kind in _PREFIX_KINDS or kind.startswith(_PREFIX_GROUPS):
             if bars:
                 bad(f"step {i}: {kind} after the first BAR")
         else:
             bad(f"step {i}: unexpected {kind}")
+    else:
+        ended = False
     flush()
     if time is None or key is None:
         bad("no TIME or KEY")
     if not bars or any(not b for b in bars):
         bad("no bars, or an empty bar")
+    if require_end and not ended:
+        bad("no END (truncated sequence)")
     return {"time": time, "key": key, "bars": bars}
 
 
