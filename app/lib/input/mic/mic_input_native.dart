@@ -172,7 +172,9 @@ class _NativeMicInput implements MicInput {
   void _onChunk(Map<dynamic, dynamic> msg) {
     final rate = (msg['sampleRate'] as num).toDouble();
     final endMs = (msg['endMs'] as num).toDouble();
-    final bytes = msg['samples'] as Uint8List;
+    var bytes = msg['samples'] as Uint8List;
+    // A view must start on a 4-byte boundary; copy when the message doesn't.
+    if (bytes.offsetInBytes % 4 != 0) bytes = Uint8List.fromList(bytes);
     final samples = Float32List.view(
       bytes.buffer,
       bytes.offsetInBytes,
