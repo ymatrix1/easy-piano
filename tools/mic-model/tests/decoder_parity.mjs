@@ -8,6 +8,6 @@ const dec = new Decoder(params);
 const notes = [];
 for (let g = 0; g < on.length - 3; g++) {
   dec.expected = new Set(expected[g]);
-  notes.push(...dec.push(g, on[g], fr[g]).map((n) => [n.pitch, n.time, n.detectedAt]));
+  notes.push(...dec.push(g, on[g], fr[g]).filter((n) => n.on).map((n) => [n.pitch, n.time, n.detectedAt]));
 }
 writeFileSync(`${dir}/out.json`, JSON.stringify(notes));

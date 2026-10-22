@@ -7,7 +7,7 @@
 // worker -> main: {type:'ready'}, {type:'error', message}, {type:'slow'},
 //                 {type:'notes', notes:[{pitch, time, detectedAt}]} (seconds from the first sample),
 //                 {type:'stats', meanMs, maxMs, frames}
-import { Decoder, FRONT_CTX, Frontend, LOOKAHEAD, NBANDS, NKEYS, Resampler } from './mic_model_core.js';
+import { Decoder, FRONT_CTX, Frontend, HOP, LOOKAHEAD, NBANDS, Resampler, SR } from './mic_model_core.js';
 
 const MODEL_BASE = './models/piano_net'; // .onnx + .json (state dims)
 const ORT_DIR = new URL('./vendor/ort/', import.meta.url).href;
@@ -104,7 +104,7 @@ self.onmessage = (e) => {
   if (m.type === 'init') {
     init(m).catch((err) => postMessage({ type: 'error', message: String(err && err.message ? err.message : err) }));
   } else if (m.type === 'chunk' && session) {
-    backlog += Math.ceil(m.samples.length / (m.sampleRate ?? 48000) * 62.5);
+    backlog += (m.samples.length / (m.sampleRate ?? 48000)) * (SR / HOP); // frames this chunk will produce
     if (backlog > MAX_BACKLOG_FRAMES) {
       postMessage({ type: 'slow' });
       backlog = 0;

@@ -351,7 +351,7 @@ class _WebMicInput implements MicInput {
                   (item as JSObject)
                       .getProperty<JSNumber>('pitch'.toJS)
                       .toDartInt,
-                  true,
+                  item.getProperty<JSBoolean>('on'.toJS).toDart,
                   item.getProperty<JSNumber>('time'.toJS).toDartDouble,
                   item.getProperty<JSNumber>('detectedAt'.toJS).toDartDouble,
                 ),

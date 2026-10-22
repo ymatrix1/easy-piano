@@ -155,12 +155,18 @@ export class Frontend {
 
 // ---- decoder: onset/frame probabilities -> note-ons -------------------------
 export const DEFAULT_PARAMS = {
-  thrExp: 0.4, // onset prob needed for an expected key
-  thrUnexp: 0.8, // ... for any other key
+  thrExp: 0.25, // onset prob needed for an expected key
+  thrUnexp: 0.9, // ... for any other key
   frameThr: 0.5, // frame prob an unexpected start must sustain
   hold: 3, // frames an unexpected start is held (persistence)
+  thrBlind: 0.6, // onset prob when nothing is expected (free play, calibration)
+  holdBlind: 3, // persistence frames in that case
   refractory: 6, // frames before a key may retrigger
-  calib: 0, // seconds added to the frame time to estimate the onset
+  guardFrames: 6, // octave ghost guard (only when notes are expected): an unexpected onset an octave below a key that fired this recently, or is expected, is dropped
+  calib: 0.006, // seconds added to the frame time to estimate the onset
+  frameOff: 0.3, // frame prob under which a sounding key counts as released ...
+  offFrames: 3, // ... after this many frames in a row
+  maxHold: 0.6, // seconds; a mic can't see a key go up, so keys never stay lit longer (as the DSP detector)
 };
 
 export class Decoder {
@@ -169,35 +175,62 @@ export class Decoder {
     this.expected = new Set();
     this.armed = new Uint8Array(NKEYS).fill(1);
     this.last = new Int32Array(NKEYS).fill(-999);
-    this.pending = []; // {g, k, minFrame}
+    this.pending = []; // {g, k, hold}
+    this.prevFrame = null;
+    this.active = new Map(); // key -> {g, low} for keys reported on
+    this.fired = new Int32Array(NKEYS).fill(-999); // last frame each key's onset crossed its threshold
   }
 
-  /** Feeds the probabilities of model frame g; returns [{pitch, time, detectedAt}] (seconds, input timeline). */
+  /** Feeds the probabilities of model frame g; returns [{pitch, on, time, detectedAt}] (seconds, input timeline). */
   push(g, onset, frame) {
     const p = this.p;
     const out = [];
     const at = (gg) => ((gg + LOOKAHEAD) * HOP + WIN / 2) / SR;
+    const emitOn = (k, g0, detectedAt) => {
+      const time = (g0 * HOP) / SR + p.calib;
+      if (this.active.has(k)) out.push({ pitch: k + MIDI_LO, on: false, time, detectedAt });
+      this.active.set(k, { g: g0, low: 0 });
+      out.push({ pitch: k + MIDI_LO, on: true, time, detectedAt });
+    };
+    const blind = this.expected.size === 0;
     for (let k = 0; k < NKEYS; k++) {
       if (onset[k] < 0.5 * p.thrExp) this.armed[k] = 1;
     }
+    const fire = [];
     for (let k = 0; k < NKEYS; k++) {
+      const thr = this.expected.has(k + MIDI_LO) ? p.thrExp : blind ? p.thrBlind : p.thrUnexp;
+      if (this.armed[k] && onset[k] >= thr && g - this.last[k] >= p.refractory) fire.push(k);
+    }
+    for (const k of fire) this.fired[k] = g; // before judging: a ghost and its real note fire in the same frame
+    for (const k of fire) {
+      this.armed[k] = 0;
+      this.last[k] = g;
       const expected = this.expected.has(k + MIDI_LO);
-      const thr = expected ? p.thrExp : p.thrUnexp;
-      if (this.armed[k] && onset[k] >= thr && g - this.last[k] >= p.refractory) {
-        this.armed[k] = 0;
-        this.last[k] = g;
-        if (expected) out.push({ pitch: k + MIDI_LO, time: (g * HOP) / SR + p.calib, detectedAt: at(g) });
-        else this.pending.push({ g, k, minFrame: frame[k] });
+      if (!blind && !expected && k + 12 < NKEYS && (this.expected.has(k + 12 + MIDI_LO) || g - this.fired[k + 12] <= p.guardFrames)) {
+        continue; // ghost: the octave above is sounding
       }
+      if (expected) emitOn(k, g, at(g));
+      else this.pending.push({ g, k, hold: blind ? p.holdBlind : p.hold });
     }
     const keep = [];
     for (const c of this.pending) {
-      if (g > c.g) c.minFrame = Math.min(c.minFrame, frame[c.k]);
-      if (g - c.g >= p.hold) {
-        if (c.minFrame >= p.frameThr) out.push({ pitch: c.k + MIDI_LO, time: (c.g * HOP) / SR + p.calib, detectedAt: at(g) });
+      if (g - c.g >= c.hold) {
+        // Still sounding at the end of the hold (the frame head lags the attack).
+        if (Math.min(frame[c.k], this.prevFrame ? this.prevFrame[c.k] : 1) >= p.frameThr) emitOn(c.k, c.g, at(g));
       } else keep.push(c);
     }
     this.pending = keep;
+    this.prevFrame = Float32Array.from(frame);
+    // Releases: the frame head says the key stopped sounding, or it's been held too long.
+    for (const [k, a] of this.active) {
+      if (g <= a.g + 1) continue;
+      a.low = frame[k] < p.frameOff ? a.low + 1 : 0;
+      if (a.low >= p.offFrames || (g - a.g) * HOP / SR > p.maxHold) {
+        this.active.delete(k);
+        const time = (g * HOP) / SR + p.calib;
+        out.push({ pitch: k + MIDI_LO, on: false, time, detectedAt: at(g) });
+      }
+    }
     return out;
   }
 }

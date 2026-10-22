@@ -35,6 +35,10 @@ class Params:
     thr_unexp: float = 0.8  # ... for any other key
     frame_thr: float = 0.5  # frame prob an unexpected start must sustain
     hold: int = 3  # frames an unexpected start is held (persistence)
+    thr_blind: float = 0.6  # onset prob when nothing is expected (free play, calibration)
+    hold_blind: int = 2  # persistence frames in that case
+    octave_guard: bool = True  # when notes are expected: drop an unexpected onset an octave below a key that fired / is expected
+    guard_frames: int = 6  # how far back (frames) a firing key above counts
     refractory: int = 6  # frames before a key may retrigger
     calib: float = 0.0  # seconds added to the frame time to estimate the onset
 
@@ -76,7 +80,8 @@ def decode(on, fr, expected_at, p: Params):
     armed = np.ones(88, bool)
     last = np.full(88, -999)
     pending = []  # (g, key)
-    lo_thr = min(p.thr_exp, p.thr_unexp)
+    fired = np.full(88, -999)  # last frame each key's onset crossed its threshold
+    lo_thr = min(p.thr_exp, p.thr_unexp, p.thr_blind)
     any_hi = (on >= lo_thr).any(axis=1)  # frames where some key could fire
     low = on < 0.5 * p.thr_exp
     for g in range(T - LOOKAHEAD):
@@ -85,26 +90,37 @@ def decode(on, fr, expected_at, p: Params):
             continue
         t = avail(g)
         if any_hi[g]:
+            exp = expected_at(t)
             ek = np.zeros(88, bool)
-            for pitch in expected_at(t):
+            for pitch in exp:
                 if 0 <= pitch - MIDI_LO < 88:
                     ek[pitch - MIDI_LO] = True
-            thr = np.where(ek, p.thr_exp, p.thr_unexp)
+            blind = not exp
+            thr = np.where(ek, p.thr_exp, p.thr_blind if blind else p.thr_unexp)
             fire = armed & (on[g] >= thr) & (g - last >= p.refractory)
+            fired[fire] = g  # before the loop: a ghost and its real note fire in the same frame
             for k in np.flatnonzero(fire):
                 armed[k] = False
                 last[k] = g
+                if (
+                    p.octave_guard
+                    and not blind
+                    and not ek[k]
+                    and k + 12 < 88
+                    and (ek[k + 12] or g - fired[k + 12] <= p.guard_frames)
+                ):
+                    continue  # ghost: the octave above is sounding
                 if ek[k]:
                     out.append((g * HOP / SR + p.calib, k + MIDI_LO, t))
                 else:
-                    pending.append((g, k))
+                    pending.append((g, k, p.hold_blind if blind else p.hold))
         keep = []
-        for g0, k in pending:
-            if g - g0 >= p.hold:
-                if fr[g0 : g0 + p.hold + 1, k].min() >= p.frame_thr:
+        for g0, k, hold in pending:
+            if g - g0 >= hold:
+                if fr[max(g - 1, 0) : g + 1, k].min() >= p.frame_thr:  # still sounding at the end of the hold
                     out.append((g0 * HOP / SR + p.calib, k + MIDI_LO, t))
             else:
-                keep.append((g0, k))
+                keep.append((g0, k, hold))
         pending = keep
     return out
 

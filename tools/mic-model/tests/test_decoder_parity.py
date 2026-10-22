@@ -26,14 +26,18 @@ def test_js_decoder_matches_python():
     want = decode(on, fr, lambda t: set(expected[min(round((t * 16000 - 512) / 256) - 3, T - 1)]), p)
     with tempfile.TemporaryDirectory() as d:
         d = Path(d)
-        params = {
-            "thrExp": p.thr_exp,
-            "thrUnexp": p.thr_unexp,
-            "frameThr": p.frame_thr,
-            "hold": p.hold,
-            "refractory": p.refractory,
-            "calib": p.calib,
+        names = {
+            "thr_exp": "thrExp",
+            "thr_unexp": "thrUnexp",
+            "frame_thr": "frameThr",
+            "hold": "hold",
+            "thr_blind": "thrBlind",
+            "hold_blind": "holdBlind",
+            "refractory": "refractory",
+            "guard_frames": "guardFrames",
+            "calib": "calib",
         }
+        params = {js: getattr(p, py) for py, js in names.items()}
         (d / "in.json").write_text(
             json.dumps({"on": on.tolist(), "fr": fr.tolist(), "expected": expected, "params": params})
         )
