@@ -14,6 +14,11 @@ easy_piano_core = { path = "../../core" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 easy_piano_audio = { path = "../../audio", features = ["decode", "output"] }
 
+# cpal finds the JavaVM and Context through ndk-context (set in android.rs).
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+ndk-context = "0.1"
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
