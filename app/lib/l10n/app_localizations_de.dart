@@ -371,4 +371,118 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get micQuietTip =>
       'Am besten in einem ruhigen Raum: Sprechen, Tippen oder Musik in der Nähe können als Töne erkannt werden.';
+
+  @override
+  String get generatedBadge => 'Generiert';
+
+  @override
+  String get practiceLoading => 'Der Melodie-Macher wird vorbereitet…';
+
+  @override
+  String practiceDownload(int percent) {
+    return 'Download $percent%';
+  }
+
+  @override
+  String get practiceGenerating =>
+      'Ein Stück für diese Lektion wird geschrieben…';
+
+  @override
+  String get practiceAgain => 'Nochmal spielen';
+
+  @override
+  String get practiceFailed =>
+      'Kein passendes Stück für diese Lektion gefunden. Versuch es nochmal.';
+
+  @override
+  String get practiceNotYet => 'Übungsstücke gibt es vorerst nur im Browser.';
+
+  @override
+  String get practiceModelError =>
+      'Der Melodie-Macher konnte nicht geladen werden. Prüfe deine Verbindung und versuch es nochmal.';
+
+  @override
+  String practiceNotesHit(int hit, int total) {
+    return '$hit von $total Noten';
+  }
+
+  @override
+  String get practiceNoStars =>
+      'Ein neues Stück für diese Lektion. Nur zum Üben: keine Sterne.';
+
+  @override
+  String get practiceWait => 'Warte auf mich';
+
+  @override
+  String get practicePlayAlong => 'Mitspielen';
+
+  @override
+  String get endlessPractice => 'Endlos üben';
+
+  @override
+  String get endlessPracticeDesc =>
+      'Neue Musik für dein Level, geschrieben während du spielst. Wähle Level und Regeln.';
+
+  @override
+  String get setupLevel => 'Level';
+
+  @override
+  String get setupHands => 'Hände';
+
+  @override
+  String setupTempo(int bpm) {
+    return 'Tempo · $bpm bpm';
+  }
+
+  @override
+  String get setupNoteValues => 'Notenwerte';
+
+  @override
+  String get setupMode => 'Modus';
+
+  @override
+  String get handRight => 'Rechts';
+
+  @override
+  String get handLeft => 'Links';
+
+  @override
+  String get handBoth => 'Beide';
+
+  @override
+  String get noteValuesInvalid =>
+      'Mit diesen Notenwerten lässt sich kein Takt füllen. Nimm einen längeren oder kürzeren dazu.';
+
+  @override
+  String get streamEnded =>
+      'Mit diesen Einstellungen ließ sich keine weitere Musik schreiben.';
+
+  @override
+  String get setupStyle => 'Stil';
+
+  @override
+  String levelN(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String get styleAny => 'Egal';
+
+  @override
+  String get styleClassical => 'Klassik';
+
+  @override
+  String get styleFolk => 'Volkslied';
+
+  @override
+  String get styleChildren => 'Kinderlied';
+
+  @override
+  String get stylePop => 'Pop';
+
+  @override
+  String get styleJazz => 'Jazz';
+
+  @override
+  String get styleGame => 'Spiel';
 }

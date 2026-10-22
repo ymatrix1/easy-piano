@@ -107,6 +107,10 @@
       }, 1000);
     })();
   </script>
+  <script>
+    // Practice mode runtime (melody model), imported on first use.
+    window.epMelodyImport = function () { return import('./melody/practice.js'); };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

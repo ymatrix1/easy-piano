@@ -378,6 +378,7 @@ dependencies = [
  "flutter_rust_bridge",
  "jni",
  "ndk-context",
+ "serde_json",
 ]
 
 [[package]]
