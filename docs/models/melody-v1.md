@@ -70,3 +70,7 @@ Weights: CC-BY-SA-4.0, decision D24 (accepted 2026-10-21). Generated tunes: CC0-
   - Per-tune provenance allows retraining without any corpus or flag.
 - **Untested licence positions:** NMD transcriptions (D18), CC-BY-SA data (Mutopia), CC-BY dataset terms (PDMX). See OQ10 and D24.
 - **Style labels** are keyword-based; 12,999 PDMX tunes have none (bean piano-oial).
+
+## Next versions
+
+Improvements planned for v1.1 (no retrain), v2 (data + retrain) and v3 (advanced material): [melody-model-roadmap](../research/melody-model-roadmap.md).
