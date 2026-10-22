@@ -1,0 +1,169 @@
+{
+  "course": "showcase-moonlight",
+  "nodes": [
+    {
+      "id": "triplets",
+      "kind": "lesson",
+      "title": "str:node.scm.triplets",
+      "icon": "note",
+      "levels": [
+        "scm-01-triplets"
+      ],
+      "next": [
+        "octaves"
+      ]
+    },
+    {
+      "id": "octaves",
+      "kind": "lesson",
+      "title": "str:node.scm.octaves",
+      "icon": "note",
+      "levels": [
+        "scm-02-octaves"
+      ],
+      "next": [
+        "melody-top"
+      ]
+    },
+    {
+      "id": "melody-top",
+      "kind": "lesson",
+      "title": "str:node.scm.melody-top",
+      "icon": "note",
+      "levels": [
+        "scm-03-melody-top"
+      ],
+      "next": [
+        "together"
+      ]
+    },
+    {
+      "id": "together",
+      "kind": "lesson",
+      "title": "str:node.scm.together",
+      "icon": "note",
+      "levels": [
+        "scm-04-together"
+      ],
+      "next": [
+        "part-1"
+      ]
+    },
+    {
+      "id": "part-1",
+      "kind": "song",
+      "title": "str:node.scm.part-1",
+      "icon": "play",
+      "levels": [
+        "scm-05-part-1"
+      ],
+      "next": [
+        "part-2"
+      ],
+      "songs": {
+        "default": "scm-part-1",
+        "classical": "scm-part-1"
+      }
+    },
+    {
+      "id": "part-2",
+      "kind": "song",
+      "title": "str:node.scm.part-2",
+      "icon": "play",
+      "levels": [
+        "scm-06-part-2"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "scm-part-2",
+        "classical": "scm-part-2"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.scm.gate-1",
+      "icon": "star",
+      "levels": [
+        "scm-10-gate-part-1",
+        "scm-11-gate-part-2",
+        "scm-12-gate-together"
+      ],
+      "next": [
+        "climb"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "climb",
+      "kind": "lesson",
+      "title": "str:node.scm.climb",
+      "icon": "note",
+      "levels": [
+        "scm-07-climb"
+      ],
+      "next": [
+        "part-3"
+      ]
+    },
+    {
+      "id": "part-3",
+      "kind": "song",
+      "title": "str:node.scm.part-3",
+      "icon": "play",
+      "levels": [
+        "scm-08-part-3"
+      ],
+      "next": [
+        "connecting"
+      ],
+      "songs": {
+        "default": "scm-part-3",
+        "classical": "scm-part-3"
+      }
+    },
+    {
+      "id": "connecting",
+      "kind": "lesson",
+      "title": "str:node.scm.connecting",
+      "icon": "note",
+      "levels": [
+        "scm-09-connecting"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.scm.gate-2",
+      "icon": "star",
+      "levels": [
+        "scm-13-gate-part-3",
+        "scm-14-gate-link",
+        "scm-15-gate-climb"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.scm.boss",
+      "icon": "play",
+      "levels": [
+        "scm-16-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "moonlight-sonata",
+        "classical": "moonlight-sonata"
+      }
+    }
+  ]
+}

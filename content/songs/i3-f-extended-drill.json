@@ -1,0 +1,45 @@
+{
+  "id": "i3-f-extended-drill",
+  "title": "Stretch in F",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "F4:4@1 G4:4@2 A4:4@3 Bb4:4@4"
+    },
+    {
+      "RH": "C5:2@4 D5:2@5"
+    },
+    {
+      "RH": "Bb4:4@3 A4:4@2 G4:4@1 A4:4@2"
+    },
+    {
+      "RH": "E4:4@1 F4:4@2 G4:4@3 A4:4@4"
+    },
+    {
+      "RH": "F4:4@1 A4:4@3 C5:2@5"
+    },
+    {
+      "RH": "D5:4@5 C5:4@4 Bb4:4@3 A4:4@2"
+    },
+    {
+      "RH": "G4:4@3 F4:4@2 E4:4@1 F4:4@2"
+    },
+    {
+      "RH": "F4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      1,
+      5
+    ]
+  ]
+}

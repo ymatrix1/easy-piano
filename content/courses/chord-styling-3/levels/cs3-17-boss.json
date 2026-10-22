@@ -1,0 +1,27 @@
+{
+  "id": "cs3-17-boss",
+  "title": "str:level.cs3.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "shenandoah-styles",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "shenandoah-styles",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "shenandoah-styles",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

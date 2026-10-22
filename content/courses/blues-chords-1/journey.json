@@ -1,0 +1,182 @@
+{
+  "course": "blues-chords-1",
+  "nodes": [
+    {
+      "id": "dom7",
+      "kind": "lesson",
+      "title": "str:node.bc1.dom7",
+      "icon": "note",
+      "levels": [
+        "bc1-01-dom7"
+      ],
+      "next": [
+        "swing"
+      ]
+    },
+    {
+      "id": "swing",
+      "kind": "lesson",
+      "title": "str:node.bc1.swing",
+      "icon": "note",
+      "levels": [
+        "bc1-02-swing"
+      ],
+      "next": [
+        "twelve-bar"
+      ]
+    },
+    {
+      "id": "twelve-bar",
+      "kind": "lesson",
+      "title": "str:node.bc1.twelve-bar",
+      "icon": "note",
+      "levels": [
+        "bc1-03-twelve-bar"
+      ],
+      "next": [
+        "frankie"
+      ]
+    },
+    {
+      "id": "frankie",
+      "kind": "song",
+      "title": "str:node.bc1.frankie",
+      "icon": "play",
+      "levels": [
+        "bc1-04-frankie"
+      ],
+      "next": [
+        "shuffle"
+      ],
+      "songs": {
+        "default": "frankie-and-johnny",
+        "jazz_blues": "frankie-and-johnny"
+      }
+    },
+    {
+      "id": "shuffle",
+      "kind": "lesson",
+      "title": "str:node.bc1.shuffle",
+      "icon": "note",
+      "levels": [
+        "bc1-05-shuffle"
+      ],
+      "next": [
+        "careless-love"
+      ]
+    },
+    {
+      "id": "careless-love",
+      "kind": "song",
+      "title": "str:node.bc1.careless-love",
+      "icon": "play",
+      "levels": [
+        "bc1-06-careless-love"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "careless-love",
+        "jazz_blues": "careless-love",
+        "folk_world": "careless-love"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.bc1.gate-1",
+      "icon": "star",
+      "levels": [
+        "bc1-07-gate-frankie",
+        "bc1-08-gate-careless-love",
+        "bc1-09-gate-twelve-bar"
+      ],
+      "next": [
+        "boogie"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boogie",
+      "kind": "lesson",
+      "title": "str:node.bc1.boogie",
+      "icon": "note",
+      "levels": [
+        "bc1-10-boogie"
+      ],
+      "next": [
+        "blues-scale"
+      ]
+    },
+    {
+      "id": "blues-scale",
+      "kind": "lesson",
+      "title": "str:node.bc1.blues-scale",
+      "icon": "note",
+      "levels": [
+        "bc1-11-blues-scale"
+      ],
+      "next": [
+        "joshua"
+      ]
+    },
+    {
+      "id": "joshua",
+      "kind": "song",
+      "title": "str:node.bc1.joshua",
+      "icon": "play",
+      "levels": [
+        "bc1-12-joshua"
+      ],
+      "next": [
+        "rock-roll"
+      ],
+      "songs": {
+        "default": "joshua-fit-the-battle",
+        "hymns_spirituals": "joshua-fit-the-battle"
+      }
+    },
+    {
+      "id": "rock-roll",
+      "kind": "lesson",
+      "title": "str:node.bc1.rock-roll",
+      "icon": "note",
+      "levels": [
+        "bc1-13-rock-roll"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.bc1.gate-2",
+      "icon": "star",
+      "levels": [
+        "bc1-14-gate-joshua",
+        "bc1-15-gate-blues-riff",
+        "bc1-16-gate-rock-roll"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.bc1.boss",
+      "icon": "play",
+      "levels": [
+        "bc1-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "bc1-boss",
+        "originals_pop": "bc1-boss"
+      }
+    }
+  ]
+}

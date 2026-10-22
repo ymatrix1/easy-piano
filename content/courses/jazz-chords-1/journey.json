@@ -1,0 +1,194 @@
+{
+  "course": "jazz-chords-1",
+  "nodes": [
+    {
+      "id": "voicings",
+      "kind": "lesson",
+      "title": "str:node.jc1.voicings",
+      "icon": "note",
+      "levels": [
+        "jc1-01-voicings"
+      ],
+      "next": [
+        "two-five-one"
+      ]
+    },
+    {
+      "id": "two-five-one",
+      "kind": "lesson",
+      "title": "str:node.jc1.two-five-one",
+      "icon": "note",
+      "levels": [
+        "jc1-02-two-five-one"
+      ],
+      "next": [
+        "shells"
+      ]
+    },
+    {
+      "id": "shells",
+      "kind": "lesson",
+      "title": "str:node.jc1.shells",
+      "icon": "note",
+      "levels": [
+        "jc1-03-shells"
+      ],
+      "next": [
+        "comping"
+      ]
+    },
+    {
+      "id": "comping",
+      "kind": "lesson",
+      "title": "str:node.jc1.comping",
+      "icon": "note",
+      "levels": [
+        "jc1-04-comping"
+      ],
+      "next": [
+        "charleston"
+      ]
+    },
+    {
+      "id": "charleston",
+      "kind": "lesson",
+      "title": "str:node.jc1.charleston",
+      "icon": "note",
+      "levels": [
+        "jc1-05-charleston"
+      ],
+      "next": [
+        "saints"
+      ]
+    },
+    {
+      "id": "saints",
+      "kind": "song",
+      "title": "str:node.jc1.saints",
+      "icon": "play",
+      "levels": [
+        "jc1-06-saints"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "when-the-saints",
+        "jazz_blues": "when-the-saints"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.jc1.gate-1",
+      "icon": "star",
+      "levels": [
+        "jc1-07-gate-saints",
+        "jc1-08-gate-two-five-one",
+        "jc1-09-gate-charleston"
+      ],
+      "next": [
+        "turnaround"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "turnaround",
+      "kind": "lesson",
+      "title": "str:node.jc1.turnaround",
+      "icon": "note",
+      "levels": [
+        "jc1-10-turnaround"
+      ],
+      "next": [
+        "two-five-one-f"
+      ]
+    },
+    {
+      "id": "two-five-one-f",
+      "kind": "lesson",
+      "title": "str:node.jc1.two-five-one-f",
+      "icon": "note",
+      "levels": [
+        "jc1-11-two-five-one-f"
+      ],
+      "next": [
+        "melody-shells"
+      ]
+    },
+    {
+      "id": "melody-shells",
+      "kind": "lesson",
+      "title": "str:node.jc1.melody-shells",
+      "icon": "note",
+      "levels": [
+        "jc1-12-melody-shells"
+      ],
+      "next": [
+        "riverside"
+      ]
+    },
+    {
+      "id": "riverside",
+      "kind": "song",
+      "title": "str:node.jc1.riverside",
+      "icon": "play",
+      "levels": [
+        "jc1-13-riverside"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "down-by-the-riverside",
+        "hymns_spirituals": "down-by-the-riverside",
+        "folk_world": "down-by-the-riverside"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.jc1.gate-2",
+      "icon": "star",
+      "levels": [
+        "jc1-14-gate-riverside",
+        "jc1-15-gate-turnaround",
+        "jc1-16-gate-melody-shells"
+      ],
+      "next": [
+        "bill-bailey"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "bill-bailey",
+      "kind": "song",
+      "title": "str:node.jc1.bill-bailey",
+      "icon": "play",
+      "levels": [
+        "jc1-17-bill-bailey"
+      ],
+      "next": [
+        "boss"
+      ],
+      "songs": {
+        "default": "bill-bailey-easy",
+        "jazz_blues": "bill-bailey-easy"
+      }
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.jc1.boss",
+      "icon": "play",
+      "levels": [
+        "jc1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "bill-bailey",
+        "jazz_blues": "bill-bailey"
+      }
+    }
+  ]
+}

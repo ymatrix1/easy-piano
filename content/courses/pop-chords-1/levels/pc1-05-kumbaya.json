@@ -1,0 +1,34 @@
+{
+  "id": "pc1-05-kumbaya",
+  "title": "str:level.pc1.05.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "kumbaya",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "kumbaya",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "kumbaya",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "kumbaya",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

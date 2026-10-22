@@ -1,0 +1,27 @@
+{
+  "id": "pa1-18-boss",
+  "title": "str:level.pa1.18.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "hallelujah-chorus",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hallelujah-chorus",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hallelujah-chorus",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

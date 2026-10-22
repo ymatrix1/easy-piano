@@ -1,0 +1,351 @@
+{
+  "course": "lead-sheet-3",
+  "nodes": [
+    {
+      "node": "key-d",
+      "new_skill": "Key of D (F sharp, C sharp): left-hand chords D, G, A and A7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "skip",
+      "new_skill": "Traditional song in D with chords D, G, A and A7 in the left hand.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "key-a",
+      "new_skill": "Key of A (G sharp): left-hand chords A, D and E7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "G#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sunny-hill",
+      "new_skill": "Original tune in A with A, D and E7 and eighth-note runs.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "G#"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "bm",
+      "new_skill": "B minor and the progression D, Bm, G, A.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "evening-ballad",
+      "new_skill": "Ballad in D over D, Bm, G, A and A7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: chords in D and A, B minor.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "broken-85",
+      "new_skill": "Broken-chord left hand: root, fifth, octave, fifth.",
+      "required": [
+        {
+          "pitch": "D2",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "oh-dear",
+      "new_skill": "Traditional 6/8 air in D with a rolling left hand.",
+      "required": [
+        {
+          "rhythm": "8"
+        },
+        {
+          "pitch": "D2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        120,
+        132
+      ],
+      "hands": "both",
+      "time": "6/8"
+    },
+    {
+      "node": "broken-35",
+      "new_skill": "Broken-chord left hand: root, fifth, third, fifth.",
+      "required": [
+        {
+          "pitch": "F#3",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "garden-waltz",
+      "new_skill": "3/4 waltz with a rolling broken-chord left hand.",
+      "required": [
+        {
+          "pitch": "F#3",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        96,
+        104
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "third",
+      "new_skill": "Right hand adds a third below the melody on long notes.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "mix",
+      "new_skill": "Mix block chords and broken chords in the left hand.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: broken chords, 6/8 and 3/4, mixed left-hand styles.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        84,
+        126
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Foster's Beautiful Dreamer: triplet melody, thirds below, broken-chord and block left hand.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        20,
+        20
+      ],
+      "bpm": [
+        60,
+        72
+      ],
+      "hands": "both",
+      "time": "3/4"
+    }
+  ]
+}

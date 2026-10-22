@@ -1,0 +1,62 @@
+{
+  "id": "sl-descend",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sl.descend.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 5,
+      "press": "B2",
+      "label": "5"
+    },
+    {
+      "at": 7,
+      "hand": "L",
+      "finger": 4,
+      "press": "A2",
+      "label": "4"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 5,
+      "press": "F2",
+      "label": "5"
+    },
+    {
+      "at": 13,
+      "hand": "L",
+      "finger": 5,
+      "press": "E2",
+      "label": "5"
+    },
+    {
+      "at": 13,
+      "prompt": "your_turn"
+    }
+  ]
+}

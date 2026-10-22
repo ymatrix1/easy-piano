@@ -1,0 +1,31 @@
+{
+  "id": "adv1-12-ornaments",
+  "title": "str:level.adv1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "adv1-ornaments"
+    },
+    {
+      "type": "wait",
+      "score": "adv1-ornament-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-ornament-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-ornament-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

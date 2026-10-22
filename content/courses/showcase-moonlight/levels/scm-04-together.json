@@ -1,0 +1,31 @@
+{
+  "id": "scm-04-together",
+  "title": "str:level.scm.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "scm-together"
+    },
+    {
+      "type": "wait",
+      "score": "scm-together-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-together-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-together-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

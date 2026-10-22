@@ -1,0 +1,61 @@
+{
+  "id": "jc2-jazz-waltz",
+  "title": "Waltz in F",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 120,
+  "time": "3/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "A4:4@1 C5:1/6@3 D5:1/12@4 F5:4@5",
+      "LH": "F2:4@5 A2E3:4@31 A2E3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "G5:4@5 D5:1/6@3 F5:1/12@5 Bb4:4@1",
+      "LH": "G2:4@5 Bb2F3:4@31 Bb2F3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "E5:4@3 G5:1/6@5 E5:1/12@3 C5:4@1",
+      "LH": "C2:4@5 Bb2E3:4@31 Bb2E3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "A4:2.@1",
+      "LH": "F2:4@5 A2E3:4@31 A2E3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "A4:4@1 D5:1/6@4 F5:1/12@5 A5:4@5",
+      "LH": "D2:4@5 C3F3:4@31 C3F3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "G5:4@5 F5:1/6@5 D5:1/12@3 Bb4:4@1",
+      "LH": "G2:4@5 Bb2F3:4@31 Bb2F3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "E5:4@5 Bb4:1/6@3 G4:1/12@1 A4:4@2",
+      "LH": "C2:4@5 Bb2E3:4@31 Bb2E3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    },
+    {
+      "RH": "C5:2.@1",
+      "LH": "F2A2E3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 F#2:4"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

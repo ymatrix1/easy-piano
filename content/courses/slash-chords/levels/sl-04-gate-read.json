@@ -1,0 +1,14 @@
+{
+  "id": "sl-04-gate-read",
+  "title": "str:level.sl.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sl-read-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

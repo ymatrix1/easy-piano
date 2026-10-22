@@ -1,0 +1,14 @@
+{
+  "id": "jc1-07-gate-saints",
+  "title": "str:level.jc1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "when-the-saints",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

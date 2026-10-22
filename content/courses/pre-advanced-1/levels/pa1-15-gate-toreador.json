@@ -1,0 +1,14 @@
+{
+  "id": "pa1-15-gate-toreador",
+  "title": "str:level.pa1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "toreador-song",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "i3-06-gate-brahms",
+  "title": "str:level.i3.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "brahms-lullaby",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "id": "jc1-251-f-drill",
+  "title": "ii-V-I in F Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "{chord:\"Gm7\"} Bb3D4F4G4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "G2:4 Bb2:4 D3:4 F3:4"
+    },
+    {
+      "RH": "{chord:\"C7\"} Bb3C4E4G4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "C2:4 E2:4 G2:4 Bb2:4"
+    },
+    {
+      "RH": "{chord:\"Fmaj7\"} A3C4E4F4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "F2:4 A2:4 C3:4 E3:4"
+    },
+    {
+      "RH": "A3C4E4F4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "F2:4 A2:4 C3:4 E3:4"
+    },
+    {
+      "RH": "{chord:\"Gm7\"} Bb3D4F4G4:2@1235 {chord:\"C7\"} Bb3C4E4G4:2@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "G2:4 D3:4 C2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"Fmaj7\"} A3C4E4F4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "F2:4 A2:4 C3:4 E3:4"
+    },
+    {
+      "RH": "{chord:\"Gm7\"} Bb3D4F4G4:2@1235 {chord:\"C7\"} Bb3C4E4G4:2@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "G2:4 D3:4 C2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"Fmaj7\"} A3C4E4F4:1@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "F2:4 A2:4 C3:4 E3:4"
+    },
+    {
+      "RH": "{chord:\"Gm7\"} r:4 Bb3D4F4G4:4@1235 r:4 Bb3D4F4G4:4@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "G2:4 Bb2:4 D3:4 F3:4"
+    },
+    {
+      "RH": "r:4 Bb3D4F4G4:4@1235 {chord:\"C7\"} r:4 Bb3C4E4G4:4@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "G2:4 D3:4 C2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"Fmaj7\"} r:4 A3C4E4F4:4@1235 r:4 A3C4E4F4:4@1235",
+      "DRUMS": "C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12 C2F#2:1/6 F#2:1/12 D2F#2:1/6 F#2:1/12",
+      "BASS": "F2:4 A2:4 C3:4 E3:4"
+    },
+    {
+      "RH": "r:4 A3C4E4F4:4@1235 r:2",
+      "DRUMS": "C2C#3:1",
+      "BASS": "F2:1"
+    }
+  ],
+  "critical": [
+    [
+      8,
+      10
+    ]
+  ]
+}

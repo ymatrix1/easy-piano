@@ -1,0 +1,136 @@
+{
+  "id": "jc1-comping",
+  "duration_beats": 20,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.jc1.comping.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 5,
+      "press": "C5",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 5,
+      "press": "C5",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "caption": "str:scene.jc1.comping.2"
+    },
+    {
+      "at": 11,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 11,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 11,
+      "hand": "R",
+      "finger": 5,
+      "press": "C5",
+      "label": "5"
+    },
+    {
+      "at": 12.5,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 12.5,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 12.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 12.5,
+      "hand": "R",
+      "finger": 5,
+      "press": "C5",
+      "label": "5"
+    },
+    {
+      "at": 17,
+      "prompt": "your_turn"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "i1-11-dotted",
+  "title": "str:level.i1.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i1-rhythm"
+    },
+    {
+      "type": "wait",
+      "score": "i1-dotted-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-dotted-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-dotted-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

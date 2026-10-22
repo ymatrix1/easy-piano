@@ -1,0 +1,14 @@
+{
+  "id": "jc2-15-gate-hard-times",
+  "title": "str:level.jc2.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "hard-times-come-again",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

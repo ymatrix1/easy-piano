@@ -1,0 +1,14 @@
+{
+  "id": "i1-17-gate-syncopation",
+  "title": "str:level.i1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i1-synco-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

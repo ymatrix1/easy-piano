@@ -1,0 +1,13 @@
+{
+  "id": "cs2-15-gate-swing-low",
+  "title": "str:level.cs2.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "swing-low-sweet-chariot",
+      "tempo": 1.0,
+      "pass": 0.7
+    }
+  ]
+}

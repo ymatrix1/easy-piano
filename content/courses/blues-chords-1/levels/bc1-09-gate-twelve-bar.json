@@ -1,0 +1,14 @@
+{
+  "id": "bc1-09-gate-twelve-bar",
+  "title": "str:level.bc1.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "bc1-twelve-bar",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

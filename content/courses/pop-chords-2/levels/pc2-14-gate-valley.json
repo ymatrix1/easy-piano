@@ -1,0 +1,14 @@
+{
+  "id": "pc2-14-gate-valley",
+  "title": "str:level.pc2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "down-in-the-valley",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

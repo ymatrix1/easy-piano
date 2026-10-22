@@ -1,0 +1,123 @@
+{
+  "id": "home-on-the-range",
+  "title": "Home on the Range",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 84,
+  "time": "3/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"G7\"} r:2 G4:4@1",
+      "LH": "r:2.",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "G1:4 D2:4 D2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C5:2@2 C5:4@2",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C5:4@2 E5:2@4",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} E5:4@4 D5:4@3 C5:4@2",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"G7\"} D5:2.@3",
+      "LH": "B2F3G3:2.@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "G1:4 D2:4 D2:4"
+    },
+    {
+      "RH": "{chord:\"G7\"} G4:4@1 A4:4@2 B4:4@3",
+      "LH": "B2F3G3:2.@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "G1:4 D2:4 D2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C5:2@4 {chord:\"G7\"} D5:4@5",
+      "LH": "C3E3G3:2@531 B2F3G3:4@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G1:4"
+    },
+    {
+      "RH": "{chord:\"C\"} E5:2.@4",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} C5:2@2 C5:4@2",
+      "LH": "C3F3A3:2.@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "F1:4 C2:4 C2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C5:4@2 E5:2@4",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} E5:4@4 D5:4@3 C5:4@2",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"G7\"} D5:2.@3",
+      "LH": "B2F3G3:2.@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "G1:4 D2:4 D2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} E5:4@4 D5:4@3 C5:4@2",
+      "LH": "C3E3A3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "A1:4 E2:4 E2:4"
+    },
+    {
+      "RH": "{chord:\"G7\"} D5:4@3 E5:4@4 D5:4@3",
+      "LH": "B2F3G3:2.@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "G1:4 D2:4 D2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} E5:4@4 E5:4@4 D5:4@3",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "C2:4 G2:4 G2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} C5:2@3 {chord:\"G7\"} B4:4@2",
+      "LH": "C3F3A3:2@521 B2F3G3:4@521",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4",
+      "BASS": "F1:4 C2:4 G1:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C5:2.@2",
+      "LH": "C3E3G3:2.@531",
+      "DRUMS": "C2C#3:2.",
+      "BASS": "C2:2."
+    }
+  ],
+  "critical": [
+    [
+      8,
+      12
+    ]
+  ]
+}

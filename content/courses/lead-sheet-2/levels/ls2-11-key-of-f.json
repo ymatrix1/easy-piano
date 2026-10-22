@@ -1,0 +1,31 @@
+{
+  "id": "ls2-11-key-of-f",
+  "title": "str:level.ls2.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls2-key-f"
+    },
+    {
+      "type": "wait",
+      "score": "ls2-f-chords",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-f-chords",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-f-chords",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

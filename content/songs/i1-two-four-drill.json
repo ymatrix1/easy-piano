@@ -1,0 +1,47 @@
+{
+  "id": "i1-two-four-drill",
+  "title": "March Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 84,
+  "time": "2/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 E4:4@3",
+      "LH": "C3:2@5"
+    },
+    {
+      "RH": "G4:4@5 E4:4@3",
+      "LH": "G3:2@1"
+    },
+    {
+      "RH": "F4:4@4 D4:4@2",
+      "LH": "B2:2@4"
+    },
+    {
+      "RH": "E4:4@3 C4:4@1",
+      "LH": "C3:2@5"
+    },
+    {
+      "RH": "C4:8@1 D4:8@2 E4:8@3 F4:8@4",
+      "LH": "C3:2@5"
+    },
+    {
+      "RH": "G4:4@5 G4:4@5",
+      "LH": "C3:4@5 G3:4@1"
+    },
+    {
+      "RH": "F4:8@4 E4:8@3 D4:8@2 E4:8@3",
+      "LH": "B2:4@4 G2:4@5"
+    },
+    {
+      "RH": "C4:2@1",
+      "LH": "C3:2@5"
+    }
+  ]
+}

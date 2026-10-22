@@ -1,0 +1,31 @@
+{
+  "id": "pa2-02-oompah",
+  "title": "str:level.pa2.02.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pa2-oompah"
+    },
+    {
+      "type": "wait",
+      "score": "pa2-oompah-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-oompah-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-oompah-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

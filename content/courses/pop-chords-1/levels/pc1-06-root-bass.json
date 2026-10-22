@@ -1,0 +1,31 @@
+{
+  "id": "pc1-06-root-bass",
+  "title": "str:level.pc1.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc1-root-bass"
+    },
+    {
+      "type": "wait",
+      "score": "pc1-bass-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-bass-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-bass-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

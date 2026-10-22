@@ -1,0 +1,14 @@
+{
+  "id": "c1-15-gate-k331",
+  "title": "str:level.c1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "mozart-k331-theme",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

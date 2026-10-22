@@ -1,0 +1,14 @@
+{
+  "id": "sce-15-gate-part-b",
+  "title": "str:level.sce.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sce-part-b",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

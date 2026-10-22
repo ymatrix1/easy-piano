@@ -1,0 +1,14 @@
+{
+  "id": "pa1-06-gate-ode",
+  "title": "str:level.pa1.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ode-to-joy-in-d",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

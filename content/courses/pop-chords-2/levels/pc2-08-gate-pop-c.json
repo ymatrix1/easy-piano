@@ -1,0 +1,14 @@
+{
+  "id": "pc2-08-gate-pop-c",
+  "title": "str:level.pc2.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pc2-pop-c",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

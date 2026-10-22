@@ -1,0 +1,27 @@
+{
+  "id": "ar1-11-seventh",
+  "title": "str:level.ar1.11.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ar1-seventh-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-seventh-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-seventh-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "i2-15-gate-octaves",
+  "title": "str:level.i2.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i2-octave-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

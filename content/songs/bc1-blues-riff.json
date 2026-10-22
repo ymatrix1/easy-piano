@@ -1,0 +1,55 @@
+{
+  "id": "bc1-blues-riff",
+  "title": "Blues Scale Riffs",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 88,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:8@1 Eb4:8@2 F4:8@4 F#4:8@4 G4:4@5 r:4",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "G4:8@5 F#4:8@4 F4:8@4 Eb4:8@2 C4:4@1 r:4",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "Eb4:8@2 F4:8@4 F#4:8@4 G4:8@5 Bb4:4@5 G4:4@5",
+      "LH": "F2:4@5 C3:4@5 D3:4@4 C3:4@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "G4:8@5 F4:8@4 Eb4:8@2 C4:8@1 C4:2@1",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:8@1 Eb4:8@2 F4:8@4 F#4:8@4 G4:4@5 r:4",
+      "LH": "F2:4@5 C3:4@5 D3:4@4 C3:4@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "G4:8@5 F#4:8@4 F4:8@4 Eb4:8@2 C4:4@1 r:4",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "Bb4:4@5 G4:8@5 F#4:8@4 F4:8@4 Eb4:8@2 C4:4@1",
+      "LH": "G2:4@5 D3:4@4 E3:4@3 D3:4@4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

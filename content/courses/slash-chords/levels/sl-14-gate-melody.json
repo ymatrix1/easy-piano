@@ -1,0 +1,14 @@
+{
+  "id": "sl-14-gate-melody",
+  "title": "str:level.sl.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sl-melody-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

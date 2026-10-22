@@ -1,0 +1,75 @@
+{
+  "id": "bc1-twelve-bar",
+  "title": "Twelve-Bar Blues in C",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 A3C4Eb4:4@135 r:4 A3C4Eb4:4@135",
+      "LH": "F2:4@5 C3:4@5 D3:4@4 C3:4@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 A3C4Eb4:4@135 r:4 A3C4Eb4:4@135",
+      "LH": "F2:4@5 C3:4@5 D3:4@4 C3:4@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 B3D4F4:4@135 r:4 B3D4F4:4@135",
+      "LH": "G2:4@5 D3:4@4 E3:4@3 D3:4@4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 A3C4Eb4:4@135 r:4 A3C4Eb4:4@135",
+      "LH": "F2:4@5 C3:4@5 D3:4@4 C3:4@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 r:4 G3Bb3E4:4@135",
+      "LH": "C3:4@5 G3:4@1 A3:4@2 G3:4@1",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "r:4 G3Bb3E4:4@135 G3Bb3E4:2@135",
+      "LH": "C3:4@5 G3:4@1 C3:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    }
+  ]
+}

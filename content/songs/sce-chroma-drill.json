@@ -1,0 +1,45 @@
+{
+  "id": "sce-chroma-drill",
+  "title": "Chromatic Climb",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "2/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:4 r:8 D4:16@1 D#4:16@1"
+    },
+    {
+      "RH": "E4:16@1 C5:8@5 E4:16@1 C5:8@5 E4:16@1 C5:16@5"
+    },
+    {
+      "RH": "C5:4@1 r:16 C5:16@1 D5:16@2 D#5:16@2"
+    },
+    {
+      "RH": "E5:16@4 C5:16@2 D5:16@3 E5:8@4 B4:16@1 D5:8@3"
+    },
+    {
+      "RH": "C5:4.@5 D4:16@1 D#4:16@1"
+    },
+    {
+      "RH": "E4:16@1 F4:16@2 F#4:16@2 G4:8@3 A4:16@4 G4:8@3"
+    },
+    {
+      "RH": "G4:16@1 A4:16@2 A#4:16@2 B4:16@3 C5:8@4 B4:8@3"
+    },
+    {
+      "RH": "C5:2@1"
+    }
+  ],
+  "critical": [
+    [
+      5,
+      7
+    ]
+  ]
+}

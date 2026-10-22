@@ -1,0 +1,31 @@
+{
+  "id": "jc1-10-turnaround",
+  "title": "str:level.jc1.10.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "jc1-turnaround"
+    },
+    {
+      "type": "wait",
+      "score": "jc1-turnaround-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-turnaround-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-turnaround-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

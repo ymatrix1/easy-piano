@@ -1,0 +1,62 @@
+{
+  "id": "scm-dotted",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.scm.dotted.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 3.75,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 7.75,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 5,
+      "press": "G#4",
+      "label": "5"
+    },
+    {
+      "at": 14,
+      "prompt": "your_turn"
+    }
+  ]
+}

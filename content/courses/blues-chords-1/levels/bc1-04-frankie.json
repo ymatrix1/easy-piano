@@ -1,0 +1,33 @@
+{
+  "id": "bc1-04-frankie",
+  "title": "str:level.bc1.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "frankie-and-johnny",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "frankie-and-johnny",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "frankie-and-johnny",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "frankie-and-johnny",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

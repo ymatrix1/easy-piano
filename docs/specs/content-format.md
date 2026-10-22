@@ -49,6 +49,8 @@ content/
 }
 ```
 
+`source`: `original` (our arrangement from our own knowledge of the tune), `generated` (see below), or the edition it is based on, e.g. `mutopia` with `source_url` pointing at the Mutopia piece page (public domain or CC-BY-SA editions only; the simplified arrangement stays ours, `CC-BY-SA-4.0`).
+
 `bpm` counts the time signature's beat unit (its denominator note): `6/8` at 120 plays 120 eighths a minute, `2/2` at 60 plays 60 halves (session engine, [difficulty](difficulty.md)).
 
 ### Generated songs (optional fields)

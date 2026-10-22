@@ -1,0 +1,47 @@
+{
+  "id": "ar1-15-romance",
+  "title": "str:level.ar1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "spanish-romance",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "spanish-romance",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "spanish-romance",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "spanish-romance",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "spanish-romance",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "spanish-romance",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

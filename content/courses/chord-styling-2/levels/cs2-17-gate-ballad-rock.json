@@ -1,0 +1,13 @@
+{
+  "id": "cs2-17-gate-ballad-rock",
+  "title": "str:level.cs2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-rock-drill",
+      "tempo": 1.0,
+      "pass": 0.7
+    }
+  ]
+}

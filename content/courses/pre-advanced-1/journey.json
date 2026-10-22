@@ -1,0 +1,197 @@
+{
+  "course": "pre-advanced-1",
+  "nodes": [
+    {
+      "id": "keysigs",
+      "kind": "lesson",
+      "title": "str:node.pa1.keysigs",
+      "icon": "note",
+      "levels": [
+        "pa1-01-key-signatures"
+      ],
+      "next": [
+        "sixteenths"
+      ]
+    },
+    {
+      "id": "sixteenths",
+      "kind": "lesson",
+      "title": "str:node.pa1.sixteenths",
+      "icon": "note",
+      "levels": [
+        "pa1-02-sixteenths"
+      ],
+      "next": [
+        "ode-joy-d"
+      ]
+    },
+    {
+      "id": "ode-joy-d",
+      "kind": "song",
+      "title": "str:node.pa1.ode-joy-d",
+      "icon": "play",
+      "levels": [
+        "pa1-03-ode-to-joy-in-d"
+      ],
+      "next": [
+        "dotted"
+      ],
+      "songs": {
+        "default": "ode-to-joy-in-d",
+        "classical": "ode-to-joy-in-d"
+      }
+    },
+    {
+      "id": "dotted",
+      "kind": "lesson",
+      "title": "str:node.pa1.dotted",
+      "icon": "note",
+      "levels": [
+        "pa1-04-dotted-eighth"
+      ],
+      "next": [
+        "la-donna"
+      ]
+    },
+    {
+      "id": "la-donna",
+      "kind": "song",
+      "title": "str:node.pa1.la-donna",
+      "icon": "play",
+      "levels": [
+        "pa1-05-la-donna"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "la-donna-e-mobile",
+        "classical": "la-donna-e-mobile"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.pa1.gate-1",
+      "icon": "star",
+      "levels": [
+        "pa1-06-gate-ode",
+        "pa1-07-gate-donna",
+        "pa1-08-gate-dotted"
+      ],
+      "next": [
+        "scales"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "scales",
+      "kind": "lesson",
+      "title": "str:node.pa1.scales",
+      "icon": "note",
+      "levels": [
+        "pa1-09-scales"
+      ],
+      "next": [
+        "toreador"
+      ]
+    },
+    {
+      "id": "toreador",
+      "kind": "song",
+      "title": "str:node.pa1.toreador",
+      "icon": "play",
+      "levels": [
+        "pa1-10-toreador"
+      ],
+      "next": [
+        "chromatic"
+      ],
+      "songs": {
+        "default": "toreador-song",
+        "classical": "toreador-song"
+      }
+    },
+    {
+      "id": "chromatic",
+      "kind": "lesson",
+      "title": "str:node.pa1.chromatic",
+      "icon": "note",
+      "levels": [
+        "pa1-11-chromatic"
+      ],
+      "next": [
+        "chords"
+      ]
+    },
+    {
+      "id": "chords",
+      "kind": "lesson",
+      "title": "str:node.pa1.chords",
+      "icon": "note",
+      "levels": [
+        "pa1-12-chords-octaves"
+      ],
+      "next": [
+        "pomp"
+      ]
+    },
+    {
+      "id": "pomp",
+      "kind": "song",
+      "title": "str:node.pa1.pomp",
+      "icon": "play",
+      "levels": [
+        "pa1-13-pomp"
+      ],
+      "next": [
+        "range"
+      ],
+      "songs": {
+        "default": "pomp-and-circumstance",
+        "classical": "pomp-and-circumstance"
+      }
+    },
+    {
+      "id": "range",
+      "kind": "lesson",
+      "title": "str:node.pa1.range",
+      "icon": "note",
+      "levels": [
+        "pa1-14-high-notes"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.pa1.gate-2",
+      "icon": "star",
+      "levels": [
+        "pa1-15-gate-toreador",
+        "pa1-16-gate-pomp",
+        "pa1-17-gate-chords"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.pa1.boss",
+      "icon": "play",
+      "levels": [
+        "pa1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "hallelujah-chorus",
+        "classical": "hallelujah-chorus"
+      }
+    }
+  ]
+}

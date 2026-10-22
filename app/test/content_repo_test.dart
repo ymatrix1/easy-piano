@@ -35,11 +35,13 @@ void main() {
 
   test('sections and planned modules load', () {
     final repo = ContentRepo.fromFiles(files);
-    expect(repo.sections.map((s) => s.id), ['basic', 'main']);
+    expect(repo.sections.map((s) => s.id), ['basic', 'soloist', 'chords']);
     final planned = repo.courses.where((c) => c.planned).toList();
-    for (final id in ['essentials-1', 'essentials-2', 'essentials-3']) {
-      final course = repo.courses.firstWhere((c) => c.id == id);
-      expect(course.planned, isFalse);
+    // Every playable course resolves all of its levels.
+    final ready = repo.courses.where((c) => !c.planned).toList();
+    expect(ready.length, greaterThanOrEqualTo(4));
+    for (final course in ready) {
+      expect(course.nodes, isNotEmpty, reason: course.id);
       for (final node in course.nodes) {
         for (final l in node.levels) {
           expect(repo.levels[l], isNotNull, reason: l);

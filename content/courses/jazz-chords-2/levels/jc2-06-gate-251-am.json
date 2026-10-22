@@ -1,0 +1,14 @@
+{
+  "id": "jc2-06-gate-251-am",
+  "title": "str:level.jc2.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jc2-minor-251-am",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

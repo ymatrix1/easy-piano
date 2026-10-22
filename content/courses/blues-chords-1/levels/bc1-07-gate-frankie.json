@@ -1,0 +1,14 @@
+{
+  "id": "bc1-07-gate-frankie",
+  "title": "str:level.bc1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "frankie-and-johnny",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

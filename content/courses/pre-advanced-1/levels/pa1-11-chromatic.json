@@ -1,0 +1,28 @@
+{
+  "id": "pa1-11-chromatic",
+  "title": "str:level.pa1.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pa1-chromatic"
+    },
+    {
+      "type": "wait",
+      "score": "pa1-chromatic-drill",
+      "pre_listen": true
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-chromatic-drill",
+      "tempo": 0.65,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-chromatic-drill",
+      "tempo": 0.95,
+      "pass": 0.7
+    }
+  ]
+}

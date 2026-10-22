@@ -1,0 +1,27 @@
+{
+  "id": "jc2-10-dom-chains",
+  "title": "str:level.jc2.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "jc2-dom-chain",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-dom-chain",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-dom-chain",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

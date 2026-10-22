@@ -1,0 +1,87 @@
+{
+  "id": "bc1-dom7",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.bc1.dom7.1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 3,
+      "press": "Bb3",
+      "label": "3"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 5,
+      "press": "E4",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "caption": "str:scene.bc1.dom7.2"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 3,
+      "press": "C4",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "Eb4",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 1,
+      "press": "B3",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 3,
+      "press": "D4",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 5,
+      "press": "F4",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "prompt": "your_turn"
+    }
+  ]
+}

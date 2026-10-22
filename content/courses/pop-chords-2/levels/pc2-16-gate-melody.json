@@ -1,0 +1,14 @@
+{
+  "id": "pc2-16-gate-melody",
+  "title": "str:level.pc2.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pc2-melody-f",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "bc1-05-shuffle",
+  "title": "str:level.bc1.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "bc1-shuffle"
+    },
+    {
+      "type": "wait",
+      "score": "bc1-shuffle-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-shuffle-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-shuffle-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

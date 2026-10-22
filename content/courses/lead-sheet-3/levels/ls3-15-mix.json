@@ -1,0 +1,27 @@
+{
+  "id": "ls3-15-mix",
+  "title": "str:level.ls3.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ls3-mix-etude",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-mix-etude",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-mix-etude",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

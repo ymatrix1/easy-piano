@@ -1,0 +1,53 @@
+{
+  "id": "sce-f-drill",
+  "title": "Trip to F Major",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "2/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "F4A4:16@13 G4:16@1 F4A4:4@13 F4A4C5:8@135",
+      "LH": "F2:8@5 F3A3C4:8@531 C3:8@5 F3A3C4:8@531"
+    },
+    {
+      "RH": "r:8 Bb4:16@2 A4:16@1 Bb4:16@2 C5:16@3 D5:8@4",
+      "LH": "Bb2:8@5 D3F3Bb3:8@531 F3:8@1 D3F3Bb3:8@531"
+    },
+    {
+      "RH": "D4F4:16@13 E4:16@1 D4F4:4@13 D4F4A4:8@135",
+      "LH": "D2:8@5 F3A3:8@31 A2:8@5 F3A3:8@31"
+    },
+    {
+      "RH": "r:8 G4:16@2 F#4:16@1 G4:16@2 A4:16@3 Bb4:8@4",
+      "LH": "G2:8@5 D3G3Bb3:8@531 D3:8@1 D3G3Bb3:8@531"
+    },
+    {
+      "RH": "D5:8@1 G5:16@4 D5:8@1 G5:16@4 D5:8@1",
+      "LH": "Bb2:8@5 D3Bb3:8@51 G2:8@5 D3:8@1"
+    },
+    {
+      "RH": "C5:4@1 F5:4@4",
+      "LH": "A2:8@5 F3A3C4:8@531 D3:8@5 F3A3:8@31"
+    },
+    {
+      "RH": "A4:4@1 Bb4:4@2",
+      "LH": "A3C4:4@31 G3C4:8@41 C3:8@5"
+    },
+    {
+      "RH": "F4A4C5:2@135",
+      "LH": "F2:2@5"
+    }
+  ],
+  "critical": [
+    [
+      2,
+      4
+    ]
+  ]
+}

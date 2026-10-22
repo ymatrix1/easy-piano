@@ -1,0 +1,76 @@
+{
+  "id": "ar1-prelude-pattern",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.ar1.prelude.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "G4",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 2,
+      "press": "C5",
+      "label": "2"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 4,
+      "press": "E5",
+      "label": "4"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 1,
+      "press": "G4",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 2,
+      "press": "C5",
+      "label": "2"
+    },
+    {
+      "at": 9,
+      "hand": "R",
+      "finger": 4,
+      "press": "E5",
+      "label": "4"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

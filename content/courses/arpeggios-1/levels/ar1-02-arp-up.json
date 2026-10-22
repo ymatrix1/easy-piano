@@ -1,0 +1,31 @@
+{
+  "id": "ar1-02-arp-up",
+  "title": "str:level.ar1.02.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ar1-thumb-under"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-arp-up-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-up-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-up-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

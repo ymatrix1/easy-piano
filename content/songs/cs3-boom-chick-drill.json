@@ -1,0 +1,61 @@
+{
+  "id": "cs3-boom-chick-drill",
+  "title": "Boom Chick",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:4 C4E4G4:4@135 r:4 C4E4G4:4@135",
+      "LH": "C3:4@5 r:4 G3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 C4E4G4:4@135 r:4 C4E4G4:4@135",
+      "LH": "C3:4@5 r:4 G3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 C4F4A4:4@125 r:4 C4F4A4:4@125",
+      "LH": "F2:4@5 r:4 C3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 C4E4G4:4@135 r:4 C4E4G4:4@135",
+      "LH": "C3:4@5 r:4 G3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 B3D4G4:4@125 r:4 B3D4G4:4@125",
+      "LH": "G2:4@5 r:4 D3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 C4E4G4:4@135 r:4 B3D4G4:4@125",
+      "LH": "C3:4@5 r:4 G2:4@5 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "r:4 C4E4G4:4@135 r:4 C4E4G4:4@135",
+      "LH": "C3:4@5 r:4 G3:4@1 r:4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "adv1-04-prelude-a-major",
+  "title": "str:level.adv1.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "chopin-prelude-a-major",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-a-major",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "chopin-prelude-a-major",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-a-major",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-a-major",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-a-major",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

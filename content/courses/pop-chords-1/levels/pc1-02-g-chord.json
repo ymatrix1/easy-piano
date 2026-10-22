@@ -1,0 +1,31 @@
+{
+  "id": "pc1-02-g-chord",
+  "title": "str:level.pc1.02.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc1-g"
+    },
+    {
+      "type": "wait",
+      "score": "pc1-g-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-g-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-g-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

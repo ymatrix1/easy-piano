@@ -1,0 +1,320 @@
+{
+  "course": "pre-advanced-1",
+  "nodes": [
+    {
+      "node": "keysigs",
+      "new_skill": "Key signatures and the circle of fifths: D major has F sharp and C sharp.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "C#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sixteenths",
+      "new_skill": "Sixteenth notes in the right hand: four notes per beat.",
+      "required": [
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ode-joy-d",
+      "new_skill": "Ode to Joy in D major with a sixteenth-note variation.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        90,
+        102
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "dotted",
+      "new_skill": "Dotted eighth plus sixteenth: the long-short skip.",
+      "required": [
+        {
+          "rhythm": "8."
+        },
+        {
+          "rhythm": "16"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "la-donna",
+      "new_skill": "A lively 3/4 song in B flat with dotted-eighth rhythm and triplets.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "rhythm": "8."
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        108
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: key signatures, sixteenths and dotted rhythm.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        76,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "scales",
+      "new_skill": "F major and B flat major scales in both hands.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "Eb"
+        }
+      ],
+      "bars": [
+        8,
+        10
+      ],
+      "bpm": [
+        68,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "toreador",
+      "new_skill": "A marching 2/4 refrain in F with dotted rhythm and a low C.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "rhythm": "8."
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        96,
+        112
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "chromatic",
+      "new_skill": "Chromatic fragments: neighbouring black and white keys.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "accidental": "A#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "chords",
+      "new_skill": "Right hand three-note chords over left hand octaves.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        64,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "pomp",
+      "new_skill": "A broad march theme in G with wide singing phrases.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "4."
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        78,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "range",
+      "new_skill": "Right hand reaches up to C6.",
+      "required": [
+        {
+          "pitch": "C6",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        70,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: F and B flat, chromatic steps, chords and octaves.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        72,
+        112
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Handel's Hallelujah Chorus: fast repeated notes, big leaps and sixteenths.",
+      "required": [
+        {
+          "interval_min": 8,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        24,
+        24
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

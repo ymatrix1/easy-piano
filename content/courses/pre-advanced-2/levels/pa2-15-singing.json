@@ -1,0 +1,27 @@
+{
+  "id": "pa2-15-singing",
+  "title": "str:level.pa2.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pa2-singing-etude",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-singing-etude",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-singing-etude",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

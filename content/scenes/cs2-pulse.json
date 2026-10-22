@@ -1,0 +1,104 @@
+{
+  "id": "cs2-pulse",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.cs2.pulse.1"
+    },
+    {
+      "at": 3.0,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 3.0,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 3.0,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 3.5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 3.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 3.5,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 4.0,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 4.0,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 4.0,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 9,
+      "prompt": "your_turn"
+    }
+  ]
+}

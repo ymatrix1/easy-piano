@@ -1,0 +1,214 @@
+{
+  "course": "lead-sheet-3",
+  "nodes": [
+    {
+      "id": "key-d",
+      "kind": "lesson",
+      "title": "str:node.ls3.key-d",
+      "icon": "note",
+      "levels": [
+        "ls3-01-key-d"
+      ],
+      "next": [
+        "skip"
+      ]
+    },
+    {
+      "id": "skip",
+      "kind": "song",
+      "title": "str:node.ls3.skip",
+      "icon": "play",
+      "levels": [
+        "ls3-02-skip"
+      ],
+      "next": [
+        "key-a"
+      ],
+      "songs": {
+        "default": "skip-to-my-lou",
+        "folk_world": "skip-to-my-lou"
+      }
+    },
+    {
+      "id": "key-a",
+      "kind": "lesson",
+      "title": "str:node.ls3.key-a",
+      "icon": "note",
+      "levels": [
+        "ls3-03-key-a"
+      ],
+      "next": [
+        "sunny-hill"
+      ]
+    },
+    {
+      "id": "sunny-hill",
+      "kind": "song",
+      "title": "str:node.ls3.sunny-hill",
+      "icon": "play",
+      "levels": [
+        "ls3-04-sunny-hill"
+      ],
+      "next": [
+        "bm"
+      ],
+      "songs": {
+        "default": "ls3-a-tune",
+        "originals_pop": "ls3-a-tune"
+      }
+    },
+    {
+      "id": "bm",
+      "kind": "lesson",
+      "title": "str:node.ls3.bm",
+      "icon": "note",
+      "levels": [
+        "ls3-05-bm"
+      ],
+      "next": [
+        "evening-ballad"
+      ]
+    },
+    {
+      "id": "evening-ballad",
+      "kind": "song",
+      "title": "str:node.ls3.evening-ballad",
+      "icon": "play",
+      "levels": [
+        "ls3-06-evening-ballad"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "ls3-bm-ballad",
+        "originals_pop": "ls3-bm-ballad"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.ls3.gate-1",
+      "icon": "star",
+      "levels": [
+        "ls3-07-gate-skip",
+        "ls3-08-gate-sunny-hill",
+        "ls3-09-gate-ballad"
+      ],
+      "next": [
+        "broken-85"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "broken-85",
+      "kind": "lesson",
+      "title": "str:node.ls3.broken-85",
+      "icon": "note",
+      "levels": [
+        "ls3-10-broken-1585"
+      ],
+      "next": [
+        "oh-dear"
+      ]
+    },
+    {
+      "id": "oh-dear",
+      "kind": "song",
+      "title": "str:node.ls3.oh-dear",
+      "icon": "play",
+      "levels": [
+        "ls3-11-oh-dear"
+      ],
+      "next": [
+        "broken-35"
+      ],
+      "songs": {
+        "default": "oh-dear-what-can-the-matter-be",
+        "folk_world": "oh-dear-what-can-the-matter-be"
+      }
+    },
+    {
+      "id": "broken-35",
+      "kind": "lesson",
+      "title": "str:node.ls3.broken-35",
+      "icon": "note",
+      "levels": [
+        "ls3-12-broken-1535"
+      ],
+      "next": [
+        "garden-waltz"
+      ]
+    },
+    {
+      "id": "garden-waltz",
+      "kind": "song",
+      "title": "str:node.ls3.garden-waltz",
+      "icon": "play",
+      "levels": [
+        "ls3-13-garden-waltz"
+      ],
+      "next": [
+        "third"
+      ],
+      "songs": {
+        "default": "ls3-d-waltz",
+        "originals_pop": "ls3-d-waltz"
+      }
+    },
+    {
+      "id": "third",
+      "kind": "lesson",
+      "title": "str:node.ls3.third",
+      "icon": "note",
+      "levels": [
+        "ls3-14-third-below"
+      ],
+      "next": [
+        "mix"
+      ]
+    },
+    {
+      "id": "mix",
+      "kind": "lesson",
+      "title": "str:node.ls3.mix",
+      "icon": "note",
+      "levels": [
+        "ls3-15-mix"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.ls3.gate-2",
+      "icon": "star",
+      "levels": [
+        "ls3-16-gate-oh-dear",
+        "ls3-17-gate-waltz",
+        "ls3-18-gate-mix"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.ls3.boss",
+      "icon": "play",
+      "levels": [
+        "ls3-19-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "beautiful-dreamer",
+        "classical": "beautiful-dreamer",
+        "folk_world": "beautiful-dreamer"
+      }
+    }
+  ]
+}

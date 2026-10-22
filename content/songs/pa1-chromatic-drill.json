@@ -1,0 +1,53 @@
+{
+  "id": "pa1-chromatic-drill",
+  "title": "Chromatic Fragments",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:8@1 C#4:8@3 D4:8@1 D#4:8@3 E4:8@1 F4:8@2 F#4:8@3 G4:8@1",
+      "LH": "C3:1@5"
+    },
+    {
+      "RH": "G4:8@1 F#4:8@3 F4:8@2 E4:8@1 D#4:8@3 D4:8@1 C#4:8@3 C4:8@1",
+      "LH": "G2:2@1 C3:2@5"
+    },
+    {
+      "RH": "G4:8@4 F#4:8@3 G4:8@4 F#4:8@3 G4:4@4 E4:4@2",
+      "LH": "C3:2@5 G2:2@1"
+    },
+    {
+      "RH": "C5:8@3 B4:8@1 A#4:8@3 A4:8@1 G#4:8@3 G4:8@1 F#4:8@3 F4:8@1",
+      "LH": "F2:2@5 G2:2@4"
+    },
+    {
+      "RH": "E4:8@1 F4:8@2 F#4:8@3 G4:8@4 E4:4@2 C4:4@1",
+      "LH": "C3:2@5 G2:2@1"
+    },
+    {
+      "RH": "D4:8@1 D#4:8@2 E4:8@3 F4:8@4 G4:4@5 D4:4@1",
+      "LH": "G2:1@5"
+    },
+    {
+      "RH": "A4:8@5 G#4:8@4 G4:8@3 F#4:8@2 F4:4@2 D4:4@1",
+      "LH": "G2:1@5"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      3,
+      6
+    ]
+  ]
+}

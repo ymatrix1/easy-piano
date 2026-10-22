@@ -1,0 +1,31 @@
+{
+  "id": "ls2-05-g7-inversion",
+  "title": "str:level.ls2.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls2-g7-inv"
+    },
+    {
+      "type": "wait",
+      "score": "ls2-g7-inv",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-g7-inv",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-g7-inv",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

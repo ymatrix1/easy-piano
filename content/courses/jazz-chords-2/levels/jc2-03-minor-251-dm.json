@@ -1,0 +1,27 @@
+{
+  "id": "jc2-03-minor-251-dm",
+  "title": "str:level.jc2.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "jc2-minor-251-dm",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-minor-251-dm",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-minor-251-dm",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

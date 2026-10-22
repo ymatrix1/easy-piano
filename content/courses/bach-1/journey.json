@@ -1,0 +1,187 @@
+{
+  "course": "bach-1",
+  "nodes": [
+    {
+      "id": "two-part",
+      "kind": "lesson",
+      "title": "str:node.b1.two-part",
+      "icon": "note",
+      "levels": [
+        "b1-01-two-part"
+      ],
+      "next": [
+        "imitation"
+      ]
+    },
+    {
+      "id": "imitation",
+      "kind": "lesson",
+      "title": "str:node.b1.imitation",
+      "icon": "note",
+      "levels": [
+        "b1-02-imitation"
+      ],
+      "next": [
+        "march"
+      ]
+    },
+    {
+      "id": "march",
+      "kind": "song",
+      "title": "str:node.b1.march",
+      "icon": "play",
+      "levels": [
+        "b1-03-march"
+      ],
+      "next": [
+        "sequences"
+      ],
+      "songs": {
+        "default": "march-in-d",
+        "classical": "march-in-d"
+      }
+    },
+    {
+      "id": "sequences",
+      "kind": "lesson",
+      "title": "str:node.b1.sequences",
+      "icon": "note",
+      "levels": [
+        "b1-04-sequences"
+      ],
+      "next": [
+        "motion"
+      ]
+    },
+    {
+      "id": "motion",
+      "kind": "lesson",
+      "title": "str:node.b1.motion",
+      "icon": "note",
+      "levels": [
+        "b1-05-motion"
+      ],
+      "next": [
+        "arioso"
+      ]
+    },
+    {
+      "id": "arioso",
+      "kind": "song",
+      "title": "str:node.b1.arioso",
+      "icon": "play",
+      "levels": [
+        "b1-06-arioso"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "arioso-bach",
+        "classical": "arioso-bach",
+        "hymns_spirituals": "arioso-bach"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.b1.gate-1",
+      "icon": "star",
+      "levels": [
+        "b1-07-gate-march",
+        "b1-08-gate-arioso",
+        "b1-09-gate-sequences"
+      ],
+      "next": [
+        "minuet-form"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "minuet-form",
+      "kind": "lesson",
+      "title": "str:node.b1.minuet-form",
+      "icon": "note",
+      "levels": [
+        "b1-10-minuet-form"
+      ],
+      "next": [
+        "runs"
+      ]
+    },
+    {
+      "id": "runs",
+      "kind": "lesson",
+      "title": "str:node.b1.runs",
+      "icon": "note",
+      "levels": [
+        "b1-11-runs"
+      ],
+      "next": [
+        "jesu-joy"
+      ]
+    },
+    {
+      "id": "jesu-joy",
+      "kind": "song",
+      "title": "str:node.b1.jesu-joy",
+      "icon": "play",
+      "levels": [
+        "b1-12-jesu-joy"
+      ],
+      "next": [
+        "invention"
+      ],
+      "songs": {
+        "default": "jesu-joy",
+        "classical": "jesu-joy",
+        "hymns_spirituals": "jesu-joy"
+      }
+    },
+    {
+      "id": "invention",
+      "kind": "song",
+      "title": "str:node.b1.invention",
+      "icon": "play",
+      "levels": [
+        "b1-13-invention"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "b1-mini-invention",
+        "classical": "b1-mini-invention"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.b1.gate-2",
+      "icon": "star",
+      "levels": [
+        "b1-14-gate-jesu",
+        "b1-15-gate-invention",
+        "b1-16-gate-runs"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.b1.boss",
+      "icon": "play",
+      "levels": [
+        "b1-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "minuet-in-g-two-voice",
+        "classical": "minuet-in-g-two-voice"
+      }
+    }
+  ]
+}

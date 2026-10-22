@@ -1,0 +1,38 @@
+{
+  "id": "i3-03-chords",
+  "title": "str:level.i3.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i3-chords"
+    },
+    {
+      "type": "wait",
+      "score": "i3-chord-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-chord-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-chord-drill",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-chord-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

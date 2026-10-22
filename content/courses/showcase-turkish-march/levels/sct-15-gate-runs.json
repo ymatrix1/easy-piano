@@ -1,0 +1,14 @@
+{
+  "id": "sct-15-gate-runs",
+  "title": "str:level.sct.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sct-run-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

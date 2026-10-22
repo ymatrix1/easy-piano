@@ -1,0 +1,45 @@
+{
+  "id": "i3-a-minor-drill",
+  "title": "A Minor Steps",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "A4:4@1 B4:4@2 C5:4@3 D5:4@4"
+    },
+    {
+      "RH": "E5:2@5 C5:2@3"
+    },
+    {
+      "RH": "D5:4@4 C5:4@3 B4:4@2 A4:4@1"
+    },
+    {
+      "RH": "A4:1@1"
+    },
+    {
+      "RH": "E4:4@1 F4:4@2 G#4:4@3 A4:4@4"
+    },
+    {
+      "RH": "B4:2@5 G#4:2@3"
+    },
+    {
+      "RH": "A4:4@4 G#4:4@3 F4:4@2 E4:4@1"
+    },
+    {
+      "RH": "A4:1@4"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

@@ -1,0 +1,323 @@
+{
+  "course": "pop-chords-1",
+  "nodes": [
+    {
+      "node": "triad",
+      "new_skill": "A triad is root, third and fifth: play C, E and G together with fingers 1, 3 and 5.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        64,
+        76
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "g-chord",
+      "new_skill": "The G chord (B, D, G) sits right next to C: move the hand one step and keep the shape.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "B3",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        78
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "am-f",
+      "new_skill": "Am (A, C, E) and F (A, C, F) share the A and C under your thumb and second finger.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "A3",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        78
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "progression",
+      "new_skill": "The four-chord loop C, G, Am, F, the backbone of countless pop songs.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        70,
+        82
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "kumbaya",
+      "new_skill": "A folk song accompanied with RH chords on the four-chord set.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        74,
+        86
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "root-bass",
+      "new_skill": "Left hand root notes under right hand chords.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "G2",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        78
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: chords in the right hand across three songs.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        74,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "rhythm",
+      "new_skill": "Chord rhythms: quarter strums and an eighth-note pulse.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        10,
+        10
+      ],
+      "bpm": [
+        70,
+        82
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "michael",
+      "new_skill": "A spiritual with right hand chord rhythm and left hand roots.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        78,
+        90
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "symbols",
+      "new_skill": "Read chord symbols (C, G, Am, F) and choose the right shape.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        70,
+        82
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "melody-lh",
+      "new_skill": "Melody in the right hand over chord blocks in the left.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        78
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "whole-world",
+      "new_skill": "A singalong with the melody on top and chords below.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        82,
+        94
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: chord accompaniment and melody with chords.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        78,
+        94
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: melody with left hand chord blocks over the four-chord loop.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ls2-17-boss",
+  "title": "str:level.ls2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "red-river-valley",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "red-river-valley",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "red-river-valley",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

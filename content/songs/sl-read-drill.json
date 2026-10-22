@@ -1,0 +1,61 @@
+{
+  "id": "sl-read-drill",
+  "title": "Reading C over E",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C/E\"} E4G4C5:1@125",
+      "LH": "E3:1@3",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C/E\"} E4G4C5:1@125",
+      "LH": "E3:1@3",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F\"} F4A4C5:1@135",
+      "LH": "F2:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F/A\"} A3C4F4:1@125",
+      "LH": "A2:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G\"} G3B3D4:1@135",
+      "LH": "G2:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      1,
+      4
+    ]
+  ]
+}

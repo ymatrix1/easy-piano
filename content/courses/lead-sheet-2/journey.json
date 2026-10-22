@@ -1,0 +1,184 @@
+{
+  "course": "lead-sheet-2",
+  "nodes": [
+    {
+      "id": "g-chords",
+      "kind": "lesson",
+      "title": "str:node.ls2.g-chords",
+      "icon": "note",
+      "levels": [
+        "ls2-01-g-chords"
+      ],
+      "next": [
+        "d-em"
+      ]
+    },
+    {
+      "id": "d-em",
+      "kind": "lesson",
+      "title": "str:node.ls2.d-em",
+      "icon": "note",
+      "levels": [
+        "ls2-02-d-em"
+      ],
+      "next": [
+        "polly"
+      ]
+    },
+    {
+      "id": "polly",
+      "kind": "song",
+      "title": "str:node.ls2.polly",
+      "icon": "play",
+      "levels": [
+        "ls2-03-polly-wolly-doodle"
+      ],
+      "next": [
+        "dm"
+      ],
+      "songs": {
+        "default": "polly-wolly-doodle",
+        "folk_world": "polly-wolly-doodle"
+      }
+    },
+    {
+      "id": "dm",
+      "kind": "lesson",
+      "title": "str:node.ls2.dm",
+      "icon": "note",
+      "levels": [
+        "ls2-04-dm"
+      ],
+      "next": [
+        "g7-inv"
+      ]
+    },
+    {
+      "id": "g7-inv",
+      "kind": "lesson",
+      "title": "str:node.ls2.g7-inv",
+      "icon": "note",
+      "levels": [
+        "ls2-05-g7-inversion"
+      ],
+      "next": [
+        "buffalo"
+      ]
+    },
+    {
+      "id": "buffalo",
+      "kind": "song",
+      "title": "str:node.ls2.buffalo",
+      "icon": "play",
+      "levels": [
+        "ls2-06-buffalo-gals"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "buffalo-gals",
+        "folk_world": "buffalo-gals"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.ls2.gate-1",
+      "icon": "star",
+      "levels": [
+        "ls2-07-gate-polly",
+        "ls2-08-gate-buffalo",
+        "ls2-09-gate-dm"
+      ],
+      "next": [
+        "waltz"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "waltz",
+      "kind": "lesson",
+      "title": "str:node.ls2.waltz",
+      "icon": "note",
+      "levels": [
+        "ls2-10-waltz"
+      ],
+      "next": [
+        "key-f"
+      ]
+    },
+    {
+      "id": "key-f",
+      "kind": "lesson",
+      "title": "str:node.ls2.key-f",
+      "icon": "note",
+      "levels": [
+        "ls2-11-key-of-f"
+      ],
+      "next": [
+        "hilltop"
+      ]
+    },
+    {
+      "id": "hilltop",
+      "kind": "song",
+      "title": "str:node.ls2.hilltop",
+      "icon": "play",
+      "levels": [
+        "ls2-12-hilltop"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "ls2-f-tune",
+        "originals_pop": "ls2-f-tune"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.ls2.gate-2",
+      "icon": "star",
+      "levels": [
+        "ls2-13-gate-hilltop",
+        "ls2-14-gate-bright-f",
+        "ls2-15-gate-smooth"
+      ],
+      "next": [
+        "red-river"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "red-river",
+      "kind": "song",
+      "title": "str:node.ls2.red-river",
+      "icon": "play",
+      "levels": [
+        "ls2-16-red-river-valley"
+      ],
+      "next": [
+        "boss"
+      ],
+      "songs": {
+        "default": "red-river-valley",
+        "folk_world": "red-river-valley"
+      }
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.ls2.boss",
+      "icon": "play",
+      "levels": [
+        "ls2-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "red-river-valley"
+      }
+    }
+  ]
+}

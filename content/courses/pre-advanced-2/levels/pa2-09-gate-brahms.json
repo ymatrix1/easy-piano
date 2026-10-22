@@ -1,0 +1,14 @@
+{
+  "id": "pa2-09-gate-brahms",
+  "title": "str:level.pa2.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "brahms-waltz-op39-15",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

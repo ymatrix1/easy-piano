@@ -1,0 +1,181 @@
+{
+  "course": "lead-sheet-1",
+  "nodes": [
+    {
+      "id": "lead-sheet",
+      "kind": "lesson",
+      "title": "str:node.ls1.lead-sheet",
+      "icon": "note",
+      "levels": [
+        "ls1-01-lead-sheet"
+      ],
+      "next": [
+        "c-g7"
+      ]
+    },
+    {
+      "id": "c-g7",
+      "kind": "lesson",
+      "title": "str:node.ls1.c-g7",
+      "icon": "note",
+      "levels": [
+        "ls1-02-c-g7"
+      ],
+      "next": [
+        "yankee-doodle"
+      ]
+    },
+    {
+      "id": "yankee-doodle",
+      "kind": "song",
+      "title": "str:node.ls1.yankee-doodle",
+      "icon": "play",
+      "levels": [
+        "ls1-03-yankee-doodle"
+      ],
+      "next": [
+        "f-chord"
+      ],
+      "songs": {
+        "default": "yankee-doodle",
+        "folk_world": "yankee-doodle"
+      }
+    },
+    {
+      "id": "f-chord",
+      "kind": "lesson",
+      "title": "str:node.ls1.f-chord",
+      "icon": "note",
+      "levels": [
+        "ls1-04-f-chord"
+      ],
+      "next": [
+        "beats"
+      ]
+    },
+    {
+      "id": "beats",
+      "kind": "lesson",
+      "title": "str:node.ls1.beats",
+      "icon": "note",
+      "levels": [
+        "ls1-05-beats"
+      ],
+      "next": [
+        "this-old-man"
+      ]
+    },
+    {
+      "id": "this-old-man",
+      "kind": "song",
+      "title": "str:node.ls1.this-old-man",
+      "icon": "play",
+      "levels": [
+        "ls1-06-this-old-man"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "this-old-man",
+        "folk_world": "this-old-man"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.ls1.gate-1",
+      "icon": "star",
+      "levels": [
+        "ls1-07-gate-yankee-doodle",
+        "ls1-08-gate-this-old-man",
+        "ls1-09-gate-oh-susanna"
+      ],
+      "next": [
+        "am-chord"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "am-chord",
+      "kind": "lesson",
+      "title": "str:node.ls1.am-chord",
+      "icon": "note",
+      "levels": [
+        "ls1-10-am-chord"
+      ],
+      "next": [
+        "pickups"
+      ]
+    },
+    {
+      "id": "pickups",
+      "kind": "lesson",
+      "title": "str:node.ls1.pickups",
+      "icon": "note",
+      "levels": [
+        "ls1-11-pickups"
+      ],
+      "next": [
+        "saints"
+      ]
+    },
+    {
+      "id": "saints",
+      "kind": "song",
+      "title": "str:node.ls1.saints",
+      "icon": "play",
+      "levels": [
+        "ls1-12-saints"
+      ],
+      "next": [
+        "mid-bar"
+      ],
+      "songs": {
+        "default": "when-the-saints",
+        "hymns_spirituals": "when-the-saints"
+      }
+    },
+    {
+      "id": "mid-bar",
+      "kind": "lesson",
+      "title": "str:node.ls1.mid-bar",
+      "icon": "note",
+      "levels": [
+        "ls1-13-mid-bar"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.ls1.gate-2",
+      "icon": "star",
+      "levels": [
+        "ls1-14-gate-this-old-man-2",
+        "ls1-15-gate-saints",
+        "ls1-16-gate-mid-bar"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.ls1.boss",
+      "icon": "play",
+      "levels": [
+        "ls1-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "home-on-the-range",
+        "folk_world": "home-on-the-range"
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "ls3-06-evening-ballad",
+  "title": "str:level.ls3.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ls3-bm-ballad",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-bm-ballad",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "ls3-bm-ballad",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-bm-ballad",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-bm-ballad",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

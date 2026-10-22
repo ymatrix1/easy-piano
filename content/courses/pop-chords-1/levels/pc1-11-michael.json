@@ -1,0 +1,47 @@
+{
+  "id": "pc1-11-michael",
+  "title": "str:level.pc1.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "michael-row-the-boat-ashore",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "michael-row-the-boat-ashore",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "michael-row-the-boat-ashore",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "michael-row-the-boat-ashore",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "michael-row-the-boat-ashore",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "michael-row-the-boat-ashore",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}
