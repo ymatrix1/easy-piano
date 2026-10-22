@@ -49,9 +49,21 @@ def test_bpm_counts_the_time_signature_beat():
         mk.bpm(score(), "4/4")
 
 
-def test_two_voices_in_one_hand_are_refused():
-    with pytest.raises(Unsupported, match="two voices"):
-        mk.song(1, "T", score(tempo=(96, "quarter"), voices=True))
+def test_two_voices_in_one_hand_are_accepted():
+    s = mk.song(1, "T", score(tempo=(96, "quarter"), voices=True))
+    assert s["bars"][0]["RH"] == "C5:4 D5:4 E5:4 C5:4"
+    assert s["bars"][0]["RH2"] == "C4:4 D4:4 E4:4 C4:4"
+
+
+def test_three_voices_in_one_hand_are_refused():
+    s = score(tempo=(96, "quarter"))
+    m = s.parts[0].getElementsByClass(m21.stream.Measure)[0]
+    for _ in range(3):
+        v = m21.stream.Voice()
+        v.append(m21.note.Note("C4", quarterLength=4))
+        m.insert(0, v)
+    with pytest.raises(Unsupported, match="three or more voices"):
+        mk.song(1, "T", s)
 
 
 def test_song_carries_provenance_and_the_us_restriction():

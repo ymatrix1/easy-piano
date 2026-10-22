@@ -83,7 +83,13 @@
           "RH": {
             "type": "string"
           },
+          "RH2": {
+            "type": "string"
+          },
           "LH": {
+            "type": "string"
+          },
+          "LH2": {
             "type": "string"
           },
           "ACC": {

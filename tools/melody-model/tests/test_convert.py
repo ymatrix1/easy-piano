@@ -20,7 +20,7 @@ CHORD_FINGERING = re.compile(r"((?:[A-G][#b]?\d){2,}:[\d.]+)@\d+")
 
 
 def hands_only(bars, chord_fingering=True):
-    out = [{h: " ".join(b[h].split()) for h in ("RH", "LH") if h in b} for b in bars]
+    out = [{h: " ".join(b[h].split()) for h in ("RH", "LH", "RH2", "LH2") if h in b} for b in bars]
     if not chord_fingering:  # MusicXML import drops chord fingering (see convert.py)
         out = [{h: CHORD_FINGERING.sub(r"\1", s) for h, s in b.items()} for b in out]
     return out
@@ -84,3 +84,19 @@ def test_abc_multi_tune_file():
         "RH": "r:2 r:8 D4:8"
     }  # anacrusis padded with leading rests (greedy, longest first)
     assert jig["bars"][1] == {"RH": "G4:4 A4:8 B4:4 G4:8"}
+
+
+def test_two_voices_round_trip():
+    song = {
+        "title": "Two Voices",
+        "composer": "Test",
+        "time": "4/4",
+        "key": "C",
+        "bars": [
+            {"RH": "E4:4 F4:4 G4:4 A4:4", "RH2": "C4:1", "LH": "C3:1"},
+            {"RH": "s:2 G4:2", "RH2": "E4:1", "LH": "C3:1"},
+        ],
+    }
+    score = convert.song_to_score(song)
+    back = convert.convert_score(score, key="C")
+    assert back["bars"] == song["bars"]

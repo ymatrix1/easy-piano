@@ -18,7 +18,7 @@ pub struct Song {
     pub bpm: f64,
     pub time: String,
     pub key: String,
-    /// One entry per bar: hand ("RH" / "LH") to bar string.
+    /// One entry per bar: hand ("RH" / "LH" / "RH2" / "LH2") to bar string.
     pub bars: Vec<BTreeMap<String, String>>,
     /// Critical sections as [first_bar, last_bar_exclusive].
     #[serde(default)]
@@ -73,9 +73,12 @@ pub const GENERATOR_METHODS: [&str; 6] = [
 
 /// Licenses we can redistribute (content-and-licensing rule).
 pub const ALLOWED_LICENSES: [&str; 4] = ["CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "public-domain"];
+/// `RH2` and `LH2` are second voices for the hands.
 /// `ACC`, `DRUMS`, `BASS`, `PAD` and `CHOIR` are backing parts: played by the app,
 /// never graded.
-const HANDS: [&str; 7] = ["RH", "LH", "ACC", "DRUMS", "BASS", "PAD", "CHOIR"];
+const HANDS: [&str; 9] = [
+    "RH", "LH", "RH2", "LH2", "ACC", "DRUMS", "BASS", "PAD", "CHOIR",
+];
 /// Drum kit pieces a `DRUMS` part may use, as General MIDI percussion numbers:
 /// kick 36 (C2), snare 38 (D2), closed hi-hat 42 (F#2), open hi-hat 46 (A#2),
 /// crash 49 (C#3).
@@ -101,7 +104,7 @@ pub enum Part {
 impl Part {
     fn from_key(key: &str) -> Part {
         match key {
-            "LH" => Part::Left,
+            "LH" | "LH2" => Part::Left,
             "ACC" => Part::Acc,
             "DRUMS" => Part::Drums,
             "BASS" => Part::Bass,
@@ -136,6 +139,7 @@ pub struct TimedNote {
     pub part: Part,
     pub finger: Option<u8>,
     pub bar: usize,
+    pub voice: u8,
 }
 
 impl Song {
@@ -241,6 +245,12 @@ impl Song {
             for hand in bar.keys().filter(|h| !HANDS.contains(&h.as_str())) {
                 errs.push(format!("bar {}: unknown hand `{hand}`", i + 1));
             }
+            if bar.contains_key("RH2") && !bar.contains_key("RH") {
+                errs.push(format!("bar {}: RH2 without RH", i + 1));
+            }
+            if bar.contains_key("LH2") && !bar.contains_key("LH") {
+                errs.push(format!("bar {}: LH2 without LH", i + 1));
+            }
             for (hand, text) in bar {
                 match parse_bar(text) {
                     Err(e) => errs.push(format!("bar {} {hand}: {e}", i + 1)),
@@ -279,6 +289,63 @@ impl Song {
                 }
             }
         }
+        for (v1_key, v2_key) in [("RH", "RH2"), ("LH", "LH2")] {
+            let mut v1_notes = Vec::new();
+            let mut v2_notes = Vec::new();
+            for (i, bar) in self.bars.iter().enumerate() {
+                let bar_start = (i as u32 * num) as f64;
+                if let Some(text) = bar.get(v1_key) {
+                    if let Ok(events) = parse_bar(text) {
+                        let mut t = Dur::ZERO;
+                        for e in &events {
+                            if let Event::Note { pitches, dur, .. } = e {
+                                for &p in pitches {
+                                    v1_notes.push((
+                                        p,
+                                        bar_start + t.beats(unit),
+                                        dur.beats(unit),
+                                        i,
+                                    ));
+                                }
+                            }
+                            t = t.add(e.dur());
+                        }
+                    }
+                }
+                if let Some(text) = bar.get(v2_key) {
+                    if let Ok(events) = parse_bar(text) {
+                        let mut t = Dur::ZERO;
+                        for e in &events {
+                            if let Event::Note { pitches, dur, .. } = e {
+                                for &p in pitches {
+                                    v2_notes.push((
+                                        p,
+                                        bar_start + t.beats(unit),
+                                        dur.beats(unit),
+                                        i,
+                                    ));
+                                }
+                            }
+                            t = t.add(e.dur());
+                        }
+                    }
+                }
+            }
+            for &(p1, s1, d1, b1) in &v1_notes {
+                for &(p2, s2, d2, b2) in &v2_notes {
+                    if p1 == p2 && (s1 - s2).abs() > 1e-6 {
+                        let e1 = s1 + d1;
+                        let e2 = s2 + d2;
+                        if (s1 < s2 && s2 < e1 - 1e-6) || (s2 < s1 && s1 < e2 - 1e-6) {
+                            let bar_num = b1.max(b2) + 1;
+                            errs.push(format!(
+                                "bar {bar_num}: pitch {p1} overlaps between voice 1 and voice 2"
+                            ));
+                        }
+                    }
+                }
+            }
+        }
         for [a, b] in &self.critical {
             if a >= b || *b > self.bars.len() {
                 errs.push(format!(
@@ -298,6 +365,7 @@ impl Song {
             let bar_start = (i as u32 * num) as f64;
             for (hand, text) in bar {
                 let part = Part::from_key(hand);
+                let voice = if hand.ends_with('2') { 2 } else { 1 };
                 let mut t = Dur::ZERO;
                 for e in parse_bar(text).unwrap_or_default() {
                     if let Event::Note {
@@ -320,6 +388,7 @@ impl Song {
                                 part,
                                 finger: fingers.get(k).copied(),
                                 bar: i,
+                                voice,
                             });
                         }
                     }
@@ -376,6 +445,59 @@ mod tests {
         );
         let c4 = t.iter().find(|n| n.pitch == 60).unwrap();
         assert_eq!((c4.start_beat, c4.beats, c4.finger), (2.0, 2.0, Some(1)));
+        assert_eq!(c4.voice, 1);
+    }
+
+    #[test]
+    fn two_voices_per_hand_and_spacers() {
+        let s = Song::from_json(&song(
+            r#"[{"RH":"E4:4 F4:4 G4:4 A4:4","RH2":"C4:1","LH":"C3:1"},{"RH":"s:2 G4:2","RH2":"E4:1","LH":"C3:1"}]"#,
+            "",
+        ))
+        .unwrap();
+        assert_eq!(s.validate(), Vec::<String>::new());
+        let t = s.timeline();
+        let rh2: Vec<&TimedNote> = t.iter().filter(|n| n.voice == 2).collect();
+        assert_eq!(rh2.len(), 2);
+        assert_eq!(rh2[0].pitch, 60); // C4
+        assert_eq!(rh2[0].part, Part::Right);
+        assert!(!rh2[0].left_hand);
+        assert_eq!(rh2[1].pitch, 64); // E4
+    }
+
+    #[test]
+    fn voice_2_without_voice_1_is_rejected() {
+        let s = Song::from_json(&song(r#"[{"RH2":"C4:1","LH":"C3:1"}]"#, "")).unwrap();
+        let errs = s.validate();
+        assert!(errs.iter().any(|e| e.contains("RH2 without RH")));
+
+        let s2 = Song::from_json(&song(r#"[{"RH":"C4:1","LH2":"C3:1"}]"#, "")).unwrap();
+        let errs2 = s2.validate();
+        assert!(errs2.iter().any(|e| e.contains("LH2 without LH")));
+    }
+
+    #[test]
+    fn unison_in_two_voices_is_allowed() {
+        let s = Song::from_json(&song(
+            r#"[{"RH":"C4:4 D4:4 E4:4 F4:4","RH2":"C4:1","LH":"C3:1"}]"#,
+            "",
+        ))
+        .unwrap();
+        assert_eq!(s.validate(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn overlap_in_two_voices_with_different_onsets_is_rejected() {
+        // Voice 1 holds C4 for half note at beat 0; voice 2 strikes C4 at beat 1
+        let s = Song::from_json(&song(
+            r#"[{"RH":"C4:2 D4:2","RH2":"r:4 C4:4 r:2","LH":"C3:1"}]"#,
+            "",
+        ))
+        .unwrap();
+        let errs = s.validate();
+        assert!(errs
+            .iter()
+            .any(|e| e.contains("pitch 60 overlaps between voice 1 and voice 2")));
     }
 
     #[test]

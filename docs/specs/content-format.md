@@ -98,7 +98,7 @@ Each bar's hand string must sum to the time signature (lint error otherwise). Di
 
 ## Two voices per hand (`RH2`, `LH2`)
 
-Status: specified, not implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.
+Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.
 
 A bar may hold a second voice for either hand. It is written like any hand string:
 
