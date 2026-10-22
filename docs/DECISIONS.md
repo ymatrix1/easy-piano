@@ -368,3 +368,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
   - **Rights, for the user to decide:** this departs from `.agents/rules/content-and-licensing.md`, which needs an explicit CC0/PD/CC-BY/CC-BY-SA licence on the arrangement; the dataset gives none, and `license: public-domain` is our reading, not the author's grant. The public repository and the web build reach US users while the composition is protected there; `restricted_in` is metadata only until the app filters by region (bean piano-7os5). Accepting D33 accepts both points. Asking the author for a licence: bean piano-xmga.
   - New optional song field `restricted_in` (schema, core `Song`, lint), `content-format.md`; Methods off the ramp in `difficulty.md`; skill specs not required for Methods nodes.
   - Book 1 gaps (Nos. 12, 25, 32, 33): bean piano-zn4c. No fingering in these songs (the dataset has none).
+
+### D35. Methods live in their own library, reached from one card on the Learn tab
+
+- **Status:** proposed
+- **Context:** D33 put Mikrokosmos I as a numbered course card in a `methods` section of the Learn tab. Mikrokosmos alone has six books, and more methods are planned; a flat list of course cards buries the main path and suggests a required order.
+- **Decision:** Group method books by method in `content/methods.json`; the Learn tab shows the main path and one Methods card that opens a library (one card per method) and a method page (books as sections, Continue). Method courses are unnumbered, never locked, and restricted pieces show locked with the reason. Spec: [methods](specs/methods.md).
+- **Why:** Keeps the main path short and clearly sequential, scales to many methods and books, and gives each method room for its own description and progress.
+- **Alternatives:** A fourth bottom-nav tab "Methods" (more visible, but spends navigation on optional content); keep course cards in a section (does not scale); one course per method with books as journey nodes (loses per-book progress and order).
+- **Impact:** New `content/methods.json`, course field `method`, lint rules, two new screens, strings; off-ramp rule moves from section to `method`. Implementation: bean piano-d72v.
