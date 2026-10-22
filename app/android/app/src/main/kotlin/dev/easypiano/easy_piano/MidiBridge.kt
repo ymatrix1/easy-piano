@@ -82,28 +82,8 @@ class MidiBridge(context: Context) : EventChannel.StreamHandler {
     private inner class NoteReceiver : MidiReceiver() {
         override fun onSend(data: ByteArray, offset: Int, count: Int, timestamp: Long) {
             val ms = (if (timestamp == 0L) System.nanoTime() else timestamp) / 1e6
-            var i = offset
-            val end = offset + count
-            while (i < end) {
-                val status = data[i].toInt() and 0xFF
-                if (status < 0x80) {
-                    i++
-                    continue
-                }
-                val kind = status and 0xF0
-                val len = when (kind) {
-                    0xC0, 0xD0 -> 2
-                    0xF0 -> 1
-                    else -> 3
-                }
-                if (i + len > end) break
-                if ((kind == 0x90 || kind == 0x80) && len == 3) {
-                    val pitch = data[i + 1].toInt() and 0x7F
-                    val vel = data[i + 2].toInt() and 0x7F
-                    val on = kind == 0x90 && vel > 0
-                    main.post { sink?.success(listOf("n", pitch, vel, if (on) 1 else 0, ms)) }
-                }
-                i += len
+            for (n in MidiParser.notes(data, offset, count)) {
+                main.post { sink?.success(listOf("n", n.pitch, n.velocity, if (n.on) 1 else 0, ms)) }
             }
         }
     }

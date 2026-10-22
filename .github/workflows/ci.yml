@@ -185,6 +185,10 @@ jobs:
           grep -q 'lib/arm64-v8a/libflutter.so' apk.txt
           grep -q 'lib/arm64-v8a/libeasy_piano_bridge.so' apk.txt
 
+      - name: Kotlin unit tests
+        working-directory: app/android
+        run: ./gradlew :app:testDebugUnitTest
+
       - uses: actions/upload-artifact@v7
         with:
           name: easy-piano-arm64-apk
