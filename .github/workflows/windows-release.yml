@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -69,7 +69,7 @@ jobs:
           Copy-Item packaging/windows/README.txt "$bundle/README.txt"
           Compress-Archive -Path "$bundle/*" -DestinationPath app/build/windows/easy-piano-windows-x64.zip -CompressionLevel Optimal
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: easy-piano-windows-x64
           path: app/build/windows/easy-piano-windows-x64.zip
@@ -84,7 +84,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: easy-piano-windows-x64
           path: release-assets
