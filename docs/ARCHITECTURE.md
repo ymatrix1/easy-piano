@@ -78,7 +78,7 @@ CI (`ci.yml`, job `android`) builds the arm64 APK, checks its native libraries, 
 
 | Target | MIDI | Mic | Notes |
 |---|---|---|---|
-| Android | `android.media.midi` (USB + BLE) via channel | `AudioRecord` via channel, Dart detector ([D32](DECISIONS.md)) | min SDK 26 |
+| Android | `android.media.midi` (USB + BLE) via channel | `AudioRecord` via channel, Dart detector ([D33](DECISIONS.md)) | min SDK 26 |
 | iOS/iPadOS | CoreMIDI (USB + BLE) | AVAudioEngine | |
 | Web (Chrome/Edge/Firefox) | Web MIDI | AudioWorklet | COOP/COEP headers for wasm threads |
 | Web Safari | none → mic/touch | AudioWorklet | banner |

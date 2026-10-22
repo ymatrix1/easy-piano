@@ -63,6 +63,7 @@ Skills live in `.agents/skills/`; `.claude/skills` points there.
 - `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` in `core/` and `audio/` (audio runs the web parity test)
 - `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings` in `tools/content-cli/`, then `cargo run -- lint ../../content`
 - In `tools/melody-model/` (uv): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest`. Training deps: `uv sync --extra train` (not in CI). Fix formatting with `uv run ruff format`.
+- In `tools/mic-model/` (uv, CUDA torch wheels, not in CI): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest` (needs node for the web parity tests). Data setup: `uv run python fetch_pianos.py`, `pianos.py extract`, `fetch_maestro.py`
 - `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze` and `flutter test` in `app/` when app code changes
 - `./gradlew :app:testDebugUnitTest` in `app/android/` when Kotlin code changes (needs one `flutter build apk` first to create the wrapper)
 - Before running or building the app: `python tools/sync_content.py` (copies `content/` into app assets), and `flutter_rust_bridge_codegen generate` after changing `app/rust/src/api/`

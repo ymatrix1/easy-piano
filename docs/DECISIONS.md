@@ -342,7 +342,22 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Alternatives:** Reference only (colour); cross or shake at the play bar; error buzz; combo counter.
 - **Impact:** UI in `app/lib/practice/play_feedback.dart`; events from `core` (`Feedback`, `Timing`, `ON_TIME_US`). Bean piano-uv0e.
 
-### D32. Android MIDI and mic through a platform channel, detector stays in Dart (proposed)
+
+### D32. Web mic input: trained note model (ONNX in a Web Worker) ahead of the DSP detector
+
+- **Status:** proposed
+- **Context:** D29's DSP detector is at diminishing returns: students report typing and voices heard as notes and occasional double notes, and each rule cost recall. The reference app uses a small score-informed CNN. Basic Pitch is instrument-agnostic and transcribes voices; MAESTRO-trained public weights carry CC BY-NC-SA terms.
+- **Decision:** On web, run our own small onset+frame CNN (88 keys, 16 kHz, 21k parameters, 102 KiB ONNX, `app/web/models/piano_net.onnx`) with onnxruntime-web 1.30.0 (MIT; the same sha256-pinned wasm build practice mode stages in `app/web/melody/vendor/`, one download for both) in a Web Worker, fed by the existing mic worklet chunks. The practice screen's `expected` notes still pick the thresholds. The D29 Dart detector stays as the fallback: it listens until the model is ready and takes over when the worker errors, fails to load or falls behind. `?mic=dsp` or `easy_piano.mic_model=off` turns the model off. Training used synthetic piano from CC0/CC-BY sample sets (Salamander, FreePats KW) **and 18 h of MAESTRO v3.0.0 recordings (CC BY-NC-SA 4.0)**, with the YDP grand held out.
+- **Why:** Held-out scores beat the DSP detector on every set ([research](research/mic-input.md#trained-model-2026-10-22-bean-piano-goe3)): score-informed F1 0.983 vs 0.935 (synthetic, 3 pianos; level with DSP, 0.975 vs 0.974, on the held-out YDP piano), 0.80 vs 0.42 (real MAESTRO test audio), 0.80 vs 0.45 (piano under TTS speech); false notes on typing/chatter/hum/knocks 2.5 vs 57.5 per minute, on speech 8 vs 142; no phantom pass in 360 (DSP 1); computed report delay 76 ms vs 83 ms. Per-frame compute is about 1 ms (16 ms budget) in desktop Chrome.
+- **Alternatives:** Keep tuning the DSP rules (recall already traded for noise); Basic Pitch (~20 MB runtime, voices, 2 s windows); retrain on synthetic data only (`train.py --no-maestro`, not run: accuracy unknown, removes the NC licence question); a larger 37k model (a little better on chords and real audio, about 3 ms per frame, too slow for weak phones); run the model on the main thread or in Rust `core` (jank on the UI thread; no native audio thread yet).
+- **Impact:**
+  - **Licence, for the user to decide:** the shipped weights were trained partly on CC BY-NC-SA 4.0 audio. The user said "we can use MAESTRO, i dont mind" on 2026-10-22, but `.agents/rules/content-and-licensing.md` rejects NC-SA material and D21 only excepts training data for the melody model. Accepting this decision accepts the NC-SA exposure of the weights; rejecting it means retraining without MAESTRO (or replacing the weights) before release.
+  - **Evidence limits:** all audio is synthetic or Disklavier concert recordings plus eSpeak speech. No real student piano, room, phone microphone or phone CPU was tested (bean piano-m4r9). The octave "ghost" below a low note remains in blind mode.
+  - Download: 102 KiB model plus the 13.5 MB wasm, loaded after the mic starts; no extra build step (practice mode's `fetch_ort.py` stages the runtime). The model file is committed; publishing it as a release asset with a sha256 manifest, like `melody-model-v1`, would let the weights be replaced or withdrawn without git history (open option, relevant to the licence point above).
+  - Deviation from rule 7 (OQ11) gets larger: decoding and thresholds run in JS in a worker, not in Rust `core`; grading stays in `core`.
+  - New `tools/mic-model/` (uv, CUDA torch, not in CI): data generator, training, ONNX export, evaluation, parity tests. Beans: piano-goe3 (this), piano-m4r9 (real devices).
+
+### D33. Android MIDI and mic through a platform channel, detector stays in Dart (proposed)
 
 - **Status:** proposed
 - **Context:** Native builds used stub inputs; web has Web MIDI and a getUserMedia + Dart `NoteDetector` mic path (D29). The phone is the main target. The plan named `android.media.midi` and Oboe.

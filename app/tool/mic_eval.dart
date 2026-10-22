@@ -108,7 +108,17 @@ void main(List<String> args) {
     }
     if (verbose && misses.isNotEmpty) print('${entry.key}: $misses');
     final split = info['split'] ?? 'tune';
-    for (final g in ['all', '${info['condition']}', '${info['kind']}']) {
+    final piano = info['piano'] as String?;
+    for (final g in [
+      'all',
+      '${info['condition']}',
+      '${info['kind']}',
+      // Noise clips have no piano; per-piano and per-variant rows are piano-only.
+      if (piano != null && piano != 'none') ...[
+        'piano=$piano',
+        'variant=${info['variant']}',
+      ],
+    ]) {
       groups.putIfAbsent('$split:$g', _Score.new)
         ..tp += tp
         ..fp += ons.length - tp
@@ -140,6 +150,16 @@ void main(List<String> args) {
       'noise',
       'melody',
       'two-hands',
+      'real',
+      'speech',
+      'mixed',
+      'piano=salamander',
+      'piano=kw',
+      'piano=ydp',
+      'variant=plain',
+      'variant=detune',
+      'variant=inharm',
+      'variant=speaker',
     ]) {
       final s = groups['$split:$g'];
       if (s != null) print(s.row(g));

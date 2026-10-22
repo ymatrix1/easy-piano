@@ -204,6 +204,16 @@ void main() {
       expect(mic.running, isFalse);
     });
 
+    test('blind and model flags: DSP only on native', () {
+      final mic = createMicInput();
+      expect(mic.blind, isFalse);
+      mic.blind = true;
+      expect(mic.blind, isTrue);
+      mic.modelEnabled = true;
+      expect(mic.modelActive, isFalse);
+      expect(mic.modelFrameMs, isNull);
+    });
+
     test('devices() lists id and label', () async {
       methods['micDevices'] = (_) => [
         {'id': 7, 'label': 'Built-in microphone'},

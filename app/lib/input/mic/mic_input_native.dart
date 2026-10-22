@@ -58,8 +58,32 @@ class _NativeMicInput implements MicInput {
   @override
   set expected(Set<int> pitches) {
     _expected = pitches;
-    _detector?.expected = pitches;
+    _detector?.expected = _effectiveExpected;
   }
+
+  bool _blind = false;
+
+  @override
+  bool get blind => _blind;
+
+  @override
+  set blind(bool value) {
+    _blind = value;
+    _detector?.expected = _effectiveExpected;
+  }
+
+  /// The notes the detector sees: none while [blind].
+  Set<int> get _effectiveExpected => _blind ? const {} : _expected;
+
+  /// The trained model is web-only for now; native uses the DSP detector.
+  @override
+  bool modelEnabled = false;
+
+  @override
+  bool get modelActive => false;
+
+  @override
+  double? get modelFrameMs => null;
 
   @override
   double now() => nativeClock.now();
@@ -181,7 +205,7 @@ class _NativeMicInput implements MicInput {
       bytes.lengthInBytes ~/ 4,
     );
     final det = _detector ??= NoteDetector(sampleRate: rate)
-      ..expected = _expected;
+      ..expected = _effectiveExpected;
     _sampleRate = rate;
     _frames += samples.length;
     // The chunk ended at endMs; its last sample is frame _frames.
