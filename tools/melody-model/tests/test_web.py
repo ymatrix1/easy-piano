@@ -76,6 +76,38 @@ GEN_SPECS = [
         "hands": "BOTH",
         "patterns": [{"rhythm": "8"}, {"chord": True, "hand": "LH"}],
     },
+    # practice mode (content practice-pack): taught-set masks
+    {
+        "time": "4/4",
+        "key": "C",
+        "bars": 8,
+        "range_lo": "C4",
+        "range_hi": "G4",
+        "durs": ["2", "4"],
+        "hands": "RH",
+        "mask": {
+            "pitches": {"RH": ["C4", "D4", "E4", "G4"]},
+            "max_leap": 2,
+            "poly": {"RH": 1},
+            "rest_durs": ["2"],
+            "start": {"RH": "G4"},
+        },
+    },
+    {
+        "time": "4/4",
+        "key": "C",
+        "bars": 8,
+        "range_lo": "C3",
+        "range_hi": "G3",
+        "durs": ["1", "2", "4", "4.", "8"],
+        "hands": "LH",
+        "mask": {
+            "pitches": {"LH": ["C3", "D3", "E3", "F3", "G3"]},
+            "max_leap": 7,
+            "poly": {"LH": 3},
+            "rest_durs": ["2", "4"],
+        },
+    },
 ]
 
 
@@ -149,9 +181,21 @@ def test_masked_generation_obeys_spec(node_run):
             for h in hands:
                 events = parse_hand(bar[h])
                 assert abs(sum(dur_beats(e.dur, den) for e in events) - num) < 1e-9  # exact bar fill
+                mask = spec.get("mask")
                 for e in events:
-                    assert e.dur in spec["durs"]
+                    assert e.dur in (mask["rest_durs"] if mask and e.is_rest else spec["durs"])
+                    if mask:
+                        assert {p.name for p in e.pitches} <= set(mask["pitches"][h]) and len(
+                            e.pitches
+                        ) <= mask["poly"][h]
+                        assert not e.tie and not e.fingers
                     assert all(lo <= p.midi <= hi for p in e.pitches)
                     assert [p.midi for p in e.pitches] == sorted(
                         {p.midi for p in e.pitches}
                     )  # chords low to high
+        if spec.get("mask"):
+            h = hands[0]
+            line = [e.pitches[0].midi for bar in song["bars"] for e in parse_hand(bar[h]) if not e.is_rest]
+            start = [parse_hand(f"{p}:4")[0].pitches[0].midi for p in spec["mask"].get("start", {}).values()]
+            line = start + line  # streaming: the leap rule holds across chunks
+            assert all(abs(a - b) <= spec["mask"]["max_leap"] for a, b in zip(line, line[1:]))

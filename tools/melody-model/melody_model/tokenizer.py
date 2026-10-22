@@ -97,7 +97,7 @@ KINDS = (
     + tuple(f"SEC_{s}" for s in SECTIONS)
     + ("FIM_PRE", "FIM_SUF", "FIM_MID")
 )
-PITCHES = (NONE,) + tuple(f"{letter}{a}{o}" for o in OCTAVES for letter in LETTERS for a in ACCIDENTALS)
+PITCHES = (NONE,) + tuple(f"{n}{a}{o}" for o in OCTAVES for n in LETTERS for a in ACCIDENTALS)
 DURS = (NONE,) + DURATIONS
 FINGERS = (NONE, "1", "2", "3", "4", "5")
 

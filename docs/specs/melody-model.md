@@ -150,6 +150,7 @@ Masks at each step:
 | Pitch | `NOTE` within `RANGE_LO…RANGE_HI`; `CHORD` above the last chord pitch, ≤ 12 semitones over the root, ≤ 4 notes |
 | CHORD/TIE | only after `NOTE`/`CHORD`; no `REST` after `TIE`; no `TIE` at the tune's last slot; chord fingering all or none |
 | Unused fields | `<none>` |
+| Taught set (optional `spec.mask`, practice mode) | `NOTE` pitches = taught spellings of the hand within `max_leap` semitones of its previous note; `CHORD` ≤ taught polyphony; `REST` only with taught rest values; no `TIE`, no fingering; a dead-end candidate is dropped, not the batch ([practice-mode.md](practice-mode.md)) |
 
 Candidates are ranked by mean log probability under the masked distributions. Chrome desktop timings: [melody-browser.md](../research/melody-browser.md).
 

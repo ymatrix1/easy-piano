@@ -9,9 +9,12 @@ import 'home_page.dart' show Progress;
 
 /// Practice tab: training modes outside the course path.
 class PracticeTab extends StatelessWidget {
-  const PracticeTab({super.key, required this.onFreePlay});
+  const PracticeTab({super.key, required this.onFreePlay, this.onEndless});
 
   final VoidCallback onFreePlay;
+
+  /// Endless generated practice (docs/specs/practice-mode.md); null = soon.
+  final VoidCallback? onEndless;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +25,13 @@ class PracticeTab extends StatelessWidget {
         Icons.piano_rounded,
         GameTone.blue,
         onFreePlay as VoidCallback?,
+      ),
+      (
+        AppLocalizations.of(context).endlessPractice,
+        AppLocalizations.of(context).endlessPracticeDesc,
+        Icons.auto_awesome,
+        GameTone.gold,
+        onEndless,
       ),
       (
         AppLocalizations.of(context).sightReading,

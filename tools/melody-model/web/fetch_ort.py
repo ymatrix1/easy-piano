@@ -1,6 +1,9 @@
 """Download onnxruntime-web into web/vendor/ (git-ignored) and check each file's sha256.
 
-    python tools/melody-model/web/fetch_ort.py
+    python tools/melody-model/web/fetch_ort.py [--dest <dir>]
+
+`--dest app/web/melody/vendor --wasm-only` stages the app's practice-mode runtime: the WebGPU build is left
+out (the app uses the wasm backend, and its 25.5 MiB asyncify wasm exceeds Cloudflare Pages' 25 MiB file limit).
 
 The demo imports only these vendored files and points `ort.env.wasm.wasmPaths` at vendor/, so nothing
 executable comes from a CDN at run time. Keep VERSION equal to the onnxruntime pin in pyproject.toml (`export` extra)
@@ -23,13 +26,16 @@ FILES = {
     "ort-wasm-simd-threaded.asyncify.mjs": "3d1c85995364bb643302fc6fd877a0c3ba5ae72401815e0f24828a53d9191e28",
     "ort-wasm-simd-threaded.asyncify.wasm": "39f9f0894d478800487ed9f7dbe92618498db320cf55c8e3d89adff8dce658da",
 }
+WEBGPU = {"ort.webgpu.min.mjs", "ort-wasm-simd-threaded.asyncify.mjs", "ort-wasm-simd-threaded.asyncify.wasm"}
 VENDOR = Path(__file__).resolve().parent / "vendor"
 
 
 def main() -> int:
-    VENDOR.mkdir(exist_ok=True)
-    for name, want in FILES.items():
-        path = VENDOR / name
+    dest = Path(sys.argv[sys.argv.index("--dest") + 1]) if "--dest" in sys.argv else VENDOR
+    dest.mkdir(parents=True, exist_ok=True)
+    files = {k: v for k, v in FILES.items() if "--wasm-only" not in sys.argv or k not in WEBGPU}
+    for name, want in files.items():
+        path = dest / name
         data = path.read_bytes() if path.exists() else urllib.request.urlopen(URL + name, timeout=60).read()
         got = hashlib.sha256(data).hexdigest()
         if got != want:
