@@ -41,9 +41,9 @@ def main(ckpt):
     syn = SETS["synthetic fixtures (3 pianos)"]
     groups, cache = ev.run_eval(model, syn, "score", base)
     best = (ev.objective(groups), base)
-    grid = product((0.25, 0.35, 0.5), (0.6, 0.75, 0.9), (2, 3, 4), (0.15, 0.3, 0.5))
-    for thr_exp, thr_unexp, hold, frame_thr in grid:
-        q = replace(base, thr_exp=thr_exp, thr_unexp=thr_unexp, hold=hold, frame_thr=frame_thr)
+    grid = product((0.25, 0.35, 0.5), (2, 3, 4), (0.15, 0.3, 0.5))  # thr_unexp stays at its default (0.8)
+    for thr_exp, hold, frame_thr in grid:
+        q = replace(base, thr_exp=thr_exp, hold=hold, frame_thr=frame_thr)
         g, _ = ev.run_eval(model, syn, "score", q, cache)
         best = max(best, (ev.objective(g), q), key=lambda x: x[0])
     p = best[1]

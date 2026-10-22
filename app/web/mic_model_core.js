@@ -156,7 +156,7 @@ export class Frontend {
 // ---- decoder: onset/frame probabilities -> note-ons -------------------------
 export const DEFAULT_PARAMS = {
   thrExp: 0.25, // onset prob needed for an expected key
-  thrUnexp: 0.9, // ... for any other key
+  thrUnexp: 0.8, // ... for any other key
   frameThr: 0.5, // frame prob an unexpected start must sustain
   hold: 3, // frames an unexpected start is held (persistence)
   thrBlind: 0.6, // onset prob when nothing is expected (free play, calibration)

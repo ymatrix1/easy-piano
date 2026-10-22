@@ -32,7 +32,7 @@ HERE = Path(__file__).parent
 @dataclass(frozen=True)
 class Params:
     thr_exp: float = 0.4  # onset prob needed for an expected key
-    thr_unexp: float = 0.8  # ... for any other key
+    thr_unexp: float = 0.8  # ... for any other key (the reference app's value; a sweep on synthetic clips preferred 0.9, but quiet real mics need this)
     frame_thr: float = 0.5  # frame prob an unexpected start must sustain
     hold: int = 3  # frames an unexpected start is held (persistence)
     thr_blind: float = 0.6  # onset prob when nothing is expected (free play, calibration)

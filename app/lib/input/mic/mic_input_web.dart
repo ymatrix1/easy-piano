@@ -66,7 +66,25 @@ class _WebMicInput implements MicInput {
   @override
   set expected(Set<int> pitches) {
     _expected = pitches;
-    _detector?.expected = pitches;
+    _applyExpected();
+  }
+
+  bool _blind = false;
+
+  @override
+  bool get blind => _blind;
+
+  @override
+  set blind(bool value) {
+    _blind = value;
+    _applyExpected();
+  }
+
+  /// The notes the detectors see: none while [blind].
+  Set<int> get _effectiveExpected => _blind ? const {} : _expected;
+
+  void _applyExpected() {
+    _detector?.expected = _effectiveExpected;
     _postExpected();
   }
 
@@ -75,7 +93,7 @@ class _WebMicInput implements MicInput {
     if (w == null) return;
     final msg = JSObject()
       ..['type'] = 'expected'.toJS
-      ..['pitches'] = [for (final p in _expected) p.toJS].toJS;
+      ..['pitches'] = [for (final p in _effectiveExpected) p.toJS].toJS;
     w.postMessage(msg);
   }
 
@@ -274,7 +292,7 @@ class _WebMicInput implements MicInput {
       node.connect(sink);
       sink.connect(ctx.destination);
       _detector = NoteDetector(sampleRate: ctx.sampleRate)
-        ..expected = _expected;
+        ..expected = _effectiveExpected;
       _baseFrame = null;
       _clockOffset = double.infinity;
       node.port.onmessage = _onChunk.toJS;
@@ -308,12 +326,17 @@ class _WebMicInput implements MicInput {
     _envelope = math.max(peak, _envelope * 0.9995);
     final worker = _worker;
     if (_modelReady && worker != null) {
-      // The model hears the raw signal (trained on mic-like gains and noise).
+      // Same slow gain as the DSP path (target peak 0.3, at most 8x, no gate):
+      // a quiet laptop mic would otherwise sit below what the model was
+      // trained on (recall at -60 dBFS: 0.61 without, 0.84 with).
+      final modelGain = math.min(8.0, 0.3 / math.max(_envelope, 0.01));
       _modelBaseFrame ??= frame;
       final msg = JSObject()
         ..['type'] = 'chunk'.toJS
         ..['sampleRate'] = ctx.sampleRate.toJS
-        ..['samples'] = Float32List.fromList(samples).toJS;
+        ..['samples'] = Float32List.fromList([
+          for (final s in samples) s * modelGain,
+        ]).toJS;
       worker.postMessage(msg);
       return;
     }

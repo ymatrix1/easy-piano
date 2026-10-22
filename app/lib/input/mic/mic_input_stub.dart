@@ -52,6 +52,9 @@ class _UnsupportedMicInput implements MicInput {
   Set<int> expected = const {};
 
   @override
+  bool blind = false;
+
+  @override
   bool modelEnabled = false;
 
   @override

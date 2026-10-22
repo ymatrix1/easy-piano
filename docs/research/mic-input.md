@@ -198,7 +198,7 @@ Not used: VSCO-2 CE (CC0, orchestral library; its upright piano was not extracte
 - **Labels:** per 16 ms frame and 88 keys: onset (1 on the frame centred on the attack, its neighbours ignored) and frame (key down).
 - **Model** (`model.py`): 16 kHz audio, Hann 1024 / hop 256 STFT, 264 log-frequency bands (3 per semitone), a 7-channel harmonic stack (0.5 to 6th harmonic of each band), three time-symmetric conv layers (look-ahead 3 frames = 48 ms), five causal dilated temporal convs shared across keys, a small cross-key conv and onset/frame heads. The streaming form takes one new frame plus explicit state tensors and is **numerically identical to the training form** (`tests/test_model.py`), so ONNX inference is one cheap step per 16 ms. Shipped: widths 16/16/24/24, **20,842 parameters, 3.5 M multiply-adds per step, 102 KiB ONNX** (`app/web/models/piano_net.onnx`).
 - **Training** (`train.py`): AdamW, one-cycle learning rate 2e-3, 15,000 steps of 32 clips on an RTX 4070 SUPER (about 1 h); two sizes trained on the same batches. Validation: YDP and MAESTRO test clips. A first 111k-parameter model (12.8 M MAC per step) took **13-15 ms per frame in Chrome** (budget 16 ms) and was rejected; its step-10k checkpoint is only a reference.
-- **Decoder** (`mic_model_core.js`, mirrored in `eval_model.py`, parity-tested): score-informed like the DSP detector. An expected pitch fires at onset ≥ 0.25. Any other pitch needs ≥ 0.9, must still sound (frame head ≥ 0.5) at the end of a 3-frame hold, and is dropped when it sits an octave below a key that just fired or is expected (octave-ghost guard). With nothing expected (free play, calibration) it uses ≥ 0.6, a 3-frame hold and no guard. A key retriggers after 6 frames; it is released when its frame probability stays under 0.3 for 3 frames, or after 0.6 s. Parameters were swept **on the synthetic tune split only**; every other set below is held out from the sweep.
+- **Decoder** (`mic_model_core.js`, mirrored in `eval_model.py`, parity-tested): score-informed like the DSP detector. An expected pitch fires at onset ≥ 0.25. Any other pitch needs ≥ 0.8, must still sound (frame head ≥ 0.5) at the end of a 3-frame hold, and is dropped when it sits an octave below a key that just fired or is expected (octave-ghost guard). With nothing expected (free play, calibration) it uses ≥ 0.6, a 3-frame hold and no guard. A key retriggers after 6 frames; it is released when its frame probability stays under 0.3 for 3 frames, or after 0.6 s. Parameters were swept **on the synthetic tune split only**; every other set below is held out from the sweep. The one exception is the unexpected-note threshold, set to 0.8 by hand (see "Quiet mics" below; the sweep preferred 0.9).
 - **Scoring:** same rules as the DSP scorer (`app/tool/mic_eval.dart`): pitch match, onset within ±50 ms, each truth note once. `tools/mic-model/eval_model.py` is the Python port, `report.py` runs every set and mode, `compare.py` joins the results with the DSP output. Report delay is computed (frame completed plus look-ahead), not measured on a device.
 
 ### Results
@@ -209,19 +209,19 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 
 | Group | Notes | DSP P / R / F1 | model (shipped, 21k) P / R / F1 | model (larger, 37k) P / R / F1 |
 |---|---|---|---|---|
-| all | 360 | 0.929 / 0.942 / 0.935 | 0.989 / 0.992 / 0.990 | 0.986 / 0.992 / 0.989 |
-| single | 90 | 0.978 / 1.000 / 0.989 | 0.978 / 1.000 / 0.989 | 0.989 / 0.989 / 0.989 |
+| all | 360 | 0.929 / 0.942 / 0.935 | 0.975 / 0.992 / 0.983 | 0.981 / 0.992 / 0.986 |
+| single | 90 | 0.978 / 1.000 / 0.989 | 0.978 / 1.000 / 0.989 | 0.978 / 0.989 / 0.983 |
 | chord | 99 | 1.000 / 0.879 / 0.935 | 1.000 / 1.000 / 1.000 | 1.000 / 1.000 / 1.000 |
 | doubled | 45 | 1.000 / 0.956 / 0.977 | 0.977 / 0.933 / 0.955 | 1.000 / 0.956 / 0.977 |
-| melody | 126 | 0.992 / 0.944 / 0.967 | 0.992 / 1.000 / 0.996 | 0.984 / 1.000 / 0.992 |
-| piano=salamander | 120 | 1.000 / 0.925 / 0.961 | 0.983 / 0.983 / 0.983 | 1.000 / 0.992 / 0.996 |
-| piano=kw | 120 | 0.974 / 0.950 / 0.962 | 1.000 / 1.000 / 1.000 | 0.983 / 0.992 / 0.988 |
-| piano=ydp | 120 | 1.000 / 0.950 / 0.974 | 0.983 / 0.992 / 0.988 | 0.992 / 0.992 / 0.992 |
-| variant=plain | 216 | 0.995 / 0.926 / 0.959 | 0.995 / 1.000 / 0.998 | 0.986 / 1.000 / 0.993 |
-| variant=detune | 72 | 1.000 / 0.931 / 0.964 | 1.000 / 0.972 / 0.986 | 1.000 / 0.972 / 0.986 |
+| melody | 126 | 0.992 / 0.944 / 0.967 | 0.962 / 1.000 / 0.981 | 0.977 / 1.000 / 0.988 |
+| piano=salamander | 120 | 1.000 / 0.925 / 0.961 | 0.975 / 0.983 / 0.979 | 0.992 / 0.992 / 0.992 |
+| piano=kw | 120 | 0.974 / 0.950 / 0.962 | 1.000 / 1.000 / 1.000 | 0.975 / 0.992 / 0.983 |
+| piano=ydp | 120 | 1.000 / 0.950 / 0.974 | 0.960 / 0.992 / 0.975 | 0.992 / 0.992 / 0.992 |
+| variant=plain | 216 | 0.995 / 0.926 / 0.959 | 0.977 / 1.000 / 0.989 | 0.982 / 1.000 / 0.991 |
+| variant=detune | 72 | 1.000 / 0.931 / 0.964 | 1.000 / 0.972 / 0.986 | 0.986 / 0.972 / 0.979 |
 | variant=inharm | 36 | 0.947 / 1.000 / 0.973 | 1.000 / 1.000 / 1.000 | 1.000 / 1.000 / 1.000 |
 | variant=speaker | 36 | 1.000 / 1.000 / 1.000 | 0.921 / 0.972 / 0.946 | 1.000 / 0.972 / 0.986 |
-| noise: false notes/min | | 57.5 | 0.0 | 5.0 |
+| noise: false notes/min | | 57.5 | 2.5 | 5.0 |
 | report delay p50 / p95 (ms), all | | 83 / 108 | 76 / 90 | 76 / 87 |
 
 **synthetic fixtures (3 pianos), blind mode** (held-out test split)
@@ -240,9 +240,9 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 
 | Group | Notes | DSP P / R / F1 | model (shipped, 21k) P / R / F1 | model (larger, 37k) P / R / F1 |
 |---|---|---|---|---|
-| all | 360 | 0.878 / 0.719 / 0.791 | 0.974 / 0.819 / 0.890 | 0.985 / 0.889 / 0.934 |
-| noise: false notes/min | | 57.5 | 0.0 | 5.0 |
-| report delay p50 / p95 (ms), all | | 135 / 158 | 127 / 140 | 144 / 156 |
+| all | 360 | 0.878 / 0.719 / 0.791 | 0.966 / 0.867 / 0.914 | 0.979 / 0.897 / 0.936 |
+| noise: false notes/min | | 57.5 | 2.5 | 5.0 |
+| report delay p50 / p95 (ms), all | | 135 / 158 | 126 / 140 | 143 / 155 |
 | phantom passes (all) | | phantom 1/360 | phantom 0/360 | phantom 0/360 |
 
 **Real piano.** 24 held-out MAESTRO test files, one random 30 s excerpt each after the first minute, as is (`clean`) and through a fixed-seed room, EQ and noise chain (`room`). Dense concert repertoire (about 12 notes/s), much harder than beginner lessons; it measures acoustics, not beginner use.
@@ -251,9 +251,9 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 
 | Group | Notes | DSP P / R / F1 | model (shipped, 21k) P / R / F1 | model (larger, 37k) P / R / F1 |
 |---|---|---|---|---|
-| all | 17120 | 0.830 / 0.277 / 0.415 | 0.803 / 0.801 / 0.802 | 0.811 / 0.818 / 0.814 |
-| clean | 8560 | 0.836 / 0.311 / 0.453 | 0.811 / 0.826 / 0.818 | 0.821 / 0.843 / 0.832 |
-| room | 8560 | 0.821 / 0.243 / 0.375 | 0.794 / 0.777 / 0.785 | 0.801 / 0.792 / 0.796 |
+| all | 17120 | 0.830 / 0.277 / 0.415 | 0.799 / 0.801 / 0.800 | 0.809 / 0.818 / 0.813 |
+| clean | 8560 | 0.836 / 0.311 / 0.453 | 0.807 / 0.826 / 0.816 | 0.819 / 0.843 / 0.831 |
+| room | 8560 | 0.821 / 0.243 / 0.375 | 0.789 / 0.777 / 0.783 | 0.798 / 0.792 / 0.795 |
 | report delay p50 / p95 (ms), all | | 95 / 116 | 69 / 86 | 68 / 85 |
 
 **real piano (MAESTRO test excerpts), blind mode** (held-out test split)
@@ -271,9 +271,9 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 
 | Group | Notes | DSP P / R / F1 | model (shipped, 21k) P / R / F1 | model (larger, 37k) P / R / F1 |
 |---|---|---|---|---|
-| all | 105 | 0.182 / 0.752 / 0.293 | 0.662 / 0.971 / 0.788 | 0.687 / 0.981 / 0.808 |
-| mixed | 105 | 0.322 / 0.752 / 0.451 | 0.703 / 0.971 / 0.816 | 0.730 / 0.981 / 0.837 |
-| speech: false notes/min | | 141.8 | 6.8 | 6.8 |
+| all | 105 | 0.182 / 0.752 / 0.293 | 0.630 / 0.971 / 0.764 | 0.673 / 0.981 / 0.798 |
+| mixed | 105 | 0.322 / 0.752 / 0.451 | 0.675 / 0.971 / 0.797 | 0.730 / 0.981 / 0.837 |
+| speech: false notes/min | | 141.8 | 8.2 | 9.0 |
 | report delay p50 / p95 (ms), all | | 81 / 106 | 76 / 92 | 76 / 91 |
 
 **independent noise (eSpeak speech, alone and over piano), blind mode** (held-out test split)
@@ -287,13 +287,42 @@ DSP per piano and per variant is scored for the first time here. Fixtures were r
 
 **Compute.** `onnxruntime-web` single-thread wasm in a module Web Worker, desktop Chrome in the Claude desktop browser pane: **about 1 ms per 16 ms frame on average, 1.3-2.5 ms worst**. Version 1.27.0 gave 0.65-0.84 ms on the standalone test page and 0.76-0.84 ms inside the built app; the shipped version 1.30.0 (shared with practice mode) gave 0.96-1.07 ms on the standalone page only (`tools/mic-model/browser_check.py`); the built app was not re-run on 1.30.0. The worker output matches Python exactly on the clips compared (15/15 and 3/3 notes on 1.27.0, 15/15 on 1.30.0, equal times to the millisecond). **Not measured:** any phone or low-end device. The first load downloads the 13.5 MB wasm after the mic starts; the DSP detector listens until the model is ready. A worker that falls 40 frames behind real time, errors, or cannot load switches back to DSP.
 
+### Quiet mics, calibration and strictness (2026-10-22, after a first user report)
+
+First real use: calibration said "I didn't hear enough notes" while the panel showed correct notes, and play-along felt late. Causes found and fixed:
+
+- **Calibration judged every key as unexpected.** The practice screen keeps `expected` set to the lesson's notes while the setup panel is open; the student plays any key, so most presses took the strict path. `MicInput.blind` now makes both detectors ignore `expected` while the panel is open.
+- **No input gain.** The DSP path normalised a quiet mic (slow peak follower, target 0.3, at most 8x); the model got the raw signal. The same gain now runs in front of the model.
+- **Threshold for unexpected notes 0.9 → 0.8.** The reference app's score-informed decoder also keeps a separate, stricter threshold for unexpected notes with its own persistence (its numbers come from remote config and are not readable in the decompiled code). The sweep on synthetic clips preferred 0.9; real use disagrees, so 0.8 is set by hand. Cost: speech false notes 6.8 → 8.2 per minute.
+
+`tools/mic-model/level_sweep.py` (held-out `room` single/chord/melody fixtures scaled to a peak level, lesson expecting only C4):
+
+lesson expects C4, input scaled to a peak level, with and without the app's gain (cap 8x):
+| Peak (dBFS) | No gain: recall / precision | Gain 8x: recall / precision |
+|---|---|---|
+| -30 | 0.90 / 0.97 | 0.91 / 0.96 |
+| -40 | 0.89 / 0.97 | 0.91 / 0.96 |
+| -50 | 0.86 / 0.95 | 0.90 / 0.97 |
+| -60 | 0.79 / 0.94 | 0.88 / 0.96 |
+| -70 | 0.35 / 1.00 | 0.84 / 0.95 |
+
+threshold for unexpected notes (lesson expects C4, normal level) vs speech false notes (C-major expected):
+| thr_unexp | recall / precision | speech false notes/min |
+|---|---|---|
+| 0.9 | 0.85 / 0.97 | 6.8 |
+| 0.8 | 0.90 / 0.97 | 8.2 |
+| 0.7 | 0.90 / 0.98 | 13.5 |
+| 0.6 | 0.90 / 0.97 | 15.8 |
+
+Without the gain the model is nearly deaf at -70 dBFS (a distant laptop mic); with it recall stays at 0.84. A 20x gain cap hurt louder input, so the cap stays at the DSP value. **Not yet confirmed on the reporting user's setup**, and the lateness in play-along is not explained by these fixes (detected onset times are accurate in tests; a failed calibration leaves no latency offset, which would make hits look late).
+
 ### What the numbers say, and what they don't
 
-- Score-informed (the app's main mode) the model beats DSP on every set: synthetic F1 0.990 vs 0.935, real concert audio 0.80 vs 0.42, piano plus speech 0.82 vs 0.45. False notes on typing, chatter, hum and knocks fall from 57.5 to 0.0 per minute and on speech from 142 to 7 per minute; no phantom pass in 360 (DSP: 1).
+- Score-informed (the app's main mode) the model beats DSP on every set: synthetic F1 0.983 vs 0.935, real concert audio 0.80 vs 0.42, piano plus speech 0.80 vs 0.45. On the held-out YDP piano the two are level (0.975 vs 0.974: DSP has higher precision, the model higher recall). False notes on typing, chatter, hum and knocks fall from 57.5 to 2.5 per minute and on speech from 142 to 8 per minute; no phantom pass in 360 (DSP: 1).
 - Blind mode (nothing expected: calibration, free play) is better than DSP in precision and recall but reports notes later (124 ms vs 101 ms at p50) because unexpected notes are held for 3 frames.
 - Known failure: an **octave ghost** one octave below a real low note (a `kw` room C-E-G chord adds a C3) in blind mode; the guard removes it when notes are expected. An octave doubling is the weakest case for both detectors (score-informed recall 0.93 for the model, 0.96 for DSP).
 - The larger 37k model is a little better on chords and real audio and slower; it stays in the tables to show what the small one costs (about 0.01 F1 on synthetic, 0.01-0.03 on real).
-- The synthetic noise clips and the training noise share ideas (typing, formant speech, hum), so the **independent speech set is the honest noise number**: 7 false notes per minute, not 0.
+- The synthetic noise clips and the training noise share ideas (typing, formant speech, hum), so the **independent speech set is the honest noise number**: 8 false notes per minute, not 2.5.
 - Still unproven: a real student's piano and room, phone microphones and their processing, laptop speakers, a second instrument playing along, and phone compute. MAESTRO is concert-hall Disklavier audio, not a microphone in a living room.
 
 ## Implications

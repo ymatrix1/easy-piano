@@ -155,6 +155,8 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
   void initState() {
     super.initState();
     if (_mic.offsetMs != null) _cal = _Cal.done;
+    // Any key counts here; the lesson underneath still expects its own notes.
+    _mic.blind = true;
     _listen();
     _loadDevices();
     _meterTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
@@ -227,6 +229,7 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
     _beatTimer?.cancel();
     _meterTimer?.cancel();
     _sub?.cancel();
+    _mic.blind = false;
     super.dispose();
   }
 
@@ -335,15 +338,7 @@ class _MicSetupPanelState extends State<_MicSetupPanel> {
               color: _heard == null ? GameColors.textDim : GameColors.cyan,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            l.micQuietTip,
-            textAlign: TextAlign.center,
-            style: _body.copyWith(color: GameColors.textDim, fontSize: 14),
-          ),
-          const SizedBox(height: 18),
-          GameText(l.micCalibrateTitle, size: 16, upper: true),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           Text(
             status,
             textAlign: TextAlign.center,
