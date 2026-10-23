@@ -352,15 +352,14 @@ class _OuterTrailItemState extends State<_OuterTrailItem> {
     );
     if (widget.state == _State.current) marker = Bob(child: marker);
     // Stack, not IntrinsicHeight: the card animates its height when it
-    // expands. Keep the connector in the gutter, ending before the card's
-    // chamfered bottom-left corner even when its hover transform lifts it.
+    // expands.
     return Stack(
       children: [
-        if (!widget.last && !widget.expanded)
+        if (!widget.last)
           Positioned(
             left: 18,
             top: 58,
-            bottom: 16,
+            bottom: 4,
             width: 4,
             child: _FlowRail(
               color: widget.state == _State.locked
@@ -596,28 +595,35 @@ class _InnerTrail extends StatelessWidget {
         shape: chamfer(14, side: const BorderSide(color: GameColors.panelEdge)),
         color: GameColors.panel.withValues(alpha: 0.88),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        children: [
-          for (final (i, n) in nodes.indexed)
-            SlideIn(
-              delay: Duration(milliseconds: 40 * i),
-              offset: const Offset(-18, 0),
-              child: _SubmoduleRow(
-                index: i + 1,
-                title: repo.t(n.title),
-                kind: _kind(AppLocalizations.of(context), n.kind),
-                icon: _icon(n.kind),
-                tasks: n.levels.length,
-                stars: progress.nodeStars(n),
-                isNext: n == next,
-                first: i == 0,
-                last: i == nodes.length - 1,
-                accent: accent,
-                onTap: () => onNode(n),
-              ),
-            ),
-        ],
+      // ShapeDecoration paints the bevel but does not clip descendants. The
+      // hover wash is rectangular, so clip it to this same shape.
+      child: ClipPath(
+        clipper: ShapeBorderClipper(shape: chamfer(14)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            children: [
+              for (final (i, n) in nodes.indexed)
+                SlideIn(
+                  delay: Duration(milliseconds: 40 * i),
+                  offset: const Offset(-18, 0),
+                  child: _SubmoduleRow(
+                    index: i + 1,
+                    title: repo.t(n.title),
+                    kind: _kind(AppLocalizations.of(context), n.kind),
+                    icon: _icon(n.kind),
+                    tasks: n.levels.length,
+                    stars: progress.nodeStars(n),
+                    isNext: n == next,
+                    first: i == 0,
+                    last: i == nodes.length - 1,
+                    accent: accent,
+                    onTap: () => onNode(n),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
