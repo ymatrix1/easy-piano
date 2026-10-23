@@ -43,20 +43,13 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 2));
 
-    // Scroll down so the Methods card is fully centered in view.
-    final methodsCardFinder = find.text('METHODS');
-    await tester.scrollUntilVisible(
-      methodsCardFinder,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    // Drag an extra 250px up so it is well clear of the bottom navigation bar.
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -250));
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(methodsCardFinder, findsOneWidget);
+    // In Courses view: Methods are separate from the course trail (no METHODS card in trail).
+    expect(find.text('METHODS'), findsNothing);
 
-    // Tap Methods card to switch to Methods Catalog.
-    await tester.tap(methodsCardFinder);
+    // Switch to Methods using the top switcher.
+    final methodsSwitchFinder = find.text('Methods');
+    expect(methodsSwitchFinder, findsOneWidget);
+    await tester.tap(methodsSwitchFinder);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.byType(MethodsCatalogView), findsOneWidget);

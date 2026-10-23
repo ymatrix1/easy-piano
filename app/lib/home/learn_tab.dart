@@ -39,8 +39,10 @@ class _LearnTabState extends State<LearnTab> {
     if (widget.progress.next case (final c, _)) c.id,
   };
   late final Set<String> _openSections = {
-    for (final s in widget.repo.sections) s.id,
-    if (widget.progress.next case (final c, _)) c.section,
+    if (widget.progress.next case (final c, _))
+      c.section
+    else if (widget.repo.sections.isNotEmpty)
+      widget.repo.sections.first.id,
   };
 
   static const _tones = [
@@ -243,22 +245,6 @@ class _LearnTabState extends State<LearnTab> {
                           );
                         },
                       ),
-                  if (repo.methods.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    SlideIn(
-                      delay: Duration(
-                        milliseconds: 80 + 70 * (moduleNo < 8 ? moduleNo : 8),
-                      ),
-                      child: _MethodsCard(
-                        repo: repo,
-                        progress: progress,
-                        onTap: () {
-                          Sfx.play(SfxKind.tab);
-                          setState(() => _view = LearnView.methods);
-                        },
-                      ),
-                    ),
-                  ],
                 ],
               ],
             ),
@@ -1009,170 +995,6 @@ class _SubmoduleRow extends StatelessWidget {
   }
 }
 
-class _MethodsCard extends StatefulWidget {
-  const _MethodsCard({
-    required this.repo,
-    required this.progress,
-    required this.onTap,
-  });
-
-  final ContentRepo repo;
-  final Progress progress;
-  final VoidCallback onTap;
-
-  @override
-  State<_MethodsCard> createState() => _MethodsCardState();
-}
-
-class _MethodsCardState extends State<_MethodsCard> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final count = widget.repo.methods.length;
-    final stars = widget.progress.totalMethodStars;
-    final maxStars = widget.progress.totalMethodMaxStars;
-
-    return Semantics(
-      button: true,
-      label: l10n.methodsCardTitle,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            transform: Matrix4.translationValues(0, _hover ? -3 : 0, 0),
-            decoration: ShapeDecoration(
-              shape: chamfer(
-                20,
-                side: BorderSide(
-                  color: _hover
-                      ? GameColors.cyan.withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.16),
-                  width: 1.2,
-                ),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _hover ? const Color(0xFF382A7C) : const Color(0xFF2A1F5D),
-                  const Color(0xFF1E1442),
-                  const Color(0xFF140D30),
-                ],
-              ),
-              shadows: [
-                BoxShadow(
-                  color: _hover
-                      ? const Color(0xFF7B3CFF).withValues(alpha: 0.4)
-                      : const Color(0xFF7B3CFF).withValues(alpha: 0.25),
-                  blurRadius: _hover ? 28 : 24,
-                  offset: Offset(0, _hover ? 5 : 8),
-                ),
-              ],
-            ),
-            child: ClipPath(
-              clipper: ShapeBorderClipper(shape: chamfer(20)),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: -10,
-                    bottom: -15,
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      size: 140,
-                      color: Colors.white.withValues(alpha: 0.05),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: ShapeDecoration(
-                            shape: chamfer(12),
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.menu_book_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.methodsCardTitle.toUpperCase(),
-                                style: const TextStyle(
-                                  fontFamily: 'Audiowide',
-                                  fontSize: 17,
-                                  color: Colors.white,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.methodsCardSubtitle(count),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: Color(0xFFFFD54F),
-                              size: 22,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              maxStars > 0 ? '$stars / $maxStars' : '$stars',
-                              style: const TextStyle(
-                                fontFamily: 'Audiowide',
-                                fontSize: 14,
-                                color: Color(0xFFFFD54F),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _LearnModeSwitch extends StatelessWidget {
   const _LearnModeSwitch({
     required this.selected,
@@ -1189,15 +1011,17 @@ class _LearnModeSwitch extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: const BoxConstraints(maxWidth: 340),
         child: Container(
-          height: 42,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: const Color(0xFF130C36).withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            boxShadow: [
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF130C36).withValues(alpha: 0.95),
+            shape: chamfer(
+              14,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
+            ),
+            shadows: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 16,
@@ -1215,7 +1039,7 @@ class _LearnModeSwitch extends StatelessWidget {
                   onTap: () => onSelect(LearnView.courses),
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               Expanded(
                 child: _SwitchItem(
                   label: l10n.learnSwitchMethods,
@@ -1233,7 +1057,7 @@ class _LearnModeSwitch extends StatelessWidget {
   }
 }
 
-class _SwitchItem extends StatefulWidget {
+class _SwitchItem extends StatelessWidget {
   const _SwitchItem({
     required this.label,
     required this.icon,
@@ -1249,38 +1073,34 @@ class _SwitchItem extends StatefulWidget {
   final String? badge;
 
   @override
-  State<_SwitchItem> createState() => _SwitchItemState();
-}
-
-class _SwitchItemState extends State<_SwitchItem> {
-  bool _hover = false;
-
-  @override
   Widget build(BuildContext context) {
-    final active = widget.active;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: () {
-          Sfx.play(SfxKind.tab);
-          widget.onTap();
-        },
+    return Pressable(
+      onTap: active ? null : onTap,
+      semanticLabel: label,
+      sound: SfxKind.tab,
+      burst: false,
+      lift: 1,
+      builder: (p, hover) => Transform.scale(
+        scale: 1 - 0.03 * p,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+          curve: Curves.easeOutCubic,
+          decoration: ShapeDecoration(
+            shape: chamfer(
+              10,
+              side: active
+                  ? BorderSide(color: Colors.white.withValues(alpha: 0.35))
+                  : BorderSide.none,
+            ),
             gradient: active
-                ? const LinearGradient(
-                    colors: [Color(0xFF28E6FF), Color(0xFF0088FF)],
-                  )
-                : null,
-            color: !active && _hover
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.transparent,
-            boxShadow: active
+                ? GameTone.cyan.gradient
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: hover ? 0.08 : 0),
+                      Colors.white.withValues(alpha: hover ? 0.04 : 0),
+                    ],
+                  ),
+            shadows: active
                 ? [
                     BoxShadow(
                       color: GameColors.cyan.withValues(alpha: 0.35),
@@ -1289,59 +1109,63 @@ class _SwitchItemState extends State<_SwitchItem> {
                   ]
                 : null,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.icon,
-                size: 15,
-                color: active
-                    ? GameColors.ink
-                    : (_hover ? Colors.white : GameColors.textDim),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Audiowide',
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
-                    color: active
-                        ? GameColors.ink
-                        : (_hover ? Colors.white : GameColors.textDim),
-                  ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: active
+                      ? GameColors.ink
+                      : (hover ? Colors.white : GameColors.textDim),
                 ),
-              ),
-              if (widget.badge != null) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 1.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: active
-                        ? Colors.black.withValues(alpha: 0.18)
-                        : Colors.white12,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                const SizedBox(width: 6),
+                Flexible(
                   child: Text(
-                    widget.badge!,
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'Audiowide',
-                      fontSize: 9.5,
-                      color: active ? GameColors.ink : const Color(0xFFFFD54F),
+                      fontSize: 11.5,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                      color: active
+                          ? GameColors.ink
+                          : (hover ? Colors.white : GameColors.textDim),
                     ),
                   ),
                 ),
+                if (badge != null) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: ShapeDecoration(
+                      shape: chamfer(4),
+                      color: active
+                          ? Colors.black.withValues(alpha: 0.2)
+                          : Colors.white12,
+                    ),
+                    child: Text(
+                      badge!,
+                      style: TextStyle(
+                        fontFamily: 'Audiowide',
+                        fontSize: 9.5,
+                        color: active
+                            ? GameColors.ink
+                            : const Color(0xFFFFD54F),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
