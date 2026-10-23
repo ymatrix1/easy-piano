@@ -5,7 +5,7 @@ status: completed
 type: feature
 priority: normal
 created_at: 2026-10-23T18:45:25Z
-updated_at: 2026-10-23T19:19:30Z
+updated_at: 2026-10-23T19:25:20Z
 parent: piano-eeut
 ---
 
@@ -26,3 +26,5 @@ Out of Scope: Persisting learner progress.
 Added URL-reflecting GoRouter history for tabs and nested screens; direct routes for nodes, lessons, practice screens, and tools; navigation spec and browser URL tests.
 
 UI repair: restored the arena backdrop and themed back control on the direct course-node task screen; added a regression assertion for its deep background.
+
+Deep-link exit fix: lesson Exit now returns to the previous in-app route when available, and falls back to /learn when the lesson URL was opened directly.
