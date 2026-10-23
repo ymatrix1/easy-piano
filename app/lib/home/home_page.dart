@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
@@ -9,7 +10,6 @@ import '../practice/free_play_page.dart';
 import '../practice/generated/practice_service.dart';
 import '../practice/generated/stream_practice_page.dart';
 import '../practice/generated/tune_generator.dart';
-import '../practice/level_page.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
@@ -26,6 +26,7 @@ class HomePage extends StatefulWidget {
     required this.repo,
     required this.midi,
     required this.spikes,
+    this.tab = 'learn',
   });
 
   final ContentRepo repo;
@@ -33,6 +34,7 @@ class HomePage extends StatefulWidget {
 
   /// Opens the Phase 0 MIDI latency spike page (developer tools).
   final WidgetBuilder spikes;
+  final String tab;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -40,32 +42,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _stars = <String, int>{}; // level id → best stars
-  int _tab = 0;
+  int get _tab => const ['learn', 'practice', 'profile'].indexOf(widget.tab);
 
   Future<void> _playLevel(String levelId, [int initialStageIndex = 0]) async {
     final level = widget.repo.levels[levelId];
     if (level == null) return;
-    final stars = await Navigator.of(context).push<int>(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 380),
-        pageBuilder: (_, _, _) => LevelPage(
-          repo: widget.repo,
-          level: level,
-          midi: widget.midi,
-          initialStageIndex: initialStageIndex,
-        ),
-        transitionsBuilder: (_, a, _, child) => FadeTransition(
-          opacity: a,
-          child: ScaleTransition(
-            scale: Tween(
-              begin: 1.06,
-              end: 1.0,
-            ).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
-            child: child,
-          ),
-        ),
-      ),
-    );
+    final stars = await context.push<int>('/lesson/$levelId');
     if (stars != null && stars > (_stars[levelId] ?? 0)) {
       setState(() => _stars[levelId] = stars);
     }
@@ -76,8 +58,7 @@ class _HomePageState extends State<HomePage> {
       ? null
       : createTuneGenerator(widget.repo.melodyManifest!);
 
-  void _push(WidgetBuilder b) =>
-      Navigator.of(context).push(MaterialPageRoute(builder: b));
+  void _push(WidgetBuilder b) => context.push('/tool', extra: b);
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +137,11 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
+              _NavBar(
+                index: _tab,
+                onSelect: (i) =>
+                    context.go('/${const ['learn', 'practice', 'profile'][i]}'),
+              ),
             ],
           ),
         ),

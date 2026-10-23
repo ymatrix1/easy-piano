@@ -3,10 +3,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:go_router/go_router.dart';
 
 import 'content/content_repo.dart';
 import 'home/home_page.dart';
 import 'input/midi_input.dart';
+import 'practice/level_page.dart';
 import 'l10n/app_locale.dart';
 import 'l10n/app_localizations.dart';
 import 'src/rust/api/notation.dart' as core;
@@ -47,6 +49,45 @@ class _EasyPianoAppState extends State<EasyPianoApp>
   /// One MIDI connection shared by every screen.
   final MidiInput midi = createMidiInput();
 
+  late final GoRouter _router = GoRouter(
+    initialLocation: '/learn',
+    routes: [
+      for (final tab in ['learn', 'practice', 'profile'])
+        GoRoute(
+          path: '/$tab',
+          builder: (context, state) => HomePage(
+            repo: widget.repo,
+            midi: midi,
+            spikes: (_) => const MidiSpikePage(),
+            tab: tab,
+          ),
+        ),
+      GoRoute(
+        path: '/lesson/:levelId',
+        builder: (context, state) {
+          final level = widget.repo.levels[state.pathParameters['levelId']];
+          if (level == null) return const _UnknownRoute();
+          return LevelPage(repo: widget.repo, level: level, midi: midi);
+        },
+      ),
+      GoRoute(
+        path: '/tool',
+        builder: (context, state) {
+          final builder = state.extra;
+          return builder is WidgetBuilder
+              ? builder(context)
+              : const _UnknownRoute();
+        },
+      ),
+    ],
+    redirect: (context, state) =>
+        const ['/learn', '/practice', '/profile'].contains(state.uri.path)
+        ? null
+        : state.uri.path.startsWith('/lesson/') || state.uri.path == '/tool'
+        ? null
+        : '/learn',
+  );
+
   @override
   void initState() {
     super.initState();
@@ -83,7 +124,7 @@ class _EasyPianoAppState extends State<EasyPianoApp>
   Widget build(BuildContext context) {
     return AppLocaleScope(
       notifier: widget.appLocale,
-      child: MaterialApp(
+      child: MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         debugShowCheckedModeBanner: false,
         locale: widget.appLocale.current.locale,
@@ -93,14 +134,17 @@ class _EasyPianoAppState extends State<EasyPianoApp>
           colorSchemeSeed: const Color(0xFF6C4CF1),
           useMaterial3: true,
         ),
-        home: HomePage(
-          repo: widget.repo,
-          midi: midi,
-          spikes: (_) => const MidiSpikePage(),
-        ),
+        routerConfig: _router,
       ),
     );
   }
+}
+
+class _UnknownRoute extends StatelessWidget {
+  const _UnknownRoute();
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('Page not found')));
 }
 
 /// Phase 0 spike: MIDI or touch → colored key, with input-to-frame latency stats.

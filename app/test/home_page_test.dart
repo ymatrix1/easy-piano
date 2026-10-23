@@ -6,6 +6,7 @@ import 'package:easy_piano/input/midi_input.dart';
 import 'package:easy_piano/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 ContentRepo _repo() {
   final root = Directory('../content').absolute;
@@ -23,15 +24,29 @@ void main() {
     tester.view.physicalSize = const Size(900, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
+    final repo = _repo();
+    final router = GoRouter(
+      initialLocation: '/learn',
+      routes: [
+        for (final tab in ['learn', 'practice', 'profile'])
+          GoRoute(
+            path: '/$tab',
+            builder: (_, _) => HomePage(
+              repo: repo,
+              midi: createMidiInput(),
+              spikes: (_) => const SizedBox(),
+              tab: tab,
+            ),
+          ),
+        GoRoute(path: '/tool', builder: (_, _) => const SizedBox()),
+        GoRoute(path: '/lesson/:levelId', builder: (_, _) => const SizedBox()),
+      ],
+    );
     await tester.pumpWidget(
-      MaterialApp(
+      MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: HomePage(
-          repo: _repo(),
-          midi: createMidiInput(),
-          spikes: (_) => const SizedBox(),
-        ),
+        routerConfig: router,
       ),
     );
     await tester.pump(const Duration(seconds: 2));
@@ -68,9 +83,11 @@ void main() {
     await tester.tap(find.text('PRACTICE'));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('FREE PLAY'), findsOneWidget);
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/practice');
     await tester.tap(find.text('PROFILE'));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('DEVELOPER TOOLS'), findsOneWidget);
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/profile');
     // Let delayed entrance animations finish.
     await tester.pump(const Duration(seconds: 3));
   });
