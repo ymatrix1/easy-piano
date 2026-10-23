@@ -1,0 +1,14 @@
+{
+  "id": "scm-11-gate-part-2",
+  "title": "str:level.scm.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "scm-part-2",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

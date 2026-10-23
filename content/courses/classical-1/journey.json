@@ -1,0 +1,197 @@
+{
+  "course": "classical-1",
+  "nodes": [
+    {
+      "id": "dotted",
+      "kind": "lesson",
+      "title": "str:node.c1.dotted",
+      "icon": "note",
+      "levels": [
+        "c1-01-dotted"
+      ],
+      "next": [
+        "pickup"
+      ]
+    },
+    {
+      "id": "pickup",
+      "kind": "lesson",
+      "title": "str:node.c1.pickup",
+      "icon": "note",
+      "levels": [
+        "c1-02-pickup"
+      ],
+      "next": [
+        "spring"
+      ]
+    },
+    {
+      "id": "spring",
+      "kind": "song",
+      "title": "str:node.c1.spring",
+      "icon": "play",
+      "levels": [
+        "c1-03-spring"
+      ],
+      "next": [
+        "new-world"
+      ],
+      "songs": {
+        "default": "spring-vivaldi",
+        "classical": "spring-vivaldi"
+      }
+    },
+    {
+      "id": "new-world",
+      "kind": "song",
+      "title": "str:node.c1.new-world",
+      "icon": "play",
+      "levels": [
+        "c1-04-new-world"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "new-world-largo",
+        "classical": "new-world-largo"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.c1.gate-1",
+      "icon": "star",
+      "levels": [
+        "c1-05-gate-spring",
+        "c1-06-gate-new-world",
+        "c1-07-gate-pickup"
+      ],
+      "next": [
+        "bass-walk"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "bass-walk",
+      "kind": "lesson",
+      "title": "str:node.c1.bass-walk",
+      "icon": "note",
+      "levels": [
+        "c1-08-bass-walk"
+      ],
+      "next": [
+        "surprise"
+      ]
+    },
+    {
+      "id": "surprise",
+      "kind": "song",
+      "title": "str:node.c1.surprise",
+      "icon": "play",
+      "levels": [
+        "c1-09-surprise"
+      ],
+      "next": [
+        "minor"
+      ],
+      "songs": {
+        "default": "surprise-symphony",
+        "classical": "surprise-symphony"
+      }
+    },
+    {
+      "id": "minor",
+      "kind": "lesson",
+      "title": "str:node.c1.minor",
+      "icon": "note",
+      "levels": [
+        "c1-10-minor"
+      ],
+      "next": [
+        "fifths"
+      ]
+    },
+    {
+      "id": "fifths",
+      "kind": "lesson",
+      "title": "str:node.c1.fifths",
+      "icon": "note",
+      "levels": [
+        "c1-11-fifths"
+      ],
+      "next": [
+        "k331"
+      ]
+    },
+    {
+      "id": "k331",
+      "kind": "song",
+      "title": "str:node.c1.k331",
+      "icon": "play",
+      "levels": [
+        "c1-12-k331"
+      ],
+      "next": [
+        "reach"
+      ],
+      "songs": {
+        "default": "mozart-k331-theme",
+        "classical": "mozart-k331-theme"
+      }
+    },
+    {
+      "id": "reach",
+      "kind": "lesson",
+      "title": "str:node.c1.reach",
+      "icon": "note",
+      "levels": [
+        "c1-13-reach"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.c1.gate-2",
+      "icon": "star",
+      "levels": [
+        "c1-14-gate-surprise",
+        "c1-15-gate-k331",
+        "c1-16-gate-minor"
+      ],
+      "next": [
+        "phrases"
+      ],
+      "stars_needed": 7
+    },
+    {
+      "id": "phrases",
+      "kind": "lesson",
+      "title": "str:node.c1.phrases",
+      "icon": "note",
+      "levels": [
+        "c1-17-phrases"
+      ],
+      "next": [
+        "boss"
+      ]
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.c1.boss",
+      "icon": "play",
+      "levels": [
+        "c1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "eine-kleine-nachtmusik",
+        "classical": "eine-kleine-nachtmusik"
+      }
+    }
+  ]
+}

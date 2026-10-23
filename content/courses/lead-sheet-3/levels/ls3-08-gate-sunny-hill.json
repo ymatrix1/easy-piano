@@ -1,0 +1,14 @@
+{
+  "id": "ls3-08-gate-sunny-hill",
+  "title": "str:level.ls3.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls3-a-tune",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

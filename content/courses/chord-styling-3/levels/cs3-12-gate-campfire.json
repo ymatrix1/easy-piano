@@ -1,0 +1,14 @@
+{
+  "id": "cs3-12-gate-campfire",
+  "title": "str:level.cs3.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs3-campfire",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

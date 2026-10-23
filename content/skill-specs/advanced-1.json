@@ -1,0 +1,342 @@
+{
+  "course": "advanced-1",
+  "nodes": [
+    {
+      "node": "em-chords",
+      "new_skill": "E minor with repeated left-hand chords under a quiet right-hand line.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "D#"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        56,
+        56
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "prelude-e-minor",
+      "new_skill": "Chopin Prelude Op. 28 No. 4: sighing melody over repeated chords, chromatic descent.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        26,
+        26
+      ],
+      "bpm": [
+        52,
+        52
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "mazurka",
+      "new_skill": "A major and the mazurka rhythm: dotted eighth and sixteenth in 3/4.",
+      "required": [
+        {
+          "rhythm": "8."
+        },
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "prelude-a-major",
+      "new_skill": "Chopin Prelude Op. 28 No. 7: dotted mazurka rhythm with chords in the right hand.",
+      "required": [
+        {
+          "rhythm": "8."
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: E minor chords and the mazurka rhythm.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        26
+      ],
+      "bpm": [
+        52,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "wide-lh",
+      "new_skill": "Left-hand broken chords spanning a tenth.",
+      "required": [
+        {
+          "interval_min": 5,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gymnopedie",
+      "new_skill": "Satie Gymnopedie No. 1: slow 3/4, low bass leaps to a chord.",
+      "required": [
+        {
+          "interval_min": 8,
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        32,
+        32
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "triplets",
+      "new_skill": "Triplets against duplets: three notes in one hand against two in the other.",
+      "required": [
+        {
+          "rhythm": "12"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "liebestraum",
+      "new_skill": "Liszt Dream of Love: singing melody over wide broken chords in 6/4.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "interval_min": 6,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "6/4"
+    },
+    {
+      "node": "ornaments",
+      "new_skill": "Written-out ornaments: grace note, mordent, turn and short trill in 32nds.",
+      "required": [
+        {
+          "rhythm": "32"
+        },
+        {
+          "rhythm": "16"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "chromatic",
+      "new_skill": "Chromatic scale in both hands, up to high C.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: wide left hand, triplets and long phrases.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        32
+      ],
+      "bpm": [
+        60,
+        72
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "nocturne-style",
+      "new_skill": "Nocturne accompaniment: bass note and two chords per beat under a singing line.",
+      "required": [
+        {
+          "rhythm": "12"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        10,
+        10
+      ],
+      "bpm": [
+        46,
+        46
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Chopin Nocturne Op. 9 No. 2 (abridged, in D flat): both hands, triplet feel, ornaments.",
+      "required": [
+        {
+          "rhythm": "12"
+        },
+        {
+          "rhythm": "24"
+        },
+        {
+          "pitch": "Ab1",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        15,
+        15
+      ],
+      "bpm": [
+        46,
+        46
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

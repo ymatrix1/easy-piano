@@ -1,0 +1,14 @@
+{
+  "id": "ls3-07-gate-skip",
+  "title": "str:level.ls3.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "skip-to-my-lou",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

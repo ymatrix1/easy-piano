@@ -1,0 +1,14 @@
+{
+  "id": "ar1-17-gate-romance",
+  "title": "str:level.ar1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "spanish-romance",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

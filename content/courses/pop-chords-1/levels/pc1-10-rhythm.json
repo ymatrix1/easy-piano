@@ -1,0 +1,27 @@
+{
+  "id": "pc1-10-rhythm",
+  "title": "str:level.pc1.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pc1-rhythm-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-rhythm-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-rhythm-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

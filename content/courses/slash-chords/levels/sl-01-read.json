@@ -1,0 +1,31 @@
+{
+  "id": "sl-01-read",
+  "title": "str:level.sl.01.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sl-read"
+    },
+    {
+      "type": "wait",
+      "score": "sl-read-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-read-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-read-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

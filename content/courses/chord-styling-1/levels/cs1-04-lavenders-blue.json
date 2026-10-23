@@ -1,0 +1,40 @@
+{
+  "id": "cs1-04-lavenders-blue",
+  "title": "str:level.cs1.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "lavenders-blue",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "lavenders-blue",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "lavenders-blue",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "lavenders-blue",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "lavenders-blue",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "sl-10-sus",
+  "title": "str:level.sl.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sl-sus"
+    },
+    {
+      "type": "wait",
+      "score": "sl-sus-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-sus-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-sus-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

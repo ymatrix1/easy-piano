@@ -1,0 +1,14 @@
+{
+  "id": "i2-14-gate-eighths",
+  "title": "str:level.i2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i2-eighth-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

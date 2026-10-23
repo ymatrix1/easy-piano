@@ -1,0 +1,55 @@
+{
+  "id": "bc1-swing-drill",
+  "title": "Swing Eighths",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 E4:1/6@3 G4:1/12@5 E4:1/6@3 C4:1/12@1 D4:4@2",
+      "LH": "C3:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "E4:4@3 G4:1/6@5 E4:1/12@3 D4:1/6@2 C4:1/12@1 D4:4@2",
+      "LH": "C3:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:1/6@1 E4:1/12@3 G4:1/6@5 E4:1/12@3 F4:1/6@4 E4:1/12@3 D4:1/6@2 C4:1/12@1",
+      "LH": "F2:2@5 C3:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "G4:2@5 E4:2@3",
+      "LH": "G2:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:4@1 E4:1/6@3 G4:1/12@5 E4:1/6@3 C4:1/12@1 D4:4@2",
+      "LH": "C3:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "D4:1/6@2 F4:1/12@4 G4:1/6@5 F4:1/12@4 E4:4@3 C4:4@1",
+      "LH": "F2:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "E4:1/6@3 F4:1/12@4 G4:1/6@5 F4:1/12@4 E4:1/6@3 D4:1/12@2 C4:4@1",
+      "LH": "C3:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

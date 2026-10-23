@@ -1,0 +1,66 @@
+{
+  "id": "sct-octave-chords",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sct.chords.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "A5",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "B4",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "B5",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 5,
+      "press": "C#5",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C#6",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.sct.chords.2"
+    },
+    {
+      "at": 10,
+      "prompt": "your_turn"
+    }
+  ]
+}

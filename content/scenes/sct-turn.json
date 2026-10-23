@@ -1,0 +1,59 @@
+{
+  "id": "sct-turn",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sct.turn.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 4,
+      "press": "B4",
+      "label": "4"
+    },
+    {
+      "at": 4.25,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 2,
+      "press": "G#4",
+      "label": "2"
+    },
+    {
+      "at": 4.75,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C5",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.sct.turn.2"
+    },
+    {
+      "at": 10,
+      "prompt": "your_turn"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "b1-10-minuet-form",
+  "title": "str:level.b1.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "b1-minuet-form-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "b1-minuet-form-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "b1-minuet-form-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

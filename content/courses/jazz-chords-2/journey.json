@@ -1,0 +1,182 @@
+{
+  "course": "jazz-chords-2",
+  "nodes": [
+    {
+      "id": "bm7b5",
+      "kind": "lesson",
+      "title": "str:node.jc2.bm7b5",
+      "icon": "note",
+      "levels": [
+        "jc2-01-bm7b5"
+      ],
+      "next": [
+        "minor-251-am"
+      ]
+    },
+    {
+      "id": "minor-251-am",
+      "kind": "lesson",
+      "title": "str:node.jc2.minor-251-am",
+      "icon": "note",
+      "levels": [
+        "jc2-02-minor-251-am"
+      ],
+      "next": [
+        "minor-251-dm"
+      ]
+    },
+    {
+      "id": "minor-251-dm",
+      "kind": "lesson",
+      "title": "str:node.jc2.minor-251-dm",
+      "icon": "note",
+      "levels": [
+        "jc2-03-minor-251-dm"
+      ],
+      "next": [
+        "minor-blues"
+      ]
+    },
+    {
+      "id": "minor-blues",
+      "kind": "song",
+      "title": "str:node.jc2.minor-blues",
+      "icon": "play",
+      "levels": [
+        "jc2-04-minor-blues"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "jc2-minor-blues",
+        "jazz_blues": "jc2-minor-blues"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.jc2.gate-1",
+      "icon": "star",
+      "levels": [
+        "jc2-05-gate-blues",
+        "jc2-06-gate-251-am",
+        "jc2-07-gate-251-dm"
+      ],
+      "next": [
+        "dim7"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "dim7",
+      "kind": "lesson",
+      "title": "str:node.jc2.dim7",
+      "icon": "note",
+      "levels": [
+        "jc2-08-dim7"
+      ],
+      "next": [
+        "after-the-ball"
+      ]
+    },
+    {
+      "id": "after-the-ball",
+      "kind": "song",
+      "title": "str:node.jc2.after-the-ball",
+      "icon": "play",
+      "levels": [
+        "jc2-09-after-the-ball"
+      ],
+      "next": [
+        "dom-chains"
+      ],
+      "songs": {
+        "default": "after-the-ball",
+        "folk_world": "after-the-ball"
+      }
+    },
+    {
+      "id": "dom-chains",
+      "kind": "lesson",
+      "title": "str:node.jc2.dom-chains",
+      "icon": "note",
+      "levels": [
+        "jc2-10-dom-chains"
+      ],
+      "next": [
+        "jazz-waltz"
+      ]
+    },
+    {
+      "id": "jazz-waltz",
+      "kind": "lesson",
+      "title": "str:node.jc2.jazz-waltz",
+      "icon": "note",
+      "levels": [
+        "jc2-11-jazz-waltz"
+      ],
+      "next": [
+        "hard-times"
+      ]
+    },
+    {
+      "id": "hard-times",
+      "kind": "song",
+      "title": "str:node.jc2.hard-times",
+      "icon": "play",
+      "levels": [
+        "jc2-12-hard-times"
+      ],
+      "next": [
+        "sixths-tag"
+      ],
+      "songs": {
+        "default": "hard-times-come-again",
+        "folk_world": "hard-times-come-again",
+        "hymns_spirituals": "hard-times-come-again"
+      }
+    },
+    {
+      "id": "sixths-tag",
+      "kind": "lesson",
+      "title": "str:node.jc2.sixths-tag",
+      "icon": "note",
+      "levels": [
+        "jc2-13-sixths-tag"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.jc2.gate-2",
+      "icon": "star",
+      "levels": [
+        "jc2-14-gate-ball",
+        "jc2-15-gate-hard-times",
+        "jc2-16-gate-sixths"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.jc2.boss",
+      "icon": "play",
+      "levels": [
+        "jc2-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "st-james-infirmary",
+        "jazz_blues": "st-james-infirmary"
+      }
+    }
+  ]
+}

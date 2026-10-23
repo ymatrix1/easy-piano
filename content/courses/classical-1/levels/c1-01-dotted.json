@@ -1,0 +1,31 @@
+{
+  "id": "c1-01-dotted",
+  "title": "str:level.c1.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "c1-dotted"
+    },
+    {
+      "type": "wait",
+      "score": "c1-dotted-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-dotted-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-dotted-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

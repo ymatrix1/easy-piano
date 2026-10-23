@@ -1,0 +1,14 @@
+{
+  "id": "i2-07-gate-g-major",
+  "title": "str:level.i2.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i2-g-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

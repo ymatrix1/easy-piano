@@ -1,0 +1,61 @@
+{
+  "id": "ls2-g7-inv",
+  "title": "Smooth Steps",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4:4@2 F4:4@4 D4:2@2",
+      "LH": "{chord:\"G7\"} G2B2F3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4:4@3 G4:4@5 E4:2@3",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4:4@2 F4:4@4 D4:2@2",
+      "LH": "{chord:\"G7/B\"} B2D3F3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "F4:4@4 D4:4@2 F4:2@4",
+      "LH": "{chord:\"Dm\"} D3F3A3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4:4@2 E4:4@3 D4:2@2",
+      "LH": "{chord:\"G7/B\"} B2D3F3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      1,
+      5
+    ]
+  ]
+}

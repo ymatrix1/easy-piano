@@ -1,0 +1,45 @@
+{
+  "id": "b2-harmonic-minor",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.b2.minor.1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 3,
+      "press": "C5",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 3,
+      "press": "C#5",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 4,
+      "press": "D5",
+      "label": "4"
+    },
+    {
+      "at": 9,
+      "caption": "str:scene.b2.minor.2"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

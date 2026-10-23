@@ -1,0 +1,14 @@
+{
+  "id": "ls2-08-gate-buffalo",
+  "title": "str:level.ls2.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "buffalo-gals",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": "sce-rag",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sce.rag.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "E4",
+      "label": "1"
+    },
+    {
+      "at": 3.25,
+      "hand": "R",
+      "finger": 3,
+      "press": "G4",
+      "label": "3"
+    },
+    {
+      "at": 3.75,
+      "hand": "R",
+      "finger": 1,
+      "press": "E4",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "E4",
+      "label": "1"
+    },
+    {
+      "at": 4.25,
+      "hand": "R",
+      "finger": 3,
+      "press": "G4",
+      "label": "3"
+    },
+    {
+      "at": 4.75,
+      "hand": "R",
+      "finger": 1,
+      "press": "E4",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.sce.rag.2"
+    },
+    {
+      "at": 9,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 9.25,
+      "hand": "R",
+      "finger": 4,
+      "press": "A4",
+      "label": "4"
+    },
+    {
+      "at": 9.75,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 10,
+      "hand": "R",
+      "finger": 2,
+      "press": "G4",
+      "label": "2"
+    },
+    {
+      "at": 10.25,
+      "hand": "R",
+      "finger": 5,
+      "press": "B4",
+      "label": "5"
+    },
+    {
+      "at": 10.75,
+      "hand": "R",
+      "finger": 2,
+      "press": "G4",
+      "label": "2"
+    },
+    {
+      "at": 13,
+      "prompt": "your_turn"
+    }
+  ]
+}

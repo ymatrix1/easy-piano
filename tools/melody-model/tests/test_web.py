@@ -14,17 +14,27 @@ import pytest
 from conftest import need
 
 from melody_model.notation import DURATIONS, dur_beats, parse_hand
-from melody_model.tokenizer import FIELDS, Spec, decode, encode_song, encode_spec, step
+from melody_model.tokenizer import FIELDS, Spec, decode, encode_pattern, encode_song, encode_spec, step
 
 ROOT = Path(__file__).resolve().parents[3]
 WEB = Path(__file__).resolve().parents[1] / "web"
 NODE = shutil.which("node")
+
+
+def _encodes(p):
+    try:
+        encode_pattern(p)
+        return True
+    except ValueError:  # outside the vocabulary (e.g. triplet rhythm); same skip as test_tokenizer
+        return False
+
 
 PATTERNS = [
     p
     for f in sorted((ROOT / "content" / "skill-specs").glob("*.json"))
     for node in json.loads(f.read_text(encoding="utf-8"))["nodes"]
     for p in node.get("required", [])
+    if _encodes(p)
 ]
 
 GEN_SPECS = [

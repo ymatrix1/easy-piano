@@ -1,0 +1,14 @@
+{
+  "id": "b2-14-gate-sixteenths",
+  "title": "str:level.b2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "b2-sixteenth-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

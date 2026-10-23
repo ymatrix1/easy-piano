@@ -1,0 +1,45 @@
+{
+  "id": "scm-octave-drill",
+  "title": "Deep Octaves",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 60,
+  "time": "4/4",
+  "key": "C#m",
+  "bars": [
+    {
+      "LH": "C#2C#3:1@51"
+    },
+    {
+      "LH": "B1B2:1@51"
+    },
+    {
+      "LH": "A1A2:2@51 F#1F#2:2@51"
+    },
+    {
+      "LH": "G#1G#2:2@51 G#1G#2:2@51"
+    },
+    {
+      "LH": "C#2C#3:4@51 C#2C#3:4@51 B1B2:4@51 B1B2:4@51"
+    },
+    {
+      "LH": "A1A2:4@51 A1A2:4@51 G#1G#2:2@51"
+    },
+    {
+      "LH": "F#1F#2:2@51 G#1G#2:2@51"
+    },
+    {
+      "LH": "C#2C#3:1@51"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "i2-repeat-drill",
+  "title": "Same Note, New Finger",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 92,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@3 E4:4@2 E4:4@1 C4:4@1"
+    },
+    {
+      "RH": "G4:4@4 G4:4@3 G4:4@2 E4:4@1"
+    },
+    {
+      "RH": "A4:4@5 A4:4@4 A4:4@3 F4:4@1"
+    },
+    {
+      "RH": "G4:2@3 G4:4@2 G4:4@1"
+    },
+    {
+      "RH": "C5:4@5 C5:4@4 C5:4@3 A4:4@2"
+    },
+    {
+      "RH": "E4:8@3 E4:8@2 E4:4@1 G4:8@3 G4:8@2 G4:4@1"
+    },
+    {
+      "RH": "F4:8@3 F4:8@2 F4:4@1 A4:8@4 A4:8@3 A4:4@2"
+    },
+    {
+      "RH": "G4:8@3 G4:8@2 G4:8@1 G4:8@3 E4:4@2 C4:4@1"
+    },
+    {
+      "RH": "D4:4@3 D4:4@2 D4:4@1 F4:4@4"
+    },
+    {
+      "RH": "E4:4@3 E4:4@2 E4:4@1 G4:4@4"
+    },
+    {
+      "RH": "A4:4@4 G4:4@3 F4:4@2 E4:4@1"
+    },
+    {
+      "RH": "C4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      5,
+      7
+    ]
+  ]
+}

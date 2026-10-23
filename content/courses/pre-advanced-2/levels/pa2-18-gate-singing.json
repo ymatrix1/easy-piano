@@ -1,0 +1,14 @@
+{
+  "id": "pa2-18-gate-singing",
+  "title": "str:level.pa2.18.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pa2-singing-etude",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

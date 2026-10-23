@@ -1,0 +1,14 @@
+{
+  "id": "pa2-07-gate-polka",
+  "title": "str:level.pa2.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pa2-polka",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

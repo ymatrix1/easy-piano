@@ -1,0 +1,14 @@
+{
+  "id": "pa2-08-gate-march",
+  "title": "str:level.pa2.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pa2-march",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

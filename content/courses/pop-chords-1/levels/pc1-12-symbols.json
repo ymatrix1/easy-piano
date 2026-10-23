@@ -1,0 +1,31 @@
+{
+  "id": "pc1-12-symbols",
+  "title": "str:level.pc1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc1-symbols"
+    },
+    {
+      "type": "wait",
+      "score": "pc1-symbol-etude",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-symbol-etude",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-symbol-etude",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

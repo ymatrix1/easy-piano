@@ -1,0 +1,14 @@
+{
+  "id": "pc2-07-gate-aura-lee",
+  "title": "str:level.pc2.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "aura-lee",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

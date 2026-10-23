@@ -1,0 +1,14 @@
+{
+  "id": "ls2-07-gate-polly",
+  "title": "str:level.ls2.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "polly-wolly-doodle",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "i1-02-finger-over",
+  "title": "str:level.i1.02.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "i1-cross-lh-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-cross-lh-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-cross-lh-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

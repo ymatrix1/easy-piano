@@ -1,0 +1,34 @@
+{
+  "id": "i2-17-boss",
+  "title": "str:level.i2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "hall-of-the-mountain-king",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hall-of-the-mountain-king",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hall-of-the-mountain-king",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hall-of-the-mountain-king",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

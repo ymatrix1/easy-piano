@@ -1,0 +1,55 @@
+{
+  "id": "ls3-third-below",
+  "title": "A Third Below",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "D",
+  "bars": [
+    {
+      "RH": "D4:4@1 F#4:4@3 D4F#4:2@13",
+      "LH": "D3F#3A3:2@531 D3F#3A3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:4@5 F#4:4@3 F#4A4:2@35",
+      "LH": "D3F#3A3:2@531 D3F#3A3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:4@4 F#4:4@3 E4G4:2@24",
+      "LH": "B2D3G3:2@531 B2D3G3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:4@5 F#4:4@3 D4F#4:2@13",
+      "LH": "D3F#3A3:2@531 D3F#3A3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4:4@2 E4:4@2 F#4A4:2@35",
+      "LH": "C#3E3A3:2@531 C#3E3A3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4:4@2 G4:4@4 E4G4:2@24",
+      "LH": "C#3E3G3:2@531 C#3E3G3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4G4:2@24 E4:2@2",
+      "LH": "B2D3G3:2@531 C#3E3G3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4:1@1",
+      "LH": "D3F#3A3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    }
+  ]
+}

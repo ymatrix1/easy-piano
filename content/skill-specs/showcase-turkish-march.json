@@ -1,0 +1,305 @@
+{
+  "course": "showcase-turkish-march",
+  "nodes": [
+    {
+      "node": "turn",
+      "new_skill": "The sixteenth turn: B, A, G sharp, A in four quick notes.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "G#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "RH",
+      "time": "2/4"
+    },
+    {
+      "node": "octaves",
+      "new_skill": "Left hand broken octaves: jump an octave on every eighth note.",
+      "required": [
+        {
+          "interval_min": 8,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        10,
+        10
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "LH",
+      "time": "2/4"
+    },
+    {
+      "node": "thirds",
+      "new_skill": "Parallel thirds in the right hand over a left hand chord.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-a",
+      "new_skill": "Part A of the Rondo in A minor: turns, thirds and chords together.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "G#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-b",
+      "new_skill": "Part B: chords and left hand octave leaps in C major.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "interval_min": 8,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: turns, thirds and octave leaps.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        17
+      ],
+      "bpm": [
+        80,
+        96
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "refrain",
+      "new_skill": "A major refrain: right hand octaves over left hand eighths.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-c",
+      "new_skill": "Part C, the refrain in A major with octaves in the right hand.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "runs",
+      "new_skill": "Sixteenth runs in the right hand with E sharp and B sharp.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "connecting",
+      "new_skill": "The connecting passage: long sixteenth runs over left hand chords.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: octave refrain and sixteenth runs.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        17
+      ],
+      "bpm": [
+        76,
+        96
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "whole",
+      "new_skill": "Capstone: the whole Rondo alla Turca, every part in order.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "G#"
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        40,
+        64
+      ],
+      "bpm": [
+        100,
+        100
+      ],
+      "hands": "both",
+      "time": "2/4"
+    }
+  ]
+}

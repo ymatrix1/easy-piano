@@ -1,0 +1,40 @@
+{
+  "id": "cs1-15-rising-sun",
+  "title": "str:level.cs1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "house-of-the-rising-sun",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "house-of-the-rising-sun",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "house-of-the-rising-sun",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "house-of-the-rising-sun",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "house-of-the-rising-sun",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

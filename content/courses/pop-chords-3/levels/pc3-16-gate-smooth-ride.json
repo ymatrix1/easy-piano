@@ -1,0 +1,14 @@
+{
+  "id": "pc3-16-gate-smooth-ride",
+  "title": "str:level.pc3.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pc3-smooth-ride",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

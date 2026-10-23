@@ -1,0 +1,14 @@
+{
+  "id": "adv1-05-gate-prelude-e-minor",
+  "title": "str:level.adv1.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-e-minor",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

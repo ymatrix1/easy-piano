@@ -1,0 +1,55 @@
+{
+  "id": "pc1-melody-drill",
+  "title": "Melody and Chord Blocks",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} E4:4@3 G4:4@5 E4:4@3 C4:4@1",
+      "LH": "C3E3G3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"G\"} D4:4@2 G4:4@5 F4:4@4 D4:4@2",
+      "LH": "G2B2D3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} E4:4@3 A4:4@5 G4:4@5 E4:4@3",
+      "LH": "A2C3E3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A4:4@5 G4:4@5 F4:4@4 C4:4@1",
+      "LH": "F2A2C3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} E4:4@3 G4:4@5 C5:2@5",
+      "LH": "C3E3G3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"G\"} B4:4@5 A4:4@5 G4:2@5",
+      "LH": "G2B2D3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A4:4@5 G4:4@5 F4:4@4 E4:4@3",
+      "LH": "F2A2C3:1@531",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4:1@1",
+      "LH": "C3E3G3:1@531",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

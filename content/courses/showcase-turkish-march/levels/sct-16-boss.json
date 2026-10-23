@@ -1,0 +1,27 @@
+{
+  "id": "sct-16-boss",
+  "title": "str:level.sct.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "rondo-alla-turca",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "rondo-alla-turca",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "rondo-alla-turca",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "b1-13-invention",
+  "title": "str:level.b1.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "b1-mini-invention",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "b1-mini-invention",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "b1-mini-invention",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "b1-mini-invention",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "b1-mini-invention",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

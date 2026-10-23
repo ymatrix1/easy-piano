@@ -1,0 +1,319 @@
+{
+  "course": "intermediate-2",
+  "nodes": [
+    {
+      "node": "shift",
+      "new_skill": "Switch hand position between C and G on a long note or a rest.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "pitch": "D5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "stretch",
+      "new_skill": "Extended C position: stretch the little finger up to A, B and C.",
+      "required": [
+        {
+          "pitch": "A4",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "g-major",
+      "new_skill": "G major key signature: every F is F sharp.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        84,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "turkey",
+      "new_skill": "Folk tune in G with eighth-note runs and F sharp in both hands.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "long-notes",
+      "new_skill": "Long notes that start on the off-beat and last across the next beat.",
+      "required": [
+        {
+          "rhythm": "2"
+        },
+        {
+          "rhythm": "4."
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        84,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: position changes, G major and long notes.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        84,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "repeat",
+      "new_skill": "Repeated notes: change fingers on each repeat.",
+      "required": [
+        {
+          "pitch": "G4",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "4"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "eighths",
+      "new_skill": "Faster eighth notes at 120 beats per minute.",
+      "required": [
+        {
+          "rhythm": "8",
+          "min_bar_share": 0.5
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        116,
+        124
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "william-tell",
+      "new_skill": "Fanfare and gallop in G with leaps, repeated notes and sixteenths.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        116,
+        124
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "lh-octaves",
+      "new_skill": "Left hand octave jumps, then octave chords.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: speed, repeated notes and left hand octaves.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        76,
+        124
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minor-etude",
+      "new_skill": "E minor march with F sharp and D sharp, eighth-note runs.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        96,
+        104
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: a minor-key showpiece with eighth-note climbs, octaves and both hands.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        24,
+        24
+      ],
+      "bpm": [
+        108,
+        116
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "sce-dyad-drill",
+  "title": "Rag Chords in Thirds",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "2/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4E4:8@13 D4F4:8@13 E4G4:8@13 D4F4:8@13"
+    },
+    {
+      "RH": "E4G4:8@13 F4A4:8@13 G4B4:8@13 F4A4:8@13"
+    },
+    {
+      "RH": "C5E5:16@13 D5F5:16@13 D#5F#5:16@13 E5G5:8@13 B4D5:16@13 D5F5:8@13"
+    },
+    {
+      "RH": "C5E5:4.@13 r:8"
+    },
+    {
+      "RH": "E4G4:8@13 F4A4:8@13 E4G4:8@13 D4F4:8@13"
+    },
+    {
+      "RH": "G4B4:8@13 A4C5:8@13 G4B4:8@13 F4A4:8@13"
+    },
+    {
+      "RH": "E4C5:16@15 F4D5:16@15 F#4D#5:16@15 G4E5:8@15 E4C5:16@15 F4D5:8@15"
+    },
+    {
+      "RH": "E4G4C5:4@135 C5E5G5:8@135 r:8"
+    }
+  ],
+  "critical": [
+    [
+      3,
+      4
+    ],
+    [
+      7,
+      8
+    ]
+  ]
+}

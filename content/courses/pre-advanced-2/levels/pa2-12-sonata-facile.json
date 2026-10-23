@@ -1,0 +1,40 @@
+{
+  "id": "pa2-12-sonata-facile",
+  "title": "str:level.pa2.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "sonata-facile-k545",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sonata-facile-k545",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "sonata-facile-k545",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "sonata-facile-k545",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "sonata-facile-k545",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

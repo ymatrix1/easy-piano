@@ -1,0 +1,210 @@
+{
+  "course": "arpeggios-1",
+  "nodes": [
+    {
+      "id": "inversions",
+      "kind": "lesson",
+      "title": "str:node.ar1.inversions",
+      "icon": "note",
+      "levels": [
+        "ar1-01-inversions"
+      ],
+      "next": [
+        "arp-up"
+      ]
+    },
+    {
+      "id": "arp-up",
+      "kind": "lesson",
+      "title": "str:node.ar1.arp-up",
+      "icon": "note",
+      "levels": [
+        "ar1-02-arp-up"
+      ],
+      "next": [
+        "arp-down"
+      ]
+    },
+    {
+      "id": "arp-down",
+      "kind": "lesson",
+      "title": "str:node.ar1.arp-down",
+      "icon": "note",
+      "levels": [
+        "ar1-03-arp-down"
+      ],
+      "next": [
+        "arp-both"
+      ]
+    },
+    {
+      "id": "arp-both",
+      "kind": "lesson",
+      "title": "str:node.ar1.arp-both",
+      "icon": "note",
+      "levels": [
+        "ar1-04-arp-both"
+      ],
+      "next": [
+        "sunrise"
+      ]
+    },
+    {
+      "id": "sunrise",
+      "kind": "song",
+      "title": "str:node.ar1.sunrise",
+      "icon": "play",
+      "levels": [
+        "ar1-05-sunrise"
+      ],
+      "next": [
+        "hand-to-hand"
+      ],
+      "songs": {
+        "default": "ar1-sunrise",
+        "originals_pop": "ar1-sunrise"
+      }
+    },
+    {
+      "id": "hand-to-hand",
+      "kind": "lesson",
+      "title": "str:node.ar1.hand-to-hand",
+      "icon": "note",
+      "levels": [
+        "ar1-06-hand-to-hand"
+      ],
+      "next": [
+        "fountain"
+      ]
+    },
+    {
+      "id": "fountain",
+      "kind": "song",
+      "title": "str:node.ar1.fountain",
+      "icon": "play",
+      "levels": [
+        "ar1-07-fountain"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "ar1-fountain",
+        "folk_world": "ar1-fountain"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.ar1.gate-1",
+      "icon": "star",
+      "levels": [
+        "ar1-08-gate-sunrise",
+        "ar1-09-gate-fountain",
+        "ar1-10-gate-updown"
+      ],
+      "next": [
+        "seventh"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "seventh",
+      "kind": "lesson",
+      "title": "str:node.ar1.seventh",
+      "icon": "note",
+      "levels": [
+        "ar1-11-seventh"
+      ],
+      "next": [
+        "lh-bass"
+      ]
+    },
+    {
+      "id": "lh-bass",
+      "kind": "lesson",
+      "title": "str:node.ar1.lh-bass",
+      "icon": "note",
+      "levels": [
+        "ar1-12-lh-bass"
+      ],
+      "next": [
+        "river"
+      ]
+    },
+    {
+      "id": "river",
+      "kind": "song",
+      "title": "str:node.ar1.river",
+      "icon": "play",
+      "levels": [
+        "ar1-13-river"
+      ],
+      "next": [
+        "sixteenths"
+      ],
+      "songs": {
+        "default": "ar1-river",
+        "jazz_blues": "ar1-river"
+      }
+    },
+    {
+      "id": "sixteenths",
+      "kind": "lesson",
+      "title": "str:node.ar1.sixteenths",
+      "icon": "note",
+      "levels": [
+        "ar1-14-sixteenths"
+      ],
+      "next": [
+        "romance"
+      ]
+    },
+    {
+      "id": "romance",
+      "kind": "song",
+      "title": "str:node.ar1.romance",
+      "icon": "play",
+      "levels": [
+        "ar1-15-romance"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "spanish-romance",
+        "classical": "spanish-romance",
+        "folk_world": "spanish-romance"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.ar1.gate-2",
+      "icon": "star",
+      "levels": [
+        "ar1-16-gate-river",
+        "ar1-17-gate-romance",
+        "ar1-18-gate-lh-bass"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.ar1.boss",
+      "icon": "play",
+      "levels": [
+        "ar1-19-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "prelude-in-c-bwv846",
+        "classical": "prelude-in-c-bwv846"
+      }
+    }
+  ]
+}

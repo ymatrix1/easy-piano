@@ -1,0 +1,14 @@
+{
+  "id": "ls2-14-gate-bright-f",
+  "title": "str:level.ls2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls2-f-chords",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

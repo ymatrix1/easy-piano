@@ -1,0 +1,47 @@
+{
+  "id": "ls2-03-polly-wolly-doodle",
+  "title": "str:level.ls2.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "polly-wolly-doodle",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "polly-wolly-doodle",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "polly-wolly-doodle",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "polly-wolly-doodle",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "polly-wolly-doodle",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "polly-wolly-doodle",
+      "tempo": 0.85,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

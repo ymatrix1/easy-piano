@@ -1,0 +1,181 @@
+{
+  "course": "bach-2",
+  "nodes": [
+    {
+      "id": "d-minor",
+      "kind": "lesson",
+      "title": "str:node.b2.d-minor",
+      "icon": "note",
+      "levels": [
+        "b2-01-d-minor"
+      ],
+      "next": [
+        "g-minor"
+      ]
+    },
+    {
+      "id": "g-minor",
+      "kind": "lesson",
+      "title": "str:node.b2.g-minor",
+      "icon": "note",
+      "levels": [
+        "b2-02-g-minor"
+      ],
+      "next": [
+        "minuet"
+      ]
+    },
+    {
+      "id": "minuet",
+      "kind": "song",
+      "title": "str:node.b2.minuet",
+      "icon": "play",
+      "levels": [
+        "b2-03-minuet"
+      ],
+      "next": [
+        "phrases"
+      ],
+      "songs": {
+        "default": "minuet-in-g-minor",
+        "classical": "minuet-in-g-minor"
+      }
+    },
+    {
+      "id": "phrases",
+      "kind": "lesson",
+      "title": "str:node.b2.phrases",
+      "icon": "note",
+      "levels": [
+        "b2-04-phrases"
+      ],
+      "next": [
+        "air"
+      ]
+    },
+    {
+      "id": "air",
+      "kind": "song",
+      "title": "str:node.b2.air",
+      "icon": "play",
+      "levels": [
+        "b2-05-air"
+      ],
+      "next": [
+        "polonaise"
+      ],
+      "songs": {
+        "default": "air-on-the-g-string",
+        "classical": "air-on-the-g-string"
+      }
+    },
+    {
+      "id": "polonaise",
+      "kind": "song",
+      "title": "str:node.b2.polonaise",
+      "icon": "play",
+      "levels": [
+        "b2-06-polonaise"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "polonaise-in-g-minor",
+        "classical": "polonaise-in-g-minor"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.b2.gate-1",
+      "icon": "star",
+      "levels": [
+        "b2-07-gate-minuet",
+        "b2-08-gate-air",
+        "b2-09-gate-polonaise"
+      ],
+      "next": [
+        "e-minor"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "e-minor",
+      "kind": "lesson",
+      "title": "str:node.b2.e-minor",
+      "icon": "note",
+      "levels": [
+        "b2-10-e-minor"
+      ],
+      "next": [
+        "sixteenths"
+      ]
+    },
+    {
+      "id": "sixteenths",
+      "kind": "lesson",
+      "title": "str:node.b2.sixteenths",
+      "icon": "note",
+      "levels": [
+        "b2-11-sixteenths"
+      ],
+      "next": [
+        "leaps"
+      ]
+    },
+    {
+      "id": "leaps",
+      "kind": "lesson",
+      "title": "str:node.b2.leaps",
+      "icon": "note",
+      "levels": [
+        "b2-12-leaps"
+      ],
+      "next": [
+        "suspensions"
+      ]
+    },
+    {
+      "id": "suspensions",
+      "kind": "lesson",
+      "title": "str:node.b2.suspensions",
+      "icon": "note",
+      "levels": [
+        "b2-13-suspensions"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.b2.gate-2",
+      "icon": "star",
+      "levels": [
+        "b2-14-gate-sixteenths",
+        "b2-15-gate-leaps",
+        "b2-16-gate-suspensions"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.b2.boss",
+      "icon": "play",
+      "levels": [
+        "b2-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "bourree-in-e-minor",
+        "classical": "bourree-in-e-minor"
+      }
+    }
+  ]
+}

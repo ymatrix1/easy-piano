@@ -1,0 +1,14 @@
+{
+  "id": "cs1-09-gate-e",
+  "title": "str:level.cs1.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs1-e-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

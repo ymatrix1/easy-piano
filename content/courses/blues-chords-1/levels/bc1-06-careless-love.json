@@ -1,0 +1,33 @@
+{
+  "id": "bc1-06-careless-love",
+  "title": "str:level.bc1.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "careless-love",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "careless-love",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "careless-love",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "careless-love",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

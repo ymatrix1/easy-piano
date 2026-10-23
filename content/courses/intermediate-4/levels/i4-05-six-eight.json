@@ -1,0 +1,51 @@
+{
+  "id": "i4-05-six-eight",
+  "title": "str:level.i4.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i4-six-eight"
+    },
+    {
+      "type": "wait",
+      "score": "i4-six-eight",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-six-eight",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "i4-six-eight",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-six-eight",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-six-eight",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-six-eight",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

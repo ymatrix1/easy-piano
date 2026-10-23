@@ -1,0 +1,14 @@
+{
+  "id": "jc1-08-gate-two-five-one",
+  "title": "str:level.jc1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jc1-251-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "ls3-11-oh-dear",
+  "title": "str:level.ls3.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "oh-dear-what-can-the-matter-be",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "oh-dear-what-can-the-matter-be",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "oh-dear-what-can-the-matter-be",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "oh-dear-what-can-the-matter-be",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "oh-dear-what-can-the-matter-be",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

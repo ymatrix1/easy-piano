@@ -1,0 +1,83 @@
+{
+  "id": "ls2-key-f",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.ls2.keyf.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "F2",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 3,
+      "press": "A2",
+      "label": "3"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 1,
+      "press": "C3",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 5,
+      "press": "Bb2",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 3,
+      "press": "D3",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 1,
+      "press": "F3",
+      "label": "1"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 1,
+      "press": "Bb3",
+      "label": "1"
+    },
+    {
+      "at": 14,
+      "prompt": "your_turn"
+    }
+  ]
+}

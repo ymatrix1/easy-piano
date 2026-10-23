@@ -1,0 +1,14 @@
+{
+  "id": "ls1-16-gate-mid-bar",
+  "title": "str:level.ls1.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls1-change-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

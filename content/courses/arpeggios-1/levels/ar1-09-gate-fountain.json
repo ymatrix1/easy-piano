@@ -1,0 +1,14 @@
+{
+  "id": "ar1-09-gate-fountain",
+  "title": "str:level.ar1.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ar1-fountain",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

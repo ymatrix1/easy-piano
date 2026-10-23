@@ -1,0 +1,14 @@
+{
+  "id": "pc3-18-gate-loch-lomond-again",
+  "title": "str:level.pc3.18.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "loch-lomond",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

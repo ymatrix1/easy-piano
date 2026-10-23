@@ -1,0 +1,48 @@
+{
+  "id": "i1-cross-rh-drill",
+  "title": "Thumb Under Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 D4:4@2 E4:4@3 F4:4@1"
+    },
+    {
+      "RH": "G4:4@2 A4:4@3 B4:4@4 C5:4@5"
+    },
+    {
+      "RH": "C5:4@5 B4:4@4 A4:4@3 G4:4@2"
+    },
+    {
+      "RH": "F4:4@1 E4:4@3 D4:4@2 C4:4@1"
+    },
+    {
+      "RH": "C4:8@1 D4:8@2 E4:8@3 F4:8@1 G4:8@2 A4:8@3 B4:8@4 C5:8@5"
+    },
+    {
+      "RH": "C5:8@5 B4:8@4 A4:8@3 G4:8@2 F4:8@1 E4:8@3 D4:8@2 C4:8@1"
+    },
+    {
+      "RH": "E4:4@3 F4:4@1 G4:4@2 E4:4@3"
+    },
+    {
+      "RH": "D4:4@2 E4:4@3 F4:4@1 G4:4@2"
+    },
+    {
+      "RH": "C4:1@1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

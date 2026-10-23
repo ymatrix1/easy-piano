@@ -100,7 +100,11 @@ class _LearnTabState extends State<LearnTab> {
                                   .where((x) => x.section == section.id)
                                   .last;
                           return SlideIn(
-                            delay: Duration(milliseconds: 80 + 70 * i),
+                            // Cap the stagger: with 30 modules the last
+                            // would wait over two seconds.
+                            delay: Duration(
+                              milliseconds: 80 + 70 * (i < 8 ? i : 8),
+                            ),
                             child: _OuterTrailItem(
                               number: i + 1,
                               last: last,

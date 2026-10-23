@@ -1,0 +1,196 @@
+{
+  "course": "pop-chords-1",
+  "nodes": [
+    {
+      "id": "triad",
+      "kind": "lesson",
+      "title": "str:node.pc1.triad",
+      "icon": "note",
+      "levels": [
+        "pc1-01-triad"
+      ],
+      "next": [
+        "g-chord"
+      ]
+    },
+    {
+      "id": "g-chord",
+      "kind": "lesson",
+      "title": "str:node.pc1.g-chord",
+      "icon": "note",
+      "levels": [
+        "pc1-02-g-chord"
+      ],
+      "next": [
+        "am-f"
+      ]
+    },
+    {
+      "id": "am-f",
+      "kind": "lesson",
+      "title": "str:node.pc1.am-f",
+      "icon": "note",
+      "levels": [
+        "pc1-03-am-f"
+      ],
+      "next": [
+        "progression"
+      ]
+    },
+    {
+      "id": "progression",
+      "kind": "lesson",
+      "title": "str:node.pc1.progression",
+      "icon": "note",
+      "levels": [
+        "pc1-04-progression"
+      ],
+      "next": [
+        "kumbaya"
+      ]
+    },
+    {
+      "id": "kumbaya",
+      "kind": "song",
+      "title": "str:node.pc1.kumbaya",
+      "icon": "play",
+      "levels": [
+        "pc1-05-kumbaya"
+      ],
+      "next": [
+        "root-bass"
+      ],
+      "songs": {
+        "default": "kumbaya",
+        "folk_world": "kumbaya",
+        "hymns_spirituals": "kumbaya"
+      }
+    },
+    {
+      "id": "root-bass",
+      "kind": "lesson",
+      "title": "str:node.pc1.root-bass",
+      "icon": "note",
+      "levels": [
+        "pc1-06-root-bass"
+      ],
+      "next": [
+        "gate-1"
+      ]
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.pc1.gate-1",
+      "icon": "star",
+      "levels": [
+        "pc1-07-gate-kumbaya",
+        "pc1-08-gate-saints",
+        "pc1-09-gate-progression"
+      ],
+      "next": [
+        "rhythm"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "rhythm",
+      "kind": "lesson",
+      "title": "str:node.pc1.rhythm",
+      "icon": "note",
+      "levels": [
+        "pc1-10-rhythm"
+      ],
+      "next": [
+        "michael"
+      ]
+    },
+    {
+      "id": "michael",
+      "kind": "song",
+      "title": "str:node.pc1.michael",
+      "icon": "play",
+      "levels": [
+        "pc1-11-michael"
+      ],
+      "next": [
+        "symbols"
+      ],
+      "songs": {
+        "default": "michael-row-the-boat-ashore",
+        "hymns_spirituals": "michael-row-the-boat-ashore",
+        "folk_world": "michael-row-the-boat-ashore"
+      }
+    },
+    {
+      "id": "symbols",
+      "kind": "lesson",
+      "title": "str:node.pc1.symbols",
+      "icon": "note",
+      "levels": [
+        "pc1-12-symbols"
+      ],
+      "next": [
+        "melody-lh"
+      ]
+    },
+    {
+      "id": "melody-lh",
+      "kind": "lesson",
+      "title": "str:node.pc1.melody-lh",
+      "icon": "note",
+      "levels": [
+        "pc1-13-melody-lh"
+      ],
+      "next": [
+        "whole-world"
+      ]
+    },
+    {
+      "id": "whole-world",
+      "kind": "song",
+      "title": "str:node.pc1.whole-world",
+      "icon": "play",
+      "levels": [
+        "pc1-14-whole-world"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "hes-got-the-whole-world",
+        "hymns_spirituals": "hes-got-the-whole-world",
+        "originals_pop": "pc1-symbol-etude"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.pc1.gate-2",
+      "icon": "star",
+      "levels": [
+        "pc1-15-gate-michael",
+        "pc1-16-gate-whole-world",
+        "pc1-17-gate-symbols"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.pc1.boss",
+      "icon": "play",
+      "levels": [
+        "pc1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "pc1-boss",
+        "originals_pop": "pc1-boss"
+      }
+    }
+  ]
+}

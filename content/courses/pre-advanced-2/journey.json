@@ -1,0 +1,213 @@
+{
+  "course": "pre-advanced-2",
+  "nodes": [
+    {
+      "id": "triads",
+      "kind": "lesson",
+      "title": "str:node.pa2.triads",
+      "icon": "note",
+      "levels": [
+        "pa2-01-triads"
+      ],
+      "next": [
+        "oompah"
+      ]
+    },
+    {
+      "id": "oompah",
+      "kind": "lesson",
+      "title": "str:node.pa2.oompah",
+      "icon": "note",
+      "levels": [
+        "pa2-02-oompah"
+      ],
+      "next": [
+        "polka"
+      ]
+    },
+    {
+      "id": "polka",
+      "kind": "song",
+      "title": "str:node.pa2.polka",
+      "icon": "play",
+      "levels": [
+        "pa2-03-polka"
+      ],
+      "next": [
+        "march"
+      ],
+      "songs": {
+        "default": "pa2-polka",
+        "folk_world": "pa2-polka"
+      }
+    },
+    {
+      "id": "march",
+      "kind": "song",
+      "title": "str:node.pa2.march",
+      "icon": "play",
+      "levels": [
+        "pa2-04-march"
+      ],
+      "next": [
+        "waltz-bass"
+      ],
+      "songs": {
+        "default": "pa2-march",
+        "originals_pop": "pa2-march"
+      }
+    },
+    {
+      "id": "waltz-bass",
+      "kind": "lesson",
+      "title": "str:node.pa2.waltz-bass",
+      "icon": "note",
+      "levels": [
+        "pa2-05-waltz-bass"
+      ],
+      "next": [
+        "brahms"
+      ]
+    },
+    {
+      "id": "brahms",
+      "kind": "song",
+      "title": "str:node.pa2.brahms",
+      "icon": "play",
+      "levels": [
+        "pa2-06-brahms-waltz"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "brahms-waltz-op39-15",
+        "classical": "brahms-waltz-op39-15"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.pa2.gate-1",
+      "icon": "star",
+      "levels": [
+        "pa2-07-gate-polka",
+        "pa2-08-gate-march",
+        "pa2-09-gate-brahms"
+      ],
+      "next": [
+        "alberti"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "alberti",
+      "kind": "lesson",
+      "title": "str:node.pa2.alberti",
+      "icon": "note",
+      "levels": [
+        "pa2-10-alberti"
+      ],
+      "next": [
+        "alberti-16"
+      ]
+    },
+    {
+      "id": "alberti-16",
+      "kind": "lesson",
+      "title": "str:node.pa2.alberti-16",
+      "icon": "note",
+      "levels": [
+        "pa2-11-alberti-16"
+      ],
+      "next": [
+        "sonata"
+      ]
+    },
+    {
+      "id": "sonata",
+      "kind": "song",
+      "title": "str:node.pa2.sonata",
+      "icon": "play",
+      "levels": [
+        "pa2-12-sonata-facile"
+      ],
+      "next": [
+        "arpeggio"
+      ],
+      "songs": {
+        "default": "sonata-facile-k545",
+        "classical": "sonata-facile-k545"
+      }
+    },
+    {
+      "id": "arpeggio",
+      "kind": "lesson",
+      "title": "str:node.pa2.arpeggio",
+      "icon": "note",
+      "levels": [
+        "pa2-13-arpeggio"
+      ],
+      "next": [
+        "clementi"
+      ]
+    },
+    {
+      "id": "clementi",
+      "kind": "song",
+      "title": "str:node.pa2.clementi",
+      "icon": "play",
+      "levels": [
+        "pa2-14-clementi"
+      ],
+      "next": [
+        "singing"
+      ],
+      "songs": {
+        "default": "clementi-sonatina-op36-1",
+        "classical": "clementi-sonatina-op36-1"
+      }
+    },
+    {
+      "id": "singing",
+      "kind": "lesson",
+      "title": "str:node.pa2.singing",
+      "icon": "note",
+      "levels": [
+        "pa2-15-singing"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.pa2.gate-2",
+      "icon": "star",
+      "levels": [
+        "pa2-16-gate-sonata",
+        "pa2-17-gate-clementi",
+        "pa2-18-gate-singing"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.pa2.boss",
+      "icon": "play",
+      "levels": [
+        "pa2-19-boss-fur-elise"
+      ],
+      "next": [],
+      "songs": {
+        "default": "fur-elise",
+        "classical": "fur-elise"
+      }
+    }
+  ]
+}

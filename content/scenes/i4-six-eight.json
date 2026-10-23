@@ -1,0 +1,52 @@
+{
+  "id": "i4-six-eight",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.i4.sixeight.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "G4",
+      "label": "1"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "B4",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "D5",
+      "label": "5"
+    },
+    {
+      "at": 7.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "B4",
+      "label": "3"
+    },
+    {
+      "at": 9,
+      "caption": "str:scene.i4.sixeight.2"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

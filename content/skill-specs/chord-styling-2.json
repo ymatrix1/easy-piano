@@ -1,0 +1,386 @@
+{
+  "course": "chord-styling-2",
+  "nodes": [
+    {
+      "node": "rock-bass",
+      "new_skill": "Left hand rock bass: root and fifth in driving eighth notes.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        96,
+        112
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "chord-pulse",
+      "new_skill": "Right hand plays a chord in a steady eighth-note pulse.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        92,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "push",
+      "new_skill": "A push: play the next chord on the and of 4, with a quiet downbeat.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        96,
+        112
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sloop-john-b",
+      "new_skill": "Folk song in F: rock bass under the tune, a few chord hits and a chromatic G sharp.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "accidental": "G#"
+        },
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        116
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "rock-anthem",
+      "new_skill": "Rock song in G: chord pulse over root-fifth bass with pushes.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        104,
+        120
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: rock bass, chord pulse and pushes.",
+      "required": [
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        96,
+        120
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ballad",
+      "new_skill": "Ballad hands: left hand half-note octaves, right hand broken eighths.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "2",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        64,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "top-note",
+      "new_skill": "Melody as the top note of a right-hand chord.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "2",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ballad-song",
+      "new_skill": "Original ballad in G: broken eighths, then melody on top of chords.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        64,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ballad-rock",
+      "new_skill": "One song, two textures: ballad verse then rock chorus.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "swing-low",
+      "new_skill": "Spiritual: ballad verse with melody on top, rock-bass chorus.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8."
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: ballad textures, melody on top and rock bass.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        64,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Danny Boy as a ballad, melody on top of the chord over octave bass.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "4."
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        58,
+        74
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

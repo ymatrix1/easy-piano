@@ -1,0 +1,53 @@
+{
+  "id": "i3-parallel-drill",
+  "title": "Side by Side",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4@1 D4:4@2 E4:4@3 F4:4@4",
+      "LH": "C3:4@5 D3:4@4 E3:4@3 F3:4@2"
+    },
+    {
+      "RH": "G4:4@5 F4:4@4 E4:4@3 D4:4@2",
+      "LH": "G3:4@1 F3:4@2 E3:4@3 D3:4@4"
+    },
+    {
+      "RH": "E4:4@3 F4:4@4 G4:2@5",
+      "LH": "E3:4@3 F3:4@2 G3:2@1"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5"
+    },
+    {
+      "RH": "C4:8@1 D4:8@2 E4:8@3 F4:8@4 G4:8@5 F4:8@4 E4:8@3 D4:8@2",
+      "LH": "C3:8@5 D3:8@4 E3:8@3 F3:8@2 G3:8@1 F3:8@2 E3:8@3 D3:8@4"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1",
+      "LH": "E3:4@3 D3:4@4 C3:2@5"
+    },
+    {
+      "RH": "G4:4@5 E4:4@3 F4:4@4 D4:4@2",
+      "LH": "G3:4@1 E3:4@3 F3:4@2 D3:4@4"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

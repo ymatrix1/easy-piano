@@ -1,0 +1,36 @@
+{
+  "id": "cs2-06-ballad",
+  "title": "str:level.cs2.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "cs2-ballad"
+    },
+    {
+      "type": "wait",
+      "score": "cs2-ballad-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-drill",
+      "tempo": 0.7,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-drill",
+      "tempo": 0.9,
+      "pass": 0.7
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "i1-12-d-minor",
+  "title": "str:level.i1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "i1-dminor-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-dminor-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-dminor-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

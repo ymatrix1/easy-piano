@@ -1,0 +1,80 @@
+{
+  "id": "i4-g-scale",
+  "duration_beats": 18,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.i4.gscale.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "G4",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 2,
+      "press": "A4",
+      "label": "2"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 3,
+      "press": "B4",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 1,
+      "press": "C5",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 2,
+      "press": "D5",
+      "label": "2"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 3,
+      "press": "E5",
+      "label": "3"
+    },
+    {
+      "at": 9,
+      "hand": "R",
+      "finger": 4,
+      "press": "F#5",
+      "label": "4"
+    },
+    {
+      "at": 10,
+      "hand": "R",
+      "finger": 5,
+      "press": "G5",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "caption": "str:scene.i4.gscale.2"
+    },
+    {
+      "at": 15,
+      "prompt": "your_turn"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "sl-15-gate-ground",
+  "title": "str:level.sl.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sl-ground-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

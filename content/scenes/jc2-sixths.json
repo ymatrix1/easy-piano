@@ -1,0 +1,45 @@
+{
+  "id": "jc2-sixths",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.jc2.sixths.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 3,
+      "press": "E2",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 2,
+      "press": "G2",
+      "label": "2"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "A2",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.jc2.sixths.2"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

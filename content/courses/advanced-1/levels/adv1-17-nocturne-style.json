@@ -1,0 +1,27 @@
+{
+  "id": "adv1-17-nocturne-style",
+  "title": "str:level.adv1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "adv1-nocturne-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-nocturne-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-nocturne-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

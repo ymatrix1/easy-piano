@@ -1,0 +1,31 @@
+{
+  "id": "jc2-08-dim7",
+  "title": "str:level.jc2.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "jc2-dim7"
+    },
+    {
+      "type": "wait",
+      "score": "jc2-dim-passing",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-dim-passing",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-dim-passing",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

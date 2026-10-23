@@ -1,0 +1,14 @@
+{
+  "id": "b1-07-gate-march",
+  "title": "str:level.b1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "march-in-d",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "c1-08-bass-walk",
+  "title": "str:level.c1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "c1-bass-lines"
+    },
+    {
+      "type": "wait",
+      "score": "c1-bass-walk-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-bass-walk-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-bass-walk-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

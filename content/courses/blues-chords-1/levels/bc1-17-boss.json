@@ -1,0 +1,27 @@
+{
+  "id": "bc1-17-boss",
+  "title": "str:level.bc1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bc1-boss",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-boss",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-boss",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

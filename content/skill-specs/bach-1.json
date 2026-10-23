@@ -1,0 +1,292 @@
+{
+  "course": "bach-1",
+  "nodes": [
+    {
+      "node": "two-part",
+      "new_skill": "Two-part playing: the left hand carries the melody.",
+      "required": [
+        {
+          "pitch": "D3",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "imitation",
+      "new_skill": "Imitation: one hand repeats the other's tune.",
+      "required": [
+        {
+          "pitch": "D4",
+          "hand": "LH"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "march",
+      "new_skill": "March in D: two-part march with D major sharps.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sequences",
+      "new_skill": "Sequences: a pattern repeated a step lower, then higher.",
+      "required": [
+        {
+          "pitch": "A4",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "motion",
+      "new_skill": "Contrary and parallel motion between the hands.",
+      "required": [
+        {
+          "pitch": "E5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "arioso",
+      "new_skill": "Arioso: singing melody over an eighth-note left hand.",
+      "required": [
+        {
+          "rhythm": "8"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        56,
+        64
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: marches, two-part lines and sequences.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        68,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minuet-form",
+      "new_skill": "Minuet form: two eight-bar halves.",
+      "required": [
+        {
+          "rhythm": "2."
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "runs",
+      "new_skill": "Eighth-note runs passed between the hands.",
+      "required": [
+        {
+          "rhythm": "8"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        60,
+        68
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "jesu-joy",
+      "new_skill": "Triplets over a singing left hand.",
+      "required": [
+        {
+          "rhythm": "1/12"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        60,
+        72
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "invention",
+      "new_skill": "Little invention: imitation, sequences and runs.",
+      "required": [
+        {
+          "rhythm": "8"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: triplets, runs and two-part counterpoint.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        60,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Petzold minuet with a moving left hand.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "3/4"
+    }
+  ]
+}

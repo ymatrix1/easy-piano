@@ -1,0 +1,36 @@
+{
+  "id": "cs2-03-push",
+  "title": "str:level.cs2.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "cs2-push"
+    },
+    {
+      "type": "wait",
+      "score": "cs2-push-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-push-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-push-drill",
+      "tempo": 0.7,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-push-drill",
+      "tempo": 0.9,
+      "pass": 0.7
+    }
+  ]
+}
