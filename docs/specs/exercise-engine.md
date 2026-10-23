@@ -40,7 +40,7 @@ Play-along stages run with `Settings::training` (the app turns it on for every p
 |---|---|
 | Section threshold | `effective_threshold(pass_ratio, failed_attempts + section_fails)` |
 | Pass | All section notes judged and hits ≥ threshold × notes → `SectionEvent::Passed`, next section, `section_fails = 0` |
-| Early fail | Misses > (1 − threshold) × notes, even before the section ends |
+| Early fail | Misses plus wrong-key presses > (1 − threshold) × targets, even before the section ends |
 | Fail at full tempo | `section_fails += 1`, rewind to the section's first note; every `FAILS_BEFORE_PRACTICE` (2) failures the replay is a practice run (`intro` set) |
 | Practice run | Tempo × `PRACTICE_TEMPO` (0.75). Failed → practise again. Passed → `section_fails += 1`, replay the section at full tempo |
 
