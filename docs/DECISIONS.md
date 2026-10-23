@@ -377,3 +377,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** Separate keys reuse the existing parser, bar-length lint and fingering per voice, and leave every current song valid. Matching ignores durations, so the engine needs almost no change.
 - **Alternatives:** A voice separator inside one hand string (`"RH": "... // ..."`: harder to lint and diff); per-note voice marks (verbose, breaks the token grammar); n voices (`RH1..RHn`: no content needs more than two yet); flatten voices into chords with ties (wrong durations and engraving).
 - **Impact:** core `Song` / `notation` / timeline, staff renderer, difficulty feature, rubric flag, converter and importer, schema. Implementation: bean piano-16vk; then the rest of Mikrokosmos: bean piano-s1iz.
+
+### D35. Methods live in their own library, reached from one card on the Learn tab
+
+- **Status:** proposed
+- **Context:** D33 put Mikrokosmos I as a numbered course card in a `methods` section of the Learn tab. Mikrokosmos alone has six books, and more methods are planned; a flat list of course cards buries the main path and suggests a required order.
+- **Decision:** Group method books by method in `content/methods.json`; the Learn tab shows the main path and one Methods card that opens a library (one card per method) and a method page (books as sections, Continue). Method courses are unnumbered, never locked, and restricted pieces show locked with the reason. Spec: [methods](specs/methods.md).
+- **Why:** Keeps the main path short and clearly sequential, scales to many methods and books, and gives each method room for its own description and progress.
+- **Alternatives:** A fourth bottom-nav tab "Methods" (more visible, but spends navigation on optional content); keep course cards in a section (does not scale); one course per method with books as journey nodes (loses per-book progress and order).
+- **Impact:** New `content/methods.json`, course field `method`, lint rules, two new screens, strings; off-ramp rule moves from section to `method`. Implementation: bean piano-d72v.
