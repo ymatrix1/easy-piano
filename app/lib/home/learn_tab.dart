@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
@@ -41,20 +42,7 @@ class _LearnTabState extends State<LearnTab> {
   ];
 
   Future<void> _openNode(CourseDef course, JourneyNode node) async {
-    final selection = await showModalBottomSheet<(String, int)>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _TaskSheet(
-        repo: widget.repo,
-        progress: widget.progress,
-        course: course,
-        node: node,
-      ),
-    );
-    if (selection != null) {
-      await widget.onPlay(selection.$1, selection.$2);
-    }
+    await context.push('/course/${course.id}/node/${node.id}');
   }
 
   @override
@@ -771,6 +759,39 @@ class _SubmoduleRow extends StatelessWidget {
   }
 }
 
+/// Directly addressable detail page for a course node.
+class CourseNodePage extends StatelessWidget {
+  const CourseNodePage({
+    super.key,
+    required this.repo,
+    required this.course,
+    required this.node,
+    required this.onPlay,
+  });
+
+  final ContentRepo repo;
+  final CourseDef course;
+  final JourneyNode node;
+  final Future<void> Function(String, [int]) onPlay;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: Text(repo.t(course.title)),
+      leading: BackButton(onPressed: () => context.pop()),
+    ),
+    body: Center(
+      child: _TaskSheet(
+        repo: repo,
+        progress: Progress(repo, const {}),
+        course: course,
+        node: node,
+        onSelect: (id, stage) => onPlay(id, stage),
+      ),
+    ),
+  );
+}
+
 /// Bottom sheet listing a submodule's tasks; returns the level id to play.
 class _TaskSheet extends StatelessWidget {
   const _TaskSheet({
@@ -778,12 +799,22 @@ class _TaskSheet extends StatelessWidget {
     required this.progress,
     required this.course,
     required this.node,
+    this.onSelect,
   });
 
   final ContentRepo repo;
   final Progress progress;
   final CourseDef course;
   final JourneyNode node;
+  final void Function(String, int)? onSelect;
+
+  void _select(BuildContext context, String id, int stage) {
+    if (onSelect != null) {
+      onSelect!(id, stage);
+    } else {
+      Navigator.of(context).pop((id, stage));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -835,7 +866,7 @@ class _TaskSheet extends StatelessWidget {
                           title: repo.t(repo.levels[id]?.title ?? id),
                           stars: progress.levelStars[id] ?? 0,
                           isNext: id == open,
-                          onTap: () => Navigator.of(context).pop((id, 0)),
+                          onTap: () => _select(context, id, 0),
                         ),
                       ),
                     const SizedBox(height: 10),
@@ -847,7 +878,7 @@ class _TaskSheet extends StatelessWidget {
                               label: AppLocalizations.of(context).navPractice,
                               icon: Icons.fitness_center_rounded,
                               tone: GameTone.purple,
-                              onTap: () => Navigator.of(context).pop((open, 0)),
+                              onTap: () => _select(context, open, 0),
                               fontSize: 17,
                               height: 54,
                             ),
@@ -859,8 +890,7 @@ class _TaskSheet extends StatelessWidget {
                                   .practicePlayAlong,
                               icon: Icons.play_arrow_rounded,
                               onTap: () =>
-                                  Navigator.of(context)
-                                      .pop((open, playAlongIndex)),
+                                  _select(context, open, playAlongIndex),
                               fontSize: 17,
                               height: 54,
                             ),
@@ -871,7 +901,7 @@ class _TaskSheet extends StatelessWidget {
                       GameButton(
                         label: AppLocalizations.of(context).play,
                         icon: Icons.play_arrow_rounded,
-                        onTap: () => Navigator.of(context).pop((open, 0)),
+                        onTap: () => _select(context, open, 0),
                         fontSize: 20,
                         height: 54,
                       ),

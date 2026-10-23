@@ -47,7 +47,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _playLevel(String levelId, [int initialStageIndex = 0]) async {
     final level = widget.repo.levels[levelId];
     if (level == null) return;
-    final stars = await context.push<int>('/lesson/$levelId');
+    final stage = initialStageIndex > 0 ? '?stage=$initialStageIndex' : '';
+    final stars = await context.push<int>('/lesson/$levelId$stage');
     if (stars != null && stars > (_stars[levelId] ?? 0)) {
       setState(() => _stars[levelId] = stars);
     }
@@ -58,7 +59,8 @@ class _HomePageState extends State<HomePage> {
       ? null
       : createTuneGenerator(widget.repo.melodyManifest!);
 
-  void _push(WidgetBuilder b) => context.push('/tool', extra: b);
+  void _push(String location, WidgetBuilder b) =>
+      context.push(location, extra: b);
 
   @override
   Widget build(BuildContext context) {
@@ -68,10 +70,14 @@ class _HomePageState extends State<HomePage> {
       SafeArea(
         bottom: false,
         child: PracticeTab(
-          onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
+          onFreePlay: () => _push(
+            '/practice/free-play',
+            (_) => FreePlayPage(midi: widget.midi),
+          ),
           onEndless: _generator == null || widget.repo.practice.isEmpty
               ? null
               : () => _push(
+                  '/practice/endless',
                   (_) => StreamSetupPage(
                     repo: widget.repo,
                     generator: _generator,
@@ -86,8 +92,9 @@ class _HomePageState extends State<HomePage> {
       ),
       ProfileTab(
         progress: progress,
-        onMidiSpike: () => _push(widget.spikes),
-        onStaffSpike: () => _push((_) => const StaffSpikePage()),
+        onMidiSpike: () => _push('/tools/midi', widget.spikes),
+        onStaffSpike: () =>
+            _push('/tools/staff', (_) => const StaffSpikePage()),
       ),
     ];
     return Scaffold(

@@ -7,9 +7,14 @@ The web app uses `go_router` so the address bar reflects the current destination
 | `/learn` | Learn tab |
 | `/practice` | Practice tab |
 | `/profile` | Profile tab |
+| `/course/<course-id>/node/<node-id>` | A course node and its task list |
 | `/lesson/<level-id>` | A level, opened at its first stage |
-| `/tool` | An in-session developer or practice tool; requires router state |
+| `/lesson/<level-id>?stage=<index>` | A level opened at a selected stage |
+| `/practice/free-play` | Free play |
+| `/practice/endless` | Endless practice setup |
+| `/tools/midi` | MIDI developer spike |
+| `/tools/staff` | Staff-rendering developer spike |
 
-Tab changes replace the current tab location. Opening a level or tool pushes a history entry; browser back returns to the previous screen. Lesson URLs can be bookmarked and opened directly. `/tool` is transient and falls back to Learn when loaded without its in-session destination.
+Tab changes replace the current tab location. Opening a course node, level or tool pushes a history entry; browser back returns to the previous screen. Course-node, lesson, and tool URLs can be bookmarked and opened directly. Lessons keep the selected stage in the `stage` query parameter.
 
 Unknown paths redirect to `/learn`. Navigation state is in-memory; learner progress persistence is out of scope.
