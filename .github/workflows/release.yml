@@ -205,5 +205,6 @@ jobs:
       - name: Publish release and attach platform assets
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: gh release create "$RELEASE_TAG" release-assets/web-android-assets/* release-assets/windows-assets/* --generate-notes --title "Easy Piano ${RELEASE_TAG}"
