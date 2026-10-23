@@ -1,0 +1,25 @@
+{
+  "id": "mk2-40",
+  "title": "str:node.mk2.40",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "mikrokosmos-040",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "mikrokosmos-040",
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "mikrokosmos-040",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

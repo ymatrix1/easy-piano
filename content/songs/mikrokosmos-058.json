@@ -1,0 +1,97 @@
+{
+  "id": "mikrokosmos-058",
+  "title": "Mikrokosmos 58: In Oriental Style",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/58.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 138,
+  "time": "6/8",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:2.",
+      "LH": "G3:8 Bb3:8 G3:8 C#4:4. {tie}"
+    },
+    {
+      "RH": "r:2.",
+      "LH": "C#4:8 A3:8 G3:8 Bb3:4 C#4:8"
+    },
+    {
+      "RH": "r:2.",
+      "LH": "A3:8 G3:8 Bb3:8 D4:8 C#4:8 A3:8"
+    },
+    {
+      "RH": "G4:8 Bb4:8 G4:8 C#5:4. {tie}",
+      "LH": "C#4:2 A3:8 G3:8"
+    },
+    {
+      "RH": "C#5:8 A4:8 G4:8 Bb4:8 C#5:4",
+      "LH": "Bb3:4 C#4:8 A3:8 G3:8 Bb3:8"
+    },
+    {
+      "RH": "A4:8 G4:8 Bb4:8 D5:8 C#5:8 G4:8",
+      "LH": "C#4:4. Bb3:4 C#4:8"
+    },
+    {
+      "RH": "A4:2.",
+      "LH": "A3:2."
+    },
+    {
+      "RH": "D5:8 C#5:8 D5:8 E5:4. {tie}",
+      "LH": "r:2."
+    },
+    {
+      "RH": "E5:8 F5:8 E5:8 D5:8 C#5:8 Bb4:8",
+      "LH": "D4:8 C#4:8 D4:8 E4:4. {tie}"
+    },
+    {
+      "RH": "C#5:8 D5:8 E5:8 F5:4. {tie}",
+      "LH": "E4:8 F4:8 E4:8 D4:8 C#4:8 Bb3:8"
+    },
+    {
+      "RH": "F5:8 E5:8 D5:8 C#5:8 Bb4:8 F5:8",
+      "LH": "C#4:8 D4:8 E4:8 F4:8 E4:8 D4:8"
+    },
+    {
+      "RH": "E5:8 D5:8 C#5:8 Bb4:8 F5:8 E5:8",
+      "LH": "C#4:8 Bb3:8 F4:8 E4:8 D4:8 C#4:8"
+    },
+    {
+      "RH": "D5:8 C#5:8 Bb4:8 C#5:4 D5:8",
+      "LH": "Bb3:4. F4:8 E4:8 D4:8"
+    },
+    {
+      "RH": "E5:4. {tie} E5:4 r:8",
+      "LH": "Bb3:8 C4:2 r:8"
+    },
+    {
+      "RH": "G4:8 Bb4:8 G4:8 C#5:4. {tie}",
+      "LH": "r:4 r:8 G3:8 Bb3:8 G3:8"
+    },
+    {
+      "RH": "C#5:8 A4:8 G4:8 Bb4:8 C#5:4",
+      "LH": "C#4:2 A3:8 G3:8"
+    },
+    {
+      "RH": "A4:4 G4:8 Bb4:8 C#5:4",
+      "LH": "Bb3:8 C#4:4 A3:4 G3:8"
+    },
+    {
+      "RH": "r:8 A4:8 G4:8 Bb4:8 G4:8 Bb4:8",
+      "LH": "C#4:4. {tie} C#4:4 G3:8"
+    },
+    {
+      "RH": "A4:2.",
+      "LH": "D4:2."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "mk2-63",
+  "title": "str:node.mk2.63",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "mikrokosmos-063",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "mikrokosmos-063",
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "mikrokosmos-063",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

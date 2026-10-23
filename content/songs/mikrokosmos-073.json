@@ -1,0 +1,137 @@
+{
+  "id": "mikrokosmos-073",
+  "title": "Mikrokosmos 73: Sixths and Triads",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/73.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 98,
+  "time": "2/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "F4D5:4 G4E5:8 E4C5:8",
+      "LH": "r:2"
+    },
+    {
+      "RH": "F4D5:2",
+      "LH": "C3A3:4 D3B3:8 B2G3:8"
+    },
+    {
+      "RH": "F4D5:8 F4D5:8 G4E5:8 E4C5:8",
+      "LH": "C3A3:2"
+    },
+    {
+      "RH": "F4D5:2",
+      "LH": "C3A3:8 C3A3:8 D3B3:8 B2G3:8"
+    },
+    {
+      "RH": "B4G5:8 C5A5:8 B4G5:8 C5A5:8",
+      "LH": "A2F3:8 G2E3:8 A2F3:8 G2E3:8"
+    },
+    {
+      "RH": "B4G5:8 C5A5:8 B4G5:8 A4F5:8",
+      "LH": "A2F3:8 G2E3:8 A2F3:8 B2G3:8"
+    },
+    {
+      "RH": "G4E5:8 F4D5:8 G4E5:8 A4F5:8",
+      "LH": "C3A3:8 D3B3:8 C3A3:8 B2G3:8"
+    },
+    {
+      "RH": "B4G5:4 A4F5:8 G4E5:8",
+      "LH": "A2F3:8 G2E3:8 A2F3:8 B2G3:8"
+    },
+    {
+      "RH": "F4A4D5:4 G4B4E5:8 E4G4C5:8",
+      "LH": "C3F3A3:4 D3G3B3:8 B2E3G3:8"
+    },
+    {
+      "RH": "F4A4D5:4 A4C5F5:4",
+      "LH": "C3F3A3:4 A2D3F3:8 B2E3G3:8"
+    },
+    {
+      "RH": "r:8 F4A4D5:8 G4B4E5:8 E4G4C5:8",
+      "LH": "C3F3A3:4 D3G3B3:8 B2E3G3:8"
+    },
+    {
+      "RH": "F4A4D5:4 C4E4A4:4",
+      "LH": "C3F3A3:4 E3A3C4:8 D3G3B3:8"
+    },
+    {
+      "RH": "F4A4D5:8 E4G4C5:8 D4F4B4:8 C4E4A4:8",
+      "LH": "C3F3A3:8 B2E3G3:8 A2D3F3:8 G2C3E3:8"
+    },
+    {
+      "RH": "B3D4G4:8 C4E4A4:8 D4F4B4:8 E4G4C5:8",
+      "LH": "F2B2D3:8 G2C3E3:8 A2D3F3:8 B2E3G3:8"
+    },
+    {
+      "RH": "F4A4D5:8 E4G4C5:8 F4A4D5:8 G4B4E5:8",
+      "LH": "r:8 B2E3G3:8 C3F3A3:8 D3G3B3:8"
+    },
+    {
+      "RH": "r:8 G4B4E5:8 A4C5F5:8 B4D5G5:8",
+      "LH": "E3A3C4:8 D3G3B3:8 E3A3C4:8 F3B3D4:8"
+    },
+    {
+      "RH": "C5E5A5:8 B4D5G5:8 r:8 B4D5G5:8",
+      "LH": "r:8 F3B3D4:8 G3C4E4:8 F3B3D4:8"
+    },
+    {
+      "RH": "A4C5F5:8 B4D5G5:8 r:8 B4D5G5:8",
+      "LH": "r:8 F3B3D4:8 E3A3C4:8 F3B3D4:8"
+    },
+    {
+      "RH": "C5E5A5:8 B4D5G5:8 C5E5A5:8 B4D5G5:8",
+      "LH": "r:8 F3B3D4:8 E3A3C4:8 F3B3D4:8"
+    },
+    {
+      "RH": "r:8 B4D5G5:8 C5E5A5:8 A4C5F5:8",
+      "LH": "E3A3C4:8 F3B3D4:8 r:8 E3A3C4:8"
+    },
+    {
+      "RH": "B4D5G5:2",
+      "LH": "r:8 D3G3B3:8 E3A3C4:8 F3B3D4:8"
+    },
+    {
+      "RH": "r:8 F4A4D5:8 G4B4E5:8 E4G4C5:8",
+      "LH": "G3C4E4:4 r:4"
+    },
+    {
+      "RH": "F4A4D5:2",
+      "LH": "r:8 A2D3F3:8 B2E3G3:8 C3F3A3:8"
+    },
+    {
+      "RH": "r:8 C4E4A4:8 D4F4B4:8 B3D4G4:8",
+      "LH": "D3G3B3:4 r:4"
+    },
+    {
+      "RH": "C4E4A4:4. B3D4G4:8",
+      "LH": "r:8 G2C3E3:8 A2D3F3:8 B2E3G3:8"
+    },
+    {
+      "RH": "C4E4A4:4 C4E4A4:8 B3D4G4:8",
+      "LH": "r:8 G2C3E3:8 A2D3F3:8 B2E3G3:8"
+    },
+    {
+      "RH": "C4E4A4:8 C4E4A4:8 C4E4A4:8 B3D4G4:8",
+      "LH": "r:8 G2C3E3:8 A2D3F3:8 B2E3G3:8"
+    },
+    {
+      "RH": "F4A4D5:8 E4G4C5:8 D4F4B4:8 C4E4A4:8",
+      "LH": "r:8 G2C3E3:8 A2D3F3:8 C3F3A3:8"
+    },
+    {
+      "RH": "B3D4G4:2",
+      "LH": "D3G3B3:2"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 """Import Bartok's Mikrokosmos from the Mikrokosmos-difficulty MusicXML (D33) as a Methods course.
 
-    uv run python -m melody_model.mikrokosmos <dataset_dir> <content_dir> --pieces 1-36
+    uv run python -m melody_model.mikrokosmos <dataset_dir> <content_dir> --pieces 1-153
 
 <dataset_dir> holds the dataset's `musicxml/<n>.xml` and `mikrokosmos_metadata.csv`
 (github.com/PRamoneda/Mikrokosmos-difficulty, kept in git-ignored `data/`). Writes
@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 from pathlib import Path
 
 import music21 as m21
@@ -24,7 +25,8 @@ import music21 as m21
 from .convert import convert_score
 from .notation import Unsupported
 
-COURSE = "mikrokosmos-1"
+# Bartok's six volumes by piece number; each is a course `mikrokosmos-<book>`.
+BOOKS = {1: (1, 36), 2: (37, 66), 3: (67, 96), 4: (97, 121), 5: (122, 139), 6: (140, 153)}
 REPO = "https://github.com/PRamoneda/Mikrokosmos-difficulty"
 # Composition protected in the US until 95 years after first publication (1940): D33.
 RESTRICTED_IN = [{"region": "US", "until": "2036-01-01"}]
@@ -81,11 +83,20 @@ def song(n: int, title: str, score: m21.stream.Score) -> dict:
     }
 
 
-def level(n: int, song_id: str) -> dict:
+def book_of(n: int) -> int:
+    return next(b for b, (lo, hi) in BOOKS.items() if lo <= n <= hi)
+
+
+def unescape(title: str) -> str:
+    """The dataset CSV spells some accents as literal backslash-u escapes."""
+    return re.sub(r"[\\]u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), title)
+
+
+def level(book: int, n: int, song_id: str) -> dict:
     """Hands alone at the learner's pace, then both hands along with the app."""
     return {
-        "id": f"mk1-{n:02d}",
-        "title": f"str:node.mk1.{n:02d}",
+        "id": f"mk{book}-{n:02d}",
+        "title": f"str:node.mk{book}.{n:02d}",
         "ui": "both",
         "stages": [
             {"type": "wait", "score": song_id, "pre_listen": True, "hand": "RH"},
@@ -95,7 +106,7 @@ def level(n: int, song_id: str) -> dict:
     }
 
 
-def journey(pieces: list[tuple[int, str]]) -> dict:
+def journey(book: int, pieces: list[tuple[int, str]]) -> dict:
     nodes = []
     for i, (n, song_id) in enumerate(pieces):
         nxt = [f"piece-{pieces[i + 1][0]:02d}"] if i + 1 < len(pieces) else []
@@ -103,14 +114,14 @@ def journey(pieces: list[tuple[int, str]]) -> dict:
             {
                 "id": f"piece-{n:02d}",
                 "kind": "song",
-                "title": f"str:node.mk1.{n:02d}",
+                "title": f"str:node.mk{book}.{n:02d}",
                 "icon": "play",
-                "levels": [f"mk1-{n:02d}"],
+                "levels": [f"mk{book}-{n:02d}"],
                 "next": nxt,
                 "songs": {"default": song_id},
             }
         )
-    return {"course": COURSE, "nodes": nodes}
+    return {"course": f"mikrokosmos-{book}", "nodes": nodes}
 
 
 def parse_range(text: str) -> list[int]:
@@ -130,26 +141,29 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("dataset", type=Path)
     ap.add_argument("content", type=Path)
-    ap.add_argument("--pieces", default="1-36")
+    ap.add_argument("--pieces", default="1-153")
     args = ap.parse_args(argv)
     with open(args.dataset / "mikrokosmos_metadata.csv", encoding="utf-8") as f:
         titles = {int(r["piece number"]): r["work"] for r in csv.DictReader(f)}
-    done: list[tuple[int, str]] = []
+    done: dict[int, list[tuple[int, str]]] = {}
     for n in parse_range(args.pieces):
         xml = args.dataset / "musicxml" / f"{n}.xml"
         if not xml.exists():
             print(f"skip {n}: not in dataset")
             continue
         try:
-            s = song(n, titles[n].split(", Mikrokosmos")[0], m21.converter.parse(str(xml)))
+            s = song(n, unescape(titles[n]).split(", Mikrokosmos")[0], m21.converter.parse(str(xml)))
         except Unsupported as e:
             print(f"skip {n}: {e}")
             continue
         write(args.content / "songs" / f"{s['id']}.json", s)
-        write(args.content / "courses" / COURSE / "levels" / f"mk1-{n:02d}.json", level(n, s["id"]))
-        done.append((n, s["id"]))
+        book = book_of(n)
+        course = args.content / "courses" / f"mikrokosmos-{book}"
+        write(course / "levels" / f"mk{book}-{n:02d}.json", level(book, n, s["id"]))
+        done.setdefault(book, []).append((n, s["id"]))
         print(f"ok {n}: {s['title']} ({s['time']}, {s['key']}, {s['bpm']} bpm, {len(s['bars'])} bars)")
-    write(args.content / "courses" / COURSE / "journey.json", journey(done))
+    for book, pieces in done.items():
+        write(args.content / "courses" / f"mikrokosmos-{book}" / "journey.json", journey(book, pieces))
 
 
 if __name__ == "__main__":

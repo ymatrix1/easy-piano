@@ -1,0 +1,18 @@
+{
+  "course": "mikrokosmos-5",
+  "nodes": [
+    {
+      "id": "piece-134",
+      "kind": "song",
+      "title": "str:node.mk5.134",
+      "icon": "play",
+      "levels": [
+        "mk5-134"
+      ],
+      "next": [],
+      "songs": {
+        "default": "mikrokosmos-134"
+      }
+    }
+  ]
+}

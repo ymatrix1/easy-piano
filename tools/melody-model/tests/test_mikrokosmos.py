@@ -92,3 +92,34 @@ def test_main_writes_songs_levels_and_a_chained_journey(tmp_path):
         (out / "courses" / "mikrokosmos-1" / "levels" / "mk1-01.json").read_text(encoding="utf-8")
     )
     assert [st["type"] for st in level["stages"]] == ["wait", "wait", "play_along"]
+
+
+def test_pieces_belong_to_bartoks_six_volumes():
+    assert [mk.book_of(n) for n in (1, 36, 37, 66, 67, 96, 97, 121, 122, 139, 140, 153)] == [
+        1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
+    ]  # fmt: skip
+
+
+def test_csv_accent_escapes_are_decoded():
+    assert mk.unescape("Hommage " + chr(92) + "u00e0 J. S. B.") == "Hommage à J. S. B."
+    assert mk.unescape("Chorale") == "Chorale"
+
+
+def test_main_splits_pieces_into_one_course_per_book(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "content"
+    (data / "musicxml").mkdir(parents=True)
+    (data / "mikrokosmos_metadata.csv").write_text(
+        'piece number,work\n36,"A, Mikrokosmos, Sz. 107"\n37,"B, Mikrokosmos, Sz. 107"\n',
+        encoding="utf-8",
+    )
+    for n in (36, 37):
+        score(tempo=(100, "quarter")).write("musicxml", fp=str(data / "musicxml" / f"{n}.xml"))
+    mk.main([str(data), str(out), "--pieces", "36-37"])
+    for book, n in ((1, 36), (2, 37)):
+        journey = json.loads(
+            (out / "courses" / f"mikrokosmos-{book}" / "journey.json").read_text(encoding="utf-8")
+        )
+        assert journey["course"] == f"mikrokosmos-{book}"
+        assert journey["nodes"][0]["levels"] == [f"mk{book}-{n:02d}"]
+        assert journey["nodes"][0]["title"] == f"str:node.mk{book}.{n:02d}"
+        assert (out / "courses" / f"mikrokosmos-{book}" / "levels" / f"mk{book}-{n:02d}.json").exists()

@@ -1,0 +1,65 @@
+{
+  "id": "mikrokosmos-039",
+  "title": "Mikrokosmos 39: Staccato and Legato (2, Canon)",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/39.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 88,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "A4:4 A4:4 A4:4 A4:4",
+      "LH": "r:1"
+    },
+    {
+      "RH": "A4:8 G4:8 F4:8 G4:8 F4:4 F4:8 G4:8",
+      "LH": "A3:4 A3:4 A3:4 A3:4"
+    },
+    {
+      "RH": "A4:8 Bb4:8 A4:4 A4:8 G4:8 A4:4",
+      "LH": "A3:8 G3:8 F3:8 G3:8 F3:4 F3:8 G3:8"
+    },
+    {
+      "RH": "A4:8 G4:8 A4:8 Bb4:8 C5:4 C5:4",
+      "LH": "A3:8 Bb3:8 A3:4 A3:8 G3:8 A3:8 Bb3:8"
+    },
+    {
+      "RH": "C5:4 C5:4 C5:4 C5:4",
+      "LH": "C4:4 C4:4 r:4 C4:4"
+    },
+    {
+      "RH": "r:4 C5:4 C5:4 C5:8 Bb4:8",
+      "LH": "C4:4 C4:4 C4:4 C4:4"
+    },
+    {
+      "RH": "A4:8 Bb4:8 A4:8 G4:8 A4:4 A4:8 Bb4:8",
+      "LH": "C4:4 C4:8 Bb3:8 A3:8 Bb3:8 A3:8 G3:8"
+    },
+    {
+      "RH": "A4:8 G4:8 F4:4 F4:8 G4:8 A4:8 Bb4:8",
+      "LH": "A3:4 A3:8 Bb3:8 A3:8 G3:8 F3:4"
+    },
+    {
+      "RH": "A4:8 G4:8 F4:4 F4:8 G4:8 A4:8 G4:8",
+      "LH": "F3:8 G3:8 A3:8 Bb3:8 A3:8 G3:8 F3:4"
+    },
+    {
+      "RH": "F4:4 F4:4 F4:4 F4:4",
+      "LH": "F3:8 G3:8 A3:8 G3:8 F3:4 F3:4"
+    },
+    {
+      "RH": "r:4 F4:4 r:4 F4:4",
+      "LH": "F3:4 F3:4 F3:4 F3:4"
+    }
+  ]
+}

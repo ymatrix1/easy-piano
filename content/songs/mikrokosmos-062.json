@@ -1,0 +1,182 @@
+{
+  "id": "mikrokosmos-062",
+  "title": "Mikrokosmos 62: Minor Sixths in Parallel Motion",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/62.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 126,
+  "time": "2/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "G4:8 Bb4:8 G4:8 Bb4:8",
+      "LH": "B3:8 D4:8 B3:8 D4:8"
+    },
+    {
+      "RH": "G4:8 Bb4:8 G4:8 A4:8",
+      "LH": "B3:8 D4:8 B3:8 C#4:8"
+    },
+    {
+      "RH": "Bb4:4 A4:8 G4:8",
+      "LH": "D4:4 C#4:8 B3:8"
+    },
+    {
+      "RH": "A4:4 Bb4:8 A4:8",
+      "LH": "C#4:4 D4:8 C#4:8"
+    },
+    {
+      "RH": "G4:8 A4:8 Bb4:8 G4:8",
+      "LH": "B3:8 C#4:8 D4:8 B3:8"
+    },
+    {
+      "RH": "A4:4 A4:4",
+      "LH": "C#4:4 C#4:4"
+    },
+    {
+      "RH": "G4:8 Bb4:8 G4:8 Bb4:8",
+      "LH": "B3:8 D4:8 B3:8 D4:8"
+    },
+    {
+      "RH": "G4:8 Bb4:8 G4:8 A4:8",
+      "LH": "B3:8 D4:8 B3:8 C#4:8"
+    },
+    {
+      "RH": "Bb4:4 G4:8 Bb4:8",
+      "LH": "D4:4 B3:8 D4:8"
+    },
+    {
+      "RH": "A4:4 G4:8 A4:8",
+      "LH": "C#4:4 B3:8 C#4:8"
+    },
+    {
+      "RH": "Bb4:8 G4:8 A4:8 Bb4:8",
+      "LH": "D4:8 B3:8 C#4:8 D4:8"
+    },
+    {
+      "RH": "G4:4 G4:8 r:8",
+      "LH": "B3:4 B3:8 r:8"
+    },
+    {
+      "RH": "r:8 A4:8 F#4:8 A4:8",
+      "LH": "Bb2:8 Db3:8 Bb2:8 Db3:8"
+    },
+    {
+      "RH": "F#4:8 A4:8 F#4:8 G#4:8",
+      "LH": "r:8 Db3:8 Bb2:8 C3:8"
+    },
+    {
+      "RH": "A4:4 G#4:8 A4:8",
+      "LH": "Db3:4 C3:8 Db3:8"
+    },
+    {
+      "RH": "B4:8 A4:8 G#4:8 F#4:8",
+      "LH": "Eb3:8 Db3:8 C3:8 Bb2:8"
+    },
+    {
+      "RH": "E#4:8 F4:8 G#4:8 A4:8",
+      "LH": "A2:8 Bb2:8 C3:8 Db3:8"
+    },
+    {
+      "RH": "G#4:4 F#4:8 G#4:8",
+      "LH": "C3:4 Bb2:8 C3:8"
+    },
+    {
+      "RH": "A4:4 B4:8 A4:8",
+      "LH": "Db3:4 Eb3:8 Db3:8"
+    },
+    {
+      "RH": "G#4:8 F#4:8 E#4:8 F#4:8",
+      "LH": "C3:8 Bb2:8 A2:8 Bb2:8"
+    },
+    {
+      "RH": "G#4:4 G#4:8 r:8",
+      "LH": "C3:4 Eb3:8 Db3:8"
+    },
+    {
+      "RH": "r:4 B4:8 A4:8",
+      "LH": "C3:8 Bb2:8 A2:8 Bb2:8"
+    },
+    {
+      "RH": "G#4:8 F#4:8 E#4:8 F#4:8",
+      "LH": "C3:4 Eb4:8 Db4:8"
+    },
+    {
+      "RH": "G#4:8 r:8 B5:8 A5:8",
+      "LH": "C4:8 Bb3:8 A3:8 Bb3:8"
+    },
+    {
+      "RH": "G#5:8 F#5:8 E#5:8 F#5:8",
+      "LH": "C4:4 A4:8 Bb4:8"
+    },
+    {
+      "RH": "G#5:4 G5:8 A5:8",
+      "LH": "C5:8 r:8 B3:8 C#4:8"
+    },
+    {
+      "RH": "Bb5:4 A5:8 Bb5:8",
+      "LH": "D4:4 C#4:8 D4:8"
+    },
+    {
+      "RH": "C6:8 Bb5:8 A5:8 G5:8",
+      "LH": "E4:8 D4:8 C#4:8 B3:8"
+    },
+    {
+      "RH": "r:8 A5:8 F#5:8 A5:8",
+      "LH": "A#3:8 C#4:8 A#3:8 C#4:8"
+    },
+    {
+      "RH": "F#5:8 A5:8 F#5:8 A5:8",
+      "LH": "r:8 C#4:8 A#3:8 C#4:8"
+    },
+    {
+      "RH": "r:8 A5:8 G5:8 A5:8",
+      "LH": "A#3:8 C#4:8 B3:8 C#4:8"
+    },
+    {
+      "RH": "Bb5:4 A5:8 G5:8",
+      "LH": "D4:4 C#4:8 B3:8"
+    },
+    {
+      "RH": "F#5:8 A5:8 Bb5:8 G5:8",
+      "LH": "A#3:8 C#4:8 D4:8 B3:8"
+    },
+    {
+      "RH": "r:8 A5:8 G5:8 Bb5:8",
+      "LH": "A#3:8 C#4:8 B3:8 D4:8"
+    },
+    {
+      "RH": "A5:8 F#5:8 G5:8 Bb5:8",
+      "LH": "r:8 A#3:8 B3:8 D4:8"
+    },
+    {
+      "RH": "A5:4 C6:8 Bb5:8",
+      "LH": "C#4:4 C#4:4"
+    },
+    {
+      "RH": "A5:8 G5:8 F#5:8 G5:8",
+      "LH": "r:4 E4:8 D4:8"
+    },
+    {
+      "RH": "A5:8 r:8 C5:8 Bb4:8",
+      "LH": "C#4:8 B3:8 A#3:8 B3:8"
+    },
+    {
+      "RH": "A4:8 G4:8 F#4:8 G4:8",
+      "LH": "r:4 E4:4",
+      "LH2": "C#4:4 E4:8 D4:8"
+    },
+    {
+      "RH": "A4:2",
+      "LH": "C#4E4:2"
+    }
+  ]
+}

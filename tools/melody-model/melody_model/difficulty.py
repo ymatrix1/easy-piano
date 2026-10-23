@@ -49,8 +49,8 @@ def patterns_of(song: dict) -> list[dict]:
         out.append({"chord": True})
     if "RH" in hands and "LH" in hands:
         for rb, lb in zip(hands["RH"], hands["LH"]):
-            r = {t for t, e in _onsets(rb) if not e.is_rest}
-            lh = {t for t, e in _onsets(lb) if not e.is_rest}
+            r = {t for t, e in _onsets(rb) if e.pitches}
+            lh = {t for t, e in _onsets(lb) if e.pitches}
             if r & lh:
                 out.append({"hands_together": True})
                 break
@@ -59,12 +59,12 @@ def patterns_of(song: dict) -> list[dict]:
             max(p.midi for p in e.pitches) if hand == "RH" else min(p.midi for p in e.pitches)
             for bar in bars
             for e in bar
-            if not e.is_rest
+            if e.pitches
         ]
         leaps = [abs(a - b) for a, b in zip(line, line[1:])]
         if leaps and max(leaps) >= 3:
             out.append({"interval_min": interval_number(max(leaps)), "hand": hand})
-        durs = Counter(e.dur for bar in bars for e in bar if not e.is_rest)
+        durs = Counter(e.dur for bar in bars for e in bar if e.pitches)
         if durs:
             d = min(durs, key=lambda x: dur_beats(x, 4))  # the fastest note value is what the level teaches
             share = sum(any(e.dur == d for e in bar) for bar in bars) / max(1, len(bars))
@@ -88,7 +88,7 @@ def level_of(song: dict) -> int:
     """1 (first lessons) .. 5 (advanced for this format), from range, rhythm, accidentals, hands, chords, density."""
     hands = _hands(song)
     events = [e for bars in hands.values() for bar in bars for e in bar]
-    notes = [e for e in events if not e.is_rest]
+    notes = [e for e in events if e.pitches]
     if not notes:
         return 1
     score = 0

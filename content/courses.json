@@ -61,6 +61,46 @@
         "piano-basics"
       ],
       "journey": "courses/mikrokosmos-1/journey.json"
+    },
+    {
+      "id": "mikrokosmos-2",
+      "title": "str:course.mk2.title",
+      "description": "str:course.mk2.desc",
+      "section": "methods",
+      "requires": [
+        "mikrokosmos-1"
+      ],
+      "journey": "courses/mikrokosmos-2/journey.json"
+    },
+    {
+      "id": "mikrokosmos-3",
+      "title": "str:course.mk3.title",
+      "description": "str:course.mk3.desc",
+      "section": "methods",
+      "requires": [
+        "mikrokosmos-2"
+      ],
+      "journey": "courses/mikrokosmos-3/journey.json"
+    },
+    {
+      "id": "mikrokosmos-4",
+      "title": "str:course.mk4.title",
+      "description": "str:course.mk4.desc",
+      "section": "methods",
+      "requires": [
+        "mikrokosmos-3"
+      ],
+      "journey": "courses/mikrokosmos-4/journey.json"
+    },
+    {
+      "id": "mikrokosmos-5",
+      "title": "str:course.mk5.title",
+      "description": "str:course.mk5.desc",
+      "section": "methods",
+      "requires": [
+        "mikrokosmos-4"
+      ],
+      "journey": "courses/mikrokosmos-5/journey.json"
     }
   ]
 }

@@ -10,6 +10,12 @@ ROOT = Path(__file__).resolve().parents[3]
 SONGS = sorted((ROOT / "content" / "songs").glob("*.json"))
 
 
+def has_voices_or_spacers(song):
+    return any(k in b for b in song["bars"] for k in ("RH2", "LH2")) or any(
+        "s:" in v for b in song["bars"] for v in b.values()
+    )
+
+
 def hands_only(bars):
     return [{h: b[h] for h in ("RH", "LH") if h in b} for b in bars]
 
@@ -21,6 +27,10 @@ def normalize(bars):
 @pytest.mark.parametrize("path", SONGS, ids=lambda p: p.stem)
 def test_song_round_trip(path):
     song = json.loads(path.read_text(encoding="utf-8"))
+    if has_voices_or_spacers(song):
+        with pytest.raises(Unsupported):
+            tk.encode_song(song)
+        return
     steps = tk.encode_song(song)
     back = tk.decode(steps)
     assert back["time"] == song["time"]
@@ -62,7 +72,8 @@ def test_vocab_file_matches_code():
 def test_vocab_size_and_sequence_length():
     total = sum(len(v) for v in tk.FIELDS.values())
     assert total < 400
-    longest = max(len(tk.encode_song(json.loads(p.read_text(encoding="utf-8")))) for p in SONGS)
+    songs = [json.loads(p.read_text(encoding="utf-8")) for p in SONGS]
+    longest = max(len(tk.encode_song(s)) for s in songs if not has_voices_or_spacers(s))
     assert longest <= 1024, longest
 
 

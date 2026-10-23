@@ -1,0 +1,153 @@
+{
+  "course": "mikrokosmos-3",
+  "nodes": [
+    {
+      "id": "piece-67",
+      "kind": "song",
+      "title": "str:node.mk3.67",
+      "icon": "play",
+      "levels": [
+        "mk3-67"
+      ],
+      "next": [
+        "piece-69"
+      ],
+      "songs": {
+        "default": "mikrokosmos-067"
+      }
+    },
+    {
+      "id": "piece-69",
+      "kind": "song",
+      "title": "str:node.mk3.69",
+      "icon": "play",
+      "levels": [
+        "mk3-69"
+      ],
+      "next": [
+        "piece-70"
+      ],
+      "songs": {
+        "default": "mikrokosmos-069"
+      }
+    },
+    {
+      "id": "piece-70",
+      "kind": "song",
+      "title": "str:node.mk3.70",
+      "icon": "play",
+      "levels": [
+        "mk3-70"
+      ],
+      "next": [
+        "piece-73"
+      ],
+      "songs": {
+        "default": "mikrokosmos-070"
+      }
+    },
+    {
+      "id": "piece-73",
+      "kind": "song",
+      "title": "str:node.mk3.73",
+      "icon": "play",
+      "levels": [
+        "mk3-73"
+      ],
+      "next": [
+        "piece-74"
+      ],
+      "songs": {
+        "default": "mikrokosmos-073"
+      }
+    },
+    {
+      "id": "piece-74",
+      "kind": "song",
+      "title": "str:node.mk3.74",
+      "icon": "play",
+      "levels": [
+        "mk3-74"
+      ],
+      "next": [
+        "piece-76"
+      ],
+      "songs": {
+        "default": "mikrokosmos-074"
+      }
+    },
+    {
+      "id": "piece-76",
+      "kind": "song",
+      "title": "str:node.mk3.76",
+      "icon": "play",
+      "levels": [
+        "mk3-76"
+      ],
+      "next": [
+        "piece-79"
+      ],
+      "songs": {
+        "default": "mikrokosmos-076"
+      }
+    },
+    {
+      "id": "piece-79",
+      "kind": "song",
+      "title": "str:node.mk3.79",
+      "icon": "play",
+      "levels": [
+        "mk3-79"
+      ],
+      "next": [
+        "piece-80"
+      ],
+      "songs": {
+        "default": "mikrokosmos-079"
+      }
+    },
+    {
+      "id": "piece-80",
+      "kind": "song",
+      "title": "str:node.mk3.80",
+      "icon": "play",
+      "levels": [
+        "mk3-80"
+      ],
+      "next": [
+        "piece-83"
+      ],
+      "songs": {
+        "default": "mikrokosmos-080"
+      }
+    },
+    {
+      "id": "piece-83",
+      "kind": "song",
+      "title": "str:node.mk3.83",
+      "icon": "play",
+      "levels": [
+        "mk3-83"
+      ],
+      "next": [
+        "piece-95"
+      ],
+      "songs": {
+        "default": "mikrokosmos-083"
+      }
+    },
+    {
+      "id": "piece-95",
+      "kind": "song",
+      "title": "str:node.mk3.95",
+      "icon": "play",
+      "levels": [
+        "mk3-95"
+      ],
+      "next": [],
+      "songs": {
+        "default": "mikrokosmos-095"
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "course": "mikrokosmos-4",
+  "nodes": [
+    {
+      "id": "piece-97",
+      "kind": "song",
+      "title": "str:node.mk4.97",
+      "icon": "play",
+      "levels": [
+        "mk4-97"
+      ],
+      "next": [
+        "piece-98"
+      ],
+      "songs": {
+        "default": "mikrokosmos-097"
+      }
+    },
+    {
+      "id": "piece-98",
+      "kind": "song",
+      "title": "str:node.mk4.98",
+      "icon": "play",
+      "levels": [
+        "mk4-98"
+      ],
+      "next": [
+        "piece-101"
+      ],
+      "songs": {
+        "default": "mikrokosmos-098"
+      }
+    },
+    {
+      "id": "piece-101",
+      "kind": "song",
+      "title": "str:node.mk4.101",
+      "icon": "play",
+      "levels": [
+        "mk4-101"
+      ],
+      "next": [],
+      "songs": {
+        "default": "mikrokosmos-101"
+      }
+    }
+  ]
+}
