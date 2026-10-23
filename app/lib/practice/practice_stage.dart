@@ -386,12 +386,16 @@ class _PracticeStageState extends State<PracticeStage>
       ? 1
       : _initialTargets.last.beat + _initialTargets.last.beats;
 
+  bool get _hasSubdivisions =>
+      _notes.any((n) => !n.isSpacer && !n.isRest && n.beats < 1.0);
+
   /// Wait mode fits the whole exercise on one page when it can.
   void _fitPage(double width) {
     _staffWidth = width;
     if (_playAlong || widget.feed != null) return;
     final usable = (0.92 - _waitAnchor) * width;
-    _ppb = (usable / _totalBeats).clamp(_minPpb, _maxPpb);
+    final minPpb = _hasSubdivisions ? 95.0 : _minPpb;
+    _ppb = (usable / _totalBeats).clamp(minPpb, _maxPpb);
   }
 
   int _usAt(double ms) => ((ms - _startMs) * 1000).round();

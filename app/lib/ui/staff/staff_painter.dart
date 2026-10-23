@@ -202,11 +202,11 @@ class StaffPainter extends CustomPainter {
   }
 
   /// Index of the first note with beat >= [beat] (notes sorted by beat).
-  int _lowerBound(double beat) {
-    var lo = 0, hi = notes.length;
+  static int lowerBound(List<StaffNote> list, double beat) {
+    var lo = 0, hi = list.length;
     while (lo < hi) {
       final mid = (lo + hi) >> 1;
-      if (notes[mid].beat < beat) {
+      if (list[mid].beat < beat) {
         lo = mid + 1;
       } else {
         hi = mid;
@@ -214,6 +214,8 @@ class StaffPainter extends CustomPainter {
     }
     return lo;
   }
+
+  int _lowerBound(double beat) => lowerBound(notes, beat);
 
   /// Horizontal system layout in staff spaces. A grand staff starts with a
   /// brace just left of the system line; a single staff has no brace. The
@@ -241,6 +243,73 @@ class StaffPainter extends CustomPainter {
   ) {
     final full = math.max(clefRight + 1.0, anchorX - space * 0.6);
     return (clear: clefRight, full: full);
+  }
+
+  /// Computes the horizontal position of a bar line at [barBeat].
+  ///
+  /// By default the bar line sits `space * 0.8` before the start of the bar.
+  /// If a note immediately precedes the bar line with a tight gap (e.g. an
+  /// eighth note), the bar line is balanced between the preceding note's right
+  /// edge and the following note's left edge so it never collides with stems.
+  static double barLineX({
+    required double barBeat,
+    required double nowBeat,
+    required double anchorX,
+    required double pixelsPerBeat,
+    required double space,
+    List<StaffNote>? notes,
+  }) {
+    final barX = anchorX + (barBeat - nowBeat) * pixelsPerBeat;
+    if (notes == null || notes.isEmpty) return barX - space * 0.8;
+
+    final idx = lowerBound(notes, barBeat);
+
+    // Rightmost visual edge of notes preceding barBeat (within 2 beats).
+    double? prevRight;
+    for (var i = idx - 1; i >= 0; i--) {
+      final n = notes[i];
+      if (barBeat - n.beat > 2.0) break;
+      if (n.isSpacer) continue;
+      final nx = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
+      final width = n.isRest
+          ? space * 1.0
+          : (_isDotted(n.beats)
+                ? space * 1.95
+                : (n.beats >= 4 ? space * 1.69 : space * 1.18));
+      final right = nx + width;
+      if (prevRight == null || right > prevRight) {
+        prevRight = right;
+      }
+    }
+
+    // Leftmost visual edge of notes at or just after barBeat.
+    double? nextLeft;
+    for (var i = idx; i < notes.length; i++) {
+      final n = notes[i];
+      if (n.beat - barBeat > 0.05) break;
+      if (n.isSpacer) continue;
+      final nx = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
+      final left = _isSharp[n.pitch % 12] ? nx - space * 1.4 : nx;
+      if (nextLeft == null || left < nextLeft) {
+        nextLeft = left;
+      }
+    }
+
+    final rightBoundary = nextLeft ?? barX;
+    final nominalBx = rightBoundary - space * 0.8;
+
+    if (prevRight != null) {
+      if (rightBoundary > prevRight) {
+        final centered = (prevRight + rightBoundary) / 2;
+        if (nominalBx < centered) {
+          return centered;
+        }
+      } else {
+        return (prevRight + rightBoundary) / 2;
+      }
+    }
+
+    return nominalBx;
   }
 
   /// Grand staff: spaces between the treble bottom line and the bass top
@@ -416,7 +485,14 @@ class StaffPainter extends CustomPainter {
           .ceil();
       for (var b = firstBar; b <= lastBar; b++) {
         if (b <= 0) continue;
-        final bx = anchorX + (b * bpb - now0) * pixelsPerBeat - space * 0.8;
+        final bx = barLineX(
+          barBeat: b * bpb.toDouble(),
+          nowBeat: now0,
+          anchorX: anchorX,
+          pixelsPerBeat: pixelsPerBeat,
+          space: space,
+          notes: notes,
+        );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
       }
