@@ -103,11 +103,13 @@ class MethodsCatalogView extends StatefulWidget {
     required this.repo,
     required this.progress,
     required this.onPlay,
+    this.embedded = false,
   });
 
   final ContentRepo repo;
   final Progress progress;
   final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
+  final bool embedded;
 
   @override
   State<MethodsCatalogView> createState() => _MethodsCatalogViewState();
@@ -133,57 +135,58 @@ class _MethodsCatalogViewState extends State<MethodsCatalogView> {
       return true;
     }).toList();
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildFilterChips(context, l10n),
+        const SizedBox(height: 18),
+        for (final (i, method) in filteredMethods.indexed)
+          SlideIn(
+            delay: Duration(milliseconds: 60 + 60 * i),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _MethodCard(
+                repo: repo,
+                progress: progress,
+                method: method,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => MethodPage(
+                        repo: repo,
+                        progress: progress,
+                        method: method,
+                        onPlay: widget.onPlay,
+                      ),
+                    ),
+                  );
+                  if (mounted) setState(() {});
+                },
+              ),
+            ),
+          ),
+        if (filteredMethods.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: Text(
+                l10n.methodsFilterAll,
+                style: const TextStyle(color: GameColors.textDim, fontSize: 16),
+              ),
+            ),
+          ),
+      ],
+    );
+
+    if (widget.embedded) return content;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: homeMaxWidth(context)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildFilterChips(context, l10n),
-                const SizedBox(height: 18),
-                for (final (i, method) in filteredMethods.indexed)
-                  SlideIn(
-                    delay: Duration(milliseconds: 60 + 60 * i),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _MethodCard(
-                        repo: repo,
-                        progress: progress,
-                        method: method,
-                        onTap: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => MethodPage(
-                                repo: repo,
-                                progress: progress,
-                                method: method,
-                                onPlay: widget.onPlay,
-                              ),
-                            ),
-                          );
-                          if (mounted) setState(() {});
-                        },
-                      ),
-                    ),
-                  ),
-                if (filteredMethods.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 48),
-                    child: Center(
-                      child: Text(
-                        l10n.methodsFilterAll,
-                        style: const TextStyle(
-                          color: GameColors.textDim,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            child: content,
           ),
         ),
       ],
@@ -204,7 +207,7 @@ class _MethodsCatalogViewState extends State<MethodsCatalogView> {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF140D36).withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
@@ -213,47 +216,123 @@ class _MethodsCatalogViewState extends State<MethodsCatalogView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          Row(
             children: [
-              _FilterChip(
-                label: l10n.methodsFilterAll,
-                selected: _selectedLevel == null && _selectedSkill == null,
-                onTap: () {
-                  Sfx.play(SfxKind.tab);
-                  setState(() {
-                    _selectedLevel = null;
-                    _selectedSkill = null;
-                  });
-                },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GameColors.cyan.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: GameColors.cyan.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Text(
+                  'LEVEL',
+                  style: TextStyle(
+                    fontFamily: 'Audiowide',
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: GameColors.cyan,
+                    letterSpacing: 0.8,
+                  ),
+                ),
               ),
-              for (final entry in levelLabels.entries)
-                _FilterChip(
-                  label: entry.value,
-                  selected: _selectedLevel == entry.key,
-                  onTap: () {
-                    Sfx.play(SfxKind.tab);
-                    setState(() {
-                      _selectedLevel = _selectedLevel == entry.key
-                          ? null
-                          : entry.key;
-                    });
-                  },
+              const SizedBox(width: 10),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _FilterChip(
+                        label: l10n.methodsFilterAll,
+                        selected: _selectedLevel == null,
+                        onTap: () {
+                          Sfx.play(SfxKind.tab);
+                          setState(() => _selectedLevel = null);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      for (final entry in levelLabels.entries) ...[
+                        _FilterChip(
+                          label: entry.value,
+                          selected: _selectedLevel == entry.key,
+                          onTap: () {
+                            Sfx.play(SfxKind.tab);
+                            setState(() {
+                              _selectedLevel = _selectedLevel == entry.key
+                                  ? null
+                                  : entry.key;
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
                 ),
-              for (final entry in skillLabels.entries)
-                _FilterChip(
-                  label: entry.value,
-                  selected: _selectedSkill == entry.key,
-                  onTap: () {
-                    Sfx.play(SfxKind.tab);
-                    setState(() {
-                      _selectedSkill = _selectedSkill == entry.key
-                          ? null
-                          : entry.key;
-                    });
-                  },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(color: Colors.white10, height: 1),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GameColors.yellow.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: GameColors.yellow.withValues(alpha: 0.3),
+                  ),
                 ),
+                child: const Text(
+                  'SKILL',
+                  style: TextStyle(
+                    fontFamily: 'Audiowide',
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: GameColors.yellow,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _FilterChip(
+                        label: l10n.methodsFilterAll,
+                        selected: _selectedSkill == null,
+                        onTap: () {
+                          Sfx.play(SfxKind.tab);
+                          setState(() => _selectedSkill = null);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      for (final entry in skillLabels.entries) ...[
+                        _FilterChip(
+                          label: entry.value,
+                          selected: _selectedSkill == entry.key,
+                          onTap: () {
+                            Sfx.play(SfxKind.tab);
+                            setState(() {
+                              _selectedSkill = _selectedSkill == entry.key
+                                  ? null
+                                  : entry.key;
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -417,24 +496,20 @@ class _MethodCardState extends State<_MethodCard> {
                           children: [
                             if (method.composer.isNotEmpty) ...[
                               Text(
-                                method.composer.toUpperCase(),
+                                '${method.composer.toUpperCase()} · METHOD',
                                 style: const TextStyle(
                                   fontFamily: 'Audiowide',
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   color: GameColors.cyan,
-                                  letterSpacing: 1.2,
+                                  letterSpacing: 1.1,
                                 ),
                               ),
                               const SizedBox(height: 4),
                             ],
-                            Text(
+                            GameText(
                               repo.t(method.title),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                height: 1.15,
-                              ),
+                              size: 26,
+                              align: TextAlign.left,
                             ),
                           ],
                         ),
@@ -544,20 +619,18 @@ class _MethodCardState extends State<_MethodCard> {
                               ],
                             ),
                             const SizedBox(height: 6),
-                            SizedBox(
-                              width: 160,
-                              child: GameProgressBar(value: ratio),
-                            ),
+                            GameProgressBar(value: ratio),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 16),
                       GameButton(
                         label: l10n.methodsExplore,
                         icon: Icons.arrow_forward_rounded,
                         tone: GameTone.gold,
                         fontSize: 14,
                         minWidth: 120,
-                        height: 42,
+                        height: 44,
                         onTap: widget.onTap,
                       ),
                     ],

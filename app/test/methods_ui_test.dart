@@ -55,24 +55,24 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     expect(methodsCardFinder, findsOneWidget);
 
-    // Tap Methods card to open Methods Library.
+    // Tap Methods card to switch to Methods Catalog.
     await tester.tap(methodsCardFinder);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodsLibraryPage), findsOneWidget);
-    expect(find.text('Mikrokosmos'), findsOneWidget);
-    expect(find.text('BÉLA BARTÓK'), findsOneWidget);
+    expect(find.byType(MethodsCatalogView), findsOneWidget);
+    expect(find.text('MIKROKOSMOS'), findsOneWidget);
+    expect(find.textContaining('BÉLA BARTÓK'), findsOneWidget);
 
-    // Filter chips work.
-    expect(find.text('All'), findsOneWidget);
+    // Filter chips work: LEVEL and SKILL rows both have 'All'
+    expect(find.text('All'), findsNWidgets(2));
     expect(find.text('Beginner'), findsOneWidget);
     await tester.tap(find.text('Beginner'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Mikrokosmos'), findsOneWidget);
+    expect(find.text('MIKROKOSMOS'), findsOneWidget);
 
     // Tap Mikrokosmos method card to open MethodPage.
-    await tester.tap(find.text('Mikrokosmos'));
+    await tester.tap(find.text('MIKROKOSMOS'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.byType(MethodPage), findsOneWidget);
@@ -80,7 +80,7 @@ void main() {
     // MethodPage has description, Continue button, and book sections.
     expect(find.textContaining('153 progressive piano pieces'), findsOneWidget);
     expect(find.text('CONTINUE'), findsOneWidget);
-    expect(find.text('Mikrokosmos I'), findsOneWidget);
+    expect(find.text('MIKROKOSMOS I'), findsOneWidget);
 
     // First piece is visible in the continue banner and the first open book.
     expect(find.text('Six Unison Melodies, No. 1'), findsNWidgets(2));
@@ -98,34 +98,35 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.text('PRACTICE'), findsNothing);
 
-    // Back from MethodPage returns to MethodsLibraryPage.
+    // Back from MethodPage returns to LearnTab on Methods view.
     final backButtons = find.byType(IconButton);
     await tester.tap(backButtons.first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodsLibraryPage), findsOneWidget);
+    expect(find.byType(MethodPage), findsNothing);
+    expect(find.byType(MethodsCatalogView), findsOneWidget);
 
-    // Back from MethodsLibraryPage returns to LearnTab.
-    await tester.tap(find.byType(IconButton).first);
+    // Switch back to Courses using the top switcher.
+    final topCoursesSwitcher = find.text('Courses');
+    expect(topCoursesSwitcher, findsOneWidget);
+    await tester.tap(topCoursesSwitcher);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodsLibraryPage), findsNothing);
+    expect(find.byType(MethodsCatalogView), findsNothing);
 
-    // Scroll back up to the top so top switcher is below the floating top bar.
+    // Switch to Methods using the top switcher.
     final topMethodsSwitcher = find.text('Methods');
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, 1000));
-    await tester.pump(const Duration(milliseconds: 600));
     expect(topMethodsSwitcher, findsOneWidget);
     await tester.tap(topMethodsSwitcher);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodsLibraryPage), findsOneWidget);
+    expect(find.byType(MethodsCatalogView), findsOneWidget);
 
-    // Return to LearnTab.
-    await tester.tap(find.byType(IconButton).first);
+    // Switch back to Courses.
+    await tester.tap(topCoursesSwitcher);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodsLibraryPage), findsNothing);
+    expect(find.byType(MethodsCatalogView), findsNothing);
 
     // Collapsible sections work on the main path.
     await tester.scrollUntilVisible(
@@ -133,11 +134,35 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -100));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('SOLOIST'), findsOneWidget);
-    await tester.tap(find.text('SOLOIST'));
+    await tester.tap(find.text('SOLOIST'), warnIfMissed: false);
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('LearnTab renders without overflow on narrow phone viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final repo = _repo();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: HomePage(
+          repo: repo,
+          midi: createMidiInput(),
+          spikes: (_) => const SizedBox(),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
   });
 }

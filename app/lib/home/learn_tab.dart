@@ -9,6 +9,8 @@ import 'home_page.dart' show Progress;
 import '../methods/methods_library_page.dart';
 import 'task_sheet.dart';
 
+enum LearnView { courses, methods }
+
 /// Learn tab: a "continue" hero card, then each section's modules on the
 /// outer trail. A module card expands to show its inner trail of submodules;
 /// a submodule opens a sheet with its tasks (levels).
@@ -31,14 +33,14 @@ class LearnTab extends StatefulWidget {
 }
 
 class _LearnTabState extends State<LearnTab> {
+  LearnView _view = LearnView.courses;
+
   late final Set<String> _open = {
     if (widget.progress.next case (final c, _)) c.id,
   };
   late final Set<String> _openSections = {
-    if (widget.progress.next case (final c, _))
-      c.section
-    else if (widget.repo.sections.isNotEmpty)
-      widget.repo.sections.first.id,
+    for (final s in widget.repo.sections) s.id,
+    if (widget.progress.next case (final c, _)) c.section,
   };
 
   static const _tones = [
@@ -81,26 +83,10 @@ class _LearnTabState extends State<LearnTab> {
     ];
     var moduleNo = 0;
 
-    void openMethods() {
-      if (widget.onOpenMethods != null) {
-        widget.onOpenMethods!();
-      } else {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MethodsLibraryPage(
-              repo: repo,
-              progress: progress,
-              onPlay: widget.onPlay,
-            ),
-          ),
-        );
-      }
-    }
-
     return ListView(
       padding: EdgeInsets.fromLTRB(
         16,
-        8 + MediaQuery.paddingOf(context).top,
+        14 + MediaQuery.paddingOf(context).top,
         16,
         32,
       ),
@@ -113,151 +99,166 @@ class _LearnTabState extends State<LearnTab> {
               children: [
                 if (repo.methods.isNotEmpty) ...[
                   _LearnModeSwitch(
-                    onOpenMethods: openMethods,
-                    methodCount: repo.methods.length,
+                    selected: _view,
+                    onSelect: (v) {
+                      Sfx.play(SfxKind.tab);
+                      setState(() => _view = v);
+                    },
                     methodStars: progress.totalMethodStars,
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
                 ],
-                if (next != null)
-                  SlideIn(
-                    child: _ContinueCard(
-                      module: repo.t(next.$1.title),
-                      title: repo.t(next.$2.title),
-                      onPlay: () =>
-                          widget.onPlay(progress.firstOpenLevel(next.$2)),
+                if (_view == LearnView.methods)
+                  MethodsCatalogView(
+                    repo: repo,
+                    progress: progress,
+                    onPlay: widget.onPlay,
+                    embedded: true,
+                  )
+                else ...[
+                  if (next != null)
+                    SlideIn(
+                      child: _ContinueCard(
+                        module: repo.t(next.$1.title),
+                        title: repo.t(next.$2.title),
+                        onPlay: () =>
+                            widget.onPlay(progress.firstOpenLevel(next.$2)),
+                      ),
                     ),
-                  ),
-                for (final section in sections)
-                  if (mainCourses.any((c) => c.section == section.id))
-                    Builder(
-                      builder: (context) {
-                        final sectionCourses = mainCourses
-                            .where((c) => c.section == section.id)
-                            .toList();
-                        final isOpen = _openSections.contains(section.id);
-                        var earned = 0;
-                        var total = 0;
-                        for (final c in sectionCourses) {
-                          earned += progress.courseStars(c);
-                          total += c.nodes.length * 3;
-                        }
+                  for (final section in sections)
+                    if (mainCourses.any((c) => c.section == section.id))
+                      Builder(
+                        builder: (context) {
+                          final sectionCourses = mainCourses
+                              .where((c) => c.section == section.id)
+                              .toList();
+                          final isOpen = _openSections.contains(section.id);
+                          var earned = 0;
+                          var total = 0;
+                          for (final c in sectionCourses) {
+                            earned += progress.courseStars(c);
+                            total += c.nodes.length * 3;
+                          }
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const SizedBox(height: 20),
-                            _SectionHeader(
-                              title: repo.t(section.title),
-                              moduleCount: sectionCourses.length,
-                              earnedStars: earned,
-                              totalStars: total,
-                              isOpen: isOpen,
-                              onToggle: () {
-                                Sfx.play(SfxKind.tab);
-                                setState(() {
-                                  if (isOpen) {
-                                    _openSections.remove(section.id);
-                                  } else {
-                                    _openSections.add(section.id);
-                                  }
-                                });
-                              },
-                            ),
-                            AnimatedSize(
-                              duration: const Duration(milliseconds: 260),
-                              curve: Curves.easeOutCubic,
-                              alignment: Alignment.topCenter,
-                              child: isOpen
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(top: 14),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          for (final c in sectionCourses)
-                                            Builder(
-                                              builder: (context) {
-                                                final i = moduleNo++;
-                                                final last =
-                                                    c == sectionCourses.last;
-                                                return SlideIn(
-                                                  delay: Duration(
-                                                    milliseconds:
-                                                        80 +
-                                                        70 * (i < 8 ? i : 8),
-                                                  ),
-                                                  child: _OuterTrailItem(
-                                                    number: i + 1,
-                                                    last: last,
-                                                    state: c.planned
-                                                        ? _State.locked
-                                                        : progress.courseStars(
-                                                                c,
-                                                              ) ==
-                                                              c.nodes.length * 3
-                                                        ? _State.done
-                                                        : next?.$1 == c
-                                                        ? _State.current
-                                                        : _State.open,
-                                                    child: _ModuleCard(
-                                                      repo: repo,
-                                                      progress: progress,
-                                                      course: c,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 20),
+                              _SectionHeader(
+                                title: repo.t(section.title),
+                                moduleCount: sectionCourses.length,
+                                earnedStars: earned,
+                                totalStars: total,
+                                isOpen: isOpen,
+                                onToggle: () {
+                                  Sfx.play(SfxKind.tab);
+                                  setState(() {
+                                    if (isOpen) {
+                                      _openSections.remove(section.id);
+                                    } else {
+                                      _openSections.add(section.id);
+                                    }
+                                  });
+                                },
+                              ),
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 260),
+                                curve: Curves.easeOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: isOpen
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 14),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            for (final c in sectionCourses)
+                                              Builder(
+                                                builder: (context) {
+                                                  final i = moduleNo++;
+                                                  final last =
+                                                      c == sectionCourses.last;
+                                                  return SlideIn(
+                                                    delay: Duration(
+                                                      milliseconds:
+                                                          80 +
+                                                          70 * (i < 8 ? i : 8),
+                                                    ),
+                                                    child: _OuterTrailItem(
                                                       number: i + 1,
-                                                      tone:
-                                                          _tones[i %
-                                                              _tones.length],
-                                                      open: _open.contains(
-                                                        c.id,
-                                                      ),
-                                                      nextNode: next?.$1 == c
-                                                          ? next!.$2
-                                                          : null,
-                                                      onToggle: c.planned
-                                                          ? null
-                                                          : () => setState(
-                                                              () =>
-                                                                  _open
-                                                                      .contains(
-                                                                        c.id,
-                                                                      )
-                                                                  ? _open
-                                                                        .remove(
+                                                      last: last,
+                                                      state: c.planned
+                                                          ? _State.locked
+                                                          : progress.courseStars(
+                                                                  c,
+                                                                ) ==
+                                                                c.nodes.length *
+                                                                    3
+                                                          ? _State.done
+                                                          : next?.$1 == c
+                                                          ? _State.current
+                                                          : _State.open,
+                                                      child: _ModuleCard(
+                                                        repo: repo,
+                                                        progress: progress,
+                                                        course: c,
+                                                        number: i + 1,
+                                                        tone:
+                                                            _tones[i %
+                                                                _tones.length],
+                                                        open: _open.contains(
+                                                          c.id,
+                                                        ),
+                                                        nextNode: next?.$1 == c
+                                                            ? next!.$2
+                                                            : null,
+                                                        onToggle: c.planned
+                                                            ? null
+                                                            : () => setState(
+                                                                () =>
+                                                                    _open
+                                                                        .contains(
                                                                           c.id,
                                                                         )
-                                                                  : _open.add(
-                                                                      c.id,
-                                                                    ),
-                                                            ),
-                                                      onNode: (n) =>
-                                                          _openNode(c, n),
+                                                                    ? _open.remove(
+                                                                        c.id,
+                                                                      )
+                                                                    : _open.add(
+                                                                        c.id,
+                                                                      ),
+                                                              ),
+                                                        onNode: (n) =>
+                                                            _openNode(c, n),
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                        ],
-                                      ),
-                                    )
-                                  : const SizedBox(width: double.infinity),
-                            ),
-                          ],
-                        );
-                      },
+                                                  );
+                                                },
+                                              ),
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(width: double.infinity),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                  if (repo.methods.isNotEmpty) ...[
+                    const SizedBox(height: 28),
+                    SlideIn(
+                      delay: Duration(
+                        milliseconds: 80 + 70 * (moduleNo < 8 ? moduleNo : 8),
+                      ),
+                      child: _MethodsCard(
+                        repo: repo,
+                        progress: progress,
+                        onTap: () {
+                          Sfx.play(SfxKind.tab);
+                          setState(() => _view = LearnView.methods);
+                        },
+                      ),
                     ),
-                if (repo.methods.isNotEmpty) ...[
-                  const SizedBox(height: 28),
-                  SlideIn(
-                    delay: Duration(
-                      milliseconds: 80 + 70 * (moduleNo < 8 ? moduleNo : 8),
-                    ),
-                    child: _MethodsCard(
-                      repo: repo,
-                      progress: progress,
-                      onTap: openMethods,
-                    ),
-                  ),
+                  ],
                 ],
               ],
             ),
@@ -412,103 +413,131 @@ class _SectionHeaderState extends State<_SectionHeader> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onToggle,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: _hover
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.03),
-            border: Border.all(
-              color: widget.isOpen
-                  ? GameColors.yellow.withValues(alpha: 0.35)
-                  : Colors.white.withValues(alpha: 0.08),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: widget.onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: _hover
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.03),
+                border: Border.all(
+                  color: widget.isOpen
+                      ? GameColors.yellow.withValues(alpha: 0.35)
+                      : Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: GameColors.yellow,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.title.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: displayFont,
+                        fontSize: compact ? 15 : 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(color: Colors.black54, offset: Offset(0, 2)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (widget.moduleCount > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!compact) ...[
+                            Text(
+                              l10n
+                                  .modulesCount(widget.moduleCount)
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                fontFamily: displayFont,
+                                fontSize: 10,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            if (widget.totalStars > 0) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                '·',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                          ],
+                          if (widget.totalStars > 0) ...[
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFFD54F),
+                              size: 13,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${widget.earnedStars}/${widget.totalStars}',
+                              style: const TextStyle(
+                                fontFamily: 'Audiowide',
+                                fontSize: 10,
+                                color: Color(0xFFFFD54F),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  AnimatedRotation(
+                    turns: widget.isOpen ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white70,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: GameColors.yellow,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              GameText(widget.title, size: 20),
-              const Spacer(),
-              if (widget.moduleCount > 0) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.modulesCount(widget.moduleCount).toUpperCase(),
-                        style: TextStyle(
-                          fontFamily: displayFont,
-                          fontSize: 10,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '·',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(
-                        Icons.star_rounded,
-                        color: Color(0xFFFFD54F),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${widget.earnedStars}/${widget.totalStars}',
-                        style: const TextStyle(
-                          fontFamily: 'Audiowide',
-                          fontSize: 10,
-                          color: Color(0xFFFFD54F),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-              ],
-              AnimatedRotation(
-                turns: widget.isOpen ? 0.5 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white70,
-                  size: 26,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -1146,109 +1175,89 @@ class _MethodsCardState extends State<_MethodsCard> {
 
 class _LearnModeSwitch extends StatelessWidget {
   const _LearnModeSwitch({
-    required this.onOpenMethods,
-    required this.methodCount,
+    required this.selected,
+    required this.onSelect,
     required this.methodStars,
   });
 
-  final VoidCallback onOpenMethods;
-  final int methodCount;
+  final LearnView selected;
+  final ValueChanged<LearnView> onSelect;
   final int methodStars;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Container(
-        height: 46,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: const Color(0xFF130C36).withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF28E6FF), Color(0xFF0088FF)],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: Container(
+          height: 42,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: const Color(0xFF130C36).withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SwitchItem(
+                  label: l10n.learnSwitchCourses,
+                  icon: Icons.school_rounded,
+                  active: selected == LearnView.courses,
+                  onTap: () => onSelect(LearnView.courses),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: GameColors.cyan.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.school_rounded,
-                    size: 16,
-                    color: GameColors.ink,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.learnSwitchCourses,
-                    style: const TextStyle(
-                      fontFamily: 'Audiowide',
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                      color: GameColors.ink,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 4),
+              Expanded(
+                child: _SwitchItem(
+                  label: l10n.learnSwitchMethods,
+                  icon: Icons.auto_stories_rounded,
+                  badge: methodStars > 0 ? '$methodStars ⭐' : null,
+                  active: selected == LearnView.methods,
+                  onTap: () => onSelect(LearnView.methods),
+                ),
               ),
-            ),
-            const SizedBox(width: 4),
-            _ClickableSwitchTab(
-              label: l10n.learnSwitchMethods,
-              icon: Icons.auto_stories_rounded,
-              badge: methodStars > 0 ? '$methodStars ⭐' : null,
-              onTap: onOpenMethods,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ClickableSwitchTab extends StatefulWidget {
-  const _ClickableSwitchTab({
+class _SwitchItem extends StatefulWidget {
+  const _SwitchItem({
     required this.label,
     required this.icon,
+    required this.active,
     required this.onTap,
     this.badge,
   });
 
   final String label;
   final IconData icon;
+  final bool active;
   final VoidCallback onTap;
   final String? badge;
 
   @override
-  State<_ClickableSwitchTab> createState() => _ClickableSwitchTabState();
+  State<_SwitchItem> createState() => _SwitchItemState();
 }
 
-class _ClickableSwitchTabState extends State<_ClickableSwitchTab> {
+class _SwitchItemState extends State<_SwitchItem> {
   bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
+    final active = widget.active;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
@@ -1260,49 +1269,73 @@ class _ClickableSwitchTabState extends State<_ClickableSwitchTab> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: _hover
+            borderRadius: BorderRadius.circular(18),
+            gradient: active
+                ? const LinearGradient(
+                    colors: [Color(0xFF28E6FF), Color(0xFF0088FF)],
+                  )
+                : null,
+            color: !active && _hover
                 ? Colors.white.withValues(alpha: 0.08)
                 : Colors.transparent,
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: GameColors.cyan.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 widget.icon,
-                size: 16,
-                color: _hover ? Colors.white : GameColors.textDim,
+                size: 15,
+                color: active
+                    ? GameColors.ink
+                    : (_hover ? Colors.white : GameColors.textDim),
               ),
-              const SizedBox(width: 8),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  fontFamily: 'Audiowide',
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                  color: _hover ? Colors.white : GameColors.textDim,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Audiowide',
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.6,
+                    color: active
+                        ? GameColors.ink
+                        : (_hover ? Colors.white : GameColors.textDim),
+                  ),
                 ),
               ),
               if (widget.badge != null) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                    horizontal: 5,
+                    vertical: 1.5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white12,
-                    borderRadius: BorderRadius.circular(8),
+                    color: active
+                        ? Colors.black.withValues(alpha: 0.18)
+                        : Colors.white12,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     widget.badge!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Audiowide',
-                      fontSize: 10,
-                      color: Color(0xFFFFD54F),
+                      fontSize: 9.5,
+                      color: active ? GameColors.ink : const Color(0xFFFFD54F),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

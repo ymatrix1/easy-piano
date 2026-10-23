@@ -336,8 +336,15 @@ class _TopBar extends StatelessWidget {
                         semanticLabel: AppLocalizations.of(context).logoLabel,
                       ),
                       const SizedBox(width: 10),
-                      GameText(AppLocalizations.of(context).appTitle, size: 18),
-                      const Spacer(),
+                      Expanded(
+                        child: GameText(
+                          AppLocalizations.of(context).appTitle,
+                          size: 18,
+                          align: TextAlign.left,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       StarCounter(value: stars),
                     ],
                   ),
