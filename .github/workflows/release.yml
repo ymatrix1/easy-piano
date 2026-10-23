@@ -28,7 +28,7 @@ env:
 jobs:
   prepare:
     name: Validate release tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       version: ${{ steps.version.outputs.version }}
@@ -227,9 +227,9 @@ jobs:
   publish:
     name: Publish GitHub Release
     needs: [prepare, build-web-android, build-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           path: release-assets
 
@@ -238,4 +238,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release create "$RELEASE_TAG" release-assets/web-android-assets/* release-assets/windows-assets/* --generate-notes --title "Easy Piano ${RELEASE_TAG}"
+        run: |
+          assets=(release-assets/web-android-assets/* release-assets/windows-assets/*)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --generate-notes --title "Easy Piano ${RELEASE_TAG}"
+          fi
