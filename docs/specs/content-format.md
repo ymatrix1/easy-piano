@@ -96,6 +96,48 @@ Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter r
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
 
+## Two voices per hand (`RH2`, `LH2`)
+
+Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.
+
+A bar may hold a second voice for either hand. It is written like any hand string:
+
+```json
+{"RH": "E4:4@3 F4:4@4 G4:4@5 A4:4@5", "RH2": "C4:1@1", "LH": "C3:1@5"}
+```
+
+| Key | Meaning | Engraving |
+|---|---|---|
+| `RH`, `LH` | voice 1 (as today) | stems up in `RH`, stems down in `LH` when the hand has a second voice in that bar; otherwise as today |
+| `RH2`, `LH2` | voice 2 of the same hand | stems down in `RH2`, stems up in `LH2` |
+
+Rules:
+
+- Only two voices per hand. A bar without `RH2` / `LH2` is single-voice, so every existing song stays valid.
+- Each voice sums to the time signature on its own (same lint as a hand).
+- Voice 2 needs voice 1 in the same bar: `RH2` without `RH` is an error.
+- New token `s:<dur>`: an invisible rest (spacer). It counts for the bar length, draws nothing and is allowed in any hand or voice. Typical use: `"RH2": "s:2 C4:2"`.
+- Unison: the same pitch with the same onset in both voices of one hand is one target (graded once) and is drawn as one notehead with two stems.
+- Overlap: the same pitch sounding in both voices at once with different onsets is a lint error (one key cannot be struck while held).
+- Fingering (`@`) and `{tie}` work per voice. A tie never joins voice 1 and voice 2.
+- `ACC` and the backing parts have no second voice; they are never graded.
+
+Behaviour:
+
+| Area | Rule |
+|---|---|
+| Timeline (`Song::timeline`) | `TimedNote` gets `voice: u8` (1 or 2); `part` and `left_hand` follow the hand, so `RH2` notes are `Part::Right`. |
+| Matching / grading | Unchanged: targets are (pitch set, onset, hand); notes of both voices with the same onset form one chord. Durations are not graded. |
+| Hand modes | A stage with `hand: "RH"` grades `RH` and `RH2`; the app plays the other hand's two voices. |
+| Wait mode | Waits for every pitch at the onset across both voices; held voice-2 notes keep sounding (app or learner) while voice 1 moves. |
+| Staff | Both voices on the hand's staff; voice-2 rests move down (`RH2`) or up (`LH2`) so they do not collide; spacers draw nothing. |
+| Difficulty (`core/src/difficulty.rs`) | New feature `two_voice_bars_per_bar` (bars where a hand has a second voice / bars); the model is not refitted in this change. |
+| Rubric / skill specs | A song with a second voice needs the taught flag `two_voices`; no main-path node teaches it yet, so the rubric rejects generated songs with voices. |
+| Converter (`tools/melody-model`) | Reads up to two voices per part (MusicXML voice order: first = voice 1); three or more is still `Unsupported`. `song_to_score` writes them back as voices. |
+| Similarity | Melody extraction keeps using the top line of `RH` + `RH2` (skyline). |
+
+Out of this spec: more than two voices, cross-staff notes, meter and key changes in a song, tuplets.
+
 ## Backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`)
 
 A bar may hold an `ACC` part next to `RH` / `LH`: our own accompaniment (chords, bass) in the same notation. It is played by the app in play-along and never graded; bar lengths are linted like any hand.

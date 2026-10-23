@@ -54,15 +54,15 @@ def bpm(score: m21.stream.Score, time: str) -> int:
     return round(marks[0].getQuarterBPM() * denom / 4)
 
 
-def check_single_voice(score: m21.stream.Score) -> None:
+def check_voice_count(score: m21.stream.Score) -> None:
     for p in score.parts:
         for m in p.getElementsByClass(m21.stream.Measure):
-            if sum(1 for v in m.voices if v.notes) > 1:
-                raise Unsupported(f"two voices in one hand, bar {m.number}")
+            if sum(1 for v in m.voices if list(v.notesAndRests)) > 2:
+                raise Unsupported(f"three or more voices in one hand, bar {m.number}")
 
 
 def song(n: int, title: str, score: m21.stream.Score) -> dict:
-    check_single_voice(score)
+    check_voice_count(score)
     tune = convert_score(score, key=written_key(score))
     return {
         "id": f"mikrokosmos-{n:03d}",

@@ -158,10 +158,12 @@ def test_chord_level_fingering_with_wrong_count_is_dropped():
 
 def test_multi_voice_bar_reads_top_voice():
     low, high = m21.stream.Voice(), m21.stream.Voice()
-    low.append([n("C4", 2), n("D4", 2)])  # voice 1 is the lower one
-    high.append([n("E5", 2), n("F5", 2)])
+    low.append([n("C4", 2), n("D4", 2)])  # voice 1
+    high.append([n("E5", 2), n("F5", 2)])  # voice 2
     s = score(([[low, high]], T()), key=m21.key.Key("C"))
-    assert convert.convert_score(s)["bars"][0]["RH"] == "E5:2 F5:2"
+    bar = convert.convert_score(s)["bars"][0]
+    assert bar["RH"] == "C4:2 D4:2"
+    assert bar["RH2"] == "E5:2 F5:2"
 
 
 def test_same_signature_mode_change_is_rejected():

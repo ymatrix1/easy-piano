@@ -3,6 +3,7 @@
 //! A bar string holds space-separated tokens:
 //! - note or chord: `C4:4`, `C4E4G4:2@135`, `F#4:8.`, `E4:4@3(accent)`
 //! - rest: `r:4`
+//! - spacer: `s:4` (invisible rest)
 //! - duration: a denominator with optional dots (`4` quarter, `2.` dotted half)
 //!   or an explicit fraction of a whole note (`3/8`)
 //! - fingering: `@` then one digit 1–5 per pitch, in chord order
@@ -69,6 +70,9 @@ pub enum Event {
     Rest {
         dur: Dur,
     },
+    Spacer {
+        dur: Dur,
+    },
     Directive {
         name: String,
         arg: Option<String>,
@@ -78,7 +82,7 @@ pub enum Event {
 impl Event {
     pub fn dur(&self) -> Dur {
         match self {
-            Event::Note { dur, .. } | Event::Rest { dur } => *dur,
+            Event::Note { dur, .. } | Event::Rest { dur } | Event::Spacer { dur } => *dur,
             Event::Directive { .. } => Dur::ZERO,
         }
     }
@@ -156,7 +160,7 @@ fn split_pitches(s: &str, token: &str) -> Result<Vec<u8>, NotationError> {
     Ok(out)
 }
 
-/// Parses one token (note, chord, rest or directive).
+/// Parses one token (note, chord, rest, spacer or directive).
 pub fn parse_token(token: &str) -> Result<Event, NotationError> {
     if let Some(inner) = token.strip_prefix('{') {
         let inner = inner
@@ -183,6 +187,9 @@ pub fn parse_token(token: &str) -> Result<Event, NotationError> {
     let dur = parse_dur(dur_s, token)?;
     if head == "r" {
         return Ok(Event::Rest { dur });
+    }
+    if head == "s" {
+        return Ok(Event::Spacer { dur });
     }
     let pitches = split_pitches(head, token)?;
     let fingers: Vec<u8> = match fingers_s {
@@ -287,9 +294,28 @@ mod tests {
                 dur: Dur::new(1, 4)
             })
         );
+        assert_eq!(
+            parse_token("s:4"),
+            Ok(Event::Spacer {
+                dur: Dur::new(1, 4)
+            })
+        );
         assert!(
             matches!(parse_token("E4:4@3(accent)"), Ok(Event::Note { annotation: Some(ref a), .. }) if a == "accent")
         );
+    }
+
+    #[test]
+    fn spacer_token_is_parsed_and_counts_for_bar_length() {
+        let bar = parse_bar("s:2 C4:2").unwrap();
+        assert_eq!(bar.len(), 2);
+        assert_eq!(
+            bar[0],
+            Event::Spacer {
+                dur: Dur::new(1, 2)
+            }
+        );
+        assert_eq!(bar_length(&bar), Dur::new(1, 1));
     }
 
     #[test]
