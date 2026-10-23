@@ -53,7 +53,7 @@ Local SQLite: profile, per-level best score, stars, attempts, streak, settings, 
 
 ## Deploy (web)
 
-[D15](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`. `.github/workflows/release-web.yml` builds the same production web app from a `vMAJOR.MINOR.PATCH` tag and publishes `easy-piano-web-<tag>.zip` with generated notes on GitHub Releases; it uses the workflow token with `contents: write`. This does not deploy the tag to Pages.
+[D15](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`. `.github/workflows/release.yml` builds the web app, Windows x64 bundle, and Android arm64 APK from `vMAJOR.MINOR.PATCH` tags, then attaches versioned assets to GitHub Releases with generated notes. The Android APK is debug-signed for sideloading; it is not a Play Store package. Release builds do not deploy the tagged web build to Pages.
 
 ## Build (Android)
 
