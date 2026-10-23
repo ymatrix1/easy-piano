@@ -163,6 +163,13 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install pinned EVB project generator
+        run: npm ci --ignore-scripts --prefix tools/windows-packaging
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
@@ -181,15 +188,39 @@ jobs:
           flutter pub get
           flutter build windows --release --build-name=${{ needs.prepare.outputs.version }} --build-number=${{ github.run_number }}
 
+      - name: Install Enigma Virtual Box 11.30
+        shell: pwsh
+        run: ./packaging/windows/install-enigma-virtual-box.ps1 -Destination "$env:RUNNER_TEMP/enigmavb"
+
+      - name: Package portable Windows executable
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          $bundle = 'app/build/windows/x64/runner/Release'
+          $output = "app/build/windows/easy-piano-windows-x64-$env:RELEASE_TAG-portable.exe"
+          node tools/windows-packaging/package-single-exe.cjs $bundle $output
+          $console = Join-Path $env:RUNNER_TEMP 'enigmavb/enigmavbconsole.exe'
+          & $console 'app/build/windows/easy-piano-portable.evb'
+          if ($LASTEXITCODE -ne 0) { throw "Enigma packaging failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path -LiteralPath $output)) { throw 'Enigma did not produce the portable executable.' }
+          if ((Get-Item -LiteralPath $output).Length -le (Get-Item -LiteralPath "$bundle/easy_piano.exe").Length) {
+            throw 'Packed executable is not larger than the Flutter launcher.'
+          }
+
       - name: Package Windows app
         env:
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-        run: Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath "easy-piano-windows-x64-$env:RELEASE_TAG.zip"
+        run: |
+          Copy-Item packaging/windows/README.txt app/build/windows/x64/runner/Release/README.txt
+          Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath "easy-piano-windows-x64-$env:RELEASE_TAG.zip"
 
       - uses: actions/upload-artifact@v6
         with:
           name: windows-assets
-          path: easy-piano-windows-x64-${{ needs.prepare.outputs.tag }}.zip
+          path: |
+            easy-piano-windows-x64-${{ needs.prepare.outputs.tag }}.zip
+            app/build/windows/easy-piano-windows-x64-${{ needs.prepare.outputs.tag }}-portable.exe
           if-no-files-found: error
           retention-days: 1
 
