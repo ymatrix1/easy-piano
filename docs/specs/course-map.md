@@ -13,6 +13,8 @@ Touch Intro ─► Piano Basics ─► Essentials I ─► Essentials II ─► 
 
 Each course: 10–25 journey nodes, 30–60 levels, a boss at the end. Typical stage mix in the reference: ~80% wait (`note_sequence`), 10–25% play-along (`moving`), 2–6% teaching (video, replaced by our animation scenes), small share of single-note drills. Later courses raise the play-along share (Bach, Jazz ≈ 25–30%).
 
+In the Learn tab, journey connector rails sit behind their node markers and stop at the marker bounds, including while a marker scales on hover.
+
 ## Basic section
 
 | Course | Prereq | Skills | RH / LH range | bpm | PD songs (ours) |

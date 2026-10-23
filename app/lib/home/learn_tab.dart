@@ -691,16 +691,29 @@ class _SubmoduleRow extends StatelessWidget {
             children: [
               SizedBox(
                 width: 36,
-                child: Column(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
                   children: [
-                    Expanded(child: first ? const SizedBox() : rail),
-                    AnimatedScale(
-                      scale: hover ? 1.12 : 1,
-                      duration: const Duration(milliseconds: 180),
-                      curve: Curves.easeOutBack,
-                      child: node,
+                    Positioned.fill(
+                      child: Column(
+                        children: [
+                          Expanded(child: first ? const SizedBox() : rail),
+                          const SizedBox(height: 36),
+                          Expanded(child: last ? const SizedBox() : rail),
+                        ],
+                      ),
                     ),
-                    Expanded(child: last ? const SizedBox() : rail),
+                    Positioned.fill(
+                      child: Align(
+                        child: AnimatedScale(
+                          scale: hover ? 1.12 : 1,
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutBack,
+                          child: node,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
