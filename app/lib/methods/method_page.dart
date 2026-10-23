@@ -21,7 +21,7 @@ class MethodPage extends StatefulWidget {
   final ContentRepo repo;
   final Progress progress;
   final MethodDef method;
-  final Future<void> Function(String levelId) onPlay;
+  final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
 
   @override
   State<MethodPage> createState() => _MethodPageState();
@@ -53,7 +53,7 @@ class _MethodPageState extends State<MethodPage> {
   }
 
   Future<void> _openPiece(CourseDef course, JourneyNode node) async {
-    final level = await showModalBottomSheet<String>(
+    final selection = await showModalBottomSheet<(String, int)>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -64,8 +64,8 @@ class _MethodPageState extends State<MethodPage> {
         node: node,
       ),
     );
-    if (level != null) {
-      await widget.onPlay(level);
+    if (selection != null) {
+      await widget.onPlay(selection.$1, selection.$2);
       if (mounted) setState(() {});
     }
   }

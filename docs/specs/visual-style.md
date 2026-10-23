@@ -33,9 +33,9 @@ Modules with `status: "planned"` (Essentials I–III for now) are listed locked 
 - **Learn tab**
   - **Continue card:** big violet-blue gradient card with the next submodule's name, its module, and a pulsing yellow PLAY that starts the first unplayed task.
   - Per section: header (yellow tick + title + fading rule), then the **outer trail**: numbered chamfered markers joined by a vertical rail (done = green check, current = yellow + glow, open = violet, planned = grey lock), each next to its module card.
-  - **Module card:** gradient by position (blue, purple, green; grey when planned), "MODULE n" kicker, title, description, star progress bar `earned / nodes × 3`, chevron. Tap toggles the **inner trail** (animated expand/collapse; the current module starts open).
+  - **Module card:** gradient by position (blue, purple, orange, green, cyan, red; grey when planned), "MODULE n" kicker, title, description, star progress bar `earned / nodes × 3`, chevron. Tap toggles the **inner trail** (animated expand/collapse; the current module starts open).
   - **Inner trail:** dark glass panel; one row per submodule with a chamfered node on a thin rail (done = green check, next = yellow + glow + PLAY button, others = kind icon), "KIND · n TASKS" kicker, numbered title, three stars.
-  - **Task sheet:** bottom sheet panel with module kicker, submodule title, task rows (number, title, stars; next one outlined yellow) and a PLAY button.
+  - **Task sheet:** bottom sheet panel with module kicker, submodule title, task rows (number, title, stars; next one outlined yellow). When a level has both training (`wait`) and performance (`play_along`) stages, it presents two action buttons: `PRACTICE` (purple, starts note-by-note training and flows continuously into play-along) and `PLAY ALONG` (gold, jumps directly to the full tempo play-along); single-mode levels display one `PLAY` button.
 - **Practice tab:** grid of mode cards (Free play — own screen: keyboard, held-note names, octave shift, glissando, MIDI status, sound toggle; Sight reading, Rhythm drills, Song library marked SOON).
 - **Profile tab:** stat tiles (stars, tasks, modules) and developer tools (MIDI and staff spikes).
 
@@ -51,7 +51,7 @@ Progress rules (in memory until the progress store lands): submodule stars = low
 | `cyan` | `#2EE6FF` | Kickers, beams, accents |
 | `gold` / `goldLight` / `goldDark` | `#FFC83A` / `#FFEA9A` / `#B86E00` | Stars |
 | `success` / `danger` | `#3CE07A` / `#FF4D6D` | Done, exit |
-| `GameTone` | gold, green, blue, purple, red, grey, wood (dark glass) | Top/bottom gradient + label colour |
+| `GameTone` | gold, green, blue, purple, red, cyan, orange, grey, wood (dark glass) | Top/bottom gradient + label colour |
 | `chamfer(cut)` | Top-right and bottom-left corners cut at 45° | Every card, button, marker |
 
 ## Components (`app/lib/ui/game/game_widgets.dart`)

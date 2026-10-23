@@ -23,7 +23,7 @@ class LearnTab extends StatefulWidget {
 
   final ContentRepo repo;
   final Progress progress;
-  final Future<void> Function(String levelId) onPlay;
+  final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
   final VoidCallback? onOpenMethods;
 
   @override
@@ -41,10 +41,17 @@ class _LearnTabState extends State<LearnTab> {
       widget.repo.sections.first.id,
   };
 
-  static const _tones = [GameTone.blue, GameTone.purple, GameTone.green];
+  static const _tones = [
+    GameTone.blue,
+    GameTone.purple,
+    GameTone.orange,
+    GameTone.green,
+    GameTone.cyan,
+    GameTone.red,
+  ];
 
   Future<void> _openNode(CourseDef course, JourneyNode node) async {
-    final level = await showModalBottomSheet<String>(
+    final selection = await showModalBottomSheet<(String, int)>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -55,7 +62,9 @@ class _LearnTabState extends State<LearnTab> {
         node: node,
       ),
     );
-    if (level != null) await widget.onPlay(level);
+    if (selection != null) {
+      await widget.onPlay(selection.$1, selection.$2);
+    }
   }
 
   @override

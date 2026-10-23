@@ -43,14 +43,18 @@ class _HomePageState extends State<HomePage> {
   final _stars = <String, int>{}; // level id → best stars
   int _tab = 0;
 
-  Future<void> _playLevel(String levelId) async {
+  Future<void> _playLevel(String levelId, [int initialStageIndex = 0]) async {
     final level = widget.repo.levels[levelId];
     if (level == null) return;
     final stars = await Navigator.of(context).push<int>(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 380),
-        pageBuilder: (_, _, _) =>
-            LevelPage(repo: widget.repo, level: level, midi: widget.midi),
+        pageBuilder: (_, _, _) => LevelPage(
+          repo: widget.repo,
+          level: level,
+          midi: widget.midi,
+          initialStageIndex: initialStageIndex,
+        ),
         transitionsBuilder: (_, a, _, child) => FadeTransition(
           opacity: a,
           child: ScaleTransition(

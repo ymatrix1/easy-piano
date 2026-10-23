@@ -24,6 +24,11 @@ class TaskSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final open = progress.firstOpenLevel(node);
+    final targetLevel = repo.levels[open];
+    final stages = targetLevel?.stages ?? const [];
+    final hasWait = stages.any((s) => s.type == 'wait');
+    final playAlongIndex = stages.indexWhere((s) => s.type == 'play_along');
+    final hasBoth = hasWait && playAlongIndex >= 0;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -73,17 +78,46 @@ class TaskSheet extends StatelessWidget {
                           title: repo.t(repo.levels[id]?.title ?? id),
                           stars: progress.levelStars[id] ?? 0,
                           isNext: id == open,
-                          onTap: () => Navigator.of(context).pop(id),
+                          onTap: () => Navigator.of(context).pop((id, 0)),
                         ),
                       ),
                     const SizedBox(height: 10),
-                    GameButton(
-                      label: AppLocalizations.of(context).play,
-                      icon: Icons.play_arrow_rounded,
-                      onTap: () => Navigator.of(context).pop(open),
-                      fontSize: 20,
-                      height: 54,
-                    ),
+                    if (hasBoth)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GameButton(
+                              label: AppLocalizations.of(context).navPractice,
+                              icon: Icons.fitness_center_rounded,
+                              tone: GameTone.purple,
+                              onTap: () => Navigator.of(context).pop((open, 0)),
+                              fontSize: 17,
+                              height: 54,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GameButton(
+                              label: AppLocalizations.of(context)
+                                  .practicePlayAlong,
+                              icon: Icons.play_arrow_rounded,
+                              onTap: () =>
+                                  Navigator.of(context)
+                                      .pop((open, playAlongIndex)),
+                              fontSize: 17,
+                              height: 54,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      GameButton(
+                        label: AppLocalizations.of(context).play,
+                        icon: Icons.play_arrow_rounded,
+                        onTap: () => Navigator.of(context).pop((open, 0)),
+                        fontSize: 20,
+                        height: 54,
+                      ),
                   ],
                 ),
               ),

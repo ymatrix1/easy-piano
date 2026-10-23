@@ -25,18 +25,23 @@ class LevelPage extends StatefulWidget {
     required this.repo,
     required this.level,
     required this.midi,
+    this.initialStageIndex = 0,
   });
 
   final ContentRepo repo;
   final LevelDef level;
   final MidiInput midi;
+  final int initialStageIndex;
 
   @override
   State<LevelPage> createState() => _LevelPageState();
 }
 
 class _LevelPageState extends State<LevelPage> {
-  int _index = 0;
+  late int _index = widget.initialStageIndex.clamp(
+    0,
+    widget.level.stages.isEmpty ? 0 : widget.level.stages.length - 1,
+  );
   int _attempt = 0; // failed attempts on the current stage
   int _repeat = 0; // completed repeats of the current stage
   int _run = 0; // bumps to restart a stage widget

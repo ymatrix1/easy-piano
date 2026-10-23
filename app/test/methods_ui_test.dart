@@ -89,13 +89,14 @@ void main() {
     await tester.tap(find.text('Six Unison Melodies, No. 1').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('PLAY'), findsOneWidget);
+    expect(find.text('PRACTICE'), findsOneWidget);
+    expect(find.text('PLAY ALONG'), findsOneWidget);
 
     // Close bottom sheet.
-    Navigator.of(tester.element(find.text('PLAY'))).pop();
+    Navigator.of(tester.element(find.text('PRACTICE'))).pop();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('PLAY'), findsNothing);
+    expect(find.text('PRACTICE'), findsNothing);
 
     // Back from MethodPage returns to MethodsLibraryPage.
     final backButtons = find.byType(IconButton);

@@ -48,6 +48,22 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('2. C, D and E'), findsNothing);
 
+    // Expand again and open a submodule with both wait and play_along stages.
+    await tester.tap(find.text('PIANO BASICS'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('2. C, D and E'), findsOneWidget);
+
+    await tester.tap(find.text('2. C, D and E'));
+    await tester.pump(const Duration(milliseconds: 600));
+    // In the task sheet modal, both Practice and Play along buttons are present.
+    // (One "PRACTICE" is the bottom nav tab label, one is the sheet button).
+    expect(find.text('PRACTICE'), findsNWidgets(2));
+    expect(find.text('PLAY ALONG'), findsOneWidget);
+
+    // Dismiss bottom sheet.
+    Navigator.of(tester.element(find.text('PLAY ALONG'))).pop();
+    await tester.pump(const Duration(milliseconds: 600));
+
     // Switch tabs.
     await tester.tap(find.text('PRACTICE'));
     await tester.pump(const Duration(seconds: 1));

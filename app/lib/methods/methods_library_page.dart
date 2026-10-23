@@ -19,7 +19,7 @@ class MethodsLibraryPage extends StatelessWidget {
 
   final ContentRepo repo;
   final Progress progress;
-  final Future<void> Function(String levelId) onPlay;
+  final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +107,7 @@ class MethodsCatalogView extends StatefulWidget {
 
   final ContentRepo repo;
   final Progress progress;
-  final Future<void> Function(String levelId) onPlay;
+  final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
 
   @override
   State<MethodsCatalogView> createState() => _MethodsCatalogViewState();
