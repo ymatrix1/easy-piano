@@ -168,7 +168,8 @@ jobs:
           node-version: 22
 
       - name: Install pinned EVB project generator
-        run: npm ci --ignore-scripts --prefix tools/windows-packaging
+        working-directory: tools/windows-packaging
+        run: npm ci --ignore-scripts
 
       - uses: dtolnay/rust-toolchain@stable
         with:
