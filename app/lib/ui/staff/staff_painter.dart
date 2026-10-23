@@ -307,7 +307,7 @@ class StaffPainter extends CustomPainter {
           ? space * 1.0
           : (_isDotted(n.beats)
                 ? space * 1.95
-                : (n.beats >= 4 ? space * 1.69 : space * 1.18));
+                : (n.beats >= 4 ? space * 1.5 : space * 1.3));
       final right = nx + width;
       if (prevRight == null || right > prevRight) {
         prevRight = right;
@@ -321,7 +321,7 @@ class StaffPainter extends CustomPainter {
       if (n.beat - barBeat > 0.05) break;
       if (n.isSpacer) continue;
       final nx = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
-      final left = _isSharp[n.pitch % 12] ? nx - space * 1.4 : nx;
+      final left = _isSharp[n.pitch % 12] ? nx - space * 1.3 : nx;
       if (nextLeft == null || left < nextLeft) {
         nextLeft = left;
       }
@@ -372,7 +372,7 @@ class StaffPainter extends CustomPainter {
           ? space * 1.0
           : (_isDotted(prev.beats)
                 ? space * 1.95
-                : (prev.beats >= 4 ? space * 1.69 : space * 1.18));
+                : (prev.beats >= 4 ? space * 1.5 : space * 1.3));
       final pr = px + pWidth;
       if (prevRight == null || pr > prevRight) {
         prevRight = pr;
@@ -380,8 +380,8 @@ class StaffPainter extends CustomPainter {
     }
 
     if (prevRight != null) {
-      // Accidental is drawn at x - space * 1.4. Keep at least space * 0.4 clearance.
-      final minX = prevRight + space * 1.8;
+      // Accidental is drawn at x - space * 1.3. Keep at least space * 0.4 clearance.
+      final minX = prevRight + space * 1.7;
       if (nominalX < minX) {
         return minX;
       }
@@ -772,11 +772,11 @@ class StaffPainter extends CustomPainter {
           trebleBottomY,
           bassTopY,
           ink,
-          headWidth: (n.beats >= 4 ? 1.69 : 1.18) * space,
+          headWidth: (n.beats >= 4 ? 1.5 : 1.3) * space,
         );
         if (i == current && currentGlow != null) {
           canvas.drawCircle(
-            Offset(x + space * (n.beats >= 4 ? 0.845 : 0.59), y),
+            Offset(x + space * (n.beats >= 4 ? 0.75 : 0.65), y),
             space * 1.5,
             Paint()
               ..color = currentGlow!.withValues(alpha: 0.35)
@@ -794,7 +794,7 @@ class StaffPainter extends CustomPainter {
             canvas,
             Smufl.accidentalSharp,
             glyphSize,
-            Offset(x - space * 1.4, y),
+            Offset(x - space * 1.3, y),
             color,
           );
         }
@@ -813,8 +813,8 @@ class StaffPainter extends CustomPainter {
         final strokePaint = Paint()
           ..color = color
           ..strokeWidth = math.max(1.2, space * 0.1);
-        final sxUp = x + space * 1.18 - 0.6;
-        final sxDown = x + 0.6;
+        final sxUp = x + space * 1.3 - strokePaint.strokeWidth / 2;
+        final sxDown = x + strokePaint.strokeWidth / 2;
 
         // Check if there are other chord notes on the same beat and hand
         var isLowestOfChord = true;

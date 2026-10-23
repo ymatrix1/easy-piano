@@ -188,7 +188,7 @@ void main() {
         notes: notes,
       );
       final barX = anchorX + 4.0 * ppb;
-      final prevRight = anchorX + 3.5 * ppb + space * 1.18;
+      final prevRight = anchorX + 3.5 * ppb + space * 1.3;
       final nominalBx = barX - space * 0.8;
 
       // Centered between prevRight and barX
@@ -202,7 +202,7 @@ void main() {
       const density = 95.0; // density for subdivisions
       final notes = [
         const StaffNote(62, 3.5, 0.5),
-        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.4 sp)
+        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.3 sp)
       ];
       final bx = StaffPainter.barLineX(
         barBeat: 4.0,
@@ -213,8 +213,8 @@ void main() {
         notes: notes,
       );
       final barX = anchorX + 4.0 * density;
-      final accidentalLeft = barX - space * 1.4;
-      final prevRight = anchorX + 3.5 * density + space * 1.18;
+      final accidentalLeft = barX - space * 1.3;
+      final prevRight = anchorX + 3.5 * density + space * 1.3;
       // Bar line must be between the preceding note stem and the accidental
       expect(bx, lessThan(accidentalLeft));
       expect(bx, greaterThan(prevRight));
