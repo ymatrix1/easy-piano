@@ -19,6 +19,7 @@ Close the theory gap vs Alfred 1-3 / Faber 1-2.
 - [ ] Augmented triads and transposition lessons
 - [ ] quiz stages for scale degrees, intervals, key signatures
 - [ ] Strings in 5 locales, lint ok, course-map updated
+- [ ] Each new topic has its own lesson (scene explaining what it is + drill + song): each new key and its scale, augmented triads, transposition
 
 ## Out of Scope
 - Notation features

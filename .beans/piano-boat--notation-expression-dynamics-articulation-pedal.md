@@ -20,6 +20,7 @@ Teach how to play, not only which notes.
 - [ ] app: marks drawn on staff, playback honours dynamics/pedal
 - [ ] content-format.md, lint rules
 - [ ] Lessons in Classical I / Intermediate I for dynamics, staccato, pedal
+- [ ] Teaching lessons (animation scene + drill + song, strings in 5 locales) for each mark: dynamics p/mp/mf/f/ff, crescendo/diminuendo, staccato, legato/slur, accent, tenuto, fermata, damper pedal and overlapping pedal; placed in Classical I and Intermediate I-II
 
 ## Out of Scope
 - Ties, repeats (separate bean)

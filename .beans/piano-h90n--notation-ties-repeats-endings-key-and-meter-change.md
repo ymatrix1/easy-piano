@@ -18,6 +18,7 @@ Read real sheet-music structure like the method books teach.
 - [ ] Proposed decision: {tie} as a real tie in grading (one strike), repeat/volta/D.C./coda markers expanded to a play order, per-bar key and time changes
 - [ ] core + lint + tests; app draws ties, repeat signs, endings, new key/time
 - [ ] Re-arrange songs that worked around these (list from course-map known limits)
+- [ ] Teaching lessons (scene + drill + song): ties vs slurs, repeat signs, 1st/2nd endings, D.C./D.S. al Fine and al Coda, key change and meter change inside a piece; placed in Intermediate II-IV
 
 ## Out of Scope
 - Expression marks

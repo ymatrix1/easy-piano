@@ -21,6 +21,7 @@ Real two-voice right hand in the advanced courses.
 - [ ] Advanced I pieces (nocturne, Liebestraum, Chopin preludes) reviewed for second voices
 - [ ] Ave Maria, Canon in D, Bach II suspensions reviewed
 - [ ] content lint ok; course-map known limits updated
+- [ ] Teaching lesson on reading two voices in one hand (stems up/down, holding one voice while the other moves): scene + drills in A Taste of Bach I before the re-arranged pieces
 
 ## Out of Scope
 - Implementing RH2/LH2 (piano-16vk)
