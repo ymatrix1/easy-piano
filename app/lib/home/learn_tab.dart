@@ -840,8 +840,7 @@ class _TaskSheet extends StatelessWidget {
                               label: AppLocalizations.of(context).navPractice,
                               icon: Icons.fitness_center_rounded,
                               tone: GameTone.purple,
-                              onTap: () =>
-                                  Navigator.of(context).pop((open, 0)),
+                              onTap: () => Navigator.of(context).pop((open, 0)),
                               fontSize: 17,
                               height: 54,
                             ),
@@ -852,8 +851,9 @@ class _TaskSheet extends StatelessWidget {
                               label: AppLocalizations.of(context)
                                   .practicePlayAlong,
                               icon: Icons.play_arrow_rounded,
-                              onTap: () => Navigator.of(context)
-                                  .pop((open, playAlongIndex)),
+                              onTap: () =>
+                                  Navigator.of(context)
+                                      .pop((open, playAlongIndex)),
                               fontSize: 17,
                               height: 54,
                             ),
