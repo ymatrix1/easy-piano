@@ -3,10 +3,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:go_router/go_router.dart';
 
 import 'content/content_repo.dart';
 import 'home/home_page.dart';
+import 'home/learn_tab.dart' show CourseNodePage;
 import 'input/midi_input.dart';
+import 'practice/level_page.dart';
+import 'practice/free_play_page.dart';
+import 'practice/generated/stream_practice_page.dart';
+import 'practice/generated/tune_generator.dart';
 import 'l10n/app_locale.dart';
 import 'l10n/app_localizations.dart';
 import 'src/rust/api/notation.dart' as core;
@@ -47,9 +53,104 @@ class _EasyPianoAppState extends State<EasyPianoApp>
   /// One MIDI connection shared by every screen.
   final MidiInput midi = createMidiInput();
 
+  late final GoRouter _router = GoRouter(
+    initialLocation: '/learn',
+    routes: [
+      for (final tab in ['learn', 'practice', 'profile'])
+        GoRoute(
+          path: '/$tab',
+          builder: (context, state) => HomePage(
+            repo: widget.repo,
+            midi: midi,
+            spikes: (_) => const MidiSpikePage(),
+            tab: tab,
+          ),
+        ),
+      GoRoute(
+        path: '/practice/free-play',
+        builder: (context, state) => state.extra is WidgetBuilder
+            ? (state.extra as WidgetBuilder)(context)
+            : FreePlayPage(midi: midi),
+      ),
+      GoRoute(
+        path: '/practice/endless',
+        builder: (context, state) {
+          if (state.extra is WidgetBuilder) {
+            return (state.extra as WidgetBuilder)(context);
+          }
+          final manifest = widget.repo.melodyManifest;
+          if (manifest == null) return const _UnknownRoute();
+          return StreamSetupPage(
+            repo: widget.repo,
+            generator: createTuneGenerator(manifest),
+            midi: midi,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/tools/midi',
+        builder: (context, state) => state.extra is WidgetBuilder
+            ? (state.extra as WidgetBuilder)(context)
+            : const MidiSpikePage(),
+      ),
+      GoRoute(
+        path: '/tools/staff',
+        builder: (context, state) => state.extra is WidgetBuilder
+            ? (state.extra as WidgetBuilder)(context)
+            : const StaffSpikePage(),
+      ),
+      GoRoute(
+        path: '/lesson/:levelId',
+        builder: (context, state) {
+          final level = widget.repo.levels[state.pathParameters['levelId']];
+          if (level == null) return const _UnknownRoute();
+          return LevelPage(
+            repo: widget.repo,
+            level: level,
+            midi: midi,
+            initialStageIndex:
+                int.tryParse(state.uri.queryParameters['stage'] ?? '') ?? 0,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/course/:courseId/node/:nodeId',
+        builder: (context, state) {
+          final course = widget.repo.courses
+              .where((c) => c.id == state.pathParameters['courseId'])
+              .firstOrNull;
+          final node = course?.nodes
+              .where((n) => n.id == state.pathParameters['nodeId'])
+              .firstOrNull;
+          if (course == null || node == null) return const _UnknownRoute();
+          return CourseNodePage(
+            repo: widget.repo,
+            course: course,
+            node: node,
+            onPlay: (id, [stage = 0]) async {
+              await context.push('/lesson/$id?stage=$stage');
+            },
+          );
+        },
+      ),
+    ],
+    redirect: (context, state) =>
+        const ['/learn', '/practice', '/profile'].contains(state.uri.path)
+        ? null
+        : state.uri.path.startsWith('/lesson/') ||
+              state.uri.path.startsWith('/course/') ||
+              state.uri.path.startsWith('/tools/') ||
+              state.uri.path.startsWith('/practice/')
+        ? null
+        : '/learn',
+  );
+
   @override
   void initState() {
     super.initState();
+    // Imperative pushes (lesson, course node, tool screens) must update the
+    // browser address bar as well as the router's internal stack.
+    GoRouter.optionURLReflectsImperativeAPIs = true;
     WidgetsBinding.instance.addObserver(this);
     widget.appLocale.addListener(_onLocale);
   }
@@ -83,7 +184,7 @@ class _EasyPianoAppState extends State<EasyPianoApp>
   Widget build(BuildContext context) {
     return AppLocaleScope(
       notifier: widget.appLocale,
-      child: MaterialApp(
+      child: MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         debugShowCheckedModeBanner: false,
         locale: widget.appLocale.current.locale,
@@ -93,14 +194,17 @@ class _EasyPianoAppState extends State<EasyPianoApp>
           colorSchemeSeed: const Color(0xFF6C4CF1),
           useMaterial3: true,
         ),
-        home: HomePage(
-          repo: widget.repo,
-          midi: midi,
-          spikes: (_) => const MidiSpikePage(),
-        ),
+        routerConfig: _router,
       ),
     );
   }
+}
+
+class _UnknownRoute extends StatelessWidget {
+  const _UnknownRoute();
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('Page not found')));
 }
 
 /// Phase 0 spike: MIDI or touch → colored key, with input-to-frame latency stats.

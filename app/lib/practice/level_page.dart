@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
@@ -155,6 +156,14 @@ class _LevelPageState extends State<LevelPage> {
     _run++;
   });
 
+  void _exitToMap() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/learn');
+    }
+  }
+
   void _retry() => setState(() {
     if (_result != null && !_result!.passed) _attempt++;
     _repeat = 0;
@@ -236,7 +245,7 @@ class _LevelPageState extends State<LevelPage> {
           AppLocalizations.of(context).scenePending,
         ],
         onContinue: _next,
-        onExit: () => Navigator.of(context).pop(),
+        onExit: _exitToMap,
       );
     }
     if (!s.isPlayable || repo.songJson[s.score] == null) {
@@ -244,7 +253,7 @@ class _LevelPageState extends State<LevelPage> {
         title: s.type,
         lines: [AppLocalizations.of(context).notAvailableYet],
         onContinue: _next,
-        onExit: () => Navigator.of(context).pop(),
+        onExit: _exitToMap,
       );
     }
     return PracticeStage(
@@ -260,7 +269,7 @@ class _LevelPageState extends State<LevelPage> {
       tempo: _tempo ?? s.tempo,
       onTempo: _setTempo,
       onRestart: _restart,
-      onExit: () => Navigator.of(context).pop(),
+      onExit: _exitToMap,
       repeatDone: _index,
       repeatTotal: widget.level.stages.length,
       showKeyboard: showKeyboard,
