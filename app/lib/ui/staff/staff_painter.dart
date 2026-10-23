@@ -19,6 +19,12 @@ abstract final class Smufl {
   static const rest8th = '';
   static const rest16th = '';
 
+  // Flags for 8th and 16th notes
+  static const flag8thUp = '\uE240';
+  static const flag8thDown = '\uE241';
+  static const flag16thUp = '\uE242';
+  static const flag16thDown = '\uE243';
+
   // Time signatures
   static const timeSig0 = '';
   static const timeSig1 = '';
@@ -257,8 +263,8 @@ class StaffPainter extends CustomPainter {
     // Clef glyphs are ~2.7 spaces wide.
     var right = clefX + space * 3.4;
     if (beatsPerBar != null && beatsPerBar > 0) {
-      // Time signature digits sit after the clef (~2.0 spaces wide + padding).
-      right += space * 2.5;
+      // Time signature digits sit at clefX + 3.8 spaces, width ~1.8 spaces + clearance.
+      right = clefX + space * 6.0;
     }
     return (systemX: systemX, clefX: clefX, clefRight: right);
   }
@@ -457,27 +463,46 @@ class StaffPainter extends CustomPainter {
           ..color = dimmed
               ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
               : bandColor!;
-        // Clean open bands hugging each staff without heavy framing borders.
+        final frame = Paint()
+          ..color = staff
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = ink.strokeWidth * 2;
+        final inset = frame.strokeWidth / 2;
+
         if (_hasTreble) {
+          final rect = Rect.fromLTRB(
+            sys.systemX,
+            trebleBottomY - space * 4,
+            size.width,
+            trebleBottomY,
+          );
+          canvas.drawRect(rect, band);
           canvas.drawRect(
             Rect.fromLTRB(
               sys.systemX,
-              trebleBottomY - space * 4,
-              size.width,
-              trebleBottomY,
+              rect.top,
+              size.width - inset,
+              rect.bottom,
             ),
-            band,
+            frame,
           );
         }
         if (_hasBass) {
+          final rect = Rect.fromLTRB(
+            sys.systemX,
+            bassTopY,
+            size.width,
+            bassTopY + space * 4,
+          );
+          canvas.drawRect(rect, band);
           canvas.drawRect(
             Rect.fromLTRB(
               sys.systemX,
-              bassTopY,
-              size.width,
-              bassTopY + space * 4,
+              rect.top,
+              size.width - inset,
+              rect.bottom,
             ),
-            band,
+            frame,
           );
         }
       }
@@ -527,7 +552,7 @@ class StaffPainter extends CustomPainter {
         final denGlyph = Smufl.digitGlyph(
           4,
         ); // Default quarter note denominator
-        final tsX = sys.clefX + space * 3.4;
+        final tsX = sys.clefX + space * 3.8;
         if (numGlyph != null && denGlyph != null) {
           if (_hasTreble) {
             _drawGlyph(
@@ -839,20 +864,36 @@ class StaffPainter extends CustomPainter {
           if (stemDown) {
             // Downward stem extends from the lowest note downward
             if (isLowestOfChord) {
+              final tipY = y + space * 3.5;
               canvas.drawLine(
                 Offset(sxDown, y),
-                Offset(sxDown, y + space * 3.5),
+                Offset(sxDown, tipY),
                 strokePaint,
               );
+              if (n.beats <= 0.75) {
+                final flag = n.beats <= 0.375
+                    ? Smufl.flag16thDown
+                    : Smufl.flag8thDown;
+                _drawGlyph(
+                  canvas,
+                  flag,
+                  glyphSize,
+                  Offset(sxDown, tipY),
+                  color,
+                );
+              }
             }
           } else {
             // Upward stem extends from the highest note upward
             if (isHighestOfChord) {
-              canvas.drawLine(
-                Offset(sxUp, y),
-                Offset(sxUp, y - space * 3.5),
-                strokePaint,
-              );
+              final tipY = y - space * 3.5;
+              canvas.drawLine(Offset(sxUp, y), Offset(sxUp, tipY), strokePaint);
+              if (n.beats <= 0.75) {
+                final flag = n.beats <= 0.375
+                    ? Smufl.flag16thUp
+                    : Smufl.flag8thUp;
+                _drawGlyph(canvas, flag, glyphSize, Offset(sxUp, tipY), color);
+              }
             }
           }
           // Also connect this note to adjacent chord notes if needed
@@ -872,28 +913,46 @@ class StaffPainter extends CustomPainter {
             }
           }
         } else if (n.twoStems || isDuplicate) {
-          canvas.drawLine(
-            Offset(sxUp, y),
-            Offset(sxUp, y - space * 3.5),
-            strokePaint,
-          );
+          final tipUpY = y - space * 3.5;
+          final tipDownY = y + space * 3.5;
+          canvas.drawLine(Offset(sxUp, y), Offset(sxUp, tipUpY), strokePaint);
           canvas.drawLine(
             Offset(sxDown, y),
-            Offset(sxDown, y + space * 3.5),
+            Offset(sxDown, tipDownY),
             strokePaint,
           );
+          if (n.beats <= 0.75) {
+            final flagUp = n.beats <= 0.375
+                ? Smufl.flag16thUp
+                : Smufl.flag8thUp;
+            final flagDown = n.beats <= 0.375
+                ? Smufl.flag16thDown
+                : Smufl.flag8thDown;
+            _drawGlyph(canvas, flagUp, glyphSize, Offset(sxUp, tipUpY), color);
+            _drawGlyph(
+              canvas,
+              flagDown,
+              glyphSize,
+              Offset(sxDown, tipDownY),
+              color,
+            );
+          }
         } else if (n.stemDown) {
-          canvas.drawLine(
-            Offset(sxDown, y),
-            Offset(sxDown, y + space * 3.5),
-            strokePaint,
-          );
+          final tipY = y + space * 3.5;
+          canvas.drawLine(Offset(sxDown, y), Offset(sxDown, tipY), strokePaint);
+          if (n.beats <= 0.75) {
+            final flag = n.beats <= 0.375
+                ? Smufl.flag16thDown
+                : Smufl.flag8thDown;
+            _drawGlyph(canvas, flag, glyphSize, Offset(sxDown, tipY), color);
+          }
         } else {
-          canvas.drawLine(
-            Offset(sxUp, y),
-            Offset(sxUp, y - space * 3.5),
-            strokePaint,
-          );
+          final tipY = y - space * 3.5;
+          canvas.drawLine(Offset(sxUp, y), Offset(sxUp, tipY), strokePaint);
+          if (n.beats <= 0.75) {
+            final flag = n.beats <= 0.375 ? Smufl.flag16thUp : Smufl.flag8thUp;
+            _drawGlyph(canvas, flag, glyphSize, Offset(sxUp, tipY), color);
+          }
         }
       }
       if (n.finger != null && _shouldDrawFinger(i)) {

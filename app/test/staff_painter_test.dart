@@ -252,6 +252,13 @@ void main() {
   });
 
   group('StaffPainter chord rendering and time signature', () {
+    test('SMuFL flags for eighth and sixteenth notes are defined', () {
+      expect(Smufl.flag8thUp, equals('\uE240'));
+      expect(Smufl.flag8thDown, equals('\uE241'));
+      expect(Smufl.flag16thUp, equals('\uE242'));
+      expect(Smufl.flag16thDown, equals('\uE243'));
+    });
+
     test(
       'systemLayout accounts for time signature width when beatsPerBar is set',
       () {
@@ -267,6 +274,10 @@ void main() {
           beatsPerBar: null,
         );
         expect(withTs.clefRight, greaterThan(withoutTs.clefRight));
+        expect(
+          withTs.clefRight - withTs.clefX,
+          greaterThanOrEqualTo(space * 5.5),
+        );
       },
     );
   });
