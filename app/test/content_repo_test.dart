@@ -33,14 +33,20 @@ void main() {
     expect(repo.songJson['ode-to-joy'], contains('Beethoven'));
   });
 
-  test('sections and planned modules load', () {
+  test('sections, methods and planned modules load', () {
     final repo = ContentRepo.fromFiles(files);
-    expect(repo.sections.map((s) => s.id), [
-      'basic',
-      'soloist',
-      'chords',
-      'methods',
-    ]);
+    expect(repo.sections.map((s) => s.id), ['basic', 'soloist', 'chords']);
+    expect(repo.methods.map((m) => m.id), ['mikrokosmos']);
+    final mk = repo.methods.first;
+    expect(mk.books, contains('mikrokosmos-1'));
+    expect(
+      repo.courses.firstWhere((c) => c.id == 'mikrokosmos-1').method,
+      'mikrokosmos',
+    );
+    expect(
+      repo.courses.firstWhere((c) => c.id == 'mikrokosmos-1').isMethod,
+      isTrue,
+    );
     final planned = repo.courses.where((c) => c.planned).toList();
     // Every playable course resolves all of its levels.
     final ready = repo.courses.where((c) => !c.planned).toList();

@@ -920,6 +920,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Game'**
   String get styleGame;
+
+  /// No description provided for @methodsCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Methods'**
+  String get methodsCardTitle;
+
+  /// No description provided for @methodsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 method} other{{count} methods}}'**
+  String methodsCardSubtitle(int count);
+
+  /// No description provided for @methodsLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Methods'**
+  String get methodsLibraryTitle;
+
+  /// No description provided for @methodsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get methodsFilterAll;
+
+  /// No description provided for @methodsFilterBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get methodsFilterBeginner;
+
+  /// No description provided for @methodsFilterEarlyIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Early intermediate'**
+  String get methodsFilterEarlyIntermediate;
+
+  /// No description provided for @methodsFilterIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get methodsFilterIntermediate;
+
+  /// No description provided for @methodsFilterReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get methodsFilterReading;
+
+  /// No description provided for @methodsFilterRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Rhythm'**
+  String get methodsFilterRhythm;
+
+  /// No description provided for @methodsFilterIndependence.
+  ///
+  /// In en, this message translates to:
+  /// **'Independence'**
+  String get methodsFilterIndependence;
+
+  /// No description provided for @methodsBookCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 book} other{{count} books}}'**
+  String methodsBookCount(int count);
+
+  /// No description provided for @methodContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get methodContinue;
+
+  /// No description provided for @methodProtectedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected in your country until {year}'**
+  String methodProtectedNotice(String year);
+
+  /// No description provided for @learnSwitchCourses.
+  ///
+  /// In en, this message translates to:
+  /// **'Courses'**
+  String get learnSwitchCourses;
+
+  /// No description provided for @learnSwitchMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Methods'**
+  String get learnSwitchMethods;
+
+  /// No description provided for @modulesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 module} other{{count} modules}}'**
+  String modulesCount(int count);
+
+  /// No description provided for @methodsExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get methodsExplore;
 }
 
 class _AppLocalizationsDelegate

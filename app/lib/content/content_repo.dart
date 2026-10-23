@@ -117,6 +117,7 @@ class CourseDef {
     required this.description,
     required this.nodes,
     this.section = '',
+    this.method,
     this.planned = false,
   });
 
@@ -127,7 +128,45 @@ class CourseDef {
   /// Journey nodes, shown as submodules; each holds levels (tasks).
   final List<JourneyNode> nodes;
   final String section;
+  final String? method;
   final bool planned;
+
+  bool get isMethod => method != null && method!.isNotEmpty;
+}
+
+/// An optional method containing progressive books (e.g. Mikrokosmos).
+class MethodDef {
+  const MethodDef({
+    required this.id,
+    required this.title,
+    required this.composer,
+    required this.description,
+    required this.levels,
+    required this.skills,
+    required this.books,
+  });
+
+  final String id;
+  final String title;
+  final String composer;
+  final String description;
+  final List<String> levels;
+  final List<String> skills;
+  final List<String> books;
+
+  factory MethodDef.fromJson(Map<String, dynamic> json) => MethodDef(
+    id: json['id'] as String,
+    title: json['title'] as String,
+    composer: json['composer'] as String? ?? '',
+    description: json['description'] as String? ?? '',
+    levels: [
+      for (final l in (json['levels'] as List?) ?? const []) l as String,
+    ],
+    skills: [
+      for (final s in (json['skills'] as List?) ?? const []) s as String,
+    ],
+    books: [for (final b in (json['books'] as List?) ?? const []) b as String],
+  );
 }
 
 /// A named group of modules (e.g. Basics).
@@ -149,6 +188,7 @@ class ContentRepo {
   ContentRepo({
     required this.courses,
     this.sections = const [],
+    this.methods = const [],
     required this.levels,
     required this.songJson,
     required this.scenes,
@@ -160,6 +200,7 @@ class ContentRepo {
 
   final List<CourseDef> courses;
   final List<SectionDef> sections;
+  final List<MethodDef> methods;
   final Map<String, LevelDef> levels;
   final Map<String, String> songJson;
   final Map<String, Map<String, dynamic>> scenes;
@@ -224,6 +265,13 @@ class ContentRepo {
       for (final s in (index['sections'] as List?) ?? const [])
         SectionDef(id: s['id'] as String, title: s['title'] as String),
     ];
+    final methods = files['methods.json'] == null
+        ? const <MethodDef>[]
+        : [
+            for (final m
+                in (json('methods.json')['methods'] as List?) ?? const [])
+              MethodDef.fromJson(m as Map<String, dynamic>),
+          ];
     final courses = [
       for (final c in index['courses'] as List)
         CourseDef(
@@ -231,6 +279,7 @@ class ContentRepo {
           title: c['title'] as String,
           description: c['description'] as String,
           section: c['section'] as String? ?? '',
+          method: c['method'] as String?,
           planned: c['status'] == 'planned',
           nodes: c['journey'] == null
               ? const []
@@ -248,6 +297,7 @@ class ContentRepo {
     return ContentRepo(
       courses: courses,
       sections: sections,
+      methods: methods,
       levels: levels,
       songJson: songs,
       scenes: scenes,

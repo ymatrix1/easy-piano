@@ -135,5 +135,22 @@
   "styleChildren": "Infantil",
   "stylePop": "Pop",
   "styleJazz": "Jazz",
-  "styleGame": "Videojogo"
+  "styleGame": "Videojogo",
+  "methodsCardTitle": "Métodos",
+  "methodsCardSubtitle": "{count, plural, =1{1 método} other{{count} métodos}}",
+  "methodsLibraryTitle": "Métodos",
+  "methodsFilterAll": "Todos",
+  "methodsFilterBeginner": "Iniciante",
+  "methodsFilterEarlyIntermediate": "Intermediário inicial",
+  "methodsFilterIntermediate": "Intermediário",
+  "methodsFilterReading": "Leitura",
+  "methodsFilterRhythm": "Ritmo",
+  "methodsFilterIndependence": "Independência",
+  "methodsBookCount": "{count, plural, =1{1 livro} other{{count} livros}}",
+  "methodContinue": "Continuar",
+  "methodProtectedNotice": "Protegido em seu país até {year}",
+  "learnSwitchCourses": "Cursos",
+  "learnSwitchMethods": "Métodos",
+  "modulesCount": "{count, plural, =1{1 módulo} other{{count} módulos}}",
+  "methodsExplore": "Explorar"
 }

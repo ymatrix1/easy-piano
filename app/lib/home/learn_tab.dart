@@ -6,6 +6,10 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
 import 'home_page.dart' show Progress;
+import '../methods/methods_library_page.dart';
+import 'task_sheet.dart';
+
+enum LearnView { courses, methods }
 
 /// Learn tab: a "continue" hero card, then each section's modules on the
 /// outer trail. A module card expands to show its inner trail of submodules;
@@ -16,19 +20,29 @@ class LearnTab extends StatefulWidget {
     required this.repo,
     required this.progress,
     required this.onPlay,
+    this.onOpenMethods,
   });
 
   final ContentRepo repo;
   final Progress progress;
   final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
+  final VoidCallback? onOpenMethods;
 
   @override
   State<LearnTab> createState() => _LearnTabState();
 }
 
 class _LearnTabState extends State<LearnTab> {
+  LearnView _view = LearnView.courses;
+
   late final Set<String> _open = {
     if (widget.progress.next case (final c, _)) c.id,
+  };
+  late final Set<String> _openSections = {
+    if (widget.progress.next case (final c, _))
+      c.section
+    else if (widget.repo.sections.isNotEmpty)
+      widget.repo.sections.first.id,
   };
 
   static const _tones = [
@@ -45,7 +59,7 @@ class _LearnTabState extends State<LearnTab> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _TaskSheet(
+      builder: (_) => TaskSheet(
         repo: widget.repo,
         progress: widget.progress,
         course: course,
@@ -62,17 +76,19 @@ class _LearnTabState extends State<LearnTab> {
     final repo = widget.repo;
     final progress = widget.progress;
     final next = progress.next;
+    final mainCourses = repo.courses.where((c) => !c.isMethod).toList();
     final sections = [
-      ...repo.sections,
+      ...repo.sections.where((s) => s.id != 'methods'),
       // Courses whose section is not declared still show up.
-      if (repo.courses.any((c) => !repo.sections.any((s) => s.id == c.section)))
+      if (mainCourses.any((c) => !repo.sections.any((s) => s.id == c.section)))
         SectionDef(id: '', title: AppLocalizations.of(context).sectionMore),
     ];
     var moduleNo = 0;
+
     return ListView(
       padding: EdgeInsets.fromLTRB(
         16,
-        8 + MediaQuery.paddingOf(context).top,
+        14 + MediaQuery.paddingOf(context).top,
         16,
         32,
       ),
@@ -83,70 +99,153 @@ class _LearnTabState extends State<LearnTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (next != null)
-                  SlideIn(
-                    child: _ContinueCard(
-                      module: repo.t(next.$1.title),
-                      title: repo.t(next.$2.title),
-                      onPlay: () =>
-                          widget.onPlay(progress.firstOpenLevel(next.$2)),
-                    ),
+                if (repo.methods.isNotEmpty) ...[
+                  _LearnModeSwitch(
+                    selected: _view,
+                    onSelect: (v) {
+                      Sfx.play(SfxKind.tab);
+                      setState(() => _view = v);
+                    },
+                    methodStars: progress.totalMethodStars,
                   ),
-                for (final section in sections)
-                  if (repo.courses.any((c) => c.section == section.id)) ...[
-                    const SizedBox(height: 26),
-                    _SectionHeader(repo.t(section.title)),
-                    const SizedBox(height: 14),
-                    for (final c in repo.courses.where(
-                      (c) => c.section == section.id,
-                    ))
+                  const SizedBox(height: 20),
+                ],
+                if (_view == LearnView.methods)
+                  MethodsCatalogView(
+                    repo: repo,
+                    progress: progress,
+                    onPlay: widget.onPlay,
+                    embedded: true,
+                  )
+                else ...[
+                  if (next != null)
+                    SlideIn(
+                      child: _ContinueCard(
+                        module: repo.t(next.$1.title),
+                        title: repo.t(next.$2.title),
+                        onPlay: () =>
+                            widget.onPlay(progress.firstOpenLevel(next.$2)),
+                      ),
+                    ),
+                  for (final section in sections)
+                    if (mainCourses.any((c) => c.section == section.id))
                       Builder(
                         builder: (context) {
-                          final i = moduleNo++;
-                          final last =
-                              c ==
-                              repo.courses
-                                  .where((x) => x.section == section.id)
-                                  .last;
-                          return SlideIn(
-                            // Cap the stagger: with 30 modules the last
-                            // would wait over two seconds.
-                            delay: Duration(
-                              milliseconds: 80 + 70 * (i < 8 ? i : 8),
-                            ),
-                            child: _OuterTrailItem(
-                              number: i + 1,
-                              last: last,
-                              state: c.planned
-                                  ? _State.locked
-                                  : progress.courseStars(c) ==
-                                        c.nodes.length * 3
-                                  ? _State.done
-                                  : next?.$1 == c
-                                  ? _State.current
-                                  : _State.open,
-                              child: _ModuleCard(
-                                repo: repo,
-                                progress: progress,
-                                course: c,
-                                number: i + 1,
-                                tone: _tones[i % _tones.length],
-                                open: _open.contains(c.id),
-                                nextNode: next?.$1 == c ? next!.$2 : null,
-                                onToggle: c.planned
-                                    ? null
-                                    : () => setState(
-                                        () => _open.contains(c.id)
-                                            ? _open.remove(c.id)
-                                            : _open.add(c.id),
-                                      ),
-                                onNode: (n) => _openNode(c, n),
+                          final sectionCourses = mainCourses
+                              .where((c) => c.section == section.id)
+                              .toList();
+                          final isOpen = _openSections.contains(section.id);
+                          var earned = 0;
+                          var total = 0;
+                          for (final c in sectionCourses) {
+                            earned += progress.courseStars(c);
+                            total += c.nodes.length * 3;
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 20),
+                              _SectionHeader(
+                                title: repo.t(section.title),
+                                moduleCount: sectionCourses.length,
+                                earnedStars: earned,
+                                totalStars: total,
+                                isOpen: isOpen,
+                                onToggle: () {
+                                  Sfx.play(SfxKind.tab);
+                                  setState(() {
+                                    if (isOpen) {
+                                      _openSections.remove(section.id);
+                                    } else {
+                                      _openSections.add(section.id);
+                                    }
+                                  });
+                                },
                               ),
-                            ),
+                              AnimatedSize(
+                                duration: const Duration(milliseconds: 260),
+                                curve: Curves.easeOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: isOpen
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 14),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            for (final c in sectionCourses)
+                                              Builder(
+                                                builder: (context) {
+                                                  final i = moduleNo++;
+                                                  final last =
+                                                      c == sectionCourses.last;
+                                                  return SlideIn(
+                                                    delay: Duration(
+                                                      milliseconds:
+                                                          80 +
+                                                          70 * (i < 8 ? i : 8),
+                                                    ),
+                                                    child: _OuterTrailItem(
+                                                      number: i + 1,
+                                                      last: last,
+                                                      state: c.planned
+                                                          ? _State.locked
+                                                          : progress.courseStars(
+                                                                  c,
+                                                                ) ==
+                                                                c.nodes.length *
+                                                                    3
+                                                          ? _State.done
+                                                          : next?.$1 == c
+                                                          ? _State.current
+                                                          : _State.open,
+                                                      child: _ModuleCard(
+                                                        repo: repo,
+                                                        progress: progress,
+                                                        course: c,
+                                                        number: i + 1,
+                                                        tone:
+                                                            _tones[i %
+                                                                _tones.length],
+                                                        open: _open.contains(
+                                                          c.id,
+                                                        ),
+                                                        nextNode: next?.$1 == c
+                                                            ? next!.$2
+                                                            : null,
+                                                        onToggle: c.planned
+                                                            ? null
+                                                            : () => setState(
+                                                                () =>
+                                                                    _open
+                                                                        .contains(
+                                                                          c.id,
+                                                                        )
+                                                                    ? _open.remove(
+                                                                        c.id,
+                                                                      )
+                                                                    : _open.add(
+                                                                        c.id,
+                                                                      ),
+                                                              ),
+                                                        onNode: (n) =>
+                                                            _openNode(c, n),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                          ],
+                                        ),
+                                      )
+                                    : const SizedBox(width: double.infinity),
+                              ),
+                            ],
                           );
                         },
                       ),
-                  ],
+                ],
               ],
             ),
           ),
@@ -273,33 +372,158 @@ class _Kicker extends StatelessWidget {
   );
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+class _SectionHeader extends StatefulWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.moduleCount,
+    required this.earnedStars,
+    required this.totalStars,
+    required this.isOpen,
+    required this.onToggle,
+  });
 
   final String title;
+  final int moduleCount;
+  final int earnedStars;
+  final int totalStars;
+  final bool isOpen;
+  final VoidCallback onToggle;
+
+  @override
+  State<_SectionHeader> createState() => _SectionHeaderState();
+}
+
+class _SectionHeaderState extends State<_SectionHeader> {
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(width: 4, height: 22, color: GameColors.yellow),
-        const SizedBox(width: 10),
-        GameText(title, size: 22),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  GameColors.panelEdge,
-                  GameColors.panelEdge.withValues(alpha: 0),
+    final l10n = AppLocalizations.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: widget.onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: _hover
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.03),
+                border: Border.all(
+                  color: widget.isOpen
+                      ? GameColors.yellow.withValues(alpha: 0.35)
+                      : Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: GameColors.yellow,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.title.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: displayFont,
+                        fontSize: compact ? 15 : 17,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        shadows: const [
+                          Shadow(color: Colors.black54, offset: Offset(0, 2)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (widget.moduleCount > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!compact) ...[
+                            Text(
+                              l10n
+                                  .modulesCount(widget.moduleCount)
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                fontFamily: displayFont,
+                                fontSize: 10,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            if (widget.totalStars > 0) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                '·',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                          ],
+                          if (widget.totalStars > 0) ...[
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFFD54F),
+                              size: 13,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${widget.earnedStars}/${widget.totalStars}',
+                              style: const TextStyle(
+                                fontFamily: 'Audiowide',
+                                fontSize: 10,
+                                color: Color(0xFFFFD54F),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  AnimatedRotation(
+                    turns: widget.isOpen ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white70,
+                      size: 22,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -771,114 +995,61 @@ class _SubmoduleRow extends StatelessWidget {
   }
 }
 
-/// Bottom sheet listing a submodule's tasks; returns the level id to play.
-class _TaskSheet extends StatelessWidget {
-  const _TaskSheet({
-    required this.repo,
-    required this.progress,
-    required this.course,
-    required this.node,
+class _LearnModeSwitch extends StatelessWidget {
+  const _LearnModeSwitch({
+    required this.selected,
+    required this.onSelect,
+    required this.methodStars,
   });
 
-  final ContentRepo repo;
-  final Progress progress;
-  final CourseDef course;
-  final JourneyNode node;
+  final LearnView selected;
+  final ValueChanged<LearnView> onSelect;
+  final int methodStars;
 
   @override
   Widget build(BuildContext context) {
-    final open = progress.firstOpenLevel(node);
-    final targetLevel = repo.levels[open];
-    final stages = targetLevel?.stages ?? const [];
-    final hasWait = stages.any((s) => s.type == 'wait');
-    final playAlongIndex = stages.indexWhere((s) => s.type == 'play_along');
-    final hasBoth = hasWait && playAlongIndex >= 0;
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: PopIn(
-              from: 0.94,
-              child: GamePanel(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _Kicker(repo.t(course.title), color: GameColors.cyan),
-                    const SizedBox(height: 6),
-                    GameText(
-                      repo.t(node.title),
-                      size: 26,
-                      align: TextAlign.left,
-                    ),
-                    if (node.starsNeeded case final need?) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        AppLocalizations.of(context).gateProgress(
-                          need,
-                          progress.gateStars(node).clamp(0, need),
-                        ),
-                        style: const TextStyle(color: GameColors.textDim),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    for (final (i, id) in node.levels.indexed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _TaskRow(
-                          index: i + 1,
-                          title: repo.t(repo.levels[id]?.title ?? id),
-                          stars: progress.levelStars[id] ?? 0,
-                          isNext: id == open,
-                          onTap: () => Navigator.of(context).pop((id, 0)),
-                        ),
-                      ),
-                    const SizedBox(height: 10),
-                    if (hasBoth)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GameButton(
-                              label: AppLocalizations.of(context).navPractice,
-                              icon: Icons.fitness_center_rounded,
-                              tone: GameTone.purple,
-                              onTap: () => Navigator.of(context).pop((open, 0)),
-                              fontSize: 17,
-                              height: 54,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: GameButton(
-                              label: AppLocalizations.of(context)
-                                  .practicePlayAlong,
-                              icon: Icons.play_arrow_rounded,
-                              onTap: () =>
-                                  Navigator.of(context)
-                                      .pop((open, playAlongIndex)),
-                              fontSize: 17,
-                              height: 54,
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      GameButton(
-                        label: AppLocalizations.of(context).play,
-                        icon: Icons.play_arrow_rounded,
-                        onTap: () => Navigator.of(context).pop((open, 0)),
-                        fontSize: 20,
-                        height: 54,
-                      ),
-                  ],
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF130C36).withValues(alpha: 0.95),
+            shape: chamfer(
+              14,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
+            ),
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SwitchItem(
+                  label: l10n.learnSwitchCourses,
+                  icon: Icons.school_rounded,
+                  active: selected == LearnView.courses,
+                  onTap: () => onSelect(LearnView.courses),
                 ),
               ),
-            ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _SwitchItem(
+                  label: l10n.learnSwitchMethods,
+                  icon: Icons.auto_stories_rounded,
+                  badge: methodStars > 0 ? '$methodStars ⭐' : null,
+                  active: selected == LearnView.methods,
+                  onTap: () => onSelect(LearnView.methods),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -886,58 +1057,116 @@ class _TaskSheet extends StatelessWidget {
   }
 }
 
-class _TaskRow extends StatelessWidget {
-  const _TaskRow({
-    required this.index,
-    required this.title,
-    required this.stars,
-    required this.isNext,
+class _SwitchItem extends StatelessWidget {
+  const _SwitchItem({
+    required this.label,
+    required this.icon,
+    required this.active,
     required this.onTap,
+    this.badge,
   });
 
-  final int index;
-  final String title;
-  final int stars;
-  final bool isNext;
+  final String label;
+  final IconData icon;
+  final bool active;
   final VoidCallback onTap;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
-      onTap: onTap,
-      semanticLabel: title,
-      builder: (p, hover) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: ShapeDecoration(
-          shape: chamfer(
-            10,
-            side: BorderSide(
-              color: isNext ? GameColors.yellow : GameColors.panelEdge,
+      onTap: active ? null : onTap,
+      semanticLabel: label,
+      sound: SfxKind.tab,
+      burst: false,
+      lift: 1,
+      builder: (p, hover) => Transform.scale(
+        scale: 1 - 0.03 * p,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          decoration: ShapeDecoration(
+            shape: chamfer(
+              10,
+              side: active
+                  ? BorderSide(color: Colors.white.withValues(alpha: 0.35))
+                  : BorderSide.none,
+            ),
+            gradient: active
+                ? GameTone.cyan.gradient
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: hover ? 0.08 : 0),
+                      Colors.white.withValues(alpha: hover ? 0.04 : 0),
+                    ],
+                  ),
+            shadows: active
+                ? [
+                    BoxShadow(
+                      color: GameColors.cyan.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: active
+                      ? GameColors.ink
+                      : (hover ? Colors.white : GameColors.textDim),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Audiowide',
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                      color: active
+                          ? GameColors.ink
+                          : (hover ? Colors.white : GameColors.textDim),
+                    ),
+                  ),
+                ),
+                if (badge != null) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: ShapeDecoration(
+                      shape: chamfer(4),
+                      color: active
+                          ? Colors.black.withValues(alpha: 0.2)
+                          : Colors.white12,
+                    ),
+                    child: Text(
+                      badge!,
+                      style: TextStyle(
+                        fontFamily: 'Audiowide',
+                        fontSize: 9.5,
+                        color: active
+                            ? GameColors.ink
+                            : const Color(0xFFFFD54F),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          color: Colors.black.withValues(alpha: hover ? 0.2 : 0.28),
-        ),
-        child: Row(
-          children: [
-            GameText(
-              '$index',
-              size: 18,
-              color: isNext ? GameColors.yellow : GameColors.textDim,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            for (var s = 0; s < 3; s++)
-              GameStar(fill: s < stars ? 1 : 0, size: 18),
-          ],
         ),
       ),
     );

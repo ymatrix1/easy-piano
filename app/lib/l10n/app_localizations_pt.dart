@@ -471,6 +471,83 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get styleGame => 'Videojogo';
+
+  @override
+  String get methodsCardTitle => 'Métodos';
+
+  @override
+  String methodsCardSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count métodos',
+      one: '1 método',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsLibraryTitle => 'Métodos';
+
+  @override
+  String get methodsFilterAll => 'Todos';
+
+  @override
+  String get methodsFilterBeginner => 'Iniciante';
+
+  @override
+  String get methodsFilterEarlyIntermediate => 'Intermediário inicial';
+
+  @override
+  String get methodsFilterIntermediate => 'Intermediário';
+
+  @override
+  String get methodsFilterReading => 'Leitura';
+
+  @override
+  String get methodsFilterRhythm => 'Ritmo';
+
+  @override
+  String get methodsFilterIndependence => 'Independência';
+
+  @override
+  String methodsBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livros',
+      one: '1 livro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodContinue => 'Continuar';
+
+  @override
+  String methodProtectedNotice(String year) {
+    return 'Protegido em seu país até $year';
+  }
+
+  @override
+  String get learnSwitchCourses => 'Cursos';
+
+  @override
+  String get learnSwitchMethods => 'Métodos';
+
+  @override
+  String modulesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count módulos',
+      one: '1 módulo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsExplore => 'Explorar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

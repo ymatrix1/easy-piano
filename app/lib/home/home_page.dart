@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../content/content_repo.dart';
 import '../input/midi_input.dart';
+import '../methods/methods_library_page.dart';
 import '../practice/free_play_page.dart';
 import '../practice/generated/practice_service.dart';
 import '../practice/generated/stream_practice_page.dart';
@@ -83,7 +84,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final progress = Progress(widget.repo, _stars);
     final tabs = [
-      LearnTab(repo: widget.repo, progress: progress, onPlay: _playLevel),
+      LearnTab(
+        repo: widget.repo,
+        progress: progress,
+        onPlay: _playLevel,
+        onOpenMethods: () => _push(
+          (_) => MethodsLibraryPage(
+            repo: widget.repo,
+            progress: progress,
+            onPlay: _playLevel,
+          ),
+        ),
+      ),
       SafeArea(
         bottom: false,
         child: PracticeTab(
@@ -198,10 +210,56 @@ class Progress {
 
   int get tasksDone => levelStars.values.where((s) => s > 0).length;
 
-  /// First unfinished submodule in the first unfinished module.
+  /// First unfinished submodule in the first unfinished module of the main path.
   (CourseDef, JourneyNode)? get next {
     for (final c in repo.courses) {
-      if (c.planned) continue;
+      if (c.planned || c.isMethod) continue;
+      for (final n in c.nodes) {
+        if (!nodeDone(n)) return (c, n);
+      }
+    }
+    return null;
+  }
+
+  int methodStars(MethodDef m) {
+    var stars = 0;
+    for (final bookId in m.books) {
+      final c = repo.courses.where((c) => c.id == bookId).firstOrNull;
+      if (c != null) stars += courseStars(c);
+    }
+    return stars;
+  }
+
+  int methodMaxStars(MethodDef m) {
+    var max = 0;
+    for (final bookId in m.books) {
+      final c = repo.courses.where((c) => c.id == bookId).firstOrNull;
+      if (c != null) max += c.nodes.length * 3;
+    }
+    return max;
+  }
+
+  int get totalMethodStars {
+    var stars = 0;
+    for (final m in repo.methods) {
+      stars += methodStars(m);
+    }
+    return stars;
+  }
+
+  int get totalMethodMaxStars {
+    var max = 0;
+    for (final m in repo.methods) {
+      max += methodMaxStars(m);
+    }
+    return max;
+  }
+
+  /// Next unplayed piece in method [m].
+  (CourseDef, JourneyNode)? nextInMethod(MethodDef m) {
+    for (final bookId in m.books) {
+      final c = repo.courses.where((c) => c.id == bookId).firstOrNull;
+      if (c == null) continue;
       for (final n in c.nodes) {
         if (!nodeDone(n)) return (c, n);
       }
@@ -278,8 +336,15 @@ class _TopBar extends StatelessWidget {
                         semanticLabel: AppLocalizations.of(context).logoLabel,
                       ),
                       const SizedBox(width: 10),
-                      GameText(AppLocalizations.of(context).appTitle, size: 18),
-                      const Spacer(),
+                      Expanded(
+                        child: GameText(
+                          AppLocalizations.of(context).appTitle,
+                          size: 18,
+                          align: TextAlign.left,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       StarCounter(value: stars),
                     ],
                   ),
