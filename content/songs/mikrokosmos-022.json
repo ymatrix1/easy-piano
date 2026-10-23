@@ -1,0 +1,85 @@
+{
+  "id": "mikrokosmos-022",
+  "title": "Mikrokosmos 22: Imitation and Counterpoint",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/22.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 136,
+  "time": "4/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "r:1",
+      "LH": "B3:2 C4:4 D4:4"
+    },
+    {
+      "RH": "G4:2 A4:4 B4:4",
+      "LH": "E4:2 D4:2"
+    },
+    {
+      "RH": "C5:2 B4:2",
+      "LH": "C4:2 D4:4 E4:4"
+    },
+    {
+      "RH": "A4:2 B4:4 C5:4",
+      "LH": "F4:2 E4:2"
+    },
+    {
+      "RH": "D5:1 {tie}",
+      "LH": "D4:4 C4:4 D4:4 E4:4"
+    },
+    {
+      "RH": "D5:4 C5:4 B4:4 A4:4",
+      "LH": "F4:1 {tie}"
+    },
+    {
+      "RH": "G4:2 A4:4 B4:4",
+      "LH": "F4:1 {tie}"
+    },
+    {
+      "RH": "C5:1",
+      "LH": "F4:2 E4:2"
+    },
+    {
+      "RH": "D5:2 C5:4 B4:4",
+      "LH": "D4:2 r:2"
+    },
+    {
+      "RH": "A4:2 B4:2",
+      "LH": "F4:2 E4:4 D4:4"
+    },
+    {
+      "RH": "r:4 C5:4 B4:4 A4:4",
+      "LH": "C4:2 D4:2"
+    },
+    {
+      "RH": "G4:2 A4:2",
+      "LH": "r:4 E4:4 D4:4 C4:4"
+    },
+    {
+      "RH": "B4:4 A4:4 B4:4 C5:4",
+      "LH": "B3:2 C4:2"
+    },
+    {
+      "RH": "B4:4 A4:4 G4:2",
+      "LH": "D4:2 E4:2"
+    },
+    {
+      "RH": "A4:1 {tie}",
+      "LH": "D4:1 {tie}"
+    },
+    {
+      "RH": "A4:1",
+      "LH": "D4:1"
+    }
+  ]
+}

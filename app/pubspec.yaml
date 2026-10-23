@@ -91,6 +91,8 @@ flutter:
     - assets/content/courses/essentials-2/levels/
     - assets/content/courses/essentials-3/
     - assets/content/courses/essentials-3/levels/
+    - assets/content/courses/mikrokosmos-1/
+    - assets/content/courses/mikrokosmos-1/levels/
     - assets/content/songs/
     - assets/content/scenes/
     - assets/content/strings/

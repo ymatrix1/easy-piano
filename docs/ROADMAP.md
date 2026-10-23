@@ -45,6 +45,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] Essentials II (18 levels, 2 star gates)
 - [x] Essentials III (17 levels, 2 star gates)
 - [ ] Piano Basics 2–4, Pop Chords 1
+- [x] Methods section: Mikrokosmos I, 32 of Book 1's 36 pieces from the Mikrokosmos-difficulty MusicXML (D33, [research](research/mikrokosmos-import.md)); region filter pending
 - [x] Localization: en, pt-BR, es, fr, de UI and content strings, language picker ([i18n](specs/i18n.md))
 - [x] Polyphonic mic research result (own trained model, synthetic + MAESTRO evidence; real devices pending, piano-m4r9)
 - [x] Endless practice on web: generated music streamed while you play, level and rules picked by the learner, rubric-gated, labelled, no stars (D28, [spec](specs/practice-mode.md))

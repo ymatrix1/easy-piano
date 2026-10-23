@@ -7,6 +7,10 @@
     {
       "id": "main",
       "title": "str:section.main"
+    },
+    {
+      "id": "methods",
+      "title": "str:section.methods"
     }
   ],
   "courses": [
@@ -47,6 +51,16 @@
         "essentials-2"
       ],
       "journey": "courses/essentials-3/journey.json"
+    },
+    {
+      "id": "mikrokosmos-1",
+      "title": "str:course.mk1.title",
+      "description": "str:course.mk1.desc",
+      "section": "methods",
+      "requires": [
+        "piano-basics"
+      ],
+      "journey": "courses/mikrokosmos-1/journey.json"
     }
   ]
 }

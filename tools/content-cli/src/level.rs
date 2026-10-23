@@ -30,16 +30,22 @@ pub struct CourseSong {
 
 /// Course songs (not generated) in learning order, each at its first node, plus
 /// each node's skill envelope (most of each skill seen up to that node).
+/// Nodes off the ramp (Methods courses) add no songs; their envelope is the last one.
 pub fn course_songs(
     walk: &[NodeTaught],
     songs: &BTreeMap<String, Song>,
     model: &Model,
 ) -> (Vec<CourseSong>, Vec<Skills>) {
-    let n = walk.len().max(2);
+    let n = walk.iter().filter(|w| w.on_ramp).count().max(2);
     let [lo, hi] = model.course_levels;
     let (mut out, mut envs) = (Vec::<CourseSong>::new(), Vec::new());
     let mut env: Skills = [0.0; 8];
+    let mut step = 0; // position on the ramp
     for (i, w) in walk.iter().enumerate() {
+        if !w.on_ramp {
+            envs.push(env);
+            continue;
+        }
         for s in w
             .songs
             .iter()
@@ -56,13 +62,14 @@ pub fn course_songs(
                 id: s.id.clone(),
                 node: format!("{}/{}", w.course, w.node),
                 index: i,
-                expected: lo + (hi - lo) * i as f64 / (n - 1) as f64,
+                expected: lo + (hi - lo) * step as f64 / (n - 1) as f64,
                 skills: sk,
                 level_score: score,
                 level: model.level(&sk),
             });
         }
         envs.push(env);
+        step += 1;
     }
     (out, envs)
 }

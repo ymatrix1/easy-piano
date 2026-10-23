@@ -112,6 +112,7 @@ pub struct Features {
     pub peak_notes_per_second: f64,
     /// Bars that differ in their graded hands (repeats compressed).
     pub unique_bars: usize,
+    pub two_voice_bars_per_bar: f64,
 }
 
 fn cap(x: f64, max: f64) -> f64 {
@@ -214,6 +215,7 @@ fn hands(song: &Song) -> BTreeMap<&'static str, Hand> {
                         dur: *dur,
                     }),
                     Event::Rest { .. } => h.rests += 1,
+                    Event::Spacer { .. } => {}
                     Event::Directive { name, .. } if name == "tie" => h.ties += 1,
                     Event::Directive { .. } => {}
                 }
@@ -347,6 +349,12 @@ pub fn features(song: &Song) -> Features {
     f.peak_notes_per_second = by_bar.iter().max().copied().unwrap_or(0) as f64 / bar_secs;
     let graded = |b: &BTreeMap<String, String>| GRADED.map(|h| b.get(h).cloned());
     f.unique_bars = song.bars.iter().map(graded).collect::<BTreeSet<_>>().len();
+    let two_voice_bars = song
+        .bars
+        .iter()
+        .filter(|b| b.contains_key("RH2") || b.contains_key("LH2"))
+        .count();
+    f.two_voice_bars_per_bar = per_bar(two_voice_bars);
     f
 }
 
@@ -701,6 +709,19 @@ mod tests {
         // 2/2 at 60: two halves a bar, one second each.
         let f = features(&meter("2/2", 60, r#"[{"RH":"C4:2 D4:2"}]"#));
         assert!((f.notes_per_second - 1.0).abs() < EPS);
+    }
+
+    #[test]
+    fn two_voice_feature() {
+        let s = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:1","RH2":"E4:1","LH":"C3:1"},{"RH":"C4:1","LH":"C3:1"}]}"#,
+        )
+        .unwrap();
+        let f = features(&s);
+        assert_eq!(f.two_voice_bars_per_bar, 0.5);
     }
 
     #[test]

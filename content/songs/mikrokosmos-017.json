@@ -1,0 +1,85 @@
+{
+  "id": "mikrokosmos-017",
+  "title": "Mikrokosmos 17: Contrary Motion (1)",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/17.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 96,
+  "time": "3/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:4 D4:4 E4:4",
+      "LH": "C3:4 B2:4 A2:4"
+    },
+    {
+      "RH": "F4:4 G4:4 F4:4",
+      "LH": "G2:4 F#2:4 G2:4"
+    },
+    {
+      "RH": "E4:4 D4:2",
+      "LH": "A2:4 B2:2"
+    },
+    {
+      "RH": "C4:2 r:4",
+      "LH": "C3:2 r:4"
+    },
+    {
+      "RH": "G4:4 A4:4 B4:4",
+      "LH": "G3:4 F#3:4 E3:4"
+    },
+    {
+      "RH": "C5:4 D5:4 C5:4",
+      "LH": "D3:4 C#3:4 D3:4"
+    },
+    {
+      "RH": "B4:4 A4:2",
+      "LH": "E3:4 F#3:2"
+    },
+    {
+      "RH": "G4:2 r:4",
+      "LH": "G3:2 r:4"
+    },
+    {
+      "RH": "G4:4 A4:4 B4:4",
+      "LH": "F#3:4 E3:4 D3:4"
+    },
+    {
+      "RH": "C5:2 r:4",
+      "LH": "C3:2 r:4"
+    },
+    {
+      "RH": "G4:4 F4:4 E4:4",
+      "LH": "D3:4 E3:4 F#3:4"
+    },
+    {
+      "RH": "D4:2 r:4",
+      "LH": "G3:2 r:4"
+    },
+    {
+      "RH": "C4:4 D4:4 E4:4",
+      "LH": "C3:4 B2:4 A2:4"
+    },
+    {
+      "RH": "F4:4 G4:4 F4:4",
+      "LH": "G2:4 F#2:4 G2:4"
+    },
+    {
+      "RH": "E4:4 D4:2",
+      "LH": "A2:4 B2:2"
+    },
+    {
+      "RH": "C4:2.",
+      "LH": "C3:2."
+    }
+  ]
+}

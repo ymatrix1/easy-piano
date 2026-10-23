@@ -1,0 +1,483 @@
+{
+  "course": "mikrokosmos-1",
+  "nodes": [
+    {
+      "id": "piece-01",
+      "kind": "song",
+      "title": "str:node.mk1.01",
+      "icon": "play",
+      "levels": [
+        "mk1-01"
+      ],
+      "next": [
+        "piece-02"
+      ],
+      "songs": {
+        "default": "mikrokosmos-001"
+      }
+    },
+    {
+      "id": "piece-02",
+      "kind": "song",
+      "title": "str:node.mk1.02",
+      "icon": "play",
+      "levels": [
+        "mk1-02"
+      ],
+      "next": [
+        "piece-03"
+      ],
+      "songs": {
+        "default": "mikrokosmos-002"
+      }
+    },
+    {
+      "id": "piece-03",
+      "kind": "song",
+      "title": "str:node.mk1.03",
+      "icon": "play",
+      "levels": [
+        "mk1-03"
+      ],
+      "next": [
+        "piece-04"
+      ],
+      "songs": {
+        "default": "mikrokosmos-003"
+      }
+    },
+    {
+      "id": "piece-04",
+      "kind": "song",
+      "title": "str:node.mk1.04",
+      "icon": "play",
+      "levels": [
+        "mk1-04"
+      ],
+      "next": [
+        "piece-05"
+      ],
+      "songs": {
+        "default": "mikrokosmos-004"
+      }
+    },
+    {
+      "id": "piece-05",
+      "kind": "song",
+      "title": "str:node.mk1.05",
+      "icon": "play",
+      "levels": [
+        "mk1-05"
+      ],
+      "next": [
+        "piece-06"
+      ],
+      "songs": {
+        "default": "mikrokosmos-005"
+      }
+    },
+    {
+      "id": "piece-06",
+      "kind": "song",
+      "title": "str:node.mk1.06",
+      "icon": "play",
+      "levels": [
+        "mk1-06"
+      ],
+      "next": [
+        "piece-07"
+      ],
+      "songs": {
+        "default": "mikrokosmos-006"
+      }
+    },
+    {
+      "id": "piece-07",
+      "kind": "song",
+      "title": "str:node.mk1.07",
+      "icon": "play",
+      "levels": [
+        "mk1-07"
+      ],
+      "next": [
+        "piece-08"
+      ],
+      "songs": {
+        "default": "mikrokosmos-007"
+      }
+    },
+    {
+      "id": "piece-08",
+      "kind": "song",
+      "title": "str:node.mk1.08",
+      "icon": "play",
+      "levels": [
+        "mk1-08"
+      ],
+      "next": [
+        "piece-09"
+      ],
+      "songs": {
+        "default": "mikrokosmos-008"
+      }
+    },
+    {
+      "id": "piece-09",
+      "kind": "song",
+      "title": "str:node.mk1.09",
+      "icon": "play",
+      "levels": [
+        "mk1-09"
+      ],
+      "next": [
+        "piece-10"
+      ],
+      "songs": {
+        "default": "mikrokosmos-009"
+      }
+    },
+    {
+      "id": "piece-10",
+      "kind": "song",
+      "title": "str:node.mk1.10",
+      "icon": "play",
+      "levels": [
+        "mk1-10"
+      ],
+      "next": [
+        "piece-11"
+      ],
+      "songs": {
+        "default": "mikrokosmos-010"
+      }
+    },
+    {
+      "id": "piece-11",
+      "kind": "song",
+      "title": "str:node.mk1.11",
+      "icon": "play",
+      "levels": [
+        "mk1-11"
+      ],
+      "next": [
+        "piece-13"
+      ],
+      "songs": {
+        "default": "mikrokosmos-011"
+      }
+    },
+    {
+      "id": "piece-13",
+      "kind": "song",
+      "title": "str:node.mk1.13",
+      "icon": "play",
+      "levels": [
+        "mk1-13"
+      ],
+      "next": [
+        "piece-14"
+      ],
+      "songs": {
+        "default": "mikrokosmos-013"
+      }
+    },
+    {
+      "id": "piece-14",
+      "kind": "song",
+      "title": "str:node.mk1.14",
+      "icon": "play",
+      "levels": [
+        "mk1-14"
+      ],
+      "next": [
+        "piece-15"
+      ],
+      "songs": {
+        "default": "mikrokosmos-014"
+      }
+    },
+    {
+      "id": "piece-15",
+      "kind": "song",
+      "title": "str:node.mk1.15",
+      "icon": "play",
+      "levels": [
+        "mk1-15"
+      ],
+      "next": [
+        "piece-16"
+      ],
+      "songs": {
+        "default": "mikrokosmos-015"
+      }
+    },
+    {
+      "id": "piece-16",
+      "kind": "song",
+      "title": "str:node.mk1.16",
+      "icon": "play",
+      "levels": [
+        "mk1-16"
+      ],
+      "next": [
+        "piece-17"
+      ],
+      "songs": {
+        "default": "mikrokosmos-016"
+      }
+    },
+    {
+      "id": "piece-17",
+      "kind": "song",
+      "title": "str:node.mk1.17",
+      "icon": "play",
+      "levels": [
+        "mk1-17"
+      ],
+      "next": [
+        "piece-18"
+      ],
+      "songs": {
+        "default": "mikrokosmos-017"
+      }
+    },
+    {
+      "id": "piece-18",
+      "kind": "song",
+      "title": "str:node.mk1.18",
+      "icon": "play",
+      "levels": [
+        "mk1-18"
+      ],
+      "next": [
+        "piece-19"
+      ],
+      "songs": {
+        "default": "mikrokosmos-018"
+      }
+    },
+    {
+      "id": "piece-19",
+      "kind": "song",
+      "title": "str:node.mk1.19",
+      "icon": "play",
+      "levels": [
+        "mk1-19"
+      ],
+      "next": [
+        "piece-20"
+      ],
+      "songs": {
+        "default": "mikrokosmos-019"
+      }
+    },
+    {
+      "id": "piece-20",
+      "kind": "song",
+      "title": "str:node.mk1.20",
+      "icon": "play",
+      "levels": [
+        "mk1-20"
+      ],
+      "next": [
+        "piece-21"
+      ],
+      "songs": {
+        "default": "mikrokosmos-020"
+      }
+    },
+    {
+      "id": "piece-21",
+      "kind": "song",
+      "title": "str:node.mk1.21",
+      "icon": "play",
+      "levels": [
+        "mk1-21"
+      ],
+      "next": [
+        "piece-22"
+      ],
+      "songs": {
+        "default": "mikrokosmos-021"
+      }
+    },
+    {
+      "id": "piece-22",
+      "kind": "song",
+      "title": "str:node.mk1.22",
+      "icon": "play",
+      "levels": [
+        "mk1-22"
+      ],
+      "next": [
+        "piece-23"
+      ],
+      "songs": {
+        "default": "mikrokosmos-022"
+      }
+    },
+    {
+      "id": "piece-23",
+      "kind": "song",
+      "title": "str:node.mk1.23",
+      "icon": "play",
+      "levels": [
+        "mk1-23"
+      ],
+      "next": [
+        "piece-24"
+      ],
+      "songs": {
+        "default": "mikrokosmos-023"
+      }
+    },
+    {
+      "id": "piece-24",
+      "kind": "song",
+      "title": "str:node.mk1.24",
+      "icon": "play",
+      "levels": [
+        "mk1-24"
+      ],
+      "next": [
+        "piece-26"
+      ],
+      "songs": {
+        "default": "mikrokosmos-024"
+      }
+    },
+    {
+      "id": "piece-26",
+      "kind": "song",
+      "title": "str:node.mk1.26",
+      "icon": "play",
+      "levels": [
+        "mk1-26"
+      ],
+      "next": [
+        "piece-27"
+      ],
+      "songs": {
+        "default": "mikrokosmos-026"
+      }
+    },
+    {
+      "id": "piece-27",
+      "kind": "song",
+      "title": "str:node.mk1.27",
+      "icon": "play",
+      "levels": [
+        "mk1-27"
+      ],
+      "next": [
+        "piece-28"
+      ],
+      "songs": {
+        "default": "mikrokosmos-027"
+      }
+    },
+    {
+      "id": "piece-28",
+      "kind": "song",
+      "title": "str:node.mk1.28",
+      "icon": "play",
+      "levels": [
+        "mk1-28"
+      ],
+      "next": [
+        "piece-29"
+      ],
+      "songs": {
+        "default": "mikrokosmos-028"
+      }
+    },
+    {
+      "id": "piece-29",
+      "kind": "song",
+      "title": "str:node.mk1.29",
+      "icon": "play",
+      "levels": [
+        "mk1-29"
+      ],
+      "next": [
+        "piece-30"
+      ],
+      "songs": {
+        "default": "mikrokosmos-029"
+      }
+    },
+    {
+      "id": "piece-30",
+      "kind": "song",
+      "title": "str:node.mk1.30",
+      "icon": "play",
+      "levels": [
+        "mk1-30"
+      ],
+      "next": [
+        "piece-31"
+      ],
+      "songs": {
+        "default": "mikrokosmos-030"
+      }
+    },
+    {
+      "id": "piece-31",
+      "kind": "song",
+      "title": "str:node.mk1.31",
+      "icon": "play",
+      "levels": [
+        "mk1-31"
+      ],
+      "next": [
+        "piece-34"
+      ],
+      "songs": {
+        "default": "mikrokosmos-031"
+      }
+    },
+    {
+      "id": "piece-34",
+      "kind": "song",
+      "title": "str:node.mk1.34",
+      "icon": "play",
+      "levels": [
+        "mk1-34"
+      ],
+      "next": [
+        "piece-35"
+      ],
+      "songs": {
+        "default": "mikrokosmos-034"
+      }
+    },
+    {
+      "id": "piece-35",
+      "kind": "song",
+      "title": "str:node.mk1.35",
+      "icon": "play",
+      "levels": [
+        "mk1-35"
+      ],
+      "next": [
+        "piece-36"
+      ],
+      "songs": {
+        "default": "mikrokosmos-035"
+      }
+    },
+    {
+      "id": "piece-36",
+      "kind": "song",
+      "title": "str:node.mk1.36",
+      "icon": "play",
+      "levels": [
+        "mk1-36"
+      ],
+      "next": [],
+      "songs": {
+        "default": "mikrokosmos-036"
+      }
+    }
+  ]
+}

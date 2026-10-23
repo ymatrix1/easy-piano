@@ -1,0 +1,109 @@
+{
+  "id": "mikrokosmos-016",
+  "title": "Mikrokosmos 16: Parallel Motion and Change of Position",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/16.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 104,
+  "time": "4/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "F4:2 G4:2",
+      "LH": "D3:2 E3:2"
+    },
+    {
+      "RH": "F4:2 E4:4 D4:4",
+      "LH": "D3:2 C3:4 B2:4"
+    },
+    {
+      "RH": "E4:4 D4:4 C4:4 D4:4",
+      "LH": "C3:4 B2:4 A2:4 B2:4"
+    },
+    {
+      "RH": "E4:2 F4:2",
+      "LH": "C3:2 D3:2"
+    },
+    {
+      "RH": "G4:1",
+      "LH": "E3:1"
+    },
+    {
+      "RH": "F4:2 E4:4 D4:4",
+      "LH": "D3:2 C3:4 B2:4"
+    },
+    {
+      "RH": "C4:2 D4:2",
+      "LH": "A2:2 B2:2"
+    },
+    {
+      "RH": "E4:2 r:2",
+      "LH": "C3:2 r:2"
+    },
+    {
+      "RH": "C5:2 D5:2",
+      "LH": "E3:2 F3:2"
+    },
+    {
+      "RH": "C5:2 B4:4 A4:4",
+      "LH": "E3:2 D3:4 C3:4"
+    },
+    {
+      "RH": "B4:4 C5:4 B4:4 A4:4",
+      "LH": "D3:4 E3:4 D3:4 C3:4"
+    },
+    {
+      "RH": "G4:2 A4:4 B4:4",
+      "LH": "B2:2 C3:4 D3:4"
+    },
+    {
+      "RH": "C5:4 B4:4 A4:2",
+      "LH": "E3:4 D3:4 C3:2"
+    },
+    {
+      "RH": "B4:2 A4:2",
+      "LH": "D3:2 C3:2"
+    },
+    {
+      "RH": "G4:2 r:2",
+      "LH": "B2:2 r:2"
+    },
+    {
+      "RH": "F4:2 G4:2",
+      "LH": "D3:2 E3:2"
+    },
+    {
+      "RH": "F4:2 E4:4 D4:4",
+      "LH": "D3:2 C3:4 B2:4"
+    },
+    {
+      "RH": "C4:2 D4:2",
+      "LH": "A2:2 B2:2"
+    },
+    {
+      "RH": "E4:1",
+      "LH": "C3:1"
+    },
+    {
+      "RH": "F4:4 E4:2 D4:4",
+      "LH": "D3:4 C3:2 B2:4"
+    },
+    {
+      "RH": "C4:2 D4:2",
+      "LH": "A2:2 B2:2"
+    },
+    {
+      "RH": "C4:1",
+      "LH": "C3:1"
+    }
+  ]
+}

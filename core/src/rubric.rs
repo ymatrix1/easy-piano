@@ -84,6 +84,7 @@ fn analyse(song: &Song) -> Analysis {
                             .entry(dur_label(*dur))
                             .or_insert(i);
                     }
+                    Event::Spacer { .. } => {}
                     Event::Directive { .. } => {}
                 }
                 t = t.add(e.dur());
@@ -173,6 +174,7 @@ pub struct TaughtSet {
     pub hands_together: bool,
     /// Keys seen, used only to spell accidentals.
     pub keys: BTreeSet<String>,
+    pub two_voices: bool,
 }
 
 impl TaughtSet {
@@ -182,9 +184,14 @@ impl TaughtSet {
         if !a.errors.is_empty() {
             return Err(a.errors);
         }
+        let has_two_voices = song
+            .bars
+            .iter()
+            .any(|b| b.contains_key("RH2") || b.contains_key("LH2"));
         let mut t = TaughtSet {
             rests: a.has_rests(),
             hands_together: hands_together(&a),
+            two_voices: has_two_voices,
             ..Default::default()
         };
         t.rest_durations = a.rests.values().flat_map(|r| r.keys().cloned()).collect();
@@ -227,6 +234,7 @@ impl TaughtSet {
         self.max_interval = self.max_interval.max(o.max_interval);
         self.rests |= o.rests;
         self.hands_together |= o.hands_together;
+        self.two_voices |= o.two_voices;
     }
 
     fn flats(&self) -> bool {
@@ -670,6 +678,13 @@ fn taught_errors(song: &Song, a: &Analysis, taught: &TaughtSet) -> Vec<String> {
     if hands_together(a) && !taught.hands_together {
         errs.push("hands together not taught yet".into());
     }
+    let song_two_voices = song
+        .bars
+        .iter()
+        .any(|b| b.contains_key("RH2") || b.contains_key("LH2"));
+    if song_two_voices && !taught.two_voices {
+        errs.push("two voices per hand not taught yet".into());
+    }
     errs
 }
 
@@ -694,6 +709,23 @@ mod tests {
 
     fn taught_from(bars: &str) -> TaughtSet {
         TaughtSet::from_song(&song("4/4", bars)).unwrap()
+    }
+
+    #[test]
+    fn two_voices_flag_required_when_song_has_second_voice() {
+        let s_two = song("4/4", r#"[{"RH":"C4:1","RH2":"E4:1","LH":"C3:1"}]"#);
+        let s_one = song("4/4", r#"[{"RH":"C4:1","LH":"C3:1"}]"#);
+        let taught_one = TaughtSet::from_song(&s_one).unwrap();
+        assert!(!taught_one.two_voices);
+
+        let errs = taught_violations(&s_two, &taught_one);
+        assert!(errs
+            .iter()
+            .any(|e| e.contains("two voices per hand not taught yet")));
+
+        let taught_two = TaughtSet::from_song(&s_two).unwrap();
+        assert!(taught_two.two_voices);
+        assert!(taught_violations(&s_two, &taught_two).is_empty());
     }
 
     #[test]
