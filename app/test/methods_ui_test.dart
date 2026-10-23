@@ -109,5 +109,34 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.byType(MethodsLibraryPage), findsNothing);
+
+    // Scroll back up to the top so top switcher is below the floating top bar.
+    final topMethodsSwitcher = find.text('Methods');
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 1000));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(topMethodsSwitcher, findsOneWidget);
+    await tester.tap(topMethodsSwitcher);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.byType(MethodsLibraryPage), findsOneWidget);
+
+    // Return to LearnTab.
+    await tester.tap(find.byType(IconButton).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(find.byType(MethodsLibraryPage), findsNothing);
+
+    // Collapsible sections work on the main path.
+    await tester.scrollUntilVisible(
+      find.text('SOLOIST'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -100));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('SOLOIST'), findsOneWidget);
+    await tester.tap(find.text('SOLOIST'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
   });
 }

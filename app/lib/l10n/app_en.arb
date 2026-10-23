@@ -287,5 +287,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "learnSwitchCourses": "Courses",
+  "learnSwitchMethods": "Methods",
+  "modulesCount": "{count, plural, =1{1 module} other{{count} modules}}",
+  "@modulesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "methodsExplore": "Explore"
 }

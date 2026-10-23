@@ -6,6 +6,7 @@ import '../home/task_sheet.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
+import '../ui/game/sfx.dart';
 
 /// Screen for a specific method (e.g. Mikrokosmos) with description and collapsible books.
 class MethodPage extends StatefulWidget {
@@ -143,6 +144,7 @@ class _MethodPageState extends State<MethodPage> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            mouseCursor: SystemMouseCursors.click,
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -325,123 +327,133 @@ class _MethodPageState extends State<MethodPage> {
     final bookStars = progress.courseStars(course);
     final maxBookStars = course.nodes.length * 3;
 
-    return Container(
-      decoration: ShapeDecoration(
-        shape: chamfer(
-          16,
-          side: BorderSide(
-            color: isOpen
-                ? GameColors.cyan.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: ShapeDecoration(
+          shape: chamfer(
+            16,
+            side: BorderSide(
+              color: isOpen
+                  ? GameColors.cyan.withValues(alpha: 0.35)
+                  : Colors.white.withValues(alpha: 0.12),
+              width: isOpen ? 1.3 : 1,
+            ),
           ),
+          color: const Color(0xFF1B144A).withValues(alpha: 0.85),
         ),
-        color: const Color(0xFF1B144A).withValues(alpha: 0.8),
-      ),
-      child: ClipPath(
-        clipper: ShapeBorderClipper(shape: chamfer(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () => setState(() {
-                if (isOpen) {
-                  _openBooks.remove(bookId);
-                } else {
-                  _openBooks.add(bookId);
-                }
-              }),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 14,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            repo.t(course.title),
-                            style: const TextStyle(
-                              fontFamily: 'Audiowide',
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.taskCount(course.nodes.length),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: chamfer(16)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Sfx.play(SfxKind.open);
+                    setState(() {
+                      if (isOpen) {
+                        _openBooks.remove(bookId);
+                      } else {
+                        _openBooks.add(bookId);
+                      }
+                    });
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          color: Color(0xFFFFD54F),
-                          size: 17,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$bookStars / $maxBookStars',
-                          style: const TextStyle(
-                            fontFamily: 'Audiowide',
-                            fontSize: 12,
-                            color: Color(0xFFFFD54F),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                repo.t(course.title),
+                                style: const TextStyle(
+                                  fontFamily: 'Audiowide',
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.taskCount(course.nodes.length),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        AnimatedRotation(
-                          turns: isOpen ? 0.25 : 0.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFFD54F),
+                              size: 17,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$bookStars / $maxBookStars',
+                              style: const TextStyle(
+                                fontFamily: 'Audiowide',
+                                fontSize: 12,
+                                color: Color(0xFFFFD54F),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            AnimatedRotation(
+                              turns: isOpen ? 0.25 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            if (isOpen) ...[
-              const Divider(color: Colors.white12, height: 1),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+              if (isOpen) ...[
+                const Divider(color: Colors.white12, height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: Column(
+                    children: [
+                      for (final node in course.nodes)
+                        _PieceTile(
+                          repo: repo,
+                          progress: progress,
+                          course: course,
+                          node: node,
+                          onTap: () => _openPiece(course, node),
+                        ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    for (final node in course.nodes)
-                      _PieceTile(
-                        repo: repo,
-                        progress: progress,
-                        course: course,
-                        node: node,
-                        onTap: () => _openPiece(course, node),
-                      ),
-                  ],
-                ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _PieceTile extends StatelessWidget {
+class _PieceTile extends StatefulWidget {
   const _PieceTile({
     required this.repo,
     required this.progress,
@@ -457,23 +469,39 @@ class _PieceTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_PieceTile> createState() => _PieceTileState();
+}
+
+class _PieceTileState extends State<_PieceTile> {
+  bool _hover = false;
+
+  @override
   Widget build(BuildContext context) {
-    final stars = progress.nodeStars(node);
+    final stars = widget.progress.nodeStars(widget.node);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: ShapeDecoration(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                side: BorderSide(
+                  color: _hover
+                      ? GameColors.cyan.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.08),
+                ),
               ),
-              color: Colors.white.withValues(alpha: 0.04),
+              color: _hover
+                  ? Colors.white.withValues(alpha: 0.09)
+                  : Colors.white.withValues(alpha: 0.04),
             ),
             child: Row(
               children: [
@@ -482,7 +510,7 @@ class _PieceTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        repo.t(node.title),
+                        widget.repo.t(widget.node.title),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

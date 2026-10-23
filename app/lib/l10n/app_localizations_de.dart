@@ -530,4 +530,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String methodProtectedNotice(String year) {
     return 'In deinem Land bis $year urheberrechtlich geschützt';
   }
+
+  @override
+  String get learnSwitchCourses => 'Kurse';
+
+  @override
+  String get learnSwitchMethods => 'Methoden';
+
+  @override
+  String modulesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Module',
+      one: '1 Modul',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsExplore => 'Erkunden';
 }

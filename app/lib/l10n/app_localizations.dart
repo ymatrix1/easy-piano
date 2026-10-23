@@ -998,6 +998,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protected in your country until {year}'**
   String methodProtectedNotice(String year);
+
+  /// No description provided for @learnSwitchCourses.
+  ///
+  /// In en, this message translates to:
+  /// **'Courses'**
+  String get learnSwitchCourses;
+
+  /// No description provided for @learnSwitchMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Methods'**
+  String get learnSwitchMethods;
+
+  /// No description provided for @modulesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 module} other{{count} modules}}'**
+  String modulesCount(int count);
+
+  /// No description provided for @methodsExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get methodsExplore;
 }
 
 class _AppLocalizationsDelegate

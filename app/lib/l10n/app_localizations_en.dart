@@ -525,4 +525,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String methodProtectedNotice(String year) {
     return 'Protected in your country until $year';
   }
+
+  @override
+  String get learnSwitchCourses => 'Courses';
+
+  @override
+  String get learnSwitchMethods => 'Methods';
+
+  @override
+  String modulesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count modules',
+      one: '1 module',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsExplore => 'Explore';
 }

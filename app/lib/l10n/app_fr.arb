@@ -148,5 +148,9 @@
   "methodsFilterIndependence": "Indépendance",
   "methodsBookCount": "{count, plural, =1{1 livre} other{{count} livres}}",
   "methodContinue": "Continuer",
-  "methodProtectedNotice": "Protégé dans votre pays jusqu'en {year}"
+  "methodProtectedNotice": "Protégé dans votre pays jusqu'en {year}",
+  "learnSwitchCourses": "Cours",
+  "learnSwitchMethods": "Méthodes",
+  "modulesCount": "{count, plural, =1{1 module} other{{count} modules}}",
+  "methodsExplore": "Explorer"
 }
