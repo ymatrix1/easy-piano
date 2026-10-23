@@ -305,7 +305,7 @@ class _SectionHeader extends StatelessWidget {
 
 /// One stop on the outer trail: numbered marker and connector on the left,
 /// the module card on the right.
-class _OuterTrailItem extends StatelessWidget {
+class _OuterTrailItem extends StatefulWidget {
   const _OuterTrailItem({
     required this.number,
     required this.last,
@@ -321,8 +321,15 @@ class _OuterTrailItem extends StatelessWidget {
   final Widget child;
 
   @override
+  State<_OuterTrailItem> createState() => _OuterTrailItemState();
+}
+
+class _OuterTrailItemState extends State<_OuterTrailItem> {
+  var _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final (Color fill, Color fg) = switch (state) {
+    final (Color fill, Color fg) = switch (widget.state) {
       _State.done => (GameColors.success, GameColors.ink),
       _State.current => (GameColors.yellow, GameColors.ink),
       _State.open => (GameColors.panelHi, Colors.white),
@@ -339,35 +346,43 @@ class _OuterTrailItem extends StatelessWidget {
         color: fill,
       ),
       alignment: Alignment.center,
-      child: state == _State.done
+      child: widget.state == _State.done
           ? Icon(Icons.check_rounded, color: fg, size: 24)
-          : state == _State.locked
+          : widget.state == _State.locked
           ? Icon(Icons.lock_rounded, color: fg, size: 18)
-          : GameText('$number', size: 18, color: fg, shadow: false),
+          : GameText('${widget.number}', size: 18, color: fg, shadow: false),
     );
-    if (state == _State.current) marker = Bob(child: marker);
+    if (widget.state == _State.current) marker = Bob(child: marker);
     // Stack, not IntrinsicHeight: the card animates its height when it
-    // expands. Hide the outer rail in that state so it doesn't run beside
-    // the submodule tiles.
-    return Stack(
-      children: [
-        if (!last && !expanded)
-          Positioned(
-            left: 18,
-            top: 58,
-            bottom: 4,
-            width: 4,
-            child: _FlowRail(
-              color: state == _State.locked ? const Color(0xFF2A2850) : fill,
-              flowing: state == _State.current || state == _State.done,
+    // expands. Hide the outer rail while expanded or hovered so it doesn't
+    // run beside the highlighted course content.
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Stack(
+        children: [
+          if (!widget.last && !widget.expanded && !_hovered)
+            Positioned(
+              left: 18,
+              top: 58,
+              bottom: 4,
+              width: 4,
+              child: _FlowRail(
+                color: widget.state == _State.locked
+                    ? const Color(0xFF2A2850)
+                    : fill,
+                flowing:
+                    widget.state == _State.current ||
+                    widget.state == _State.done,
+              ),
             ),
+          Positioned(left: 0, top: 14, child: marker),
+          Padding(
+            padding: EdgeInsets.only(left: 54, bottom: widget.last ? 0 : 16),
+            child: widget.child,
           ),
-        Positioned(left: 0, top: 14, child: marker),
-        Padding(
-          padding: EdgeInsets.only(left: 54, bottom: last ? 0 : 16),
-          child: child,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
