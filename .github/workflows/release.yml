@@ -232,6 +232,7 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           path: release-assets
+          merge-multiple: true
 
       - name: Publish release and attach platform assets
         env:
@@ -239,7 +240,12 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          assets=(release-assets/web-android-assets/* release-assets/windows-assets/*)
+          mapfile -t assets < <(find release-assets -maxdepth 1 -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.exe' \) -print | sort)
+          if [ "${#assets[@]}" -ne 4 ]; then
+            echo "Expected 4 release files (.apk, .zip, .exe); found ${#assets[@]}" >&2
+            find release-assets -maxdepth 3 -print >&2
+            exit 1
+          fi
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           else
