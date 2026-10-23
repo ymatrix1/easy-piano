@@ -240,7 +240,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          mapfile -t assets < <(find release-assets -maxdepth 1 -type f \( -name '*.apk' -o -name '*.zip' -o -name '*.exe' \) -print | sort)
+          mapfile -t assets < <(find release-assets -type f \( -name '*.apk' -o -name '*.zip' -o -name '*-portable.exe' \) -print | sort)
           if [ "${#assets[@]}" -ne 4 ]; then
             echo "Expected 4 release files (.apk, .zip, .exe); found ${#assets[@]}" >&2
             find release-assets -maxdepth 3 -print >&2
