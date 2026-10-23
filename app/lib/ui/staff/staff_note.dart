@@ -11,6 +11,8 @@ class StaffNote {
     this.isRest = false,
     this.isSpacer = false,
     this.finger,
+    this.tie = false,
+    this.articulation,
   });
 
   /// MIDI pitch (60 = middle C).
@@ -30,6 +32,12 @@ class StaffNote {
 
   /// Finger number 1-5 to print above the note, if any.
   final int? finger;
+
+  /// When true, renders a tie curve connecting to the next note of the same pitch.
+  final bool tie;
+
+  /// Articulation mark, if any: 'staccato', 'tenuto', 'accent', 'fermata'.
+  final String? articulation;
 }
 
 /// Ode to Joy (Beethoven, public domain), simplified, own arrangement.

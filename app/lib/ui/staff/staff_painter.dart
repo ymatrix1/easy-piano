@@ -2,55 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'beam_layout.dart';
+import 'engraving_decorations.dart';
 import 'music_font.dart';
+import 'smufl.dart';
 import 'staff_note.dart';
 
-/// SMuFL code points (Leland / Bravura standard).
-abstract final class Smufl {
-  static const gClef = '';
-  static const fClef = '';
-  static const noteheadWhole = '';
-  static const noteheadHalf = '';
-  static const noteheadBlack = '';
-  static const accidentalSharp = '';
-  static const restWhole = '';
-  static const restHalf = '';
-  static const restQuarter = '';
-  static const rest8th = '';
-  static const rest16th = '';
-
-  // Flags for 8th and 16th notes
-  static const flag8thUp = '\uE240';
-  static const flag8thDown = '\uE241';
-  static const flag16thUp = '\uE242';
-  static const flag16thDown = '\uE243';
-
-  // Time signatures
-  static const timeSig0 = '';
-  static const timeSig1 = '';
-  static const timeSig2 = '';
-  static const timeSig3 = '';
-  static const timeSig4 = '';
-  static const timeSig5 = '';
-  static const timeSig6 = '';
-  static const timeSig7 = '';
-  static const timeSig8 = '';
-  static const timeSig9 = '';
-
-  static String? digitGlyph(int digit) => switch (digit) {
-    0 => timeSig0,
-    1 => timeSig1,
-    2 => timeSig2,
-    3 => timeSig3,
-    4 => timeSig4,
-    5 => timeSig5,
-    6 => timeSig6,
-    7 => timeSig7,
-    8 => timeSig8,
-    9 => timeSig9,
-    _ => null,
-  };
-}
+export 'smufl.dart';
+export 'beam_layout.dart';
+export 'engraving_decorations.dart';
 
 /// Which staves to draw; comes from the level's `ui` field.
 enum Staves { treble, bass, grand }
@@ -359,10 +319,11 @@ class StaffPainter extends CustomPainter {
     required double nowBeat,
     required double pixelsPerBeat,
     required double space,
+    Map<int, double>? xCache,
   }) {
+    if (xCache != null && xCache.containsKey(index)) return xCache[index]!;
     final n = notes[index];
     final nominalX = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
-    if (!_isSharp[n.pitch % 12]) return nominalX;
 
     // Find preceding note on the same staff/voice region within 2 beats.
     // Notes with the exact same beat (chords) are not preceding horizontal notes.
@@ -373,7 +334,17 @@ class StaffPainter extends CustomPainter {
       if ((prev.beat - n.beat).abs() < 1e-6) continue;
       if (n.beat - prev.beat > 2.0) break;
       if (prev.isSpacer || prev.leftHand != onBass) continue;
-      final px = anchorX + (prev.beat - nowBeat) * pixelsPerBeat;
+      final px = xCache != null && xCache.containsKey(i)
+          ? xCache[i]!
+          : noteX(
+              index: i,
+              notes: notes,
+              anchorX: anchorX,
+              nowBeat: nowBeat,
+              pixelsPerBeat: pixelsPerBeat,
+              space: space,
+              xCache: xCache,
+            );
       final pWidth = prev.isRest
           ? space * 1.0
           : (_isDotted(prev.beats)
@@ -383,17 +354,28 @@ class StaffPainter extends CustomPainter {
       if (prevRight == null || pr > prevRight) {
         prevRight = pr;
       }
+      break;
     }
 
+    var result = nominalX;
     if (prevRight != null) {
-      // Accidental is drawn at x - space * 1.3. Keep at least space * 0.4 clearance.
-      final minX = prevRight + space * 1.7;
-      if (nominalX < minX) {
-        return minX;
+      if (_isSharp[n.pitch % 12]) {
+        // Accidental is drawn at x - space * 1.3. Keep at least space * 0.4 clearance.
+        final minX = prevRight + space * 1.7;
+        if (result < minX) {
+          result = minX;
+        }
+      } else {
+        // Minimum clearance between noteheads even without accidentals
+        final minX = prevRight + space * 0.4;
+        if (result < minX) {
+          result = minX;
+        }
       }
     }
 
-    return nominalX;
+    xCache?[index] = result;
+    return result;
   }
 
   /// Grand staff: spaces between the treble bottom line and the bass top
@@ -553,19 +535,20 @@ class StaffPainter extends CustomPainter {
           4,
         ); // Default quarter note denominator
         final tsX = sys.clefX + space * 3.8;
+        final tsSize = space * 3.4;
         if (numGlyph != null && denGlyph != null) {
           if (_hasTreble) {
             _drawGlyph(
               canvas,
               numGlyph,
-              glyphSize,
+              tsSize,
               Offset(tsX, trebleBottomY - space * 3),
               staff,
             );
             _drawGlyph(
               canvas,
               denGlyph,
-              glyphSize,
+              tsSize,
               Offset(tsX, trebleBottomY - space * 1),
               staff,
             );
@@ -574,14 +557,14 @@ class StaffPainter extends CustomPainter {
             _drawGlyph(
               canvas,
               numGlyph,
-              glyphSize,
+              tsSize,
               Offset(tsX, bassTopY + space * 1),
               staff,
             );
             _drawGlyph(
               canvas,
               denGlyph,
-              glyphSize,
+              tsSize,
               Offset(tsX, bassTopY + space * 3),
               staff,
             );
@@ -735,18 +718,64 @@ class StaffPainter extends CustomPainter {
         introN++;
       }
     }
-    final drawnUnisons = <(double, int, bool)>{};
-    for (var i = first; i < notes.length; i++) {
-      final n = notes[i];
-      if (n.beat > lastBeat) break;
-      final x = noteX(
+
+    final xCache = <int, double>{};
+    for (var i = math.max(0, first - 10); i < notes.length; i++) {
+      if (notes[i].beat > lastBeat + 2.0) break;
+      noteX(
         index: i,
         notes: notes,
         anchorX: anchorX,
         nowBeat: now,
         pixelsPerBeat: pixelsPerBeat,
         space: space,
+        xCache: xCache,
       );
+    }
+
+    final beamGroups = BeamLayout.computeBeamGroups(
+      notes: notes,
+      first: first,
+      lastBeat: lastBeat,
+      onBass: _onBass,
+      noteY: (pitch, onB) => _noteY(pitch, onB, l),
+      noteXs: xCache,
+      space: space,
+      beatsPerBar: bpb,
+    );
+    final beamedIndices = <int>{};
+    for (final g in beamGroups) {
+      beamedIndices.addAll(g.indices);
+    }
+
+    for (final g in beamGroups) {
+      BeamLayout.drawBeamGroup(
+        canvas: canvas,
+        group: g,
+        notes: notes,
+        noteY: (pitch, onB) => _noteY(pitch, onB, l),
+        onBass: _onBass,
+        space: space,
+        defaultColor: inkColor,
+        colorOf: colorOf,
+      );
+    }
+
+    final drawnUnisons = <(double, int, bool)>{};
+    for (var i = first; i < notes.length; i++) {
+      final n = notes[i];
+      if (n.beat > lastBeat) break;
+      final x =
+          xCache[i] ??
+          noteX(
+            index: i,
+            notes: notes,
+            anchorX: anchorX,
+            nowBeat: now,
+            pixelsPerBeat: pixelsPerBeat,
+            space: space,
+            xCache: xCache,
+          );
       lastX = x;
       if (x + space * 2 < 0) continue; // off screen; the cover hides the rest
       if (n.isSpacer) continue;
@@ -832,9 +861,53 @@ class StaffPainter extends CustomPainter {
             Paint()..color = color,
           );
         }
+
+        if (n.tie) {
+          for (var k = i + 1; k < notes.length; k++) {
+            final nextN = notes[k];
+            if (nextN.isSpacer || nextN.isRest) continue;
+            if (nextN.pitch == n.pitch && nextN.leftHand == n.leftHand) {
+              final nextX =
+                  xCache[k] ??
+                  noteX(
+                    index: k,
+                    notes: notes,
+                    anchorX: anchorX,
+                    nowBeat: now,
+                    pixelsPerBeat: pixelsPerBeat,
+                    space: space,
+                    xCache: xCache,
+                  );
+              final nextY = _noteY(nextN.pitch, onBass, l);
+              EngravingDecorations.drawTie(
+                canvas,
+                x1: x,
+                y1: y,
+                x2: nextX,
+                y2: nextY,
+                space: space,
+                color: color,
+                tieAbove: n.stemDown,
+              );
+              break;
+            }
+          }
+        }
+
+        if (n.articulation != null) {
+          EngravingDecorations.drawArticulation(
+            canvas,
+            articulation: n.articulation!,
+            x: x,
+            y: y,
+            space: space,
+            color: color,
+            stemDown: n.stemDown,
+          );
+        }
       }
 
-      if (n.beats < 4) {
+      if (!beamedIndices.contains(i) && n.beats < 4) {
         final strokePaint = Paint()
           ..color = color
           ..strokeWidth = math.max(1.2, space * 0.1);
