@@ -194,6 +194,8 @@ pub struct Target {
     /// Wait mode: the hint was shown before this target was completed.
     pub hinted: bool,
     pub state: ChordState,
+    pub stem_downs: Vec<bool>,
+    pub two_stems: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -317,28 +319,74 @@ pub fn companion_notes(song: &Song, hand: HandFilter) -> Vec<TimedNote> {
 }
 
 fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
+    let active: Vec<&TimedNote> = notes
+        .iter()
+        .filter(|n| !n.accomp && plays(hand, n))
+        .collect();
     let mut out: Vec<Target> = Vec::new();
-    for n in notes.iter().filter(|n| !n.accomp && plays(hand, n)) {
-        match out.last_mut() {
-            Some(t) if (t.beat - n.start_beat).abs() < 1e-9 => {
-                t.pitches.insert(n.pitch);
-                t.fingers.push(n.finger);
-                t.beats = t.beats.min(n.beats);
-            }
-            _ => out.push(Target {
-                beat: n.start_beat,
-                beats: n.beats,
-                bar: n.bar,
-                pitches: BTreeSet::from([n.pitch]),
-                fingers: vec![n.finger],
-                played: BTreeSet::new(),
-                first_us: None,
-                played_us: Default::default(),
-                deltas_us: Vec::new(),
-                hinted: false,
-                state: ChordState::Pending,
-            }),
+    let mut i = 0;
+    while i < active.len() {
+        let start_beat = active[i].start_beat;
+        let mut j = i;
+        while j < active.len() && (active[j].start_beat - start_beat).abs() < 1e-9 {
+            j += 1;
         }
+        let group = &active[i..j];
+        let bar = group[0].bar;
+        let beats = group.iter().map(|n| n.beats).fold(f64::INFINITY, f64::min);
+        let pitches: BTreeSet<u8> = group.iter().map(|n| n.pitch).collect();
+
+        let mut fingers = Vec::new();
+        let mut stem_downs = Vec::new();
+        let mut two_stems = Vec::new();
+
+        for &p in &pitches {
+            let p_notes: Vec<&&TimedNote> = group.iter().filter(|n| n.pitch == p).collect();
+            let finger = p_notes.iter().find_map(|n| n.finger);
+            fingers.push(finger);
+
+            let is_unison =
+                p_notes.iter().any(|n| n.voice == 1) && p_notes.iter().any(|n| n.voice == 2);
+            if is_unison {
+                two_stems.push(true);
+                stem_downs.push(false);
+            } else {
+                two_stems.push(false);
+                let n = p_notes[0];
+                if !n.left_hand {
+                    stem_downs.push(n.voice == 2);
+                } else {
+                    let bar_has_lh2 = notes
+                        .iter()
+                        .any(|m| m.bar == n.bar && m.left_hand && m.voice == 2);
+                    if n.voice == 2 {
+                        stem_downs.push(false);
+                    } else if bar_has_lh2 {
+                        stem_downs.push(true);
+                    } else {
+                        stem_downs.push(false);
+                    }
+                }
+            }
+        }
+
+        out.push(Target {
+            beat: start_beat,
+            beats,
+            bar,
+            pitches,
+            fingers,
+            played: BTreeSet::new(),
+            first_us: None,
+            played_us: Default::default(),
+            deltas_us: Vec::new(),
+            hinted: false,
+            state: ChordState::Pending,
+            stem_downs,
+            two_stems,
+        });
+
+        i = j;
     }
     out
 }
@@ -1378,5 +1426,80 @@ mod tests {
         s.tick(3_500_000);
         assert_eq!(s.take_section_event(), None);
         assert_eq!(s.targets()[0].state, ChordState::Missed);
+    }
+
+    #[test]
+    fn two_voices_merged_targets_and_wait_mode() {
+        let s = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"E4:4 F4:4 G4:4 A4:4","RH2":"C4:1","LH":"C3:1"}],
+            "critical":[[0,1]]}"#,
+        )
+        .unwrap();
+
+        // Right hand session: targets should merge RH and RH2
+        let mut session = Session::new(
+            &s,
+            Settings {
+                mode: Mode::Wait,
+                hand: HandFilter::Right,
+                ..Default::default()
+            },
+        );
+
+        // 4 targets at beats 0, 1, 2, 3
+        let ts = session.targets();
+        assert_eq!(ts.len(), 4);
+        // At beat 0: C4 (voice 2) and E4 (voice 1) are a chord target
+        assert_eq!(ts[0].beat, 0.0);
+        assert_eq!(ts[0].pitches, BTreeSet::from([60, 64]));
+        // C4 has stem down (voice 2), E4 has stem up (voice 1)
+        assert_eq!(ts[0].stem_downs, vec![true, false]);
+        assert_eq!(ts[0].two_stems, vec![false, false]);
+
+        // At beat 1: F4 (voice 1)
+        assert_eq!(ts[1].beat, 1.0);
+        assert_eq!(ts[1].pitches, BTreeSet::from([65]));
+        assert_eq!(ts[1].stem_downs, vec![false]);
+
+        // Press C4 and E4 within spread to hit target 0
+        press(&mut session, 60, 0);
+        press(&mut session, 64, 50_000);
+        assert_eq!(session.tick(50_000).cursor, 1);
+        assert_eq!(session.targets()[0].state, ChordState::Hit { delta_us: 0 });
+
+        // Companion notes for Right hand should include LH (left hand)
+        let companion = companion_notes(&s, HandFilter::Right);
+        assert_eq!(companion.len(), 1);
+        assert_eq!(companion[0].pitch, 48); // C3
+    }
+
+    #[test]
+    fn unison_forms_two_stems_target() {
+        let s = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:4 D4:4 E4:4 F4:4","RH2":"C4:1","LH":"C3:1"}],
+            "critical":[[0,1]]}"#,
+        )
+        .unwrap();
+
+        let session = Session::new(
+            &s,
+            Settings {
+                mode: Mode::PlayAlong,
+                hand: HandFilter::Right,
+                ..Default::default()
+            },
+        );
+
+        let ts = session.targets();
+        assert_eq!(ts.len(), 4);
+        // Target 0 has unison C4: graded once, two_stems is true
+        assert_eq!(ts[0].pitches, BTreeSet::from([60]));
+        assert_eq!(ts[0].two_stems, vec![true]);
     }
 }

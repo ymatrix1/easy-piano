@@ -392,6 +392,8 @@ class TargetView {
   final int bar;
   final Uint8List pitches;
   final Uint8List fingers;
+  final List<bool> stemDowns;
+  final List<bool> twoStems;
 
   /// 0 pending, 1 hit, 2 missed.
   final int state;
@@ -402,6 +404,8 @@ class TargetView {
     required this.bar,
     required this.pitches,
     required this.fingers,
+    required this.stemDowns,
+    required this.twoStems,
     required this.state,
   });
 
@@ -412,6 +416,8 @@ class TargetView {
       bar.hashCode ^
       pitches.hashCode ^
       fingers.hashCode ^
+      stemDowns.hashCode ^
+      twoStems.hashCode ^
       state.hashCode;
 
   @override
@@ -424,5 +430,7 @@ class TargetView {
           bar == other.bar &&
           pitches == other.pitches &&
           fingers == other.fingers &&
+          stemDowns == other.stemDowns &&
+          twoStems == other.twoStems &&
           state == other.state;
 }

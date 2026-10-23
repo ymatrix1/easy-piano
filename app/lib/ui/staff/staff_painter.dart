@@ -13,6 +13,11 @@ abstract final class Smufl {
   static const noteheadHalf = '';
   static const noteheadBlack = '';
   static const accidentalSharp = '';
+  static const restWhole = '';
+  static const restHalf = '';
+  static const restQuarter = '';
+  static const rest8th = '';
+  static const rest16th = '';
 }
 
 /// Which staves to draw; comes from the level's `ui` field.
@@ -498,12 +503,14 @@ class StaffPainter extends CustomPainter {
         introN++;
       }
     }
+    final drawnUnisons = <(double, int, bool)>{};
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       final x = anchorX + (n.beat - now) * pixelsPerBeat;
       lastX = x;
       if (x + space * 2 < 0) continue; // off screen; the cover hides the rest
+      if (n.isSpacer) continue;
       final intro = introOn ? introAt(introT, i - first, introN) : null;
       if (intro != null) {
         if (intro.alpha <= 0) continue;
@@ -514,65 +521,110 @@ class StaffPainter extends CustomPainter {
         canvas.translate(0, intro.rise * size.height);
       }
       final onBass = _onBass(n);
+      final color = colorOf?.call(i) ?? inkColor;
+      if (n.isRest) {
+        final restY =
+            (onBass ? bassTopY + 2 * space : trebleBottomY - 2 * space) +
+            (n.voice == 2 ? (onBass ? -2 : 2) * space : 0.0);
+        final restGlyph = n.beats >= 4
+            ? Smufl.restWhole
+            : n.beats >= 2
+            ? Smufl.restHalf
+            : n.beats >= 1
+            ? Smufl.restQuarter
+            : n.beats >= 0.5
+            ? Smufl.rest8th
+            : Smufl.rest16th;
+        _drawGlyph(canvas, restGlyph, glyphSize, Offset(x, restY), color);
+        if (intro != null) canvas.restore();
+        continue;
+      }
+
       final step = diatonicStep(n.pitch);
       final y = _noteY(n.pitch, onBass, l);
-      _drawLedgers(
-        canvas,
-        x,
-        y,
-        onBass,
-        step,
-        half,
-        space,
-        trebleBottomY,
-        bassTopY,
-        ink,
-        headWidth: (n.beats >= 4 ? 1.69 : 1.18) * space,
-      );
-      final color = colorOf?.call(i) ?? inkColor;
-      if (i == current && currentGlow != null) {
-        canvas.drawCircle(
-          Offset(x + space * (n.beats >= 4 ? 0.845 : 0.59), y),
-          space * 1.5,
-          Paint()
-            ..color = currentGlow!.withValues(alpha: 0.35)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.8),
-        );
-      }
-      final head = n.beats >= 4
-          ? Smufl.noteheadWhole
-          : n.beats >= 2
-          ? Smufl.noteheadHalf
-          : Smufl.noteheadBlack;
-      _drawGlyph(canvas, head, glyphSize, Offset(x, y), color);
-      if (_isSharp[n.pitch % 12]) {
-        _drawGlyph(
+      final noteKey = (n.beat, n.pitch, onBass);
+      final isDuplicate = drawnUnisons.contains(noteKey);
+      drawnUnisons.add(noteKey);
+
+      if (!isDuplicate) {
+        _drawLedgers(
           canvas,
-          Smufl.accidentalSharp,
-          glyphSize,
-          Offset(x - space * 1.4, y),
-          color,
+          x,
+          y,
+          onBass,
+          step,
+          half,
+          space,
+          trebleBottomY,
+          bassTopY,
+          ink,
+          headWidth: (n.beats >= 4 ? 1.69 : 1.18) * space,
         );
+        if (i == current && currentGlow != null) {
+          canvas.drawCircle(
+            Offset(x + space * (n.beats >= 4 ? 0.845 : 0.59), y),
+            space * 1.5,
+            Paint()
+              ..color = currentGlow!.withValues(alpha: 0.35)
+              ..maskFilter = MaskFilter.blur(BlurStyle.normal, space * 0.8),
+          );
+        }
+        final head = n.beats >= 4
+            ? Smufl.noteheadWhole
+            : n.beats >= 2
+            ? Smufl.noteheadHalf
+            : Smufl.noteheadBlack;
+        _drawGlyph(canvas, head, glyphSize, Offset(x, y), color);
+        if (_isSharp[n.pitch % 12]) {
+          _drawGlyph(
+            canvas,
+            Smufl.accidentalSharp,
+            glyphSize,
+            Offset(x - space * 1.4, y),
+            color,
+          );
+        }
+        if (_isDotted(n.beats)) {
+          // Dot sits in a space: nudge up when the note is on a line.
+          final dy = step.isEven ? -half : 0.0;
+          canvas.drawCircle(
+            Offset(x + space * 1.75, y + dy),
+            space * 0.2,
+            Paint()..color = color,
+          );
+        }
       }
-      if (_isDotted(n.beats)) {
-        // Dot sits in a space: nudge up when the note is on a line.
-        final dy = step.isEven ? -half : 0.0;
-        canvas.drawCircle(
-          Offset(x + space * 1.75, y + dy),
-          space * 0.2,
-          Paint()..color = color,
-        );
-      }
+
       if (n.beats < 4) {
-        // Stem up from the right side of the notehead (1.18 spaces wide in Bravura).
-        final sx = x + space * 1.18 - 0.6;
-        canvas.drawLine(
-          Offset(sx, y),
-          Offset(sx, y - space * 3.5),
-          Paint()
-            ..color = color
-            ..strokeWidth = math.max(1.2, space * 0.1),
-        );
+        final strokePaint = Paint()
+          ..color = color
+          ..strokeWidth = math.max(1.2, space * 0.1);
+        final sxUp = x + space * 1.18 - 0.6;
+        final sxDown = x + 0.6;
+        if (n.twoStems || isDuplicate) {
+          canvas.drawLine(
+            Offset(sxUp, y),
+            Offset(sxUp, y - space * 3.5),
+            strokePaint,
+          );
+          canvas.drawLine(
+            Offset(sxDown, y),
+            Offset(sxDown, y + space * 3.5),
+            strokePaint,
+          );
+        } else if (n.stemDown) {
+          canvas.drawLine(
+            Offset(sxDown, y),
+            Offset(sxDown, y + space * 3.5),
+            strokePaint,
+          );
+        } else {
+          canvas.drawLine(
+            Offset(sxUp, y),
+            Offset(sxUp, y - space * 3.5),
+            strokePaint,
+          );
+        }
       }
       if (n.finger != null) {
         _drawFinger(

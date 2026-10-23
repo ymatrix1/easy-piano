@@ -1173,6 +1173,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<bool> dco_decode_list_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_bool).toList();
+  }
+
+  @protected
   List<FeedbackView> dco_decode_list_feedback_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_feedback_view).toList();
@@ -1295,15 +1301,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TargetView dco_decode_target_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return TargetView(
       beat: dco_decode_f_64(arr[0]),
       beats: dco_decode_f_64(arr[1]),
       bar: dco_decode_u_32(arr[2]),
       pitches: dco_decode_list_prim_u_8_strict(arr[3]),
       fingers: dco_decode_list_prim_u_8_strict(arr[4]),
-      state: dco_decode_u_8(arr[5]),
+      stemDowns: dco_decode_list_bool(arr[5]),
+      twoStems: dco_decode_list_bool(arr[6]),
+      state: dco_decode_u_8(arr[7]),
     );
   }
 
@@ -1480,6 +1488,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<bool> sse_decode_list_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <bool>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_bool(deserializer));
     }
     return ans_;
   }
@@ -1665,6 +1685,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_bar = sse_decode_u_32(deserializer);
     var var_pitches = sse_decode_list_prim_u_8_strict(deserializer);
     var var_fingers = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_stemDowns = sse_decode_list_bool(deserializer);
+    var var_twoStems = sse_decode_list_bool(deserializer);
     var var_state = sse_decode_u_8(deserializer);
     return TargetView(
       beat: var_beat,
@@ -1672,6 +1694,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       bar: var_bar,
       pitches: var_pitches,
       fingers: var_fingers,
+      stemDowns: var_stemDowns,
+      twoStems: var_twoStems,
       state: var_state,
     );
   }
@@ -1842,6 +1866,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_bool(List<bool> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_bool(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_feedback_view(
     List<FeedbackView> self,
     SseSerializer serializer,
@@ -1994,6 +2027,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.bar, serializer);
     sse_encode_list_prim_u_8_strict(self.pitches, serializer);
     sse_encode_list_prim_u_8_strict(self.fingers, serializer);
+    sse_encode_list_bool(self.stemDowns, serializer);
+    sse_encode_list_bool(self.twoStems, serializer);
     sse_encode_u_8(self.state, serializer);
   }
 

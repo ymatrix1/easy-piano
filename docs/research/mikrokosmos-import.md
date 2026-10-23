@@ -60,6 +60,7 @@ Bartók reuses his own material on purpose: No. 17 is No. 13's melody in contrar
 ## Follow-ups
 
 - App: hide `restricted_in` songs in restricted regions (bean piano-7os5).
-- Import Nos. 12, 25, 32 and 33: meter changes, triplets, 3/2 and 6/4, two voices per hand (bean piano-zn4c).
+- Two voices per hand: spec and D34, implementation bean piano-16vk.
+- Import the rest of Books 1-6 (bean piano-s1iz, supersedes piano-zn4c).
 - Ask the dataset author for an explicit licence (CC-BY-4.0 or CC0) on the MusicXML (bean piano-xmga).
 - Confirm which edition `IMSLP465640` is.

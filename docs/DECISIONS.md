@@ -369,6 +369,15 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
   - New optional song field `restricted_in` (schema, core `Song`, lint), `content-format.md`; Methods off the ramp in `difficulty.md`; skill specs not required for Methods nodes.
   - Book 1 gaps (Nos. 12, 25, 32, 33): bean piano-zn4c. No fingering in these songs (the dataset has none).
 
+### D34. Two voices per hand as `RH2` / `LH2` bar keys
+
+- **Status:** proposed
+- **Context:** The song format has one line per hand (chords allowed). 69 of the 147 Mikrokosmos pieces, and most piano repertoire past beginner level, have a hand holding one line while it plays another; the importer refuses them rather than drop notes ([research](research/mikrokosmos-import.md)).
+- **Decision:** A bar may add `RH2` / `LH2`, a second voice of that hand in the same notation, plus an invisible spacer token `s:<dur>`. Grading keeps onset-based targets per hand, so both voices of a hand merge into one target stream; engraving draws voice 1 and voice 2 with opposite stems. Full rules: [content-format](specs/content-format.md#two-voices-per-hand-rh2-lh2).
+- **Why:** Separate keys reuse the existing parser, bar-length lint and fingering per voice, and leave every current song valid. Matching ignores durations, so the engine needs almost no change.
+- **Alternatives:** A voice separator inside one hand string (`"RH": "... // ..."`: harder to lint and diff); per-note voice marks (verbose, breaks the token grammar); n voices (`RH1..RHn`: no content needs more than two yet); flatten voices into chords with ties (wrong durations and engraving).
+- **Impact:** core `Song` / `notation` / timeline, staff renderer, difficulty feature, rubric flag, converter and importer, schema. Implementation: bean piano-16vk; then the rest of Mikrokosmos: bean piano-s1iz.
+
 ### D35. Methods live in their own library, reached from one card on the Learn tab
 
 - **Status:** proposed

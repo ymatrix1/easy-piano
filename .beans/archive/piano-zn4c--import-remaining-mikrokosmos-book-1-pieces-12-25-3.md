@@ -1,10 +1,11 @@
 ---
 # piano-zn4c
 title: Import remaining Mikrokosmos Book 1 pieces (12, 25, 32, 33)
-status: todo
+status: scrapped
 type: task
+priority: normal
 created_at: 2026-10-22T19:09:55Z
-updated_at: 2026-10-22T19:09:55Z
+updated_at: 2026-10-22T19:28:39Z
 parent: piano-bjig
 ---
 
@@ -24,3 +25,7 @@ The full Book 1 as a Methods track.
 ## Out of Scope
 
 Books 2-6.
+
+## Reasons for Scrapping
+
+Merged into piano-s1iz (rest of Mikrokosmos).
