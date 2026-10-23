@@ -63,7 +63,16 @@ def check_voice_count(score: m21.stream.Score) -> None:
                 raise Unsupported(f"three or more voices in one hand, bar {m.number}")
 
 
+def expand_repeats(score: m21.stream.Score) -> m21.stream.Score:
+    """Write repeated sections out in full (the app has no repeat signs)."""
+    has_repeat = any(
+        isinstance(b, m21.bar.Repeat) for b in score.recurse().getElementsByClass(m21.bar.Barline)
+    )
+    return score.expandRepeats() if has_repeat else score
+
+
 def song(n: int, title: str, score: m21.stream.Score) -> dict:
+    score = expand_repeats(score)
     check_voice_count(score)
     tune = convert_score(score, key=written_key(score))
     return {

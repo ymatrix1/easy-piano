@@ -57,6 +57,30 @@ Checks on the imported pieces:
 - `content lint`: no errors.
 - Round trips (`tests/test_convert.py`, `tests/test_tokenizer.py`): MusicXML round trip passes for every piece. The MIDI round trip skips pieces with a second voice or invisible rest (MIDI has neither) and pieces where MIDI merges ties or rests across bars into a length the format cannot hold; it matches pitches and rhythm on the rest once runs of rests are summed. The melody-model tokenizer refuses songs with `RH2`/`LH2` or `s:` (the model has no such tokens) instead of dropping notes; `difficulty.py` ignores spacers.
 
+## What the source has and the lessons drop
+
+Counted in the MusicXML of the 66 imported pieces, and compared with the printed page for Nos. 56 and 31 (notes and rhythm match):
+
+| Mark | In the XML | In the lesson |
+|---|---|---|
+| Slurs | 1630 marks, 57 pieces | dropped |
+| Staccato | 187, 14 pieces | dropped |
+| Accents | 37, 4 pieces | dropped |
+| Tenuto | 15, 3 pieces | dropped |
+| Hairpins (crescendo, diminuendo) | 119, 20 pieces | dropped |
+| Fermata | 8, 5 pieces (37, 47, 62, 73, 101) | dropped, note not lengthened |
+| Pedal | 52, 3 pieces (47, 83, 97) | dropped |
+| Grace notes | 4, 2 pieces (62, 134) | dropped, notes missing |
+| Ties | 682, 38 pieces | kept |
+| Repeats | 22 marks, 3 pieces (31, 40, 134) | written out in full |
+| Dynamic letters (`p`, `f`) | none | none (the printed page has them: `f` on Nos. 31 and 56) |
+| Fingering | none | none (the printed page has it) |
+| Tempo words (Allegro, Risoluto) | none | none; only the metronome mark |
+
+Notes in the XML were counted against the song JSON for all 66 pieces; only two pieces were compared with the printed page, so an OCR pitch error elsewhere is possible. Repeats were expanded after this check (No. 31: 16 to 24 bars, matching the printed `|: :|`; No. 40: 31 to 37; No. 134: 21 to 47).
+
+No. 134 is three separate studies in double notes printed under one number, with repeats in each. It is one very dense lesson; splitting it into three is open (bean piano-gjig).
+
 ## Similarity
 
 Bartók reuses his own material on purpose: No. 17 is No. 13's melody in contrary motion, No. 27 is No. 9 with a new left hand, No. 28 is a canon on No. 7. These pairs score 1.0 in `core::similarity`. Mikrokosmos pieces against the folk tunes in `content/songs` give 36 false positives in 992 pairs at 0.5 (3.6%, above the 3% the calibration allows): five-finger modal lines share stock figures with folk tunes. Like the drills, method pieces are left out of the calibration set (`core/tests/similarity_calibration.rs`). They stay in the `content similar` corpus, so a generated tune that copies them is flagged.
@@ -78,6 +102,7 @@ Bartók reuses his own material on purpose: No. 17 is No. 13's melody in contrar
 
 - App: hide `restricted_in` songs in restricted regions (bean piano-7os5).
 - Two voices per hand: done (D34, bean piano-16vk).
+- Expressive marks and grace notes (bean piano-gjig).
 - The remaining 81 pieces: bean piano-weqs (meter changes, odd meters, tuplets, a third voice, hand fixes for OCR errors).
 - Ask the dataset author for an explicit licence (CC-BY-4.0 or CC0) on the MusicXML (bean piano-xmga).
 - Confirm which edition `IMSLP465640` is.

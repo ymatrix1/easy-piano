@@ -123,3 +123,16 @@ def test_main_splits_pieces_into_one_course_per_book(tmp_path):
         assert journey["nodes"][0]["levels"] == [f"mk{book}-{n:02d}"]
         assert journey["nodes"][0]["title"] == f"str:node.mk{book}.{n:02d}"
         assert (out / "courses" / f"mikrokosmos-{book}" / "levels" / f"mk{book}-{n:02d}.json").exists()
+
+
+def test_repeated_sections_are_written_out():
+    s = score(tempo=(96, "quarter"))
+    for part in s.parts:
+        m = part.getElementsByClass(m21.stream.Measure).first()
+        m.leftBarline = m21.bar.Repeat(direction="start")
+        m.rightBarline = m21.bar.Repeat(direction="end")
+    assert len(mk.song(31, "T", s)["bars"]) == 2
+
+
+def test_scores_without_repeats_are_left_alone():
+    assert len(mk.song(31, "T", score(tempo=(96, "quarter")))["bars"]) == 1
