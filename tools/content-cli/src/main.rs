@@ -117,7 +117,7 @@ fn load_songs(root: &Path) -> (BTreeMap<String, Song>, Vec<(PathBuf, String)>) {
 
 /// One journey node with the songs its levels play and everything taught so far.
 /// Sections whose courses are optional repertoire, not steps of the main path.
-const OFF_RAMP_SECTIONS: [&str; 1] = ["methods"];
+const OFF_RAMP_SECTIONS: [&str; 0] = [];
 
 struct NodeTaught {
     course: String,
@@ -184,10 +184,11 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             .max()
             .unwrap_or(0);
         depth.insert(cid.to_string(), d);
-        let on_ramp = !course
-            .get("section")
-            .and_then(Value::as_str)
-            .is_some_and(|s| OFF_RAMP_SECTIONS.contains(&s));
+        let on_ramp = course.get("method").is_none()
+            && !course
+                .get("section")
+                .and_then(Value::as_str)
+                .is_some_and(|s| OFF_RAMP_SECTIONS.contains(&s));
         if course.get("status").and_then(Value::as_str) == Some("planned") {
             continue;
         }
@@ -473,6 +474,76 @@ fn lint_dir(root: &Path) -> Lint {
         .map(str::to_string)
         .collect();
 
+    // Methods library (docs/specs/methods.md, D35).
+    let methods_path = root.join("methods.json");
+    let mut method_ids: BTreeSet<String> = BTreeSet::new();
+    let mut method_books: BTreeMap<String, String> = BTreeMap::new();
+    if methods_path.exists() {
+        if let Some(methods_val) = read_json(&mut lint, &methods_path) {
+            lint.collect_strs(&methods_val);
+            const VALID_LEVELS: [&str; 4] =
+                ["beginner", "early-intermediate", "intermediate", "advanced"];
+            const VALID_SKILLS: [&str; 6] = [
+                "reading",
+                "rhythm",
+                "independence",
+                "coordination",
+                "fluency",
+                "technique",
+            ];
+            if let Some(methods) = methods_val.get("methods").and_then(Value::as_array) {
+                for m in methods {
+                    let Some(mid) = m.get("id").and_then(Value::as_str) else {
+                        lint.err(&methods_path, "method without `id`");
+                        continue;
+                    };
+                    method_ids.insert(mid.to_string());
+                    if let Some(levels) = m.get("levels").and_then(Value::as_array) {
+                        for l in levels.iter().filter_map(Value::as_str) {
+                            if !VALID_LEVELS.contains(&l) {
+                                lint.err(
+                                    &methods_path,
+                                    format!("method `{mid}` has unknown level `{l}`"),
+                                );
+                            }
+                        }
+                    }
+                    if let Some(skills) = m.get("skills").and_then(Value::as_array) {
+                        for s in skills.iter().filter_map(Value::as_str) {
+                            if !VALID_SKILLS.contains(&s) {
+                                lint.err(
+                                    &methods_path,
+                                    format!("method `{mid}` has unknown skill `{s}`"),
+                                );
+                            }
+                        }
+                    }
+                    if let Some(books) = m.get("books").and_then(Value::as_array) {
+                        for b in books.iter().filter_map(Value::as_str) {
+                            if !course_ids.contains(b) {
+                                lint.err(
+                                    &methods_path,
+                                    format!("method `{mid}` lists unknown book course `{b}`"),
+                                );
+                            }
+                            if let Some(other) = method_books.insert(b.to_string(), mid.to_string())
+                            {
+                                lint.err(
+                                    &methods_path,
+                                    format!(
+                                        "book course `{b}` is listed in multiple methods: `{other}` and `{mid}`"
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                }
+            } else {
+                lint.err(&methods_path, "`methods` must be an array");
+            }
+        }
+    }
+
     for course in &course_list {
         let Some(cid) = course.get("id").and_then(Value::as_str) else {
             lint.err(&courses_path, "course without `id`");
@@ -498,6 +569,32 @@ fn lint_dir(root: &Path) -> Lint {
                     format!("course `{cid}`: unknown section `{sec}`"),
                 );
             }
+        }
+        if let Some(method) = course.get("method").and_then(Value::as_str) {
+            if !method_ids.contains(method) {
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}` references unknown method `{method}`"),
+                );
+            }
+            if let Some(listed_in) = method_books.get(cid) {
+                if listed_in != method {
+                    lint.err(
+                        &courses_path,
+                        format!("course `{cid}` has method `{method}` but is listed in method `{listed_in}`"),
+                    );
+                }
+            } else {
+                lint.err(
+                    &courses_path,
+                    format!("course `{cid}` has method `{method}` but is not listed in any method's books"),
+                );
+            }
+        } else if let Some(listed_in) = method_books.get(cid) {
+            lint.err(
+                &courses_path,
+                format!("course `{cid}` is listed in method `{listed_in}` books but does not have `\"method\": \"{listed_in}\"`"),
+            );
         }
         // Planned courses are listed (locked) in the app but have no journey yet.
         match course.get("status").and_then(Value::as_str) {
@@ -1161,6 +1258,50 @@ mod tests {
         let (list, envs) = level::course_songs(&walk, &songs, &Model::builtin());
         assert_eq!(envs.len(), walk.len());
         assert!(list.iter().all(|c| !c.node.starts_with("mikrokosmos-1/")));
+    }
+
+    #[test]
+    fn methods_lint_checks_references_and_enums() {
+        let dir = fixture("methods");
+        let w = |p: &str, t: &str| fs::write(dir.join(p), t).unwrap();
+        w("strings/en.json", r#"{"t":"Title"}"#);
+        w(
+            "methods.json",
+            r#"{"methods":[{"id":"m1","title":"str:t","levels":["beginner"],"skills":["reading"],"books":["c1"]}]}"#,
+        );
+        w(
+            "courses.json",
+            r#"{"courses":[{"id":"c1","requires":[],"journey":"courses/c1/journey.json","method":"m1"},{"id":"c2","requires":["c1"],"journey":"courses/c2/journey.json"}]}"#,
+        );
+        let lint = lint_dir(&dir);
+        assert!(
+            !lint.errors.iter().any(|e| e.contains("method")),
+            "errors: {:?}",
+            lint.errors
+        );
+
+        // Bad level
+        w(
+            "methods.json",
+            r#"{"methods":[{"id":"m1","title":"str:t","levels":["not-valid"],"skills":["reading"],"books":["c1"]}]}"#,
+        );
+        let lint = lint_dir(&dir);
+        assert!(lint
+            .errors
+            .iter()
+            .any(|e| e.contains("unknown level `not-valid`")));
+
+        // Unlisted course with method
+        w(
+            "methods.json",
+            r#"{"methods":[{"id":"m1","title":"str:t","levels":["beginner"],"skills":["reading"],"books":[]}]}"#,
+        );
+        let lint = lint_dir(&dir);
+        assert!(lint
+            .errors
+            .iter()
+            .any(|e| e.contains("not listed in any method's books")));
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

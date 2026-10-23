@@ -380,7 +380,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 
 ### D35. Methods live in their own library, reached from one card on the Learn tab
 
-- **Status:** proposed
+- **Status:** accepted
 - **Context:** D33 put Mikrokosmos I as a numbered course card in a `methods` section of the Learn tab. Mikrokosmos alone has six books, and more methods are planned; a flat list of course cards buries the main path and suggests a required order.
 - **Decision:** Group method books by method in `content/methods.json`; the Learn tab shows the main path and one Methods card that opens a library (one card per method) and a method page (books as sections, Continue). Method courses are unnumbered, never locked, and restricted pieces show locked with the reason. Spec: [methods](specs/methods.md).
 - **Why:** Keeps the main path short and clearly sequential, scales to many methods and books, and gives each method room for its own description and progress.

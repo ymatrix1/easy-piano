@@ -468,4 +468,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get styleGame => 'Game';
+
+  @override
+  String get methodsCardTitle => 'Methods';
+
+  @override
+  String methodsCardSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count methods',
+      one: '1 method',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsLibraryTitle => 'Methods';
+
+  @override
+  String get methodsFilterAll => 'All';
+
+  @override
+  String get methodsFilterBeginner => 'Beginner';
+
+  @override
+  String get methodsFilterEarlyIntermediate => 'Early intermediate';
+
+  @override
+  String get methodsFilterIntermediate => 'Intermediate';
+
+  @override
+  String get methodsFilterReading => 'Reading';
+
+  @override
+  String get methodsFilterRhythm => 'Rhythm';
+
+  @override
+  String get methodsFilterIndependence => 'Independence';
+
+  @override
+  String methodsBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodContinue => 'Continue';
+
+  @override
+  String methodProtectedNotice(String year) {
+    return 'Protected in your country until $year';
+  }
 }

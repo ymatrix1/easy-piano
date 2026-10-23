@@ -135,5 +135,18 @@
   "styleChildren": "Kinderlied",
   "stylePop": "Pop",
   "styleJazz": "Jazz",
-  "styleGame": "Spiel"
+  "styleGame": "Spiel",
+  "methodsCardTitle": "Methoden",
+  "methodsCardSubtitle": "{count, plural, =1{1 Methode} other{{count} Methoden}}",
+  "methodsLibraryTitle": "Methoden",
+  "methodsFilterAll": "Alle",
+  "methodsFilterBeginner": "Anfänger",
+  "methodsFilterEarlyIntermediate": "Untere Mittelstufe",
+  "methodsFilterIntermediate": "Mittelstufe",
+  "methodsFilterReading": "Notenlesen",
+  "methodsFilterRhythm": "Rhythmus",
+  "methodsFilterIndependence": "Unabhängigkeit",
+  "methodsBookCount": "{count, plural, =1{1 Buch} other{{count} Bücher}}",
+  "methodContinue": "Weiter",
+  "methodProtectedNotice": "In deinem Land bis {year} urheberrechtlich geschützt"
 }

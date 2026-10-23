@@ -1,0 +1,27 @@
+{
+  "methods": [
+    {
+      "id": "mikrokosmos",
+      "title": "str:method.mikrokosmos.title",
+      "composer": "Béla Bartók",
+      "description": "str:method.mikrokosmos.desc",
+      "levels": [
+        "beginner",
+        "early-intermediate",
+        "intermediate"
+      ],
+      "skills": [
+        "reading",
+        "rhythm",
+        "independence"
+      ],
+      "books": [
+        "mikrokosmos-1",
+        "mikrokosmos-2",
+        "mikrokosmos-3",
+        "mikrokosmos-4",
+        "mikrokosmos-5"
+      ]
+    }
+  ]
+}

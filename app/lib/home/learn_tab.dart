@@ -6,6 +6,8 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
 import 'home_page.dart' show Progress;
+import '../methods/methods_library_page.dart';
+import 'task_sheet.dart';
 
 /// Learn tab: a "continue" hero card, then each section's modules on the
 /// outer trail. A module card expands to show its inner trail of submodules;
@@ -16,11 +18,13 @@ class LearnTab extends StatefulWidget {
     required this.repo,
     required this.progress,
     required this.onPlay,
+    this.onOpenMethods,
   });
 
   final ContentRepo repo;
   final Progress progress;
   final Future<void> Function(String levelId) onPlay;
+  final VoidCallback? onOpenMethods;
 
   @override
   State<LearnTab> createState() => _LearnTabState();
@@ -38,7 +42,7 @@ class _LearnTabState extends State<LearnTab> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _TaskSheet(
+      builder: (_) => TaskSheet(
         repo: widget.repo,
         progress: widget.progress,
         course: course,
@@ -53,10 +57,11 @@ class _LearnTabState extends State<LearnTab> {
     final repo = widget.repo;
     final progress = widget.progress;
     final next = progress.next;
+    final mainCourses = repo.courses.where((c) => !c.isMethod).toList();
     final sections = [
-      ...repo.sections,
+      ...repo.sections.where((s) => s.id != 'methods'),
       // Courses whose section is not declared still show up.
-      if (repo.courses.any((c) => !repo.sections.any((s) => s.id == c.section)))
+      if (mainCourses.any((c) => !repo.sections.any((s) => s.id == c.section)))
         SectionDef(id: '', title: AppLocalizations.of(context).sectionMore),
     ];
     var moduleNo = 0;
@@ -84,11 +89,11 @@ class _LearnTabState extends State<LearnTab> {
                     ),
                   ),
                 for (final section in sections)
-                  if (repo.courses.any((c) => c.section == section.id)) ...[
+                  if (mainCourses.any((c) => c.section == section.id)) ...[
                     const SizedBox(height: 26),
                     _SectionHeader(repo.t(section.title)),
                     const SizedBox(height: 14),
-                    for (final c in repo.courses.where(
+                    for (final c in mainCourses.where(
                       (c) => c.section == section.id,
                     ))
                       Builder(
@@ -96,7 +101,7 @@ class _LearnTabState extends State<LearnTab> {
                           final i = moduleNo++;
                           final last =
                               c ==
-                              repo.courses
+                              mainCourses
                                   .where((x) => x.section == section.id)
                                   .last;
                           return SlideIn(
@@ -138,6 +143,33 @@ class _LearnTabState extends State<LearnTab> {
                         },
                       ),
                   ],
+                if (repo.methods.isNotEmpty) ...[
+                  const SizedBox(height: 28),
+                  SlideIn(
+                    delay: Duration(
+                      milliseconds: 80 + 70 * (moduleNo < 8 ? moduleNo : 8),
+                    ),
+                    child: _MethodsCard(
+                      repo: repo,
+                      progress: progress,
+                      onTap: () {
+                        if (widget.onOpenMethods != null) {
+                          widget.onOpenMethods!();
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MethodsLibraryPage(
+                                repo: repo,
+                                progress: progress,
+                                onPlay: widget.onPlay,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -762,138 +794,139 @@ class _SubmoduleRow extends StatelessWidget {
   }
 }
 
-/// Bottom sheet listing a submodule's tasks; returns the level id to play.
-class _TaskSheet extends StatelessWidget {
-  const _TaskSheet({
+class _MethodsCard extends StatelessWidget {
+  const _MethodsCard({
     required this.repo,
     required this.progress,
-    required this.course,
-    required this.node,
+    required this.onTap,
   });
 
   final ContentRepo repo;
   final Progress progress;
-  final CourseDef course;
-  final JourneyNode node;
-
-  @override
-  Widget build(BuildContext context) {
-    final open = progress.firstOpenLevel(node);
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: PopIn(
-              from: 0.94,
-              child: GamePanel(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _Kicker(repo.t(course.title), color: GameColors.cyan),
-                    const SizedBox(height: 6),
-                    GameText(
-                      repo.t(node.title),
-                      size: 26,
-                      align: TextAlign.left,
-                    ),
-                    if (node.starsNeeded case final need?) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        AppLocalizations.of(context).gateProgress(
-                          need,
-                          progress.gateStars(node).clamp(0, need),
-                        ),
-                        style: const TextStyle(color: GameColors.textDim),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    for (final (i, id) in node.levels.indexed)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _TaskRow(
-                          index: i + 1,
-                          title: repo.t(repo.levels[id]?.title ?? id),
-                          stars: progress.levelStars[id] ?? 0,
-                          isNext: id == open,
-                          onTap: () => Navigator.of(context).pop(id),
-                        ),
-                      ),
-                    const SizedBox(height: 10),
-                    GameButton(
-                      label: AppLocalizations.of(context).play,
-                      icon: Icons.play_arrow_rounded,
-                      onTap: () => Navigator.of(context).pop(open),
-                      fontSize: 20,
-                      height: 54,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TaskRow extends StatelessWidget {
-  const _TaskRow({
-    required this.index,
-    required this.title,
-    required this.stars,
-    required this.isNext,
-    required this.onTap,
-  });
-
-  final int index;
-  final String title;
-  final int stars;
-  final bool isNext;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      semanticLabel: title,
-      builder: (p, hover) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: ShapeDecoration(
-          shape: chamfer(
-            10,
-            side: BorderSide(
-              color: isNext ? GameColors.yellow : GameColors.panelEdge,
+    final l10n = AppLocalizations.of(context);
+    final count = repo.methods.length;
+    final stars = progress.totalMethodStars;
+    final maxStars = progress.totalMethodMaxStars;
+
+    return Semantics(
+      button: true,
+      label: l10n.methodsCardTitle,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          decoration: ShapeDecoration(
+            shape: chamfer(
+              20,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
+            ),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2A1F5D), Color(0xFF1E1442), Color(0xFF140D30)],
+            ),
+            shadows: [
+              BoxShadow(
+                color: const Color(0xFF7B3CFF).withValues(alpha: 0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipPath(
+            clipper: ShapeBorderClipper(shape: chamfer(20)),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -10,
+                  bottom: -15,
+                  child: Icon(
+                    Icons.menu_book_rounded,
+                    size: 140,
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: ShapeDecoration(
+                          shape: chamfer(12),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.methodsCardTitle.toUpperCase(),
+                              style: const TextStyle(
+                                fontFamily: 'Audiowide',
+                                fontSize: 17,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.methodsCardSubtitle(count),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Color(0xFFFFD54F),
+                            size: 22,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            maxStars > 0 ? '$stars / $maxStars' : '$stars',
+                            style: const TextStyle(
+                              fontFamily: 'Audiowide',
+                              fontSize: 14,
+                              color: Color(0xFFFFD54F),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          color: Colors.black.withValues(alpha: hover ? 0.2 : 0.28),
-        ),
-        child: Row(
-          children: [
-            GameText(
-              '$index',
-              size: 18,
-              color: isNext ? GameColors.yellow : GameColors.textDim,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            for (var s = 0; s < 3; s++)
-              GameStar(fill: s < stars ? 1 : 0, size: 18),
-          ],
         ),
       ),
     );

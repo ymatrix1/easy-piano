@@ -472,4 +472,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get styleGame => 'Videojuego';
+
+  @override
+  String get methodsCardTitle => 'Métodos';
+
+  @override
+  String methodsCardSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count métodos',
+      one: '1 método',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodsLibraryTitle => 'Métodos';
+
+  @override
+  String get methodsFilterAll => 'Todos';
+
+  @override
+  String get methodsFilterBeginner => 'Principiante';
+
+  @override
+  String get methodsFilterEarlyIntermediate => 'Intermedio inicial';
+
+  @override
+  String get methodsFilterIntermediate => 'Intermedio';
+
+  @override
+  String get methodsFilterReading => 'Lectura';
+
+  @override
+  String get methodsFilterRhythm => 'Ritmo';
+
+  @override
+  String get methodsFilterIndependence => 'Independencia';
+
+  @override
+  String methodsBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count libros',
+      one: '1 libro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get methodContinue => 'Continuar';
+
+  @override
+  String methodProtectedNotice(String year) {
+    return 'Protegido en tu país hasta $year';
+  }
 }

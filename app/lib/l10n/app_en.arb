@@ -253,5 +253,39 @@
         "type": "int"
       }
     }
+  },
+  "methodsCardTitle": "Methods",
+  "methodsCardSubtitle": "{count, plural, =1{1 method} other{{count} methods}}",
+  "@methodsCardSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "methodsLibraryTitle": "Methods",
+  "methodsFilterAll": "All",
+  "methodsFilterBeginner": "Beginner",
+  "methodsFilterEarlyIntermediate": "Early intermediate",
+  "methodsFilterIntermediate": "Intermediate",
+  "methodsFilterReading": "Reading",
+  "methodsFilterRhythm": "Rhythm",
+  "methodsFilterIndependence": "Independence",
+  "methodsBookCount": "{count, plural, =1{1 book} other{{count} books}}",
+  "@methodsBookCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "methodContinue": "Continue",
+  "methodProtectedNotice": "Protected in your country until {year}",
+  "@methodProtectedNotice": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
   }
 }
