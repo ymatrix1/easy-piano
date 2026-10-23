@@ -1,10 +1,11 @@
 ---
 # piano-gjig
 title: 'Expressive marks: articulation, slurs, dynamics, pedal, fermata, text, grace notes'
-status: todo
+status: scrapped
 type: task
+priority: normal
 created_at: 2026-10-23T12:20:52Z
-updated_at: 2026-10-23T12:20:52Z
+updated_at: 2026-10-23T12:25:37Z
 parent: piano-bjig
 ---
 
@@ -28,3 +29,7 @@ Lessons that teach phrasing and touch, not only pitch and rhythm; both method bo
 ## Out of Scope
 
 Playback of expression (velocity, pedal in the synth) unless the spec asks; ornaments the sources do not contain.
+
+## Reasons for Scrapping
+
+Duplicates piano-boat (expression marks) and piano-h90n (ties, repeats, key and meter changes), written in PR #76. The Mikrokosmos measurements stay in docs/research/mikrokosmos-import.md and feed those beans.

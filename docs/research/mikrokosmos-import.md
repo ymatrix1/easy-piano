@@ -79,7 +79,7 @@ Counted in the MusicXML of the 66 imported pieces, and compared with the printed
 
 Notes in the XML were counted against the song JSON for all 66 pieces; only two pieces were compared with the printed page, so an OCR pitch error elsewhere is possible. Repeats were expanded after this check (No. 31: 16 to 24 bars, matching the printed `|: :|`; No. 40: 31 to 37; No. 134: 21 to 47).
 
-No. 134 is three separate studies in double notes printed under one number, with repeats in each. It is one very dense lesson; splitting it into three is open (bean piano-gjig).
+No. 134 is three separate studies in double notes printed under one number, with repeats in each. It is one very dense lesson; splitting it into three is open (beans piano-boat and piano-h90n (PR #76)).
 
 ## Similarity
 
@@ -98,11 +98,26 @@ Bartók reuses his own material on purpose: No. 17 is No. 13's melody in contrar
 - The repository and the web build are public worldwide, so the US restriction is only metadata until the app filters by region and the content is kept out of the US build or served per region.
 - Without fingering, the learner gets no finger hints in these pieces.
 
+## Everything still missing
+
+For the Mikrokosmos lessons and the song format they need. Beans marked (#76) are written in PR #76 and not yet on `main`.
+
+| Gap | Size | Bean |
+|---|---|---|
+| Slurs, staccato, accents, tenuto, hairpins, fermata, pedal, dynamic letters (not in the format) | 1630 / 187 / 37 / 15 / 119 / 8 / 52 marks in the 66 pieces | piano-boat (#76) |
+| Real ties in grading, repeat signs and endings in the format, key and meter changes inside a piece | 20 skipped pieces change meter mid-piece | piano-h90n (#76) |
+| Dynamic letters and fingering in the lessons: absent from the dataset, present on the printed pages | all 66 pieces | piano-tpud |
+| Grace notes and ornaments | 4 notes lost in Nos. 62 and 134 | piano-rlp3 |
+| Notes not compared with the printed page | 64 of 66 pieces | piano-15up |
+| No. 134 is three studies in one lesson | 1 piece | piano-8mi4 |
+| The remaining pieces: odd meters (3/2, 6/4, 5/4, 5/8, 7/8, 8/8), triplets, a third voice, OCR bar-length and tie errors, key changes, double accidentals; Volume VI has none | 81 pieces | piano-weqs |
+| Re-arranging courses that worked around one line per hand | Soloist and Chords courses | piano-5zp3 (#76) |
+| Region filter: hide pieces protected in the learner's region (US until 2036-01-01) | all Mikrokosmos songs | piano-7os5 |
+| Methods library screens (card, library, method page) and unnumbered method courses | 5 Mikrokosmos courses | piano-d72v, spec in #75 |
+| Licence of the dataset XML (none stated); which edition `IMSLP465640` is | the whole import | piano-xmga |
+| Difficulty ramp and expected levels for late courses | lint only warns | piano-j1jn (#76) |
+| Remaining keys, augmented triads, transposition, theory quizzes | other courses, not Mikrokosmos | piano-0caa (#76) |
+
 ## Follow-ups
 
-- App: hide `restricted_in` songs in restricted regions (bean piano-7os5).
-- Two voices per hand: done (D34, bean piano-16vk).
-- Expressive marks and grace notes (bean piano-gjig).
-- The remaining 81 pieces: bean piano-weqs (meter changes, odd meters, tuplets, a third voice, hand fixes for OCR errors).
-- Ask the dataset author for an explicit licence (CC-BY-4.0 or CC0) on the MusicXML (bean piano-xmga).
-- Confirm which edition `IMSLP465640` is.
+See [Everything still missing](#everything-still-missing): each gap has a bean.
