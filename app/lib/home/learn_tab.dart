@@ -20,7 +20,7 @@ class LearnTab extends StatefulWidget {
 
   final ContentRepo repo;
   final Progress progress;
-  final Future<void> Function(String levelId) onPlay;
+  final Future<void> Function(String levelId, [int initialStageIndex]) onPlay;
 
   @override
   State<LearnTab> createState() => _LearnTabState();
@@ -34,7 +34,7 @@ class _LearnTabState extends State<LearnTab> {
   static const _tones = [GameTone.blue, GameTone.purple, GameTone.green];
 
   Future<void> _openNode(CourseDef course, JourneyNode node) async {
-    final level = await showModalBottomSheet<String>(
+    final selection = await showModalBottomSheet<(String, int)>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -45,7 +45,9 @@ class _LearnTabState extends State<LearnTab> {
         node: node,
       ),
     );
-    if (level != null) await widget.onPlay(level);
+    if (selection != null) {
+      await widget.onPlay(selection.$1, selection.$2);
+    }
   }
 
   @override
@@ -779,6 +781,12 @@ class _TaskSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final open = progress.firstOpenLevel(node);
+    final targetLevel = repo.levels[open];
+    final stages = targetLevel?.stages ?? const [];
+    final hasWait = stages.any((s) => s.type == 'wait');
+    final playAlongIndex = stages.indexWhere((s) => s.type == 'play_along');
+    final hasBoth = hasWait && playAlongIndex >= 0;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -820,17 +828,46 @@ class _TaskSheet extends StatelessWidget {
                           title: repo.t(repo.levels[id]?.title ?? id),
                           stars: progress.levelStars[id] ?? 0,
                           isNext: id == open,
-                          onTap: () => Navigator.of(context).pop(id),
+                          onTap: () => Navigator.of(context).pop((id, 0)),
                         ),
                       ),
                     const SizedBox(height: 10),
-                    GameButton(
-                      label: AppLocalizations.of(context).play,
-                      icon: Icons.play_arrow_rounded,
-                      onTap: () => Navigator.of(context).pop(open),
-                      fontSize: 20,
-                      height: 54,
-                    ),
+                    if (hasBoth)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GameButton(
+                              label: AppLocalizations.of(context).navPractice,
+                              icon: Icons.fitness_center_rounded,
+                              tone: GameTone.purple,
+                              onTap: () =>
+                                  Navigator.of(context).pop((open, 0)),
+                              fontSize: 17,
+                              height: 54,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GameButton(
+                              label: AppLocalizations.of(context)
+                                  .practicePlayAlong,
+                              icon: Icons.play_arrow_rounded,
+                              onTap: () => Navigator.of(context)
+                                  .pop((open, playAlongIndex)),
+                              fontSize: 17,
+                              height: 54,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      GameButton(
+                        label: AppLocalizations.of(context).play,
+                        icon: Icons.play_arrow_rounded,
+                        onTap: () => Navigator.of(context).pop((open, 0)),
+                        fontSize: 20,
+                        height: 54,
+                      ),
                   ],
                 ),
               ),
