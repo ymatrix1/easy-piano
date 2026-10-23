@@ -412,25 +412,27 @@ class _SectionHeaderState extends State<_SectionHeader> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+              decoration: ShapeDecoration(
+                shape: chamfer(
+                  10,
+                  side: BorderSide(
+                    color: widget.isOpen
+                        ? GameColors.yellow.withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
                 color: _hover
                     ? Colors.white.withValues(alpha: 0.08)
                     : Colors.white.withValues(alpha: 0.03),
-                border: Border.all(
-                  color: widget.isOpen
-                      ? GameColors.yellow.withValues(alpha: 0.35)
-                      : Colors.white.withValues(alpha: 0.08),
-                ),
               ),
               child: Row(
                 children: [
                   Container(
                     width: 4,
                     height: 20,
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: GameColors.yellow,
-                      borderRadius: BorderRadius.circular(2),
+                      shape: chamfer(2),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -457,10 +459,12 @@ class _SectionHeaderState extends State<_SectionHeader> {
                         horizontal: 6,
                         vertical: 3,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white10),
+                        shape: chamfer(
+                          6,
+                          side: const BorderSide(color: Colors.white10),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1119,23 +1123,22 @@ class _SwitchItem extends StatelessWidget {
                   size: 16,
                   color: active
                       ? GameColors.ink
-                      : (hover ? Colors.white : GameColors.textDim),
+                      : (hover
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.95)),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 7),
                 Flexible(
-                  child: Text(
+                  child: GameText(
                     label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Audiowide',
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                      color: active
-                          ? GameColors.ink
-                          : (hover ? Colors.white : GameColors.textDim),
-                    ),
+                    size: 13,
+                    upper: true,
+                    shadow: false,
+                    color: active
+                        ? GameColors.ink
+                        : (hover
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.95)),
                   ),
                 ),
                 if (badge != null) ...[

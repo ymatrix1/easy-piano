@@ -4,8 +4,8 @@ import 'package:easy_piano/content/content_repo.dart';
 import 'package:easy_piano/home/home_page.dart';
 import 'package:easy_piano/input/midi_input.dart';
 import 'package:easy_piano/l10n/app_localizations.dart';
-import 'package:easy_piano/methods/method_page.dart';
 import 'package:easy_piano/methods/methods_library_page.dart';
+import 'package:easy_piano/ui/game/game_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -43,11 +43,8 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 2));
 
-    // In Courses view: Methods are separate from the course trail (no METHODS card in trail).
-    expect(find.text('METHODS'), findsNothing);
-
     // Switch to Methods using the top switcher.
-    final methodsSwitchFinder = find.text('Methods');
+    final methodsSwitchFinder = find.text('METHODS');
     expect(methodsSwitchFinder, findsOneWidget);
     await tester.tap(methodsSwitchFinder);
     await tester.pump();
@@ -64,43 +61,30 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('MIKROKOSMOS'), findsOneWidget);
 
-    // Tap Mikrokosmos method card to open MethodPage.
+    // Tap Mikrokosmos method card to expand inline like a course module.
     await tester.tap(find.text('MIKROKOSMOS'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodPage), findsOneWidget);
 
-    // MethodPage has description, Continue button, and book sections.
-    expect(find.textContaining('153 progressive piano pieces'), findsOneWidget);
-    expect(find.text('CONTINUE'), findsOneWidget);
+    // Mikrokosmos expands inline to show its books and pieces.
     expect(find.text('MIKROKOSMOS I'), findsOneWidget);
-
-    // First piece is visible in the continue banner and the first open book.
-    expect(find.text('Six Unison Melodies, No. 1'), findsNWidgets(2));
+    expect(find.text('Six Unison Melodies, No. 1'), findsOneWidget);
 
     // Tapping a piece opens TaskSheet.
-    await tester.tap(find.text('Six Unison Melodies, No. 1').last);
+    await tester.tap(find.text('Six Unison Melodies, No. 1'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('PRACTICE'), findsOneWidget);
+    expect(find.widgetWithText(GameButton, 'PRACTICE'), findsOneWidget);
     expect(find.text('PLAY ALONG'), findsOneWidget);
 
     // Close bottom sheet.
-    Navigator.of(tester.element(find.text('PRACTICE'))).pop();
+    Navigator.of(tester.element(find.text('PLAY ALONG'))).pop();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('PRACTICE'), findsNothing);
-
-    // Back from MethodPage returns to LearnTab on Methods view.
-    final backButtons = find.byType(IconButton);
-    await tester.tap(backButtons.first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-    expect(find.byType(MethodPage), findsNothing);
-    expect(find.byType(MethodsCatalogView), findsOneWidget);
+    expect(find.text('PLAY ALONG'), findsNothing);
 
     // Switch back to Courses using the top switcher.
-    final topCoursesSwitcher = find.text('Courses');
+    final topCoursesSwitcher = find.text('COURSES');
     expect(topCoursesSwitcher, findsOneWidget);
     await tester.tap(topCoursesSwitcher);
     await tester.pump();
@@ -108,7 +92,7 @@ void main() {
     expect(find.byType(MethodsCatalogView), findsNothing);
 
     // Switch to Methods using the top switcher.
-    final topMethodsSwitcher = find.text('Methods');
+    final topMethodsSwitcher = find.text('METHODS');
     expect(topMethodsSwitcher, findsOneWidget);
     await tester.tap(topMethodsSwitcher);
     await tester.pump();
