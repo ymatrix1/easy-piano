@@ -26,10 +26,12 @@ abstract final class GameColors {
 enum GameTone {
   /// Primary call to action (signal yellow).
   gold(Color(0xFFFFE15A), Color(0xFFFFB800), GameColors.ink),
-  green(Color(0xFF5CF08F), Color(0xFF18B055), GameColors.ink),
+  green(Color(0xFF22A055), Color(0xFF0D5E30), Colors.white),
   blue(Color(0xFF4FA8FF), Color(0xFF1D4FD6), Colors.white),
   purple(Color(0xFFB277FF), Color(0xFF5B23C9), Colors.white),
   red(Color(0xFFFF6B83), Color(0xFFC81E45), Colors.white),
+  cyan(Color(0xFF06B6D4), Color(0xFF0E7490), Colors.white),
+  orange(Color(0xFFFF8A3D), Color(0xFFC2410C), Colors.white),
   grey(Color(0xFF4A4770), Color(0xFF2A2850), Color(0xFF9C99C8)),
 
   /// Dark glass, for secondary actions.

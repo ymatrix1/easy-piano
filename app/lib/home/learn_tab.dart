@@ -31,7 +31,14 @@ class _LearnTabState extends State<LearnTab> {
     if (widget.progress.next case (final c, _)) c.id,
   };
 
-  static const _tones = [GameTone.blue, GameTone.purple, GameTone.green];
+  static const _tones = [
+    GameTone.blue,
+    GameTone.purple,
+    GameTone.orange,
+    GameTone.green,
+    GameTone.cyan,
+    GameTone.red,
+  ];
 
   Future<void> _openNode(CourseDef course, JourneyNode node) async {
     final level = await showModalBottomSheet<String>(
