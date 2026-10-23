@@ -312,6 +312,50 @@ class StaffPainter extends CustomPainter {
     return nominalBx;
   }
 
+  /// Spacing between notes and accidentals: ensures accidentals don't collide
+  /// with preceding noteheads/stems on tight rhythms (e.g. 8th notes).
+  static double noteX({
+    required int index,
+    required List<StaffNote> notes,
+    required double anchorX,
+    required double nowBeat,
+    required double pixelsPerBeat,
+    required double space,
+  }) {
+    final n = notes[index];
+    final nominalX = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
+    if (!_isSharp[n.pitch % 12]) return nominalX;
+
+    // Find preceding note on the same staff/voice region within 2 beats.
+    final onBass = n.leftHand;
+    double? prevRight;
+    for (var i = index - 1; i >= 0; i--) {
+      final prev = notes[i];
+      if (n.beat - prev.beat > 2.0) break;
+      if (prev.isSpacer || prev.leftHand != onBass) continue;
+      final px = anchorX + (prev.beat - nowBeat) * pixelsPerBeat;
+      final pWidth = prev.isRest
+          ? space * 1.0
+          : (_isDotted(prev.beats)
+                ? space * 1.95
+                : (prev.beats >= 4 ? space * 1.69 : space * 1.18));
+      final pr = px + pWidth;
+      if (prevRight == null || pr > prevRight) {
+        prevRight = pr;
+      }
+    }
+
+    if (prevRight != null) {
+      // Accidental is drawn at x - space * 1.4. Keep at least space * 0.4 clearance.
+      final minX = prevRight + space * 1.8;
+      if (nominalX < minX) {
+        return minX;
+      }
+    }
+
+    return nominalX;
+  }
+
   /// Grand staff: spaces between the treble bottom line and the bass top
   /// line (reference: about 2; 3 leaves room for middle-C ledgers).
   static const staffGap = 3.0;
@@ -370,9 +414,11 @@ class StaffPainter extends CustomPainter {
     final staffTop = _hasTreble ? trebleBottomY - space * 4 : bassTopY;
     final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
     final sys = systemLayout(staves, space);
+    // Vertical band padding: includes Middle C and standard ledger notes inside the band
+    final vPad = space * 1.5;
     final staffSpans = [
-      if (_hasTreble) (trebleBottomY - space * 4, trebleBottomY),
-      if (_hasBass) (bassTopY, bassTopY + space * 4),
+      if (_hasTreble) (trebleBottomY - space * 4 - vPad, trebleBottomY + vPad),
+      if (_hasBass) (bassTopY - vPad, bassTopY + space * 4 + vPad),
     ];
 
     // Band, staff lines, clefs and brace.
@@ -583,7 +629,14 @@ class StaffPainter extends CustomPainter {
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
-      final x = anchorX + (n.beat - now) * pixelsPerBeat;
+      final x = noteX(
+        index: i,
+        notes: notes,
+        anchorX: anchorX,
+        nowBeat: now,
+        pixelsPerBeat: pixelsPerBeat,
+        space: space,
+      );
       lastX = x;
       if (x + space * 2 < 0) continue; // off screen; the cover hides the rest
       if (n.isSpacer) continue;
@@ -702,7 +755,7 @@ class StaffPainter extends CustomPainter {
           );
         }
       }
-      if (n.finger != null) {
+      if (n.finger != null && _shouldDrawFinger(i)) {
         _drawFinger(
           canvas,
           i,
@@ -788,6 +841,32 @@ class StaffPainter extends CustomPainter {
 
   static bool _isDotted(double beats) =>
       const [0.75, 1.5, 3.0, 6.0].any((d) => (beats - d).abs() < 1e-6);
+
+  /// Decides if fingering text should be rendered for note at [index].
+  /// Shows fingering if it has an active badge, if it's the first note for that hand,
+  /// if the finger changed from the previous note played by the same hand,
+  /// or if there is a hand position leap / large rest gap.
+  bool _shouldDrawFinger(int index) {
+    final n = notes[index];
+    if (n.finger == null) return false;
+    if (badgeColorOf?.call(index) != null) return true;
+
+    // Look for previous playable note for the same hand
+    StaffNote? prev;
+    for (var k = index - 1; k >= 0; k--) {
+      final cand = notes[k];
+      if (!cand.isSpacer && !cand.isRest && cand.leftHand == n.leftHand) {
+        prev = cand;
+        break;
+      }
+    }
+
+    if (prev == null) return true; // First note of this hand
+    if (prev.finger != n.finger) return true; // Finger changed
+    if ((n.pitch - prev.pitch).abs() >= 5) return true; // Hand position shifted
+    if (n.beat - prev.beat >= 4.0) return true; // New phrase after gap
+    return false;
+  }
 
   void _drawFinger(
     Canvas canvas,

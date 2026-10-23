@@ -220,4 +220,34 @@ void main() {
       expect(bx, greaterThan(prevRight));
     });
   });
+
+  group('StaffPainter noteX accidental spacing', () {
+    const space = 8.0;
+    const anchorX = 100.0;
+    const nowBeat = 0.0;
+    const ppb = 50.0; // tight spacing
+
+    test('accidental shifts note right if tight to preceding note', () {
+      final notes = [
+        const StaffNote(60, 0.0, 0.25), // C4 ending around beat 0.25
+        const StaffNote(
+          66,
+          0.25,
+          0.25,
+        ), // F#4 on beat 0.25 (nominal 112.5 < minX 123.84)
+      ];
+      final x = StaffPainter.noteX(
+        index: 1,
+        notes: notes,
+        anchorX: anchorX,
+        nowBeat: nowBeat,
+        pixelsPerBeat: ppb,
+        space: space,
+      );
+      final nominalX = anchorX + 0.25 * ppb;
+      // Because nominalX puts F# too close to C4 for the sharp sign (at x - space * 1.4),
+      // noteX pushes it right
+      expect(x, greaterThan(nominalX));
+    });
+  });
 }
