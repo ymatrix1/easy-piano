@@ -1,0 +1,182 @@
+{
+  "id": "mikrokosmos-069",
+  "title": "Mikrokosmos 69: Chord Study",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/69.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 168,
+  "time": "6/8",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:4. r:4 r:8",
+      "LH": "r:4. F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "r:2.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "r:4 r:8 C5:4.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "G4:4. F4:4.",
+      "LH": "G2B2D3:4 r:8 A2C3E3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "G4:2. {tie}",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "G4:2.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "r:4 r:8 C5:4.",
+      "LH": "G2B2D3:4 r:8 A2C3E3:8 G2B2D3:8 C3E3:8"
+    },
+    {
+      "RH": "F5:4. E5:4.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "D5:2. {tie}",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "D5:2.",
+      "LH": "G2B2D3:4 r:8 A2C3E3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "r:4 r:8 F5:4.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "D5:4. G5:4.",
+      "LH": "B2D3F3:4. C3E3G3:8 B2D3F3:8 A2C3E3:8"
+    },
+    {
+      "RH": "F5:2. {tie}",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "F5:2.",
+      "LH": "G2B2D3:4 r:8 A2C3E3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "r:4 r:8 G4:4.",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "F4:4. Bb4:4.",
+      "LH": "B2D3F3:4. C3E3G3:8 B2D3F3:8 A2C3E3:8"
+    },
+    {
+      "RH": "G4:2. {tie}",
+      "LH": "G2B2D3:4 r:8 F2A2C3:8 G2B2D3:8 F2A2C3:8"
+    },
+    {
+      "RH": "G4:2. {tie}",
+      "LH": "G2B2D3:4 r:8 A2C3E3:8 G2B2D3:8 A2C3E3:8"
+    },
+    {
+      "RH": "G4:4. r:4 r:8",
+      "LH": "G2B2D3:4 r:8 F3A3C4:8 G3B3D4:8 F3A3C4:8"
+    },
+    {
+      "RH": "r:4 r:8 F4A4C5:8 G4B4D5:8 F4A4C5:8",
+      "LH": "G3B3D4:4 r:8 r:4 r:8"
+    },
+    {
+      "RH": "G4B4D5:4 r:8 F4A4C5:8 G4B4D5:8 F4A4C5:8",
+      "LH": "r:4 r:8 C3:4."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "G2:4. F2:4."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 F4A4C5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "G2:2. {tie}"
+    },
+    {
+      "RH": "B4D5F5:4. C5E5G5:8 B4D5F5:8 A4C5E5:8",
+      "LH": "G2:2."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "r:4 r:8 C3:4.",
+      "LH2": "s:4. r:4 s:8"
+    },
+    {
+      "RH": "G4B4D5:4 r:8 F4A4C5:8 G4B4D5:8 F4A4C5:8",
+      "LH": "D3:4. G3:4."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 B4D5F5:8 C5E5G5:8",
+      "LH": "D3:2. {tie}"
+    },
+    {
+      "RH": "D5F5A5:4. C5E5G5:8 B4D5F5:8 A4C5E5:8",
+      "LH": "D3:2."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "r:4 r:8 C3:4."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "F3:4. C3:4."
+    },
+    {
+      "RH": "F4A4C5:8 E4G4B4:8 F4A4C5:8 G4B4D5:8 F4A4C5:8 E4G4B4:8",
+      "LH": "Eb3:2. {tie}"
+    },
+    {
+      "RH": "F4A4C5:4 r:8 G4B4D5:8 F4A4C5:8 G4B4D5:8",
+      "LH": "Eb3:2. {tie}"
+    },
+    {
+      "RH": "E4G4B4:4 r:8 F4A4C5:8 E4G4B4:8 D4F4A4:8",
+      "LH": "Eb3:4 r:8 F2:4."
+    },
+    {
+      "RH": "C4E4G4:8 B3D4F4:8 C4E4G4:8 D4F4A4:8 E4G4B4:8 F4A4C5:8",
+      "LH": "Bb2:4. A2:4."
+    },
+    {
+      "RH": "G4B4D5:4 r:8 F4A4C5:8 G4B4D5:8 A4C5E5:8",
+      "LH": "G2:2. {tie}"
+    },
+    {
+      "RH": "G4B4D5:4 r:8 A4C5E5:8 G4B4D5:8 F4A4C5:8",
+      "LH": "G2:4 r:8 F3A3C4:8 G3B3D4:8 A3C4E4:8"
+    },
+    {
+      "RH": "G4B4D5:4 r:8 C5E5G5:4 r:8",
+      "LH": "G3B3D4:4 r:8 B2D3F3:8 C3E3G3:8 D3F3A3:8"
+    },
+    {
+      "RH": "G4B4D5:4 r:8 D4F4A4:4 r:8",
+      "LH": "E3G3B3:4 r:8 F3A3C4:4 r:8"
+    },
+    {
+      "RH": "G4:2. {tie}",
+      "LH": "G3B3D4:2. {tie}"
+    },
+    {
+      "RH": "G4:4. r:4.",
+      "LH": "G3B3D4:4. r:4."
+    }
+  ]
+}

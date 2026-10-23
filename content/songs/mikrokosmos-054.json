@@ -1,0 +1,65 @@
+{
+  "id": "mikrokosmos-054",
+  "title": "Mikrokosmos 54: Chromatic",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/54.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 288,
+  "time": "6/8",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:8 F4:8 F#4:8 G4:8 F#4:8 F4:8",
+      "LH": "E3:8 F3:8 F#3:8 G3:8 F#3:8 F3:8"
+    },
+    {
+      "RH": "D#4:8 G4:8 G#4:8 G4:8 F4:8 F4:8",
+      "LH": "F#3:8 G3:8 G#3:8 G3:8 F#3:8 F3:8"
+    },
+    {
+      "RH": "E4:8 r:8 r:8 E4:8 r:8 r:8",
+      "LH": "r:4 r:8 E3:8 r:8 r:8"
+    },
+    {
+      "RH": "G4:8 G#4:8 A4:8 A#4:8 A4:8 G#4:8",
+      "LH": "G3:8 G#3:8 A3:8 A#3:8 A3:8 G#3:8"
+    },
+    {
+      "RH": "A4:8 A#4:8 B4:8 A#4:8 A4:8 G#4:8",
+      "LH": "A3:8 A#3:8 B3:8 A#3:8 A3:8 G#3:8"
+    },
+    {
+      "RH": "r:4 r:8 G4:8 r:8 r:8",
+      "LH": "G3:8 r:8 r:8 G3:8 r:8 r:8"
+    },
+    {
+      "RH": "G#4:8 A4:8 A#4:8 B4:8 r:8 r:8",
+      "LH": "r:4 r:8 G3:8 G#3:8 A3:8"
+    },
+    {
+      "RH": "F#4:8 G4:8 G#4:8 A4:8 r:8 r:8",
+      "LH": "A#3:8 r:8 r:8 C#3:8 D3:8 D#3:8"
+    },
+    {
+      "RH": "E4:8 F4:8 F#4:8 G4:8 F#4:8 F4:8",
+      "LH": "E3:8 D#3:8 D3:8 C#3:8 D3:8 D#3:8"
+    },
+    {
+      "RH": "F#4:8 G4:8 G#4:8 G4:8 F#4:8 F4:8",
+      "LH": "D3:8 C#3:8 C3:8 C#3:8 D3:8 D#3:8"
+    },
+    {
+      "RH": "r:4 r:8 E4:8 r:8 r:8",
+      "LH": "E3:8 r:8 r:8 E3:8 r:8 r:8"
+    }
+  ]
+}

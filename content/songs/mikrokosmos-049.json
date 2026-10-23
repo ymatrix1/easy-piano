@@ -1,0 +1,61 @@
+{
+  "id": "mikrokosmos-049",
+  "title": "Mikrokosmos 49: Crescendo - Diminuendo",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/49.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 150,
+  "time": "6/8",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "G4:8 A4:8 B4:8 C5:8 r:8 r:8",
+      "LH": "r:4 r:8 C3:8 D3:8 E3:8"
+    },
+    {
+      "RH": "A4:8 B4:8 C#5:8 D5:8 r:8 r:8",
+      "LH": "F3:8 r:8 r:8 D3:8 E3:8 F#3:8"
+    },
+    {
+      "RH": "C5:8 B4:8 A4:8 G4:8 C5:8 A4:8",
+      "LH": "G3:4 D3:8 E3:8 C3:8 F#3:8"
+    },
+    {
+      "RH": "B4:8 G4:8 C5:8 A4:8 D5:8 B4:8",
+      "LH": "D3:8 G3:8 E3:8 F#3:8 C3:8 D3:8"
+    },
+    {
+      "RH": "G4:8 r:8 r:8 r:4 r:8",
+      "LH": "r:8 E3:8 F#3:8 G3:8 r:8 r:8"
+    },
+    {
+      "RH": "D5:8 C#5:8 B4:8 A4:8 r:8 r:8",
+      "LH": "r:4 r:8 G3:8 F#3:8 E3:8"
+    },
+    {
+      "RH": "C5:8 B4:8 A4:8 G4:8 r:8 r:8",
+      "LH": "D3:8 r:8 r:8 F3:8 E3:8 D3:8"
+    },
+    {
+      "RH": "Bb4:8 A4:8 G4:8 A4:8 C5:8 B4:8",
+      "LH": "C3:4 E3:8 F3:8 D3:8 G3:8"
+    },
+    {
+      "RH": "C5:8 G4:8 Bb4:8 A4:8 D5:8 B4:8",
+      "LH": "r:8 E3:8 C3:8 r:8 F3:8 D3:8"
+    },
+    {
+      "RH": "C5:8 r:8 r:8 r:4 r:8",
+      "LH": "r:8 G3:8 E3:8 C3:8 r:8 r:8"
+    }
+  ]
+}

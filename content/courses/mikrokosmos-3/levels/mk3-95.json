@@ -1,0 +1,25 @@
+{
+  "id": "mk3-95",
+  "title": "str:node.mk3.95",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "mikrokosmos-095",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "mikrokosmos-095",
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "mikrokosmos-095",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

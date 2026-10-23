@@ -1,0 +1,89 @@
+{
+  "id": "mikrokosmos-079",
+  "title": "Mikrokosmos 79: Hommage à J. S. B.",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/79.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 69,
+  "time": "3/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "B4:16 G#4:16 E4:16 G#4:16 B4:4 {tie} B4:16 G#4:16 E4:16 G#4:16",
+      "LH": "E3:4 {tie} E3:16 G#3:16 B3:16 G#3:16 E3:16 G#3:16 B3:16 G#3:16"
+    },
+    {
+      "RH": "B4:16 A4:16 E4:16 A4:16 B4:4 {tie} B4:16 A4:16 E4:16 A4:16",
+      "LH": "E3:4 {tie} E3:16 F3:16 B3:16 F3:16 E3:16 F3:16 B3:16 F3:16"
+    },
+    {
+      "RH": "B4:16 F4:16 E4:16 F4:16 B4:4 {tie} B4:16 F4:16 E4:16 F4:16",
+      "LH": "E3:4 E3:16 A3:16 B3:16 A3:16 E3:16 A3:16 B3:16 A3:16"
+    },
+    {
+      "RH": "B4:16 G#4:16 E4:16 G#4:16 B4:4 {tie} B4:16 G#4:16 E4:16 G#4:16",
+      "LH": "E3:4 {tie} E3:16 G#3:16 B3:16 G#3:16 E3:16 G#3:16 B3:16 G#3:16"
+    },
+    {
+      "RH": "B4:16 G4:16 E4:16 G4:16 B4:4 {tie} B4:16 G4:16 E4:16 G4:16",
+      "LH": "E3:4 {tie} E3:16 G3:16 B3:16 G3:16 E3:16 G3:16 B3:16 G3:16"
+    },
+    {
+      "RH": "A4:16 G4:16 E4:16 G4:16 A4:4 {tie} A4:16 G4:16 E4:16 G4:16",
+      "LH": "E3:4 {tie} E3:16 G3:16 A3:16 G3:16 E3:16 G3:16 A3:16 G3:16"
+    },
+    {
+      "RH": "A4:16 F4:16 E4:16 F4:16 A4:4 {tie} A4:16 F4:16 E4:16 F4:16",
+      "LH": "E3:4 {tie} E3:16 F3:16 A3:16 F3:16 E3:16 F3:16 A3:16 F3:16"
+    },
+    {
+      "RH": "G4:16 F4:16 E4:16 F4:16 G4:4 {tie} G4:16 F4:16 E4:16 F4:16",
+      "LH": "E3:4 {tie} E3:16 F3:16 G3:16 F3:16 E3:16 F3:16 G3:16 F3:16"
+    },
+    {
+      "RH": "G4:16 Bb4:16 G4:16 E4:16 Bb4:4 {tie} Bb4:16 G4:16 E4:16 A4:16",
+      "LH": "E3:8. F#3:16 G3:16 Bb3:16 G3:16 E3:16 Bb3:4 {tie}"
+    },
+    {
+      "RH": "Bb4:4 {tie} Bb4:16 G4:16 F#4:16 A4:16 A#4:4 {tie}",
+      "LH": "Bb3:16 G3:16 F3:16 A3:16 Bb3:4 {tie} Bb3:16 Ab3:16 G3:16 A3:16"
+    },
+    {
+      "RH": "A#4:16 A4:16 G#4:16 A4:16 A#4:8. A4:16 G#4:16 A4:16 A#4:8 {tie}",
+      "LH": "A#3:8. A3:16 G#3:16 A3:16 A#3:8 A#3:16 A3:16 G#3:16 A3:16"
+    },
+    {
+      "RH": "A#4:16 A4:16 G#4:16 G4:16 A#4:8. A4:16 G#4:16 G4:16 B4:8 {tie}",
+      "LH": "A#3:8. A3:16 G#3:16 G3:16 A#3:8. A3:16 G#3:16 G3:16"
+    },
+    {
+      "RH": "B4:16 A#4:16 E4:16 A#4:16 B4:4 {tie} B4:16 G#4:16 E4:16 G#4:16",
+      "LH": "B3:4 {tie} B3:16 A3:16 E3:16 A3:16 B3:4 {tie}"
+    },
+    {
+      "RH": "B4:4 {tie} B4:16 F#4:16 E4:16 F#4:16 B4:4 {tie}",
+      "LH": "B3:16 G3:16 E3:16 G3:16 B3:4 {tie} B3:16 F3:16 E3:16 F3:16"
+    },
+    {
+      "RH": "B4:16 G#4:16 E4:16 B4:16 G#4:16 E4:16 B4:16 G#4:16 E4:16 B4:16 G#4:16 E4:16",
+      "LH": "B3:8. G3:16 E3:16 B3:16 G3:16 E3:16 B3:16 G3:16 E3:16 B3:16"
+    },
+    {
+      "RH": "r:8 B4:16 G#4:16 r:16 B4:16 G#4:16 r:16 B4:16 G#4:16 r:16 B4:16",
+      "LH": "G3:16 E3:16 G3:16 E3:16 G3:16 E3:16 r:16 G3:16 E3:16 r:16 G3:16 E3:16"
+    },
+    {
+      "RH": "G#4:2.",
+      "LH": "E3B3:2."
+    }
+  ]
+}

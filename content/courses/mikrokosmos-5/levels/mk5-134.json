@@ -1,0 +1,25 @@
+{
+  "id": "mk5-134",
+  "title": "str:node.mk5.134",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "mikrokosmos-134",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "mikrokosmos-134",
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "mikrokosmos-134",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

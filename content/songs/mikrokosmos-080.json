@@ -1,0 +1,109 @@
+{
+  "id": "mikrokosmos-080",
+  "title": "Mikrokosmos 80: Hommage à R. Sch.",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/80.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 72,
+  "time": "2/4",
+  "key": "Cm",
+  "bars": [
+    {
+      "RH": "G4:8. B4:16 C5:8. D5:16",
+      "LH": "B3:8 D4:8 E4:8 F4:8"
+    },
+    {
+      "RH": "Eb5:8. C5:16 Bb4:8. Ab4:16",
+      "LH": "F#4:8 Eb4:8 Db4:8 C4:8"
+    },
+    {
+      "RH": "G4:2",
+      "LH": "B3:8 D4:8 E4:8 F4:8"
+    },
+    {
+      "RH": "C5:8 r:8 r:4",
+      "LH": "F#4:8 Eb4:8 Db4:8 C4:8"
+    },
+    {
+      "RH": "G4:8. B4:16 C5:8. D5:16",
+      "LH": "B3:8 D4:8 E4:8 F4:8"
+    },
+    {
+      "RH": "Eb5:8. C5:16 Bb4:8. Ab4:16",
+      "LH": "F#4:8 Eb4:8 Db4:8 C4:8"
+    },
+    {
+      "RH": "G4:2",
+      "LH": "B3:8 D4:8 E4:8 F4:8"
+    },
+    {
+      "RH": "G4:8 r:8 r:4",
+      "LH": "F#4:8 Eb4:8 C4:8 D4:8"
+    },
+    {
+      "RH": "F#5:8 Eb5:8 Db5:8 C5:8",
+      "LH": "Eb4:8. C4:16 Bb3:8. Ab3:16"
+    },
+    {
+      "RH": "B4:8 D5:8 E5:8 F5:8",
+      "LH": "G3:8. B3:16 C#4:8. D4:16"
+    },
+    {
+      "RH": "F#5:8 Eb5:8 Db5:8 C5:8",
+      "LH": "Eb4:2"
+    },
+    {
+      "RH": "B4:8 D5:8 E5:8 F5:8",
+      "LH": "Ab3:8 r:8 r:4"
+    },
+    {
+      "RH": "F#5:8 Eb5:8 Db5:8 C5:8",
+      "LH": "A3:8. C4:16 D4:8. E4:16"
+    },
+    {
+      "RH": "B4:8 D5:8 E5:8 F5:8",
+      "LH": "F4:8. Bb3:16 B3:8. D4:16"
+    },
+    {
+      "RH": "C5:2 {tie}",
+      "LH": "Eb4:8. C4:16 A3:8. Bb3:16"
+    },
+    {
+      "RH": "C5:8 G5:16 Eb5:8. B4:8",
+      "LH": "Ab3D4:2"
+    },
+    {
+      "RH": "C5:2",
+      "LH": "Ab3:8. Eb4:16 A3:8 B3:8"
+    },
+    {
+      "RH": "C5:8. B4:16 F5:8 F#5:8",
+      "LH": "Ab3:2 {tie}"
+    },
+    {
+      "RH": "C5:2 {tie}",
+      "LH": "Ab3:8 E4:8 Bb3:8 A3:8"
+    },
+    {
+      "RH": "C5:8 F5:8 Eb5:8 Bb4:8",
+      "LH": "Ab3:4 G3:4"
+    },
+    {
+      "RH": "C5:2 {tie}",
+      "LH": "C4:2 {tie}"
+    },
+    {
+      "RH": "C5:2",
+      "LH": "C4:2"
+    }
+  ]
+}

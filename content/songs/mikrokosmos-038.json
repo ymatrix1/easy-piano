@@ -1,0 +1,53 @@
+{
+  "id": "mikrokosmos-038",
+  "title": "Mikrokosmos 38: Staccato and Legato (1)",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/38.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 96,
+  "time": "3/4",
+  "key": "D",
+  "bars": [
+    {
+      "RH": "D4:8 E4:8 F#4:4 F#4:4",
+      "LH": "F#3:8 E3:8 D3:4 D3:4"
+    },
+    {
+      "RH": "F#4:4 F#4:4 F#4:8 E4:8",
+      "LH": "D3:4 D3:4 D3:8 E3:8"
+    },
+    {
+      "RH": "D4:4 E4:8 F#4:8 G4:4",
+      "LH": "F#3:4 G3:8 F#3:8 E3:4"
+    },
+    {
+      "RH": "F#4:8 G4:8 A4:2",
+      "LH": "D3:8 E3:8 F#3:2"
+    },
+    {
+      "RH": "G4:8 F#4:8 E4:4 E4:4",
+      "LH": "E3:8 F#3:8 G3:4 G3:4"
+    },
+    {
+      "RH": "D4:8 E4:8 F#4:4 E4:8 F#4:8",
+      "LH": "F#3:8 E3:8 D3:4 C#3:8 D3:8"
+    },
+    {
+      "RH": "G4:8 A4:8 G4:8 F#4:8 E4:4",
+      "LH": "E3:4 E3:8 D3:8 C#3:4"
+    },
+    {
+      "RH": "D4:2.",
+      "LH": "D3:2."
+    }
+  ]
+}

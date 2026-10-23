@@ -147,6 +147,14 @@ flutter:
     - assets/content/courses/advanced-1/levels/
     - assets/content/courses/mikrokosmos-1/
     - assets/content/courses/mikrokosmos-1/levels/
+    - assets/content/courses/mikrokosmos-2/
+    - assets/content/courses/mikrokosmos-2/levels/
+    - assets/content/courses/mikrokosmos-3/
+    - assets/content/courses/mikrokosmos-3/levels/
+    - assets/content/courses/mikrokosmos-4/
+    - assets/content/courses/mikrokosmos-4/levels/
+    - assets/content/courses/mikrokosmos-5/
+    - assets/content/courses/mikrokosmos-5/levels/
     - assets/content/songs/
     - assets/content/scenes/
     - assets/content/strings/
