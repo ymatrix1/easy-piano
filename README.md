@@ -75,7 +75,7 @@ flutter pub get
 flutter build windows --release
 ```
 
-The executable and runtime files are in `app/build/windows/x64/runner/Release/`. CI packages that whole directory as `easy-piano-windows-x64.zip` on pull requests and pushes to `main`. Pushing a `v*` tag also publishes the ZIP as a GitHub Release asset. See [Windows build and release](docs/ARCHITECTURE.md#build-windows).
+The executable and runtime files are in `app/build/windows/x64/runner/Release/`. CI packages the folder as `easy-piano-windows-x64.zip` and creates an Enigma Virtual Box portable single-file executable on pull requests and pushes to `main`. Version tags publish both Windows assets with the web build and Android APK. The portable executable is unsigned, may trigger SmartScreen or antivirus warnings, and requires the Microsoft Visual C++ v14 Redistributable (x64). The ZIP remains available as a fallback. See [Windows build and release](docs/ARCHITECTURE.md#build-windows).
 
 ## Status
 
@@ -93,7 +93,7 @@ Ideas, bug reports and pull requests are welcome. Before you start:
 
 ## Releases
 
-Push a version tag such as `v1.2.3` to build the web app, Windows x64 app bundle, and Android arm64 APK, then publish all three with generated release notes on GitHub Releases. The workflow can also be run manually for an existing version tag. It needs the repository's default `GITHUB_TOKEN` with Actions write access to releases; it does not need Cloudflare secrets. The Android APK uses the project's current debug signing key, so it is for sideloading and is not suitable for Google Play or upgrades signed with another key. Production hosting continues to deploy from `main` through `deploy-web.yml`.
+Push a version tag such as `v1.2.3` to build the web app, Windows x64 ZIP and portable single-file executable, and Android arm64 APK, then publish them with generated release notes on GitHub Releases. The workflow can also be run manually for an existing version tag. It needs the repository's default `GITHUB_TOKEN` with Actions write access to releases; it does not need Cloudflare secrets. The Windows portable executable embeds the Flutter runtime bundle with Enigma Virtual Box; it remains unsigned and may be flagged by SmartScreen or antivirus software. The Android APK uses the project's current debug signing key, so it is for sideloading and is not suitable for Google Play or upgrades signed with another key. Production hosting continues to deploy from `main` through `deploy-web.yml`.
 
 ## License
 
