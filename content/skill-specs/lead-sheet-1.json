@@ -1,0 +1,304 @@
+{
+  "course": "lead-sheet-1",
+  "nodes": [
+    {
+      "node": "lead-sheet",
+      "new_skill": "Read a lead sheet: the melody with a chord symbol above each bar; the left hand plays the chord root.",
+      "required": [
+        {
+          "pitch": "G2",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "c-g7",
+      "new_skill": "Left hand chords: C (C-E-G) and G7 (B-F-G), one per bar.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "yankee-doodle",
+      "new_skill": "First song from chord symbols: melody over C and G7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "f-chord",
+      "new_skill": "Left hand F chord (C-F-A): the I, IV and V7 chords.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "beats",
+      "new_skill": "Play the chord on beats 1 and 3, then on every beat.",
+      "required": [
+        {
+          "rhythm": "2",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "4",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "this-old-man",
+      "new_skill": "A song with C, F and G7 chords on beats 1 and 3.",
+      "required": [
+        {
+          "rhythm": "2",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: lead sheets with C, F and G7.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        9,
+        16
+      ],
+      "bpm": [
+        92,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "am-chord",
+      "new_skill": "Left hand A minor chord (C-E-A) in the loop C, Am, F, G7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "pickups",
+      "new_skill": "Melody that starts on a pickup, with the chords changing under it.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "saints",
+      "new_skill": "A classic pickup song with the chord under every bar.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "mid-bar",
+      "new_skill": "Change chord in the middle of a bar: two chords per bar.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: pickups, Am and mid-bar changes.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        72,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: a 3/4 song with a pickup and chords changing, even mid-bar.",
+      "required": [
+        {
+          "rhythm": "2.",
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "3/4"
+    }
+  ]
+}

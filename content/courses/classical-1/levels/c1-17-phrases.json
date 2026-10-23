@@ -1,0 +1,27 @@
+{
+  "id": "c1-17-phrases",
+  "title": "str:level.c1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "c1-phrase-etude",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-phrase-etude",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-phrase-etude",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

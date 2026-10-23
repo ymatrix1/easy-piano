@@ -5,7 +5,7 @@ from pathlib import Path
 from melody_model import tokenizer as tk
 from melody_model.difficulty import level_of, patterns_of, pick_patterns
 from melody_model.labels import plan
-from melody_model.notation import parse_hand
+from melody_model.notation import Unsupported, parse_hand
 from melody_model.samples import make_sample
 from melody_model.simplify import coarsen, simplify
 
@@ -40,6 +40,10 @@ def test_patterns_found():
 
 def test_every_found_pattern_encodes():
     for f in (ROOT / "content" / "songs").glob("*.json"):
+        try:
+            tk.encode_song(song(f.stem))
+        except Unsupported:
+            continue  # outside the model's vocabulary (triplets, 6/4, > 64 bars)
         for p in patterns_of(song(f.stem)):
             tk.encode_pattern(p)
 

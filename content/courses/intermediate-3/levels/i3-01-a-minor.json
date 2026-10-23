@@ -1,0 +1,31 @@
+{
+  "id": "i3-01-a-minor",
+  "title": "str:level.i3.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i3-a-minor"
+    },
+    {
+      "type": "wait",
+      "score": "i3-a-minor-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-a-minor-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-a-minor-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

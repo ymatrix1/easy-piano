@@ -1,0 +1,55 @@
+{
+  "id": "i1-d-position",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.i1.dpos.1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 2,
+      "press": "E4",
+      "label": "2"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 3,
+      "press": "F#4",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 4,
+      "press": "G4",
+      "label": "4"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

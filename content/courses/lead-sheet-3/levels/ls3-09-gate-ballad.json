@@ -1,0 +1,14 @@
+{
+  "id": "ls3-09-gate-ballad",
+  "title": "str:level.ls3.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls3-bm-ballad",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

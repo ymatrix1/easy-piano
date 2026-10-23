@@ -1,0 +1,76 @@
+{
+  "id": "ar1-hand-to-hand",
+  "duration_beats": 15,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.ar1.handtohand.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 2,
+      "press": "G3",
+      "label": "2"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 1,
+      "press": "E4",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 2,
+      "press": "G4",
+      "label": "2"
+    },
+    {
+      "at": 9,
+      "hand": "R",
+      "finger": 3,
+      "press": "C5",
+      "label": "3"
+    },
+    {
+      "at": 10,
+      "hand": "R",
+      "finger": 5,
+      "press": "E5",
+      "label": "5"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}

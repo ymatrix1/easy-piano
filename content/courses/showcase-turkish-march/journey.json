@@ -1,0 +1,173 @@
+{
+  "course": "showcase-turkish-march",
+  "nodes": [
+    {
+      "id": "turn",
+      "kind": "lesson",
+      "title": "str:node.sct.turn",
+      "icon": "note",
+      "levels": [
+        "sct-01-turn"
+      ],
+      "next": [
+        "octaves"
+      ]
+    },
+    {
+      "id": "octaves",
+      "kind": "lesson",
+      "title": "str:node.sct.octaves",
+      "icon": "note",
+      "levels": [
+        "sct-02-broken-octaves"
+      ],
+      "next": [
+        "thirds"
+      ]
+    },
+    {
+      "id": "thirds",
+      "kind": "lesson",
+      "title": "str:node.sct.thirds",
+      "icon": "note",
+      "levels": [
+        "sct-03-thirds"
+      ],
+      "next": [
+        "part-a"
+      ]
+    },
+    {
+      "id": "part-a",
+      "kind": "song",
+      "title": "str:node.sct.part-a",
+      "icon": "play",
+      "levels": [
+        "sct-04-part-a"
+      ],
+      "next": [
+        "part-b"
+      ],
+      "songs": {
+        "default": "sct-part-a",
+        "classical": "sct-part-a"
+      }
+    },
+    {
+      "id": "part-b",
+      "kind": "song",
+      "title": "str:node.sct.part-b",
+      "icon": "play",
+      "levels": [
+        "sct-05-part-b"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "sct-part-b",
+        "classical": "sct-part-b"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.sct.gate-1",
+      "icon": "star",
+      "levels": [
+        "sct-06-gate-part-a",
+        "sct-07-gate-part-b",
+        "sct-08-gate-thirds"
+      ],
+      "next": [
+        "refrain"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "refrain",
+      "kind": "lesson",
+      "title": "str:node.sct.refrain",
+      "icon": "note",
+      "levels": [
+        "sct-09-octave-refrain"
+      ],
+      "next": [
+        "part-c"
+      ]
+    },
+    {
+      "id": "part-c",
+      "kind": "song",
+      "title": "str:node.sct.part-c",
+      "icon": "play",
+      "levels": [
+        "sct-10-part-c"
+      ],
+      "next": [
+        "runs"
+      ],
+      "songs": {
+        "default": "sct-part-c",
+        "classical": "sct-part-c"
+      }
+    },
+    {
+      "id": "runs",
+      "kind": "lesson",
+      "title": "str:node.sct.runs",
+      "icon": "note",
+      "levels": [
+        "sct-11-runs"
+      ],
+      "next": [
+        "connecting"
+      ]
+    },
+    {
+      "id": "connecting",
+      "kind": "song",
+      "title": "str:node.sct.connecting",
+      "icon": "play",
+      "levels": [
+        "sct-12-part-d"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "sct-part-d",
+        "classical": "sct-part-d"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.sct.gate-2",
+      "icon": "star",
+      "levels": [
+        "sct-13-gate-part-c",
+        "sct-14-gate-part-d",
+        "sct-15-gate-runs"
+      ],
+      "next": [
+        "whole"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "whole",
+      "kind": "boss",
+      "title": "str:node.sct.whole",
+      "icon": "play",
+      "levels": [
+        "sct-16-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "rondo-alla-turca",
+        "classical": "rondo-alla-turca"
+      }
+    }
+  ]
+}

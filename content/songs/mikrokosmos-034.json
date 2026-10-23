@@ -1,0 +1,125 @@
+{
+  "id": "mikrokosmos-034",
+  "title": "Mikrokosmos 34: In Phrygian Mode",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/34.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 80,
+  "time": "2/2",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "r:4 C5:4 B4:2 {tie}",
+      "LH": "E3:2. F3:4"
+    },
+    {
+      "RH": "B4:4 D5:4 B4:2 {tie}",
+      "LH": "E3:2. G3:4"
+    },
+    {
+      "RH": "B4:4 E5:4 B4:2 {tie}",
+      "LH": "E3:2. A3:4"
+    },
+    {
+      "RH": "B4:4 D5:4 E5:4 F5:4",
+      "LH": "E3:1 {tie}"
+    },
+    {
+      "RH": "E5:4 B4:4 E5:2",
+      "LH": "E3:4 F3:4 G3:4 A3:4"
+    },
+    {
+      "RH": "D5:2 B4:4 D5:4",
+      "LH": "B3:1 {tie}"
+    },
+    {
+      "RH": "C5:1 {tie}",
+      "LH": "B3:4 A3:4 G3:4 A3:4"
+    },
+    {
+      "RH": "C5:1",
+      "LH": "B3:4 A3:4 G3:4 F3:4"
+    },
+    {
+      "RH": "r:4 B4:4 D5:4 E5:4",
+      "LH": "E3:2 B3:2 {tie}"
+    },
+    {
+      "RH": "F5:2 C5:2",
+      "LH": "B3:4 A3:4 B3:2"
+    },
+    {
+      "RH": "D5:2 r:4 B4:4",
+      "LH": "F3:2 G3:2"
+    },
+    {
+      "RH": "C5:4 D5:4 E5:2",
+      "LH": "E3:2. B3:4"
+    },
+    {
+      "RH": "B4:2 C5:2",
+      "LH": "A3:4 G3:4 A3:2"
+    },
+    {
+      "RH": "r:4 D5:4 B4:2",
+      "LH": "F3:2 G3:2"
+    },
+    {
+      "RH": "E5:4 C5:2 D5:4",
+      "LH": "E3:2 F3:2"
+    },
+    {
+      "RH": "B4:2 E5:4 C5:4 {tie}",
+      "LH": "G3:2 F3:2"
+    },
+    {
+      "RH": "C5:4 D5:4 B4:2",
+      "LH": "G3:2 A3:2"
+    },
+    {
+      "RH": "C5:4 B4:4 r:4 C5:4",
+      "LH": "G3:2 A3:2"
+    },
+    {
+      "RH": "B4:4 D5:4 E5:4 F5:4",
+      "LH": "B3:1 {tie}"
+    },
+    {
+      "RH": "E5:4 B4:4 E5:2",
+      "LH": "B3:4 A3:4 G3:4 A3:4"
+    },
+    {
+      "RH": "D5:2 B4:4 D5:4",
+      "LH": "B3:1 {tie}"
+    },
+    {
+      "RH": "C5:4 B4:4 C5:2",
+      "LH": "B3:4 A3:4 G3:4 A3:4"
+    },
+    {
+      "RH": "B4:1 {tie}",
+      "LH": "F3:2 B3:2"
+    },
+    {
+      "RH": "B4:1 {tie}",
+      "LH": "G3:2 A3:2"
+    },
+    {
+      "RH": "B4:1 {tie}",
+      "LH": "E3:1 {tie}"
+    },
+    {
+      "RH": "B4:1",
+      "LH": "E3:1"
+    }
+  ]
+}

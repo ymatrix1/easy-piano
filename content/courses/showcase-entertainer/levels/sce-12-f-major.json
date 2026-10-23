@@ -1,0 +1,31 @@
+{
+  "id": "sce-12-f-major",
+  "title": "str:level.sce.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sce-f-key"
+    },
+    {
+      "type": "wait",
+      "score": "sce-f-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sce-f-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sce-f-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

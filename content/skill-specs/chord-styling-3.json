@@ -1,0 +1,324 @@
+{
+  "course": "chord-styling-3",
+  "nodes": [
+    {
+      "node": "alt-bass",
+      "new_skill": "Alternating bass: left hand plays the root (finger 5), then the fifth (thumb), over each chord.",
+      "required": [
+        {
+          "pitch": "G3",
+          "hand": "LH"
+        },
+        {
+          "rhythm": "4",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "shenandoah",
+      "new_skill": "Use alternating bass under a slow folk melody.",
+      "required": [
+        {
+          "pitch": "G3",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boom-chick",
+      "new_skill": "Boom-chick: left hand bass on beats 1 and 3, right hand chord on beats 2 and 4.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "campfire",
+      "new_skill": "Play a whole song in boom-chick style: bass, chord, bass, chord.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "waltz-style",
+      "new_skill": "Waltz style: bass on one, small chord on two and three, with G7 and D7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "2.",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        92,
+        100
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "clementine",
+      "new_skill": "Waltz bass under a familiar 3/4 melody with pickup notes.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8."
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        92,
+        100
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: alternating bass, boom-chick and waltz bass.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        68,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "key-g",
+      "new_skill": "Key of G chords: G, C, D, D7 and Em with alternating bass.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "pitch": "E2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "laredo",
+      "new_skill": "Waltz bass in G with D and D7 under a cowboy ballad.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        88,
+        96
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "mixing",
+      "new_skill": "Mix styles in one piece: alternating bass, boom-chick, then a passing bass.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "passing",
+      "new_skill": "Passing bass: walk down C, B, A from the C chord into Am.",
+      "required": [
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A2",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: waltz in G, mixing styles and passing bass.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        17
+      ],
+      "bpm": [
+        76,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Shenandoah with alternating bass, boom-chick and a passing bass in one piece.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "cs3-15-gate-mixing",
+  "title": "str:level.cs3.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs3-mix-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

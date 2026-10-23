@@ -1,0 +1,14 @@
+{
+  "id": "b1-09-gate-sequences",
+  "title": "str:level.b1.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "b1-sequence-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

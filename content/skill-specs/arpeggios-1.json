@@ -1,0 +1,354 @@
+{
+  "course": "arpeggios-1",
+  "nodes": [
+    {
+      "node": "inversions",
+      "new_skill": "Right-hand inversions of C, Am, F and G: same chord, new shape.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "arp-up",
+      "new_skill": "Rising two-octave arpeggio with the thumb passing under.",
+      "required": [
+        {
+          "pitch": "C6",
+          "hand": "RH"
+        },
+        {
+          "interval_min": 3,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "arp-down",
+      "new_skill": "Falling two-octave arpeggio with finger 3 crossing over the thumb.",
+      "required": [
+        {
+          "pitch": "C6",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "arp-both",
+      "new_skill": "Up-and-down arpeggios in one smooth arch.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C6",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "sunrise",
+      "new_skill": "First piece: rolling arpeggios in the right hand over bass notes.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "hand-to-hand",
+      "new_skill": "One arpeggio shared between the hands: left hand starts, right hand finishes.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "fountain",
+      "new_skill": "Hand-to-hand arpeggios in a minor key across several chords.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: rolling arpeggios, up, down and across the hands.",
+      "required": [
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        66,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "seventh",
+      "new_skill": "Cmaj7 and Am7 arpeggios (and Dm7, G7, Fmaj7) in one hand position.",
+      "required": [
+        {
+          "pitch": "B4",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "lh-bass",
+      "new_skill": "Left-hand fifths, sixths and octaves under a right-hand arpeggio.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        13,
+        13
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "river",
+      "new_skill": "Seventh-chord arpeggios over left-hand fifths, sixths and octaves.",
+      "required": [
+        {
+          "pitch": "B4",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sixteenths",
+      "new_skill": "Sixteenth-note arpeggio texture (the Prelude pattern) over left-hand fifths.",
+      "required": [
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "romance",
+      "new_skill": "3/4 piece: right-hand melody over left-hand triplet arpeggios in E minor.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: seventh arpeggios, left-hand dyads and triplets.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        13,
+        16
+      ],
+      "bpm": [
+        72,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Bach's Prelude in C, sixteenth-note arpeggios over left-hand dyads.",
+      "required": [
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        35,
+        35
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

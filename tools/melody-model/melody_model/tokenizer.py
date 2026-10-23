@@ -243,16 +243,21 @@ def encode_events(events: list[Event]) -> list[Step]:
 def encode_bars(bars: list[dict]) -> list[Step]:
     out = []
     for bar in bars:
+        if "RH2" in bar or "LH2" in bar:
+            raise Unsupported("second voice (RH2/LH2)")
         out.append(step("BAR"))
         for hand in ("RH", "LH"):
             if hand in bar:
+                events = parse_hand(bar[hand])
+                if any(e.is_spacer for e in events):
+                    raise Unsupported("spacer rest")
                 out.append(step(hand))
-                out += encode_events(parse_hand(bar[hand]))
+                out += encode_events(events)
     return out
 
 
 def encode_song(song: dict, spec: Spec | None = None) -> list[Step]:
-    """Song JSON (RH/LH only; backing parts are ignored) to steps."""
+    """Song JSON (RH/LH only; backing parts are ignored; a second voice or spacer raises Unsupported) to steps."""
     spec = spec or spec_from_song(song)
     return [step("BOS")] + encode_spec(spec) + encode_bars(song["bars"]) + [step("END")]
 

@@ -12,7 +12,7 @@ Native Android builds used the stub inputs, so Free Play and lessons showed "Web
 
 ## Higher Goal
 
-Phase 2: the app is usable on a phone with a MIDI keyboard or the microphone, like the web build ([D33](../docs/DECISIONS.md)).
+Phase 2: the app is usable on a phone with a MIDI keyboard or the microphone, like the web build ([D36](../docs/DECISIONS.md)).
 
 ## Acceptance Criteria
 
@@ -22,7 +22,7 @@ Phase 2: the app is usable on a phone with a MIDI keyboard or the microphone, li
 - [ ] Native error texts never say "browser" (new strings in all locales)
 - [ ] Web unchanged; `flutter analyze` and `flutter test` pass
 - [ ] USB MIDI keyboard and mic drive Free Play and a lesson on a device (logcat/screenshot proof)
-- [ ] `docs/specs/input.md`, `docs/ARCHITECTURE.md` updated; D33 recorded as proposed
+- [ ] `docs/specs/input.md`, `docs/ARCHITECTURE.md` updated; D36 recorded as proposed
 
 ## Out of Scope
 

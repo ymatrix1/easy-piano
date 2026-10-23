@@ -1,0 +1,166 @@
+{
+  "course": "slash-chords",
+  "nodes": [
+    {
+      "id": "read",
+      "kind": "lesson",
+      "title": "str:node.sl.read",
+      "icon": "note",
+      "levels": [
+        "sl-01-read"
+      ],
+      "next": [
+        "inversions"
+      ]
+    },
+    {
+      "id": "inversions",
+      "kind": "lesson",
+      "title": "str:node.sl.inversions",
+      "icon": "note",
+      "levels": [
+        "sl-02-inversions"
+      ],
+      "next": [
+        "pedal"
+      ]
+    },
+    {
+      "id": "pedal",
+      "kind": "lesson",
+      "title": "str:node.sl.pedal",
+      "icon": "note",
+      "levels": [
+        "sl-03-pedal"
+      ],
+      "next": [
+        "gate-1"
+      ]
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.sl.gate-1",
+      "icon": "star",
+      "levels": [
+        "sl-04-gate-read",
+        "sl-05-gate-inversions",
+        "sl-06-gate-pedal"
+      ],
+      "next": [
+        "descend"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "descend",
+      "kind": "lesson",
+      "title": "str:node.sl.descend",
+      "icon": "note",
+      "levels": [
+        "sl-07-descend"
+      ],
+      "next": [
+        "ascend"
+      ]
+    },
+    {
+      "id": "ascend",
+      "kind": "lesson",
+      "title": "str:node.sl.ascend",
+      "icon": "note",
+      "levels": [
+        "sl-08-ascend"
+      ],
+      "next": [
+        "ground"
+      ]
+    },
+    {
+      "id": "ground",
+      "kind": "song",
+      "title": "str:node.sl.ground",
+      "icon": "play",
+      "levels": [
+        "sl-09-ground"
+      ],
+      "next": [
+        "sus"
+      ],
+      "songs": {
+        "default": "sl-ground-drill",
+        "classical": "canon-in-d"
+      }
+    },
+    {
+      "id": "sus",
+      "kind": "lesson",
+      "title": "str:node.sl.sus",
+      "icon": "note",
+      "levels": [
+        "sl-10-sus"
+      ],
+      "next": [
+        "melody"
+      ]
+    },
+    {
+      "id": "melody",
+      "kind": "lesson",
+      "title": "str:node.sl.melody",
+      "icon": "note",
+      "levels": [
+        "sl-11-melody"
+      ],
+      "next": [
+        "ave-maria"
+      ]
+    },
+    {
+      "id": "ave-maria",
+      "kind": "song",
+      "title": "str:node.sl.ave-maria",
+      "icon": "play",
+      "levels": [
+        "sl-12-ave-maria"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "ave-maria-gounod",
+        "classical": "ave-maria-gounod",
+        "hymns_spirituals": "ave-maria-gounod"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.sl.gate-2",
+      "icon": "star",
+      "levels": [
+        "sl-13-gate-ave-maria",
+        "sl-14-gate-melody",
+        "sl-15-gate-ground"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.sl.boss",
+      "icon": "play",
+      "levels": [
+        "sl-16-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "canon-in-d",
+        "classical": "canon-in-d"
+      }
+    }
+  ]
+}

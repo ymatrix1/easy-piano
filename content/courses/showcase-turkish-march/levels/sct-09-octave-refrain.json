@@ -1,0 +1,38 @@
+{
+  "id": "sct-09-octave-refrain",
+  "title": "str:level.sct.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sct-octave-chords"
+    },
+    {
+      "type": "wait",
+      "score": "sct-refrain-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-refrain-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-refrain-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-refrain-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

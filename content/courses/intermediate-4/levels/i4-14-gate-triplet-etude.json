@@ -1,0 +1,14 @@
+{
+  "id": "i4-14-gate-triplet-etude",
+  "title": "str:level.i4.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i4-triplet-etude",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

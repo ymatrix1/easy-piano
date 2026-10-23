@@ -1,0 +1,14 @@
+{
+  "id": "i3-15-gate-contrary-scale",
+  "title": "str:level.i3.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i3-contrary-scale-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

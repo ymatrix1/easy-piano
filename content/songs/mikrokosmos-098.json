@@ -1,0 +1,137 @@
+{
+  "id": "mikrokosmos-098",
+  "title": "Mikrokosmos 98: Thumb Under",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/98.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 100,
+  "time": "2/4",
+  "key": "Dm",
+  "bars": [
+    {
+      "RH": "r:4 F4:4",
+      "LH": "r:4 F3:4"
+    },
+    {
+      "RH": "G4:4. A4:8",
+      "LH": "G3:4. A3:8"
+    },
+    {
+      "RH": "Bb4:4. A4:8",
+      "LH": "Bb3:4. A3:8"
+    },
+    {
+      "RH": "G4:8 F4:8 E4:8 D4:8",
+      "LH": "G3:8 F3:8 E3:8 D3:8"
+    },
+    {
+      "RH": "G4:8 A4:8 Bb4:8 G4:8",
+      "LH": "G3:8 A3:8 Bb3:8 G3:8"
+    },
+    {
+      "RH": "C#5:4 A4:4",
+      "LH": "C#4:4 A3:4"
+    },
+    {
+      "RH": "G4:4 C#5:4",
+      "LH": "G3:4 C#3:4"
+    },
+    {
+      "RH": "D5:4. E5:8",
+      "LH": "D3:4. E3:8"
+    },
+    {
+      "RH": "F5:4. E5:8",
+      "LH": "F3:4. E3:8"
+    },
+    {
+      "RH": "D5:8 C5:8 B4:8 A4:8",
+      "LH": "D3:8 C3:8 B2:8 A2:8"
+    },
+    {
+      "RH": "D5:8 E5:8 F5:8 D5:8",
+      "LH": "D3:8 E3:8 F3:8 D3:8"
+    },
+    {
+      "RH": "G#5:4 E5:4",
+      "LH": "G#3:4 E3:4"
+    },
+    {
+      "RH": "D5:4 r:4",
+      "LH": "D3:4 r:4"
+    },
+    {
+      "RH": "Bb5:4. A5:8",
+      "LH": "Bb3:4. A3:8"
+    },
+    {
+      "RH": "G5:8 F#5:8 E5:8 D5:8",
+      "LH": "G3:8 F#3:8 E3:8 D3:8"
+    },
+    {
+      "RH": "Ab5:4 G5:8 F5:8",
+      "LH": "Ab3:4 G3:8 F3:8"
+    },
+    {
+      "RH": "E5:8 D5:8 C5:4",
+      "LH": "E3:8 D3:8 C3:4"
+    },
+    {
+      "RH": "F#5:4 F5:8 Eb5:8",
+      "LH": "F#3:4 F3:8 Eb3:8"
+    },
+    {
+      "RH": "D5:8 C5:8 B4:8 C5:8",
+      "LH": "D3:8 C3:8 B2:8 C3:8"
+    },
+    {
+      "RH": "C#5:4 A4:4",
+      "LH": "C#3:4 A2:4"
+    },
+    {
+      "RH": "G4:4 Bb5:4 {tie}",
+      "LH": "G2:4 r:4"
+    },
+    {
+      "RH": "Bb5:4. A5:8",
+      "LH": "Bb3:4. A3:8"
+    },
+    {
+      "RH": "G5:8 F#5:8 E5:8 D5:8",
+      "LH": "G3:8 F#3:8 E3:8 D3:8"
+    },
+    {
+      "RH": "r:8 Ab5:8 G5:8 F5:8",
+      "LH": "Ab3:4 G3:8 F3:8"
+    },
+    {
+      "RH": "E5:8 D5:8 C5:4",
+      "LH": "E3:8 D3:8 C3:4"
+    },
+    {
+      "RH": "F#5:8 F5:8 Eb5:8 D5:8",
+      "LH": "r:8 F3:8 Eb3:8 D3:8"
+    },
+    {
+      "RH": "C5:8 B4:8 Bb4:8 Ab4:8",
+      "LH": "C3:8 B2:8 Bb2:8 Ab2:8"
+    },
+    {
+      "RH": "C#5:4 A4:4",
+      "LH": "C#3:4 A2:4"
+    },
+    {
+      "RH": "G4:4 r:4",
+      "LH": "G2:4 r:4"
+    }
+  ]
+}

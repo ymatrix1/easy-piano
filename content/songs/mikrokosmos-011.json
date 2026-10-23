@@ -1,0 +1,85 @@
+{
+  "id": "mikrokosmos-011",
+  "title": "Mikrokosmos 11: Parallel Motion",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/11.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 140,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "A4:4 B4:4 C5:2",
+      "LH": "F3:4 G3:4 A3:2"
+    },
+    {
+      "RH": "D5:2 C5:4 B4:4",
+      "LH": "B3:2 A3:4 G3:4"
+    },
+    {
+      "RH": "A4:4 B4:4 C5:4 B4:4",
+      "LH": "F3:4 G3:4 A3:4 G3:4"
+    },
+    {
+      "RH": "A4:2 G4:2",
+      "LH": "F3:2 E3:2"
+    },
+    {
+      "RH": "A4:4 B4:4 C5:4 D5:4",
+      "LH": "F3:4 G3:4 A3:4 B3:4"
+    },
+    {
+      "RH": "C5:4 B4:4 A4:4 G4:4",
+      "LH": "A3:4 G3:4 F3:4 E3:4"
+    },
+    {
+      "RH": "A4:2 B4:2",
+      "LH": "F3:2 G3:2"
+    },
+    {
+      "RH": "A4:2 r:2",
+      "LH": "F3:2 r:2"
+    },
+    {
+      "RH": "A4:4 B4:4 C5:2",
+      "LH": "F3:4 G3:4 A3:2"
+    },
+    {
+      "RH": "D5:2 C5:4 B4:4",
+      "LH": "B3:2 A3:4 G3:4"
+    },
+    {
+      "RH": "A4:4 B4:4 C5:4 B4:4",
+      "LH": "F3:4 G3:4 A3:4 G3:4"
+    },
+    {
+      "RH": "A4:2 G4:2",
+      "LH": "F3:2 E3:2"
+    },
+    {
+      "RH": "r:4 A4:4 B4:4 C5:4",
+      "LH": "r:4 F3:4 G3:4 A3:4"
+    },
+    {
+      "RH": "B4:4 A4:4 G4:4 A4:4",
+      "LH": "G3:4 F3:4 E3:4 F3:4"
+    },
+    {
+      "RH": "G4:1 {tie}",
+      "LH": "G3:1 {tie}"
+    },
+    {
+      "RH": "G4:1",
+      "LH": "G3:1"
+    }
+  ]
+}

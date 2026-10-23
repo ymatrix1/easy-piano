@@ -65,7 +65,7 @@ Evaluation (all in the weights file's `fit` block, with command, seed, row count
 
 Course τ is circular (the fit uses node order); read it with the baselines and the PDMX check. PDMX tunes are only scored, never committed; only the fitted numbers are.
 
-**Assumption, proposed (D26):** the expected level ramps linearly from `course_levels[0]` at the first course node to `course_levels[1]` (1 → 6) at the last. It sets the anchors and the lint yardstick; it is not fitted and needs the user's sign-off.
+**Assumption, proposed (D26):** the expected level ramps linearly with the node's learning stage, from `course_levels[0]` at stage 0 to `course_levels[1]` (1 → 6) at the deepest stage. Stage = the course's prerequisite depth in `courses.json` (0 with no `requires`, else 1 + the deepest prerequisite) plus the node's fraction of its journey, so parallel tracks after the same course (Soloist, Chords) expect the same level. Before the tracks existed the ramp used the position in the course walk; for Piano Basics → Essentials III both give the same order. It sets the anchors and the lint yardstick; it is not fitted and needs the user's sign-off. `course_levels[1]` stays 6 until the model is recalibrated with track songs (piano-j1jn); `content level --course` prints `stage` next to `index`, and `tools/difficulty/calibrate.py` still pairs by `index`.
 
 Run: `python tools/difficulty/calibrate.py [--data <melody data dir>] [--dry-run]`. Current metrics are in the weights file's `fit` block.
 
@@ -85,6 +85,8 @@ Run: `python tools/difficulty/calibrate.py [--data <melody data dir>] [--dry-run
 - `--course`: every course song with node, expected level, skills. `--jsonl <file>`: one line per tune row (`bars`, `time`, `key`, optional `bpm`; missing metadata filled in). The row's own license is kept and echoed with `license_checked: false`: license and provenance rules are skipped because dataset rows are scored, never published.
 
 ## Lint
+
+Courses in the `methods` section (optional method books, [D33](../DECISIONS.md)) are off the ramp: their songs get no expected level and are left out of `--course`.
 
 `content lint` warns (never errors) when a course song's level differs from its node's expected level (the linear ramp above, proposed) by more than 2.5. Today this warns on `e3-scale-drill` and `joy-to-the-world` (level 3, node expects ~6).
 

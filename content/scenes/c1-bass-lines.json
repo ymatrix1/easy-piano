@@ -1,0 +1,87 @@
+{
+  "id": "c1-bass-lines",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.c1.bass.1"
+    },
+    {
+      "at": 2,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 4,
+      "press": "D3",
+      "label": "4"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 2,
+      "press": "F3",
+      "label": "2"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "caption": "str:scene.c1.bass.2"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 5,
+      "press": "F2",
+      "label": "5"
+    },
+    {
+      "at": 12,
+      "hand": "L",
+      "finger": 1,
+      "press": "C3",
+      "label": "1"
+    },
+    {
+      "at": 13,
+      "prompt": "your_turn"
+    }
+  ]
+}

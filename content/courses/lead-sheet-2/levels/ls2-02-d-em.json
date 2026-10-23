@@ -1,0 +1,31 @@
+{
+  "id": "ls2-02-d-em",
+  "title": "str:level.ls2.02.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls2-minor"
+    },
+    {
+      "type": "wait",
+      "score": "ls2-d-em",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-d-em",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-d-em",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

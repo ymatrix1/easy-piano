@@ -91,6 +91,70 @@ flutter:
     - assets/content/courses/essentials-2/levels/
     - assets/content/courses/essentials-3/
     - assets/content/courses/essentials-3/levels/
+    - assets/content/courses/classical-1/
+    - assets/content/courses/classical-1/levels/
+    - assets/content/courses/intermediate-1/
+    - assets/content/courses/intermediate-1/levels/
+    - assets/content/courses/intermediate-3/
+    - assets/content/courses/intermediate-3/levels/
+    - assets/content/courses/bach-1/
+    - assets/content/courses/bach-1/levels/
+    - assets/content/courses/bach-2/
+    - assets/content/courses/bach-2/levels/
+    - assets/content/courses/intermediate-2/
+    - assets/content/courses/intermediate-2/levels/
+    - assets/content/courses/intermediate-4/
+    - assets/content/courses/intermediate-4/levels/
+    - assets/content/courses/blues-chords-1/
+    - assets/content/courses/blues-chords-1/levels/
+    - assets/content/courses/lead-sheet-1/
+    - assets/content/courses/lead-sheet-1/levels/
+    - assets/content/courses/pre-advanced-2/
+    - assets/content/courses/pre-advanced-2/levels/
+    - assets/content/courses/pre-advanced-1/
+    - assets/content/courses/pre-advanced-1/levels/
+    - assets/content/courses/slash-chords/
+    - assets/content/courses/slash-chords/levels/
+    - assets/content/courses/showcase-turkish-march/
+    - assets/content/courses/showcase-turkish-march/levels/
+    - assets/content/courses/jazz-chords-2/
+    - assets/content/courses/jazz-chords-2/levels/
+    - assets/content/courses/lead-sheet-2/
+    - assets/content/courses/lead-sheet-2/levels/
+    - assets/content/courses/pop-chords-3/
+    - assets/content/courses/pop-chords-3/levels/
+    - assets/content/courses/chord-styling-1/
+    - assets/content/courses/chord-styling-1/levels/
+    - assets/content/courses/arpeggios-1/
+    - assets/content/courses/arpeggios-1/levels/
+    - assets/content/courses/jazz-chords-1/
+    - assets/content/courses/jazz-chords-1/levels/
+    - assets/content/courses/pop-chords-2/
+    - assets/content/courses/pop-chords-2/levels/
+    - assets/content/courses/showcase-entertainer/
+    - assets/content/courses/showcase-entertainer/levels/
+    - assets/content/courses/showcase-moonlight/
+    - assets/content/courses/showcase-moonlight/levels/
+    - assets/content/courses/pop-chords-1/
+    - assets/content/courses/pop-chords-1/levels/
+    - assets/content/courses/chord-styling-2/
+    - assets/content/courses/chord-styling-2/levels/
+    - assets/content/courses/lead-sheet-3/
+    - assets/content/courses/lead-sheet-3/levels/
+    - assets/content/courses/chord-styling-3/
+    - assets/content/courses/chord-styling-3/levels/
+    - assets/content/courses/advanced-1/
+    - assets/content/courses/advanced-1/levels/
+    - assets/content/courses/mikrokosmos-1/
+    - assets/content/courses/mikrokosmos-1/levels/
+    - assets/content/courses/mikrokosmos-2/
+    - assets/content/courses/mikrokosmos-2/levels/
+    - assets/content/courses/mikrokosmos-3/
+    - assets/content/courses/mikrokosmos-3/levels/
+    - assets/content/courses/mikrokosmos-4/
+    - assets/content/courses/mikrokosmos-4/levels/
+    - assets/content/courses/mikrokosmos-5/
+    - assets/content/courses/mikrokosmos-5/levels/
     - assets/content/songs/
     - assets/content/scenes/
     - assets/content/strings/

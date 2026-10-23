@@ -1,0 +1,31 @@
+{
+  "id": "sce-01-rag",
+  "title": "str:level.sce.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sce-rag"
+    },
+    {
+      "type": "wait",
+      "score": "sce-rag-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sce-rag-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sce-rag-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

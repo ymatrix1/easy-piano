@@ -1,0 +1,47 @@
+{
+  "id": "i4-02-g-chords",
+  "title": "str:level.i4.02.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "i4-g-chords",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-g-chords",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "i4-g-chords",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-g-chords",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-g-chords",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i4-g-chords",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

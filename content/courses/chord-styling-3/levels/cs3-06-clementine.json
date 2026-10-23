@@ -1,0 +1,40 @@
+{
+  "id": "cs3-06-clementine",
+  "title": "str:level.cs3.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "clementine",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "clementine",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "clementine",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "clementine",
+      "tempo": 0.75,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "clementine",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "cs1-18-gate-rising-sun",
+  "title": "str:level.cs1.18.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "house-of-the-rising-sun",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

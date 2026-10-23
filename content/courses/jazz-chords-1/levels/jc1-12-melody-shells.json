@@ -1,0 +1,27 @@
+{
+  "id": "jc1-12-melody-shells",
+  "title": "str:level.jc1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "jc1-melody-shell-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-melody-shell-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-melody-shell-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

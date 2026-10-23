@@ -1,0 +1,31 @@
+{
+  "id": "sct-02-broken-octaves",
+  "title": "str:level.sct.02.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sct-broken-octave"
+    },
+    {
+      "type": "wait",
+      "score": "sct-octave-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-octave-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-octave-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

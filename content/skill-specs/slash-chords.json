@@ -1,0 +1,294 @@
+{
+  "course": "slash-chords",
+  "nodes": [
+    {
+      "node": "read",
+      "new_skill": "Read a slash chord: C/E is a C chord with E in the bass.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "E3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "inversions",
+      "new_skill": "Inversions as slash chords: C/E, C/G, G/B, F/A, F/C.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "D3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        9,
+        9
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "pedal",
+      "new_skill": "Pedal bass: keep one bass note while the chords above change.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "C3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: reading slash chords, inversions and pedal bass.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        9
+      ],
+      "bpm": [
+        72,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "descend",
+      "new_skill": "Descending bass line under changing chords: C, G/B, Am, Am/G, F, C/E, Dm, G.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        9,
+        9
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ascend",
+      "new_skill": "Ascending bass with slash chords: C, C/E, F, F/A, G/B, C.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "pitch": "A2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ground",
+      "new_skill": "A ground bass: one bass pattern that repeats while the music above grows.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rhythm": "4",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        9,
+        17
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sus",
+      "new_skill": "Suspended sounds: F/G and Bb/C.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        9,
+        9
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "melody",
+      "new_skill": "Melody in the right hand over a slash-chord accompaniment in the left.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        9,
+        9
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "ave-maria",
+      "new_skill": "Slow melody over a changing bass line of slash chords: Gounod's Ave Maria.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        20,
+        20
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: ground bass, suspended sounds, melody over slash chords.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        9,
+        20
+      ],
+      "bpm": [
+        66,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Pachelbel's Canon, a ground bass with the melody growing from half notes to eighths.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

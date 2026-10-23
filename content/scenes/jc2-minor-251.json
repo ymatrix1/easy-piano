@@ -1,0 +1,87 @@
+{
+  "id": "jc2-minor-251",
+  "duration_beats": 20,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.jc2.m251.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 3,
+      "press": "D3",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 2,
+      "press": "F3",
+      "label": "2"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "hand": "L",
+      "finger": 3,
+      "press": "G#2",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 2,
+      "press": "B2",
+      "label": "2"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 1,
+      "press": "D3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 3,
+      "press": "C3",
+      "label": "3"
+    },
+    {
+      "at": 12,
+      "hand": "L",
+      "finger": 2,
+      "press": "E3",
+      "label": "2"
+    },
+    {
+      "at": 13,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 14,
+      "caption": "str:scene.jc2.m251.2"
+    },
+    {
+      "at": 17,
+      "prompt": "your_turn"
+    }
+  ]
+}

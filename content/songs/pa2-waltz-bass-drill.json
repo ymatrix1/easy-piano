@@ -1,0 +1,51 @@
+{
+  "id": "pa2-waltz-bass-drill",
+  "title": "Waltz Bass Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 96,
+  "time": "3/4",
+  "key": "C",
+  "bars": [
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 E3G3C4:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 E3G3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 D3G3B3:4@521 D3G3B3:4@521"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 E3G3C4:4@531"
+    },
+    {
+      "LH": "F2:4@5 F3A3C4:4@531 F3A3C4:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 E3G3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 D3G3B3:4@521 D3G3B3:4@521"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 E3G3C4:4@531"
+    },
+    {
+      "LH": "A2:4@5 E3A3C4:4@521 E3A3C4:4@521"
+    },
+    {
+      "LH": "F2:4@5 F3A3C4:4@531 F3A3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 D3G3B3:4@521 D3G3B3:4@521"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:2@531"
+    }
+  ]
+}

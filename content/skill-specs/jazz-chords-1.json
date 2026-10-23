@@ -1,0 +1,304 @@
+{
+  "course": "jazz-chords-1",
+  "nodes": [
+    {
+      "node": "voicings",
+      "new_skill": "Four-note seventh chords in the right hand: Dm7 and Cmaj7.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "two-five-one",
+      "new_skill": "The ii-V-I in C with smooth voice leading: Dm7, G7, Cmaj7.",
+      "required": [
+        {
+          "chord": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "shells",
+      "new_skill": "Left-hand shells: root and seventh, root and third.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "comping",
+      "new_skill": "Comping: chords on beats 2 and 4 with rests on 1 and 3.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "charleston",
+      "new_skill": "The Charleston rhythm: dotted quarter, eighth, rest.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "saints",
+      "new_skill": "A swing tune with simple left-hand roots.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: voicings, the ii-V-I and the Charleston.",
+      "required": [
+        {
+          "chord": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        80,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "turnaround",
+      "new_skill": "Am7 and the turnaround Cmaj7, Am7, Dm7, G7.",
+      "required": [
+        {
+          "chord": true
+        }
+      ],
+      "bars": [
+        15,
+        15
+      ],
+      "bpm": [
+        88,
+        88
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "two-five-one-f",
+      "new_skill": "The ii-V-I in F: Gm7, C7, Fmaj7.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "melody-shells",
+      "new_skill": "A melody in the right hand over left-hand shells.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "riverside",
+      "new_skill": "A spiritual with the melody over shells.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: turnaround, melody over shells and a spiritual.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        17
+      ],
+      "bpm": [
+        84,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "bill-bailey",
+      "new_skill": "A jazz-age tune with a chromatic touch and shells under it.",
+      "required": [
+        {
+          "accidental": "D#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        96,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course finale: the full tune with the left hand comping shells on 2 and 4.",
+      "required": [
+        {
+          "rest": true,
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        25,
+        25
+      ],
+      "bpm": [
+        104,
+        104
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "course": "chord-styling-1",
+  "nodes": [
+    {
+      "id": "broken-rh",
+      "kind": "lesson",
+      "title": "str:node.cs1.broken-rh",
+      "icon": "note",
+      "levels": [
+        "cs1-01-broken-rh"
+      ],
+      "next": [
+        "broken-lh"
+      ]
+    },
+    {
+      "id": "broken-lh",
+      "kind": "lesson",
+      "title": "str:node.cs1.broken-lh",
+      "icon": "note",
+      "levels": [
+        "cs1-02-broken-lh"
+      ],
+      "next": [
+        "split"
+      ]
+    },
+    {
+      "id": "split",
+      "kind": "lesson",
+      "title": "str:node.cs1.split",
+      "icon": "note",
+      "levels": [
+        "cs1-03-split"
+      ],
+      "next": [
+        "lavenders-blue"
+      ]
+    },
+    {
+      "id": "lavenders-blue",
+      "kind": "song",
+      "title": "str:node.cs1.lavenders-blue",
+      "icon": "play",
+      "levels": [
+        "cs1-04-lavenders-blue"
+      ],
+      "next": [
+        "am-home"
+      ],
+      "songs": {
+        "default": "lavenders-blue",
+        "folk_world": "lavenders-blue"
+      }
+    },
+    {
+      "id": "am-home",
+      "kind": "lesson",
+      "title": "str:node.cs1.am-home",
+      "icon": "note",
+      "levels": [
+        "cs1-05-am-home"
+      ],
+      "next": [
+        "e-major"
+      ]
+    },
+    {
+      "id": "e-major",
+      "kind": "lesson",
+      "title": "str:node.cs1.e-major",
+      "icon": "note",
+      "levels": [
+        "cs1-06-e-major"
+      ],
+      "next": [
+        "gate-1"
+      ]
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.cs1.gate-1",
+      "icon": "star",
+      "levels": [
+        "cs1-07-gate-lavenders",
+        "cs1-08-gate-am",
+        "cs1-09-gate-e"
+      ],
+      "next": [
+        "drunken-sailor"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "drunken-sailor",
+      "kind": "song",
+      "title": "str:node.cs1.drunken-sailor",
+      "icon": "play",
+      "levels": [
+        "cs1-10-drunken-sailor"
+      ],
+      "next": [
+        "styles"
+      ],
+      "songs": {
+        "default": "drunken-sailor",
+        "folk_world": "drunken-sailor"
+      }
+    },
+    {
+      "id": "styles",
+      "kind": "song",
+      "title": "str:node.cs1.styles",
+      "icon": "play",
+      "levels": [
+        "cs1-11-style-block",
+        "cs1-12-style-split",
+        "cs1-13-style-broken"
+      ],
+      "next": [
+        "six-eight"
+      ],
+      "songs": {
+        "default": "cs1-style-broken",
+        "originals_pop": "cs1-style-split"
+      }
+    },
+    {
+      "id": "six-eight",
+      "kind": "lesson",
+      "title": "str:node.cs1.six-eight",
+      "icon": "note",
+      "levels": [
+        "cs1-14-six-eight"
+      ],
+      "next": [
+        "rising-sun"
+      ]
+    },
+    {
+      "id": "rising-sun",
+      "kind": "song",
+      "title": "str:node.cs1.rising-sun",
+      "icon": "play",
+      "levels": [
+        "cs1-15-rising-sun"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "house-of-the-rising-sun",
+        "folk_world": "house-of-the-rising-sun"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.cs1.gate-2",
+      "icon": "star",
+      "levels": [
+        "cs1-16-gate-sailor",
+        "cs1-17-gate-style",
+        "cs1-18-gate-rising-sun"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.cs1.boss",
+      "icon": "play",
+      "levels": [
+        "cs1-19-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "house-of-the-rising-sun-arp"
+      }
+    }
+  ]
+}

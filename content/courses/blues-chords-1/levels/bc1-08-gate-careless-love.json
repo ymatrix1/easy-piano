@@ -1,0 +1,14 @@
+{
+  "id": "bc1-08-gate-careless-love",
+  "title": "str:level.bc1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "careless-love",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

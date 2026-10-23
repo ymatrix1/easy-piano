@@ -1,0 +1,45 @@
+{
+  "id": "ar1-arp-updown-drill",
+  "title": "Up and Over",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 66,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4:8@1 E4:8@2 G4:8@3 C5:8@1 E5:8@2 G5:8@3 C6:8@5 G5:8@3"
+    },
+    {
+      "RH": "E5:8@2 C5:8@1 G4:8@3 E4:8@2 C4:2@1"
+    },
+    {
+      "RH": "G3:8@1 B3:8@2 D4:8@3 G4:8@1 B4:8@2 D5:8@3 G5:8@5 D5:8@3"
+    },
+    {
+      "RH": "B4:8@2 G4:8@1 D4:8@3 B3:8@2 G3:2@1"
+    },
+    {
+      "RH": "A3:8@1 C4:8@2 E4:8@3 A4:8@1 C5:8@2 E5:8@3 A5:8@5 E5:8@3"
+    },
+    {
+      "RH": "C5:8@2 A4:8@1 E4:8@3 C4:8@2 A3:2@1"
+    },
+    {
+      "RH": "F3:8@1 A3:8@2 C4:8@3 F4:8@1 A4:8@2 C5:8@3 F5:8@5 C5:8@3"
+    },
+    {
+      "RH": "A4:8@2 F4:8@1 C4:8@3 A3:8@2 F3:2@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

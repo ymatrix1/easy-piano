@@ -1,0 +1,47 @@
+{
+  "id": "pc1-14-whole-world",
+  "title": "str:level.pc1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "hes-got-the-whole-world",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "hes-got-the-whole-world",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "hes-got-the-whole-world",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "hes-got-the-whole-world",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "hes-got-the-whole-world",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "hes-got-the-whole-world",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

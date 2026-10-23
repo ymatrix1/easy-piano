@@ -22,6 +22,8 @@ pub struct CourseSong {
     pub id: String,
     pub node: String,
     pub index: usize,
+    /// Prerequisite depth + node fraction (see `NodeTaught::stage`).
+    pub stage: f64,
     pub expected: f64,
     pub skills: Skills,
     pub level_score: f64,
@@ -30,16 +32,28 @@ pub struct CourseSong {
 
 /// Course songs (not generated) in learning order, each at its first node, plus
 /// each node's skill envelope (most of each skill seen up to that node).
+/// Nodes off the ramp (Methods courses) add no songs; their envelope is the last one.
 pub fn course_songs(
     walk: &[NodeTaught],
     songs: &BTreeMap<String, Song>,
     model: &Model,
 ) -> (Vec<CourseSong>, Vec<Skills>) {
-    let n = walk.len().max(2);
+    // Expected level ramps with the learning stage (prerequisite depth), so
+    // parallel tracks after the same course expect the same level.
+    let top = walk
+        .iter()
+        .filter(|w| w.on_ramp)
+        .map(|w| w.stage)
+        .fold(0.0, f64::max)
+        .max(1.0);
     let [lo, hi] = model.course_levels;
     let (mut out, mut envs) = (Vec::<CourseSong>::new(), Vec::new());
     let mut env: Skills = [0.0; 8];
     for (i, w) in walk.iter().enumerate() {
+        if !w.on_ramp {
+            envs.push(env);
+            continue;
+        }
         for s in w
             .songs
             .iter()
@@ -56,7 +70,8 @@ pub fn course_songs(
                 id: s.id.clone(),
                 node: format!("{}/{}", w.course, w.node),
                 index: i,
-                expected: lo + (hi - lo) * i as f64 / (n - 1) as f64,
+                stage: w.stage,
+                expected: lo + (hi - lo) * w.stage / top,
                 skills: sk,
                 level_score: score,
                 level: model.level(&sk),
@@ -160,7 +175,7 @@ pub fn run(args: &[String]) -> i32 {
     if course {
         let rows: Vec<Value> = course_list
             .iter()
-            .map(|c| json!({"id": c.id, "node": c.node, "index": c.index, "expected": round3(c.expected), "skills": c.skills.map(round3), "level_score": round3(c.level_score), "level": c.level}))
+            .map(|c| json!({"id": c.id, "node": c.node, "index": c.index, "stage": round3(c.stage), "expected": round3(c.expected), "skills": c.skills.map(round3), "level_score": round3(c.level_score), "level": c.level}))
             .collect();
         println!(
             "{}",

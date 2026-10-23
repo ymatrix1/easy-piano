@@ -116,12 +116,22 @@ fn load_songs(root: &Path) -> (BTreeMap<String, Song>, Vec<(PathBuf, String)>) {
 }
 
 /// One journey node with the songs its levels play and everything taught so far.
+/// Sections whose courses are optional repertoire, not steps of the main path.
+const OFF_RAMP_SECTIONS: [&str; 1] = ["methods"];
+
 struct NodeTaught {
     course: String,
     node: String,
+    /// On the main learning path; optional Methods courses are not, so they stay
+    /// out of the difficulty ramp (docs/specs/difficulty.md).
+    on_ramp: bool,
     kind: String,
     songs: Vec<String>,
     taught: TaughtSet,
+    /// Learning stage: the course's prerequisite depth (0 for courses with no
+    /// `requires`) plus the node's fraction of its journey. Parallel tracks at
+    /// the same depth share stages, unlike the position in the walk.
+    stage: f64,
 }
 
 /// Walks courses in `courses.json` order and nodes in journey order, adding each
@@ -138,6 +148,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
     let mut out = Vec::new();
     let mut taught = TaughtSet::default();
     let mut seen: BTreeSet<String> = BTreeSet::new();
+    let mut depth: BTreeMap<String, usize> = BTreeMap::new();
     let courses = read(courses_path.clone()).unwrap_or(Value::Null);
     for course in courses
         .get("courses")
@@ -163,6 +174,20 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             }
         }
         seen.insert(cid.to_string());
+        let d = course
+            .get("requires")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .filter_map(|r| depth.get(r).map(|d| d + 1))
+            .max()
+            .unwrap_or(0);
+        depth.insert(cid.to_string(), d);
+        let on_ramp = !course
+            .get("section")
+            .and_then(Value::as_str)
+            .is_some_and(|s| OFF_RAMP_SECTIONS.contains(&s));
         if course.get("status").and_then(Value::as_str) == Some("planned") {
             continue;
         }
@@ -178,12 +203,14 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
         let Some(journey) = read(cdir.join("journey.json")) else {
             continue;
         };
-        for node in journey
+        let nodes: Vec<&Value> = journey
             .get("nodes")
             .and_then(Value::as_array)
             .into_iter()
             .flatten()
-        {
+            .collect();
+        let n_nodes = nodes.len().max(1) as f64;
+        for (j, node) in nodes.into_iter().enumerate() {
             let mut ids: Vec<String> = Vec::new();
             for level in node
                 .get("levels")
@@ -238,6 +265,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             }
             out.push(NodeTaught {
                 course: cid.to_string(),
+                on_ramp,
                 node: node
                     .get("id")
                     .and_then(Value::as_str)
@@ -250,6 +278,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
                     .to_string(),
                 songs: ids,
                 taught: taught.clone(),
+                stage: d as f64 + j as f64 / n_nodes,
             });
         }
     }
@@ -326,6 +355,7 @@ fn specs_report(root: &Path) -> (Value, Lint) {
                 "course": w.course,
                 "node": w.node,
                 "kind": w.kind,
+                "on_ramp": w.on_ramp,
                 "songs": w.songs,
                 "taught": w.taught.to_json(),
                 "spec": spec.map(|s| serde_json::json!({
@@ -1052,14 +1082,14 @@ mod tests {
     }
 
     #[test]
-    fn repo_skill_specs_cover_every_node_and_parse() {
+    fn repo_skill_specs_cover_every_main_path_node_and_parse() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content");
         let (report, lint) = specs_report(&root);
         assert!(lint.errors.is_empty(), "{:?}", lint.errors);
         let nodes = report.as_array().unwrap();
         let missing: Vec<String> = nodes
             .iter()
-            .filter(|n| n["spec"].is_null())
+            .filter(|n| n["on_ramp"] == true && n["spec"].is_null())
             .map(|n| {
                 format!(
                     "{}/{}",
@@ -1087,20 +1117,30 @@ mod tests {
         let (songs, walk) = repo_walk();
         let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
         assert!(list.len() >= 30);
-        // Kendall tau between level score and node index.
-        let (mut c, mut d) = (0i64, 0i64);
-        for (i, a) in list.iter().enumerate() {
-            for b in &list[i + 1..] {
-                let s = (b.index as f64 - a.index as f64) * (b.level_score - a.level_score);
-                if s > 0.0 {
-                    c += 1
-                } else if s < 0.0 {
-                    d += 1
+        // Kendall tau between level score and learning stage.
+        let tau = |list: &[&level::CourseSong]| {
+            let (mut c, mut d) = (0i64, 0i64);
+            for (i, a) in list.iter().enumerate() {
+                for b in &list[i + 1..] {
+                    let s = (b.stage - a.stage) * (b.level_score - a.level_score);
+                    if s > 0.0 {
+                        c += 1
+                    } else if s < 0.0 {
+                        d += 1
+                    }
                 }
             }
-        }
-        let tau = (c - d) as f64 / (c + d) as f64;
-        assert!(tau > 0.5, "tau {tau}");
+            (c - d) as f64 / (c + d) as f64
+        };
+        // Calibrated range (Piano Basics, Essentials): strict.
+        let basic: Vec<_> = list.iter().filter(|c| c.stage < 4.0).collect();
+        let t = tau(&basic);
+        assert!(t > 0.5, "basic tau {t}");
+        // Soloist and Chords tracks sit above the calibration data (piano-j1jn,
+        // review piano-bdi4): the whole path must still rise, more loosely.
+        let all: Vec<_> = list.iter().collect();
+        let t = tau(&all);
+        assert!(t > 0.4, "tau {t}");
         let first = &list[0];
         let last = list.iter().max_by_key(|c| c.index).unwrap();
         assert!(
@@ -1111,6 +1151,16 @@ mod tests {
             last.id,
             last.level
         );
+    }
+
+    #[test]
+    fn methods_courses_stay_off_the_difficulty_ramp() {
+        let (songs, walk) = repo_walk();
+        let methods: Vec<_> = walk.iter().filter(|w| !w.on_ramp).collect();
+        assert!(methods.iter().any(|w| w.course == "mikrokosmos-1"));
+        let (list, envs) = level::course_songs(&walk, &songs, &Model::builtin());
+        assert_eq!(envs.len(), walk.len());
+        assert!(list.iter().all(|c| !c.node.starts_with("mikrokosmos-1/")));
     }
 
     #[test]

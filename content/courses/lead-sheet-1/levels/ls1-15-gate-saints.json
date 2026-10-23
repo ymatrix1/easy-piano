@@ -1,0 +1,14 @@
+{
+  "id": "ls1-15-gate-saints",
+  "title": "str:level.ls1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "when-the-saints",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

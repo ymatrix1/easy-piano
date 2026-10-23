@@ -1,0 +1,14 @@
+{
+  "id": "i2-06-gate-turkey",
+  "title": "str:level.i2.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "turkey-in-the-straw",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

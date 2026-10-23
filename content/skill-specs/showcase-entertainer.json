@@ -1,0 +1,340 @@
+{
+  "course": "showcase-entertainer",
+  "nodes": [
+    {
+      "node": "rag",
+      "new_skill": "Ragtime syncopation: the short-long-short figure (sixteenth, eighth, sixteenth).",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "RH",
+      "time": "2/4"
+    },
+    {
+      "node": "stride",
+      "new_skill": "Left hand stride: low bass note, chord, bass, chord.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "pitch": "G2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "LH",
+      "time": "2/4"
+    },
+    {
+      "node": "dyads",
+      "new_skill": "Two-note chords in thirds, and a chromatic climb with D sharp.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "accidental": "D#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        80
+      ],
+      "hands": "RH",
+      "time": "2/4"
+    },
+    {
+      "node": "intro",
+      "new_skill": "The Entertainer intro: octave-doubled sixteenths, then the first rag phrases with chords in both hands.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-a",
+      "new_skill": "Part A: syncopated melody over a steady stride bass, with flat notes in the bass.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: rag rhythm, stride and the first two sections.",
+      "required": [
+        {
+          "rhythm": "16"
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        76,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "runs",
+      "new_skill": "Sixteenth-note runs in the right hand over a stride left hand.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "pitch": "G5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-b",
+      "new_skill": "Part B: sixteenth runs up to A5 and a chromatic step to B.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "pitch": "A5",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "link",
+      "new_skill": "Joining sections: the pickup from A into B without a break.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true
+        }
+      ],
+      "bars": [
+        11,
+        11
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "f-major",
+      "new_skill": "A key change to F major: B flat in both hands.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-c",
+      "new_skill": "Part C in F major, with chords and a run to C6.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "part-d",
+      "new_skill": "Part D: back in C with sharps, dyads and a fast ending.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: runs, F major and the closing section.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        84
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: The Entertainer from intro to final chord, both hands.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        88,
+        88
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    }
+  ]
+}

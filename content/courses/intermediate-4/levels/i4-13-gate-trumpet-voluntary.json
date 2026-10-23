@@ -1,0 +1,14 @@
+{
+  "id": "i4-13-gate-trumpet-voluntary",
+  "title": "str:level.i4.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "trumpet-voluntary",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

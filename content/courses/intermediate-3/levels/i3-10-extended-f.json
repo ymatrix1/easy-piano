@@ -1,0 +1,31 @@
+{
+  "id": "i3-10-extended-f",
+  "title": "str:level.i3.10.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i3-extended"
+    },
+    {
+      "type": "wait",
+      "score": "i3-f-extended-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-f-extended-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-f-extended-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

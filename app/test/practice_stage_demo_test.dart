@@ -56,6 +56,8 @@ class _FakeSession implements PracticeSession {
         bar: 0,
         pitches: Uint8List.fromList([p]),
         fingers: Uint8List(0),
+        stemDowns: const [false],
+        twoStems: const [false],
         state: 0,
       ),
   ];

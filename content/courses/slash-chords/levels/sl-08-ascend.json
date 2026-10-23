@@ -1,0 +1,31 @@
+{
+  "id": "sl-08-ascend",
+  "title": "str:level.sl.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sl-descend"
+    },
+    {
+      "type": "wait",
+      "score": "sl-ascend-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-ascend-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-ascend-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

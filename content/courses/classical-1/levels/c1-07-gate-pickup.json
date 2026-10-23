@@ -1,0 +1,14 @@
+{
+  "id": "c1-07-gate-pickup",
+  "title": "str:level.c1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "c1-pickup-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "cs2-14-gate-push",
+  "title": "str:level.cs2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs2-push-drill",
+      "tempo": 1.0,
+      "pass": 0.7
+    }
+  ]
+}

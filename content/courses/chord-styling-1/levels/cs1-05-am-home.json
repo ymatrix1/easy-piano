@@ -1,0 +1,31 @@
+{
+  "id": "cs1-05-am-home",
+  "title": "str:level.cs1.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "cs1-am-home"
+    },
+    {
+      "type": "wait",
+      "score": "cs1-am-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "cs1-am-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "cs1-am-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

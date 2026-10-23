@@ -1,0 +1,66 @@
+{
+  "id": "jc2-jazz-waltz",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.jc2.jwaltz.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "F2",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "A2",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "E3",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.jc2.jwaltz.2"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 5,
+      "press": "F2",
+      "label": "5"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 3,
+      "press": "A2",
+      "label": "3"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 1,
+      "press": "E3",
+      "label": "1"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}

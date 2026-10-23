@@ -1,0 +1,14 @@
+{
+  "id": "b1-14-gate-jesu",
+  "title": "str:level.b1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jesu-joy",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

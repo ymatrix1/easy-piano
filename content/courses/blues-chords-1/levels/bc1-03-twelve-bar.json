@@ -1,0 +1,27 @@
+{
+  "id": "bc1-03-twelve-bar",
+  "title": "str:level.bc1.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bc1-twelve-bar",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-twelve-bar",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-twelve-bar",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "pa1-01-key-signatures",
+  "title": "str:level.pa1.01.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pa1-key-signatures"
+    },
+    {
+      "type": "wait",
+      "score": "pa1-keysig-drill",
+      "pre_listen": true
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-keysig-drill",
+      "tempo": 0.65,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-keysig-drill",
+      "tempo": 0.95,
+      "pass": 0.7
+    }
+  ]
+}

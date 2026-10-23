@@ -1,0 +1,61 @@
+{
+  "id": "ls2-g-chords",
+  "title": "Campfire Chords",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "G",
+  "bars": [
+    {
+      "RH": "B4:4@3 B4:4@3 D5:2@5",
+      "LH": "{chord:\"G\"} G2B2D3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "C5:4@4 B4:4@3 A4:2@2",
+      "LH": "{chord:\"G\"} G2B2D3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:4@1 G4:4@1 C5:2@4",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "B4:4@3 A4:4@2 G4:2@1",
+      "LH": "{chord:\"G\"} G2B2D3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "C5:4@4 C5:4@4 B4:4@3 A4:4@2",
+      "LH": "{chord:\"C\"} C3E3G3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "B4:4@3 G4:4@1 D5:2@5",
+      "LH": "{chord:\"G\"} G2B2D3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:4@2 A4:4@2 C5:4@4 A4:4@2",
+      "LH": "{chord:\"D7\"} D3F#3C4:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:1@1",
+      "LH": "{chord:\"G\"} G2B2D3:1@531",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

@@ -25,7 +25,7 @@ The score is local: it does not depend on how long either tune is, so a hook cop
 
 ## Calibration
 
-`cargo test --test similarity_calibration -- --nocapture` in `core/` (fixture test, runs in CI with `cargo test`). Built from the 16 PD songs in `content/songs` with ≥ 16 melody notes (drills excluded):
+`cargo test --test similarity_calibration -- --nocapture` in `core/` (fixture test, runs in CI with `cargo test`). Built from the 16 PD songs in `content/songs` with ≥ 16 melody notes (drills and method-book pieces excluded, see [mikrokosmos-import](mikrokosmos-import.md#similarity)):
 
 - **Positives (80)**, 5 per song: transposed up a fourth; all rhythms replaced; every 5th note an octave up; the song's most distinctive 12-note passage inside 28 invented notes; its most distinctive 8-note hook inside 28 invented notes.
 - **Negatives (248)**: every pair of distinct PD songs (120); 5 generic stepwise lines (scales, five-finger run, broken thirds, repeated-note drill) and 3 invented tunes against every song (128).

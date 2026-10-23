@@ -1,0 +1,62 @@
+{
+  "id": "cs2-push",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.cs2.push.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 6.5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 6.5,
+      "hand": "R",
+      "finger": 2,
+      "press": "F4",
+      "label": "2"
+    },
+    {
+      "at": 6.5,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "prompt": "your_turn"
+    }
+  ]
+}

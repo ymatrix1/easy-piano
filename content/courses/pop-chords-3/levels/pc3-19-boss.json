@@ -1,0 +1,27 @@
+{
+  "id": "pc3-19-boss",
+  "title": "str:level.pc3.19.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "the-water-is-wide",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "the-water-is-wide",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "the-water-is-wide",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

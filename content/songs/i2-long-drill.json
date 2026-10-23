@@ -1,0 +1,69 @@
+{
+  "id": "i2-long-drill",
+  "title": "Long Notes Over the Beat",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 88,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@1 G4:2@3 E4:4@1",
+      "LH": "C3:2@5 G3:2@1"
+    },
+    {
+      "RH": "F4:4@1 A4:2@3 F4:4@1",
+      "LH": "F3:2@3 D3:2@5"
+    },
+    {
+      "RH": "G4:4@1 B4:2@3 G4:4@1",
+      "LH": "E3:2@3 C3:2@5"
+    },
+    {
+      "RH": "C5:4.@3 B4:8@2 A4:2@1",
+      "LH": "C3:1@5"
+    },
+    {
+      "RH": "r:4 G4:2@3 E4:4@1",
+      "LH": "G3:2@3 E3:2@5"
+    },
+    {
+      "RH": "r:4 A4:2@3 F4:4@1",
+      "LH": "F3:2@2 C3:2@5"
+    },
+    {
+      "RH": "D4:4@1 F4:2@3 D4:4@1",
+      "LH": "G3:2@2 D3:2@5"
+    },
+    {
+      "RH": "E4:4.@3 D4:8@2 C4:2@1",
+      "LH": "C3:2@5 E3:2@3"
+    },
+    {
+      "RH": "G4:4@1 C5:2@4 G4:4@1",
+      "LH": "C3:2@5 G3:2@1"
+    },
+    {
+      "RH": "A4:4@1 C5:2@3 A4:4@1",
+      "LH": "F3:2@1 A2:2@5"
+    },
+    {
+      "RH": "G4:4.@4 F4:8@3 E4:4@2 D4:4@1",
+      "LH": "C3:2@2 G2:2@5"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      8,
+      10
+    ]
+  ]
+}

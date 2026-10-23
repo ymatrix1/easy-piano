@@ -1,0 +1,31 @@
+{
+  "id": "jc2-13-sixths-tag",
+  "title": "str:level.jc2.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "jc2-sixths"
+    },
+    {
+      "type": "wait",
+      "score": "jc2-sixths-tag",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-sixths-tag",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "jc2-sixths-tag",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

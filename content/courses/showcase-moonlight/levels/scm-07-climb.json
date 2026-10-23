@@ -1,0 +1,31 @@
+{
+  "id": "scm-07-climb",
+  "title": "str:level.scm.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "scm-climb"
+    },
+    {
+      "type": "wait",
+      "score": "scm-climb-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-climb-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-climb-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

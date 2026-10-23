@@ -1,0 +1,31 @@
+{
+  "id": "i3-08-parallel",
+  "title": "str:level.i3.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i3-coordination"
+    },
+    {
+      "type": "wait",
+      "score": "i3-parallel-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-parallel-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-parallel-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

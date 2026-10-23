@@ -1,0 +1,171 @@
+{
+  "id": "pc2-progressions",
+  "duration_beats": 18,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.pc2.prog.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 5,
+      "press": "D3",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 3,
+      "press": "F3",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 5,
+      "press": "B2",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 2,
+      "press": "D3",
+      "label": "2"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 5,
+      "press": "B2",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 2,
+      "press": "E3",
+      "label": "2"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 2,
+      "press": "F3",
+      "label": "2"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 5,
+      "press": "B2",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 2,
+      "press": "D3",
+      "label": "2"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "caption": "str:scene.pc2.prog.2"
+    },
+    {
+      "at": 14,
+      "prompt": "your_turn"
+    }
+  ]
+}

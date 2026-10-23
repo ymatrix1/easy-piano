@@ -1,0 +1,307 @@
+{
+  "course": "showcase-moonlight",
+  "nodes": [
+    {
+      "node": "triplets",
+      "new_skill": "Eighth-note triplets in the right hand: three even notes per beat in a broken chord.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH",
+          "min_bar_share": 0.75
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "octaves",
+      "new_skill": "Left hand octaves: little finger and thumb together, moving down by step.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "C#2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "melody-top",
+      "new_skill": "Melody with the dotted eighth and sixteenth rhythm, sung over a soft triplet accompaniment.",
+      "required": [
+        {
+          "rhythm": "8.",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "16",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "together",
+      "new_skill": "Hands together: a triplet figure in the right hand over a bass octave in the left.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "part-1",
+      "new_skill": "The opening of the Moonlight Sonata: triplets over slow bass octaves.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH",
+          "min_bar_share": 0.9
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        54,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "part-2",
+      "new_skill": "The melody enters on top with the dotted rhythm, over the triplets.",
+      "required": [
+        {
+          "rhythm": "8.",
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        54,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: the opening, the melody and two-hand coordination.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        54,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "climb",
+      "new_skill": "Wide arpeggios that climb and fall across two octaves, up to E5.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "part-3",
+      "new_skill": "The return of the theme, ending with the rolling coda and the closing chord.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8.",
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        28,
+        28
+      ],
+      "bpm": [
+        54,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "connecting",
+      "new_skill": "Switching a hand from the accompaniment figure to the melody.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8.",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        56,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: the return, the link between figure and melody, and the climbing arpeggios.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        28
+      ],
+      "bpm": [
+        54,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: the first movement of the Moonlight Sonata, both hands.",
+      "required": [
+        {
+          "rhythm": "12",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8.",
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        45,
+        45
+      ],
+      "bpm": [
+        54,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

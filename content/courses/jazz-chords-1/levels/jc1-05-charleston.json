@@ -1,0 +1,27 @@
+{
+  "id": "jc1-05-charleston",
+  "title": "str:level.jc1.05.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "jc1-charleston-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-charleston-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-charleston-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

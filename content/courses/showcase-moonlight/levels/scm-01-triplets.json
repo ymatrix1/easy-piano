@@ -1,0 +1,31 @@
+{
+  "id": "scm-01-triplets",
+  "title": "str:level.scm.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "scm-triplets"
+    },
+    {
+      "type": "wait",
+      "score": "scm-triplet-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-triplet-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-triplet-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

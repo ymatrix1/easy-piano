@@ -1,0 +1,27 @@
+{
+  "id": "ar1-04-arp-both",
+  "title": "str:level.ar1.04.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ar1-arp-updown-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-updown-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-updown-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

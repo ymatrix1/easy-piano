@@ -1,0 +1,53 @@
+{
+  "id": "sct-refrain-drill",
+  "title": "Octave Refrain",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "2/4",
+  "key": "A",
+  "bars": [
+    {
+      "RH": "A4A5:8@15 B4B5:8@15 C#5C#6:4@15",
+      "LH": "A3:8@1 A3:8@1 A3:8@1 A3:8@1"
+    },
+    {
+      "RH": "C#5C#6:8@15 B4B5:8@15 A4A5:8@15 G#4G#5:8@15",
+      "LH": "A3:8@1 A3:8@1 A3:8@1 A3:8@1"
+    },
+    {
+      "RH": "F#4F#5:8@15 G#4G#5:8@15 A4A5:8@15 B4B5:8@15",
+      "LH": "D3:8@1 D3:8@1 D#3:8@1 D#3:8@1"
+    },
+    {
+      "RH": "G#4G#5:4@15 E4E5:4@15",
+      "LH": "E3:4@1 E3:4@1"
+    },
+    {
+      "RH": "A4A5:8@15 B4B5:8@15 C#5C#6:8@15 B4B5:8@15",
+      "LH": "A3:8@1 A3:8@1 A3:8@1 A3:8@1"
+    },
+    {
+      "RH": "A4A5:8@15 G#4G#5:8@15 F#4F#5:8@15 G#4G#5:8@15",
+      "LH": "D3:4@2 E3:4@1"
+    },
+    {
+      "RH": "A4A5:4@15 G#4G#5:4@15",
+      "LH": "A3:4@1 E3:4@4"
+    },
+    {
+      "RH": "A4A5:2@15",
+      "LH": "A2:2@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      3
+    ]
+  ]
+}

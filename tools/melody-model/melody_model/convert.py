@@ -70,8 +70,11 @@ def convert_file_lenient(path: str | Path) -> tuple[list[dict], list[Unsupported
     return songs, errors
 
 
-def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int | str = 0) -> dict:
-    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI)."""
+def convert_score(
+    score: m21.stream.Score, melody_only: bool = False, part: int | str = 0, key: str | None = None
+) -> dict:
+    """melody_only: read only one part (index or name, default the first), as RH (voice + piano scores, MIDI).
+    key: use this key name instead of reading it from the score."""
     parts = list(score.parts)
     if not parts:
         raise Unsupported("no parts")
@@ -90,19 +93,27 @@ def convert_score(score: m21.stream.Score, melody_only: bool = False, part: int 
     time = _time_sig(score)
     bar_ql = Fraction(m21.meter.TimeSignature(time).barDuration.quarterLength).limit_denominator(64)
     hands = _assign_hands(parts, melody_only)
-    per_hand = {h: _hand_bars(p, bar_ql) for h, p in hands.items()}
-    counts = {len(b) for b in per_hand.values()}
+    per_hand = {h: _hand_bars(p, bar_ql, return_voices=True) for h, p in hands.items()}
+    counts = {len(b[0]) for b in per_hand.values()}
     if len(counts) != 1:
         raise Unsupported("hands have different bar counts")
-    bars = [
-        {h: format_hand(per_hand[h][i]) for h in ("RH", "LH") if h in per_hand} for i in range(counts.pop())
-    ]
+    num_bars = counts.pop()
+    bars = []
+    for i in range(num_bars):
+        b = {}
+        for h in ("RH", "LH"):
+            if h in per_hand:
+                v1_bars, v2_bars = per_hand[h]
+                b[h] = format_hand(v1_bars[i])
+                if v2_bars[i] is not None:
+                    b[f"{h}2"] = format_hand(v2_bars[i])
+        bars.append(b)
     md = score.metadata
     return {
         "title": (md.title if md else None) or "",
         "composer": (md.composer if md else None) or "",
         "time": time,
-        "key": _key_name(score),
+        "key": key or _key_name(score),
         "bars": bars,
     }
 
@@ -169,62 +180,108 @@ def _key_name(score) -> str:
     return name
 
 
-def _top_voice(m):
-    if not m.voices:
-        return m
-    return max(m.voices, key=lambda v: mean([p.midi for n in v.notes for p in n.pitches] or [-1]))
+def _spacers(ql: Fraction) -> list[Event]:
+    """Fill a gap with the fewest spacers, longest first."""
+    out = []
+    for q, d in sorted(_QL_TO_DUR.items(), reverse=True):
+        while ql >= q:
+            out.append(Event([], d, is_spacer=True))
+            ql -= q
+    if ql:
+        raise Unsupported(f"gap of {ql} quarters")
+    return out
 
 
-def _hand_bars(part, bar_ql: Fraction) -> list[list[Event]]:
+def _hand_bars(part, bar_ql: Fraction, return_voices: bool = False):
     measures = list(part.getElementsByClass(m21.stream.Measure))
     if not measures:
         measures = list(part.makeMeasures().getElementsByClass(m21.stream.Measure))
-    raw: list[tuple[list[Event], Fraction]] = []
+    raw1: list[tuple[list[Event], Fraction]] = []
+    raw2: list[tuple[list[Event] | None, Fraction]] = []
     for n, m in enumerate(measures):
-        events: list[Event] = []
+        voices = list(m.voices)
+        active = [v for v in voices if list(v.notesAndRests)]
+        if len(active) > 2:
+            raise Unsupported(f"three or more voices in bar {m.number}")
+        v1 = active[0] if active else m
+        v2 = active[1] if len(active) == 2 else None
+
+        events1: list[Event] = []
         pad_left = Fraction(m.paddingLeft).limit_denominator(64)
         if pad_left:
-            events += _rests(pad_left)
-        events += _bar_events(_top_voice(m), n + 1)
-        raw.append(
-            (events, sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events), Fraction(0)))
+            events1 += _rests(pad_left)
+        events1 += _bar_events(v1, n + 1, is_voice2=False)
+        raw1.append(
+            (
+                events1,
+                sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events1), Fraction(0)),
+            )
         )
-    bars: list[list[Event]] = []
+
+        if v2 is not None:
+            events2: list[Event] = []
+            if pad_left:
+                events2 += _spacers(pad_left)
+            events2 += _bar_events(v2, n + 1, is_voice2=True)
+            tot2 = sum((Fraction(dur_beats(e.dur, 4)).limit_denominator(64) for e in events2), Fraction(0))
+            if tot2 < bar_ql:
+                events2 += _spacers(bar_ql - tot2)
+                tot2 = bar_ql
+            raw2.append((events2, tot2))
+        else:
+            raw2.append((None, Fraction(0)))
+
+    bars1: list[list[Event]] = []
+    bars2: list[list[Event] | None] = []
     i = 0
-    while i < len(raw):
-        events, total = raw[i]
+    while i < len(raw1):
+        events, total = raw1[i]
         if total > bar_ql:
             raise Unsupported(f"bar {i + 1} lasts {total} quarters, expected {bar_ql}")
         if total < bar_ql:
             # strain end + next strain's pickup written as two short measures: join them
             j, acc, merged = i, total, list(events)
-            while acc < bar_ql and j + 1 < len(raw) and raw[j + 1][1] < bar_ql:
+            while acc < bar_ql and j + 1 < len(raw1) and raw1[j + 1][1] < bar_ql:
                 j += 1
-                acc += raw[j][1]
-                merged += raw[j][0]
+                acc += raw1[j][1]
+                merged += raw1[j][0]
             if acc == bar_ql and j > i:
-                bars.append(merged)
+                bars1.append(merged)
+                bars2.append(raw2[i][0])
                 i = j + 1
                 continue
             if i == 0:
                 events = _rests(bar_ql - total) + events  # opening pickup
-            elif i == len(raw) - 1 or _at_section_end(measures[i], measures, i):
+            elif i == len(raw1) - 1 or _at_section_end(measures[i], measures, i):
                 events = events + _rests(bar_ql - total)
             else:
                 raise Unsupported(f"bar {i + 1} lasts {total} quarters, expected {bar_ql}")
-        bars.append(events)
+        bars1.append(events)
+        ev2, tot2 = raw2[i]
+        if ev2 is not None and tot2 > bar_ql:
+            raise Unsupported(f"bar {i + 1} voice 2 lasts {tot2} quarters, expected {bar_ql}")
+        bars2.append(ev2)
         i += 1
-    _check_ties(bars)
-    return bars
+    _check_ties(bars1)
+    _check_ties([b for b in bars2 if b is not None])
+    if return_voices:
+        return bars1, bars2
+    return bars1
 
 
-def _bar_events(voice, bar_no: int) -> list[Event]:
+def _bar_events(voice, bar_no: int, is_voice2: bool = False) -> list[Event]:
     """Notes and rests of one bar. Ties become `Event.tie`; a tie chain inside the bar
     whose sum is one duration is merged into one note."""
     events: list[Event] = []
+    cur_offset = Fraction(0)
     for el in voice.notesAndRests:
         if el.duration.isGrace or isinstance(el, m21.harmony.ChordSymbol):
             continue
+        el_offset = Fraction(el.offset).limit_denominator(64)
+        if el_offset > cur_offset:
+            gap = el_offset - cur_offset
+            events += _spacers(gap) if is_voice2 else _rests(gap)
+            cur_offset = el_offset
         e = _event(el)
         e.tie = el.tie is not None and not el.isRest and el.tie.type in ("start", "continue")
         prev = events[-1] if events else None
@@ -233,8 +290,10 @@ def _bar_events(voice, bar_no: int) -> list[Event]:
             d = _QL_TO_DUR.get(ql)
             if d is not None:
                 prev.dur, prev.tie = d, e.tie
+                cur_offset += Fraction(dur_beats(e.dur, 4)).limit_denominator(64)
                 continue
         events.append(e)
+        cur_offset += Fraction(dur_beats(e.dur, 4)).limit_denominator(64)
     return events
 
 
@@ -267,7 +326,8 @@ def _event(el) -> Event:
     if dur is None:
         raise Unsupported(f"duration {ql} quarters")
     if el.isRest:
-        return Event([], dur)
+        is_spacer = getattr(el.style, "hideObjectOnPrint", False)
+        return Event([], dur, is_spacer=is_spacer)
     if not el.isChord:
         f = _finger_of(el)
         return Event([_pitch(el.pitch)], dur, [f] if f else [])
@@ -315,38 +375,93 @@ def _rests(ql: Fraction) -> list[Event]:
 
 
 def song_to_score(song: dict) -> m21.stream.Score:
-    """Song JSON (RH/LH) to a music21 score; used by tests and listening exports."""
+    """Song JSON (RH/LH/RH2/LH2) to a music21 score; used by tests and listening exports."""
     from .notation import parse_hand
 
     score = m21.stream.Score()
     for hand, clef in (("RH", m21.clef.TrebleClef()), ("LH", m21.clef.BassClef())):
-        if not any(hand in b for b in song["bars"]):
+        hand2 = f"{hand}2"
+        if not any(hand in b or hand2 in b for b in song["bars"]):
             continue
         part = m21.stream.Part(id=hand)
-        tied_in = False  # previous note was tied into this one
+        tied_in = False
+        tied_in2 = False
         for i, bar in enumerate(song["bars"]):
             m = m21.stream.Measure(number=i + 1)
             if i == 0:
                 m.append([clef, m21.meter.TimeSignature(song["time"]), _m21_key(song["key"])])
-            for e in parse_hand(bar.get(hand, "")):
-                ql = dur_beats(e.dur, 4)
-                if e.is_rest:
-                    el = m21.note.Rest(quarterLength=ql)
-                else:
-                    names = [p.letter + p.acc.replace("b", "-") + str(p.octave) for p in e.pitches]
-                    el = (
-                        m21.note.Note(names[0], quarterLength=ql)
-                        if len(names) == 1
-                        else m21.chord.Chord(names, quarterLength=ql)
-                    )
-                    for f in e.fingers:  # music21 writes chord fingerings to the notes in this order
-                        el.articulations.append(m21.articulations.Fingering(f))
-                    if e.tie or tied_in:
-                        el.tie = m21.tie.Tie(
-                            "continue" if e.tie and tied_in else "start" if e.tie else "stop"
+            has_v2 = hand2 in bar
+            if not has_v2:
+                for e in parse_hand(bar.get(hand, "")):
+                    ql = dur_beats(e.dur, 4)
+                    if e.is_rest or e.is_spacer:
+                        el = m21.note.Rest(quarterLength=ql)
+                        if e.is_spacer:
+                            el.style.hideObjectOnPrint = True
+                    else:
+                        names = [p.letter + p.acc.replace("b", "-") + str(p.octave) for p in e.pitches]
+                        el = (
+                            m21.note.Note(names[0], quarterLength=ql)
+                            if len(names) == 1
+                            else m21.chord.Chord(names, quarterLength=ql)
                         )
-                tied_in = e.tie
-                m.append(el)
+                        for f in e.fingers:
+                            el.articulations.append(m21.articulations.Fingering(f))
+                        if e.tie or tied_in:
+                            el.tie = m21.tie.Tie(
+                                "continue" if e.tie and tied_in else "start" if e.tie else "stop"
+                            )
+                    tied_in = e.tie
+                    m.append(el)
+            else:
+                v1 = m21.stream.Voice(id="1")
+                for e in parse_hand(bar.get(hand, "")):
+                    ql = dur_beats(e.dur, 4)
+                    if e.is_rest or e.is_spacer:
+                        el = m21.note.Rest(quarterLength=ql)
+                        if e.is_spacer:
+                            el.style.hideObjectOnPrint = True
+                    else:
+                        names = [p.letter + p.acc.replace("b", "-") + str(p.octave) for p in e.pitches]
+                        el = (
+                            m21.note.Note(names[0], quarterLength=ql)
+                            if len(names) == 1
+                            else m21.chord.Chord(names, quarterLength=ql)
+                        )
+                        for f in e.fingers:
+                            el.articulations.append(m21.articulations.Fingering(f))
+                        if e.tie or tied_in:
+                            el.tie = m21.tie.Tie(
+                                "continue" if e.tie and tied_in else "start" if e.tie else "stop"
+                            )
+                    tied_in = e.tie
+                    v1.append(el)
+
+                v2 = m21.stream.Voice(id="2")
+                for e in parse_hand(bar.get(hand2, "")):
+                    ql = dur_beats(e.dur, 4)
+                    if e.is_rest or e.is_spacer:
+                        el = m21.note.Rest(quarterLength=ql)
+                        if e.is_spacer:
+                            el.style.hideObjectOnPrint = True
+                    else:
+                        names = [p.letter + p.acc.replace("b", "-") + str(p.octave) for p in e.pitches]
+                        el = (
+                            m21.note.Note(names[0], quarterLength=ql)
+                            if len(names) == 1
+                            else m21.chord.Chord(names, quarterLength=ql)
+                        )
+                        for f in e.fingers:
+                            el.articulations.append(m21.articulations.Fingering(f))
+                        if e.tie or tied_in2:
+                            el.tie = m21.tie.Tie(
+                                "continue" if e.tie and tied_in2 else "start" if e.tie else "stop"
+                            )
+                    tied_in2 = e.tie
+                    v2.append(el)
+
+                m.insert(0, v1)
+                m.insert(0, v2)
             part.append(m)
         score.append(part)
     return score

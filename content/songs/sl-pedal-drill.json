@@ -1,0 +1,61 @@
+{
+  "id": "sl-pedal-drill",
+  "title": "Pedal bass",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F/C\"} C4F4A4:1@125",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G/C\"} G3B3D4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"Am/C\"} C4E4A4:1@125",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F/C\"} C4F4A4:1@125",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G/C\"} G3B3D4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      1,
+      6
+    ]
+  ]
+}

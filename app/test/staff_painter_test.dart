@@ -99,4 +99,125 @@ void main() {
     expect(mid, inInclusiveRange(1, 254));
     expect(alphaAround(200 + space * 0.6, cy), 255);
   });
+
+  testWidgets(
+    'stem directions, unison noteheads, voice-2 rest offset and hidden spacers',
+    (tester) async {
+      const size = Size(600, 400);
+      final now = ValueNotifier<double>(0);
+      final painter = StaffPainter(
+        notes: const [
+          // Spacer at beat 0: draws nothing
+          StaffNote(60, 0, 1, isSpacer: true),
+          // Note with stem down at beat 1
+          StaffNote(64, 1, 1, stemDown: true),
+          // Note with stem up at beat 2
+          StaffNote(64, 2, 1, stemDown: false),
+          // Unison note at beat 3 (twoStems)
+          StaffNote(64, 3, 1, twoStems: true),
+          // Rest voice 1 at beat 4
+          StaffNote(60, 4, 1, isRest: true, voice: 1),
+          // Rest voice 2 at beat 4 (offset down)
+          StaffNote(60, 4, 1, isRest: true, voice: 2),
+        ],
+        playheadBeat: now,
+        pixelsPerBeat: 60,
+        lineRatio: 0.1,
+        staves: Staves.treble,
+        playheadColor: const Color(0xFFFF0000),
+        inkColor: const Color(0xFF000000),
+      );
+      final rec = ui.PictureRecorder();
+      painter.paint(Canvas(rec), size);
+      final img = await tester.runAsync(
+        () =>
+            rec.endRecording().toImage(size.width.toInt(), size.height.toInt()),
+      );
+      final bytes = (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      expect(bytes.lengthInBytes, size.width.toInt() * size.height.toInt() * 4);
+    },
+  );
+
+  group('barLineX', () {
+    const space = 14.0;
+    const anchorX = 200.0;
+    const nowBeat = 0.0;
+    const ppb = 70.0;
+
+    test('without preceding notes: nominal offset space * 0.8', () {
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: const [],
+      );
+      final barX = anchorX + 4.0 * ppb;
+      expect(bx, closeTo(barX - space * 0.8, 0.001));
+    });
+
+    test('with quarter note before bar: nominal offset retained', () {
+      final notes = [const StaffNote(60, 3.0, 1.0)];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * ppb;
+      expect(bx, closeTo(barX - space * 0.8, 0.001));
+    });
+
+    test('with eighth note before bar: balanced between stem and next bar', () {
+      // Eighth note at beat 3.5, bar line at 4.0, next note at 4.0
+      final notes = [
+        const StaffNote(62, 3.5, 0.5), // D4 eighth note
+        const StaffNote(64, 4.0, 1.0), // E4 quarter note
+      ];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * ppb;
+      final prevRight = anchorX + 3.5 * ppb + space * 1.18;
+      final nominalBx = barX - space * 0.8;
+
+      // Centered between prevRight and barX
+      expect(bx, closeTo((prevRight + barX) / 2, 0.001));
+      // Gives strictly more space to the eighth note stem than nominalBx
+      expect(bx - prevRight, greaterThan(nominalBx - prevRight));
+      expect(bx - prevRight, closeTo(barX - bx, 0.001));
+    });
+
+    test('with accidental on next note: stays clear of the sharp sign', () {
+      const density = 95.0; // density for subdivisions
+      final notes = [
+        const StaffNote(62, 3.5, 0.5),
+        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.4 sp)
+      ];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: density,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * density;
+      final accidentalLeft = barX - space * 1.4;
+      final prevRight = anchorX + 3.5 * density + space * 1.18;
+      // Bar line must be between the preceding note stem and the accidental
+      expect(bx, lessThan(accidentalLeft));
+      expect(bx, greaterThan(prevRight));
+    });
+  });
 }

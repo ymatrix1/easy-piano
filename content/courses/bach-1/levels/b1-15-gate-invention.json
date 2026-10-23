@@ -1,0 +1,14 @@
+{
+  "id": "b1-15-gate-invention",
+  "title": "str:level.b1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "b1-mini-invention",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

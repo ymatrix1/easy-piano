@@ -287,7 +287,7 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Decision:** A pure Rust module `core/src/difficulty.rs` computes features per hand and per bar, groups them into 8 skill scores in 0..1 (reading, hand position, intervals, rhythm, key, coordination, texture, speed) and maps them to a level 1-10 with a cumulative-logit ordinal model whose weights are non-negative. Weights live in `core/data/difficulty-weights.json`, fitted by `tools/difficulty/calibrate.py` from course order, node envelopes, simplified-vs-original pairs and (when present locally) PDMX `complexity` as weak labels. Output: level, `node_fit` (earliest journey node whose taught set the song fits, computed with the rubric's own taught-set check), skill scores, hardest bars, plain reasons, and what exceeds a given node. `content level` exposes it; lint warns when a course song's level is far from its node. Spec: [specs/difficulty.md](specs/difficulty.md).
 - **Why:** Skill scores are explainable ("hard because of 16ths and hand shifts") and map to course concepts. Non-negative weights over features that only grow with difficulty make the level monotonic: more of any difficulty never lowers it, which a learner and an author can trust. An ordinal model fits 10 ordered levels with few parameters, so ~40 course songs can calibrate it. One Rust implementation serves the app, the CLI and Python (via the CLI), so labels, checks and the app never disagree.
 - **Alternatives:** Keep `level_of` (unexplained, not tied to the course); hand-set thresholds per feature (no calibration, brittle); gradient-boosted or neural regressor on PDMX (opaque, not monotonic, PDMX labels are coarse 0-3 and uploader-set); level = node index from the rubric alone (only defined for songs inside the course's taught set, says nothing above Essentials III).
-- **Impact:** New core module, weights JSON, `content level` command, lint warning, calibration script. Follow-ups: replace the melody model's `level_of` (bean piano-9aw0), use in import and placement. Weights must be refitted when course content changes a lot; lint's warning shows drift.
+- **Impact:** New core module, weights JSON, `content level` command, lint warning, calibration script. Follow-ups: replace the melody model's `level_of` (bean piano-9aw0), use in import and placement. Weights must be refitted when course content changes a lot; lint's warning shows drift. Update 2026-10-22 (still proposed): the expected-level ramp follows prerequisite depth (stage) instead of walk position, so the Soloist and Chords tracks are ranked side by side ([difficulty](specs/difficulty.md)); the lint test keeps Kendall τ > 0.5 on the calibrated basic courses and > 0.4 on the whole path until the model is refitted with track songs (piano-j1jn).
 
 ### D27. Melody-model similarity check reports, does not block, until calibrated
 
@@ -357,7 +357,37 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
   - Deviation from rule 7 (OQ11) gets larger: decoding and thresholds run in JS in a worker, not in Rust `core`; grading stays in `core`.
   - New `tools/mic-model/` (uv, CUDA torch, not in CI): data generator, training, ONNX export, evaluation, parity tests. Beans: piano-goe3 (this), piano-m4r9 (real devices).
 
-### D33. Android MIDI and mic through a platform channel, detector stays in Dart (proposed)
+### D33. Methods: Bartók's Mikrokosmos from the Mikrokosmos-difficulty MusicXML, restricted in the US until 2036
+
+- **Status:** proposed
+- **Context:** The methods spike ([research](research/piano-method-library-spike.md)) proposed a Methods area of guided tracks and put Bartók last because of territory. The user chose Mikrokosmos first, since the [Mikrokosmos-difficulty](https://github.com/PRamoneda/Mikrokosmos-difficulty) dataset already has MusicXML for 147 pieces. That repository has no licence file; the XML is an OMR transcription with manual corrections of an IMSLP PDF. The composition is public domain in Brazil and the EU (Bartók d. 1945) and protected in the USA until 2036-01-01 (first published 1940).
+- **Decision:** Import pieces from the dataset MusicXML with `melody_model.mikrokosmos` into a `methods` section, one course per Bartók volume `mikrokosmos-1` to `-5` (one node and level per piece). Song files record `source: "Mikrokosmos-difficulty"`, the file's `source_url`, `arranger` naming Bartók and the transcriber, `license: public-domain` (a faithful transcription of a public-domain score, no new arrangement), `composition_license: public-domain` and `restricted_in: [{"region": "US", "until": "2036-01-01"}]`. The user decided to use the XML and publish on 2026-10-22. Methods courses are off the difficulty ramp and out of the similarity calibration set.
+- **Why:** Mikrokosmos is graded by its composer and sequenced as a method, and the dataset saves an engraving pass: 32 of Book 1's 36 pieces convert as written. Recording the US term per song keeps the restriction machine-readable for region filtering.
+- **Alternatives:** Burgmüller Op. 100 first, as the spike recommended (no US issue, but no ready MusicXML); encode Mikrokosmos ourselves from a public-domain edition (same composition question, more work, our own licence); keep the dataset XML local and only publish after the author grants a licence; skip Bartók until 2036.
+- **Impact:**
+  - **Rights, for the user to decide:** this departs from `.agents/rules/content-and-licensing.md`, which needs an explicit CC0/PD/CC-BY/CC-BY-SA licence on the arrangement; the dataset gives none, and `license: public-domain` is our reading, not the author's grant. The public repository and the web build reach US users while the composition is protected there; `restricted_in` is metadata only until the app filters by region (bean piano-7os5). Accepting D33 accepts both points. Asking the author for a licence: bean piano-xmga.
+  - New optional song field `restricted_in` (schema, core `Song`, lint), `content-format.md`; Methods off the ramp in `difficulty.md`; skill specs not required for Methods nodes.
+  - Book 1 gaps (Nos. 12, 25, 32, 33): bean piano-zn4c. No fingering in these songs (the dataset has none).
+
+### D34. Two voices per hand as `RH2` / `LH2` bar keys
+
+- **Status:** proposed
+- **Context:** The song format has one line per hand (chords allowed). 69 of the 147 Mikrokosmos pieces, and most piano repertoire past beginner level, have a hand holding one line while it plays another; the importer refuses them rather than drop notes ([research](research/mikrokosmos-import.md)).
+- **Decision:** A bar may add `RH2` / `LH2`, a second voice of that hand in the same notation, plus an invisible spacer token `s:<dur>`. Grading keeps onset-based targets per hand, so both voices of a hand merge into one target stream; engraving draws voice 1 and voice 2 with opposite stems. Full rules: [content-format](specs/content-format.md#two-voices-per-hand-rh2-lh2).
+- **Why:** Separate keys reuse the existing parser, bar-length lint and fingering per voice, and leave every current song valid. Matching ignores durations, so the engine needs almost no change.
+- **Alternatives:** A voice separator inside one hand string (`"RH": "... // ..."`: harder to lint and diff); per-note voice marks (verbose, breaks the token grammar); n voices (`RH1..RHn`: no content needs more than two yet); flatten voices into chords with ties (wrong durations and engraving).
+- **Impact:** core `Song` / `notation` / timeline, staff renderer, difficulty feature, rubric flag, converter and importer, schema. Implementation: bean piano-16vk; then the rest of Mikrokosmos: bean piano-s1iz.
+
+### D35. Methods live in their own library, reached from one card on the Learn tab
+
+- **Status:** proposed
+- **Context:** D33 put Mikrokosmos I as a numbered course card in a `methods` section of the Learn tab. Mikrokosmos alone has six books, and more methods are planned; a flat list of course cards buries the main path and suggests a required order.
+- **Decision:** Group method books by method in `content/methods.json`; the Learn tab shows the main path and one Methods card that opens a library (one card per method) and a method page (books as sections, Continue). Method courses are unnumbered, never locked, and restricted pieces show locked with the reason. Spec: [methods](specs/methods.md).
+- **Why:** Keeps the main path short and clearly sequential, scales to many methods and books, and gives each method room for its own description and progress.
+- **Alternatives:** A fourth bottom-nav tab "Methods" (more visible, but spends navigation on optional content); keep course cards in a section (does not scale); one course per method with books as journey nodes (loses per-book progress and order).
+- **Impact:** New `content/methods.json`, course field `method`, lint rules, two new screens, strings; off-ramp rule moves from section to `method`. Implementation: bean piano-d72v.
+
+### D36. Android MIDI and mic through a platform channel, detector stays in Dart (proposed)
 
 - **Status:** proposed
 - **Context:** Native builds used stub inputs; web has Web MIDI and a getUserMedia + Dart `NoteDetector` mic path (D29). The phone is the main target. The plan named `android.media.midi` and Oboe.

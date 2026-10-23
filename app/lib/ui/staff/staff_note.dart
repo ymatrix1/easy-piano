@@ -5,6 +5,11 @@ class StaffNote {
     this.beat,
     this.beats, {
     this.leftHand = false,
+    this.voice = 1,
+    this.stemDown = false,
+    this.twoStems = false,
+    this.isRest = false,
+    this.isSpacer = false,
     this.finger,
   });
 
@@ -17,6 +22,11 @@ class StaffNote {
   /// Duration in beats (1 = quarter in 4/4).
   final double beats;
   final bool leftHand;
+  final int voice;
+  final bool stemDown;
+  final bool twoStems;
+  final bool isRest;
+  final bool isSpacer;
 
   /// Finger number 1-5 to print above the note, if any.
   final int? finger;

@@ -1,0 +1,40 @@
+{
+  "id": "ls1-03-yankee-doodle",
+  "title": "str:level.ls1.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "yankee-doodle",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "yankee-doodle",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "yankee-doodle",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "yankee-doodle",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "yankee-doodle",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

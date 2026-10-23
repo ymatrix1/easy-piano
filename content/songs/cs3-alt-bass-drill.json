@@ -1,0 +1,61 @@
+{
+  "id": "cs3-alt-bass-drill",
+  "title": "Root and Fifth",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:2@1 G4:2@3",
+      "LH": "C3:4@5 G3:4@1 C3:4@5 G3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "F4:2@1 A4:2@3",
+      "LH": "F2:4@5 C3:4@1 F2:4@5 C3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:2@1 B4:2@3",
+      "LH": "G2:4@5 D3:4@1 G2:4@5 D3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "E4:1@1",
+      "LH": "C3:4@5 G3:4@1 C3:4@5 G3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:2@3 E4:2@1",
+      "LH": "C3:4@5 G3:4@1 C3:4@5 G3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:2@3 F4:2@1",
+      "LH": "F2:4@5 C3:4@1 F2:4@5 C3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:2@4 D4:2@1",
+      "LH": "G2:4@5 D3:4@1 G2:4@5 D3:4@1",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

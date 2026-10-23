@@ -1,0 +1,40 @@
+{
+  "id": "i2-04-turkey",
+  "title": "str:level.i2.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "turkey-in-the-straw",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "turkey-in-the-straw",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "turkey-in-the-straw",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "turkey-in-the-straw",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "turkey-in-the-straw",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

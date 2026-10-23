@@ -1,0 +1,104 @@
+{
+  "id": "cs2-ballad",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.cs2.ballad.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C2",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 1,
+      "press": "C3",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 3.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 4.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 5,
+      "press": "C2",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "C3",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 5.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 6.5,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 9,
+      "prompt": "your_turn"
+    }
+  ]
+}
