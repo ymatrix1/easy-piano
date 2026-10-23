@@ -5,6 +5,7 @@ import 'package:easy_piano/home/home_page.dart';
 import 'package:easy_piano/home/learn_tab.dart' show CourseNodePage;
 import 'package:easy_piano/input/midi_input.dart';
 import 'package:easy_piano/l10n/app_localizations.dart';
+import 'package:easy_piano/ui/game/game_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -98,6 +99,13 @@ void main() {
     // The course-node URL opens its task page with Practice and Play along.
     expect(find.text('PRACTICE'), findsOneWidget);
     expect(find.text('PLAY ALONG'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Scaffold && widget.backgroundColor == GameColors.bgDeep,
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('PLAY ALONG'));
     await tester.pump(const Duration(milliseconds: 600));

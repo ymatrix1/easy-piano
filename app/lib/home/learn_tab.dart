@@ -776,17 +776,47 @@ class CourseNodePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(repo.t(course.title)),
-      leading: BackButton(onPressed: () => context.pop()),
-    ),
-    body: Center(
-      child: _TaskSheet(
-        repo: repo,
-        progress: Progress(repo, const {}),
-        course: course,
-        node: node,
-        onSelect: (id, stage) => onPlay(id, stage),
+    backgroundColor: GameColors.bgDeep,
+    body: MenuBackground(
+      child: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 64,
+              child: Row(
+                children: [
+                  const SizedBox(width: 12),
+                  GameRoundButton(
+                    icon: Icons.arrow_back_rounded,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
+                    onTap: () => context.pop(),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GameText(
+                      repo.t(course.title),
+                      size: 20,
+                      align: TextAlign.left,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: _TaskSheet(
+                  repo: repo,
+                  progress: Progress(repo, const {}),
+                  course: course,
+                  node: node,
+                  onSelect: (id, stage) => onPlay(id, stage),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
