@@ -1,0 +1,85 @@
+{
+  "id": "mikrokosmos-026",
+  "title": "Mikrokosmos 26: Repetition (2)",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/26.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 100,
+  "time": "4/4",
+  "key": "D",
+  "bars": [
+    {
+      "RH": "D4:2 E4:4 F#4:4",
+      "LH": "r:1"
+    },
+    {
+      "RH": "G4:2 G4:2",
+      "LH": "A2:2 B2:4 C#3:4"
+    },
+    {
+      "RH": "G4:2 F#4:2",
+      "LH": "D3:2 D3:2"
+    },
+    {
+      "RH": "E4:4 D4:4 E4:4 F#4:4",
+      "LH": "D3:2 C#3:2"
+    },
+    {
+      "RH": "G4:2 G4:2",
+      "LH": "B2:4 A2:4 B2:4 C#3:4"
+    },
+    {
+      "RH": "G4:2 F#4:2",
+      "LH": "D3:2 D3:2"
+    },
+    {
+      "RH": "E4:2 F#4:4 G4:4",
+      "LH": "D3:2 C#3:2"
+    },
+    {
+      "RH": "A4:2 A4:2",
+      "LH": "B2:2 C#3:4 D3:4"
+    },
+    {
+      "RH": "A4:2 G4:4 F#4:4",
+      "LH": "E3:2 E3:2"
+    },
+    {
+      "RH": "G4:4 F#4:4 E4:2",
+      "LH": "E3:2 D3:4 C#3:4"
+    },
+    {
+      "RH": "F#4:4 E4:4 D4:2",
+      "LH": "D3:2 C#3:4 B2:4"
+    },
+    {
+      "RH": "E4:2. F#4:4",
+      "LH": "C#3:4 B2:4 A2:2 {tie}"
+    },
+    {
+      "RH": "G4:2 G4:2",
+      "LH": "A2:4 B2:4 C#3:4 D3:4"
+    },
+    {
+      "RH": "G4:4 F#4:4 E4:4 D4:4",
+      "LH": "E3:4 D3:4 C#3:4 B2:4"
+    },
+    {
+      "RH": "E4:1",
+      "LH": "A2:1"
+    },
+    {
+      "RH": "E4:4 r:4 r:2",
+      "LH": "A2:4 r:4 r:2"
+    }
+  ]
+}

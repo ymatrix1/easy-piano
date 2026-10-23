@@ -86,6 +86,8 @@ Run: `python tools/difficulty/calibrate.py [--data <melody data dir>] [--dry-run
 
 ## Lint
 
+Courses in the `methods` section (optional method books, [D33](../DECISIONS.md)) are off the ramp: their songs get no expected level and are left out of `--course`.
+
 `content lint` warns (never errors) when a course song's level differs from its node's expected level (the linear ramp above, proposed) by more than 2.5. Today this warns on `e3-scale-drill` and `joy-to-the-world` (level 3, node expects ~6).
 
 ## Limits

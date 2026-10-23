@@ -1,0 +1,77 @@
+{
+  "id": "mikrokosmos-027",
+  "title": "Mikrokosmos 27: Syncopation (2)",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/27.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 96,
+  "time": "4/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "C4:2 D4:2 {tie}",
+      "LH": "C3:1"
+    },
+    {
+      "RH": "D4:4 C4:4 D4:4 E4:4",
+      "LH": "B2:1"
+    },
+    {
+      "RH": "F4:2 G4:2 {tie}",
+      "LH": "A2:1"
+    },
+    {
+      "RH": "G4:4 F4:4 E4:4 D4:4",
+      "LH": "B2:1 {tie}"
+    },
+    {
+      "RH": "C4:2 D4:4 E4:4",
+      "LH": "B2:1"
+    },
+    {
+      "RH": "F4:2 E4:2",
+      "LH": "A2:2 B2:4 C3:4"
+    },
+    {
+      "RH": "D4:2 r:2",
+      "LH": "D3:2 r:2"
+    },
+    {
+      "RH": "E4:4 F4:4 E4:4 D4:4",
+      "LH": "r:2 D3:2 {tie}"
+    },
+    {
+      "RH": "E4:1 {tie}",
+      "LH": "D3:4 C3:4 B2:4 C3:4"
+    },
+    {
+      "RH": "E4:4 D4:4 E4:4 F4:4",
+      "LH": "D3:2. C3:4"
+    },
+    {
+      "RH": "G4:1 {tie}",
+      "LH": "B2:4 C3:4 B2:4 A2:4"
+    },
+    {
+      "RH": "G4:2 F4:4 E4:4",
+      "LH": "G#2:2 A2:2 {tie}"
+    },
+    {
+      "RH": "F4:4 E4:4 D4:2",
+      "LH": "A2:2 B2:2"
+    },
+    {
+      "RH": "C4:1",
+      "LH": "C3:1"
+    }
+  ]
+}

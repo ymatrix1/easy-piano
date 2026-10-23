@@ -74,6 +74,16 @@ Songs made by a generator ([D17](../DECISIONS.md), [skill-specs](skill-specs.md)
 
 `generator` is only allowed with `source: generated`; `source_url` is not required for it.
 
+### Regional restriction (optional)
+
+A song whose composition is still protected somewhere lists those regions ([D33](../DECISIONS.md), proposed):
+
+```json
+"restricted_in": [{"region": "US", "until": "2036-01-01"}]
+```
+
+`region` is an ISO 3166-1 alpha-2 code, `until` the first day (`YYYY-MM-DD`) the song may be offered there. The app does not filter by region yet (bean piano-7os5).
+
 ## Note token grammar (draft)
 
 ```
@@ -87,6 +97,48 @@ directive:= "{" name (":" json)? "}"            ; {chord:"C"} {lyric:"..."} {tie
 Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter rest; `F#4:8.` dotted eighth.
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
+
+## Two voices per hand (`RH2`, `LH2`)
+
+Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.
+
+A bar may hold a second voice for either hand. It is written like any hand string:
+
+```json
+{"RH": "E4:4@3 F4:4@4 G4:4@5 A4:4@5", "RH2": "C4:1@1", "LH": "C3:1@5"}
+```
+
+| Key | Meaning | Engraving |
+|---|---|---|
+| `RH`, `LH` | voice 1 (as today) | stems up in `RH`, stems down in `LH` when the hand has a second voice in that bar; otherwise as today |
+| `RH2`, `LH2` | voice 2 of the same hand | stems down in `RH2`, stems up in `LH2` |
+
+Rules:
+
+- Only two voices per hand. A bar without `RH2` / `LH2` is single-voice, so every existing song stays valid.
+- Each voice sums to the time signature on its own (same lint as a hand).
+- Voice 2 needs voice 1 in the same bar: `RH2` without `RH` is an error.
+- New token `s:<dur>`: an invisible rest (spacer). It counts for the bar length, draws nothing and is allowed in any hand or voice. Typical use: `"RH2": "s:2 C4:2"`.
+- Unison: the same pitch with the same onset in both voices of one hand is one target (graded once) and is drawn as one notehead with two stems.
+- Overlap: the same pitch sounding in both voices at once with different onsets is a lint error (one key cannot be struck while held).
+- Fingering (`@`) and `{tie}` work per voice. A tie never joins voice 1 and voice 2.
+- `ACC` and the backing parts have no second voice; they are never graded.
+
+Behaviour:
+
+| Area | Rule |
+|---|---|
+| Timeline (`Song::timeline`) | `TimedNote` gets `voice: u8` (1 or 2); `part` and `left_hand` follow the hand, so `RH2` notes are `Part::Right`. |
+| Matching / grading | Unchanged: targets are (pitch set, onset, hand); notes of both voices with the same onset form one chord. Durations are not graded. |
+| Hand modes | A stage with `hand: "RH"` grades `RH` and `RH2`; the app plays the other hand's two voices. |
+| Wait mode | Waits for every pitch at the onset across both voices; held voice-2 notes keep sounding (app or learner) while voice 1 moves. |
+| Staff | Both voices on the hand's staff; voice-2 rests move down (`RH2`) or up (`LH2`) so they do not collide; spacers draw nothing. |
+| Difficulty (`core/src/difficulty.rs`) | New feature `two_voice_bars_per_bar` (bars where a hand has a second voice / bars); the model is not refitted in this change. |
+| Rubric / skill specs | A song with a second voice needs the taught flag `two_voices`; no main-path node teaches it yet, so the rubric rejects generated songs with voices. |
+| Converter (`tools/melody-model`) | Reads up to two voices per part (MusicXML voice order: first = voice 1); three or more is still `Unsupported`. `song_to_score` writes them back as voices. |
+| Similarity | Melody extraction keeps using the top line of `RH` + `RH2` (skyline). |
+
+Out of this spec: more than two voices, cross-staff notes, meter and key changes in a song, tuplets.
 
 ## Backing parts (`ACC`, `DRUMS`, `BASS`, `PAD`, `CHOIR`)
 
@@ -105,7 +157,7 @@ Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:
 
 ## Journey and levels (implemented)
 
-- `courses.json`: `sections[]` (`id`, `title`) and `courses[]` (`id`, `title`, `description`, `section`, `requires`, `journey`, optional `status`: `ready` (default) or `planned`). Planned courses have no journey and show locked in the app. Hierarchy: section → module (course) → submodule (journey node) → task (level); see [visual-style.md](visual-style.md).
+- `courses.json`: `sections[]` (`id`, `title`; `methods` holds optional method-book courses such as `mikrokosmos-1`, which stay off the difficulty ramp) and `courses[]` (`id`, `title`, `description`, `section`, `requires`, `journey`, optional `status`: `ready` (default) or `planned`). Planned courses have no journey and show locked in the app. Hierarchy: section → module (course) → submodule (journey node) → task (level); see [visual-style.md](visual-style.md).
 - Journey nodes: `id`, `kind` (`lesson`, `song`, `star_gate`, `boss`, `mini_boss`), `title`, `icon`, `levels`, `next`, optional `songs` slots keyed by taste (`default`, `classical`, `folk_world`, …; D12).
 - `star_gate` nodes also need `stars_needed` (1 to 3 × level count): one level per song, and the gate is passed when the stars summed over its levels reach it, so the learner picks which songs to play (e.g. 3 songs, `stars_needed: 5` ≈ any two played well). Other kinds must not set it. Gates never lock anything: until placement exists (OQ9) every node stays open.
 - Level stages: `type` (`wait`, `play_along`, `one_note`, `animation`, `quiz`); `score` required for wait/play_along/one_note; `scene` for animation; optional `tempo` (0.3–1.5), `pass` (0–1), `hand` (`RH`, `LH`, `both`), `pre_listen`, `repeats` (1–10, wait stages repeat in a row).
@@ -114,7 +166,7 @@ Example bar: `"DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:
 
 ## What `content lint` checks
 
-Song metadata and allowed licenses; `source_url` unless `original` or `generated`; `generated` songs need `generator` and CC0-1.0; songs with `spec_node` pass the [rubric](skill-specs.md) for that node; `skill-specs/<course>.json` parse and name real journey nodes; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
+Song metadata and allowed licenses; `restricted_in` region codes and dates; `source_url` unless `original` or `generated`; `generated` songs need `generator` and CC0-1.0; songs with `spec_node` pass the [rubric](skill-specs.md) for that node; `skill-specs/<course>.json` parse and name real journey nodes; bpm range; every bar per hand sums to the time signature; pitches in piano range; finger count matches chord size; critical sections in range; ids match file names; level, scene, score, next-node and song-slot references exist; `star_gate` has a valid `stars_needed`; course sections and statuses are known; planned courses skip journey checks; every `str:` key exists in `strings/en.json`; other `strings/<tag>.json` files warn on missing or stale keys (English fallback, see [i18n](i18n.md)).
 
 ## Rules
 

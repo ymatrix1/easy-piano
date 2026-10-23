@@ -11,6 +11,10 @@
     {
       "id": "chords",
       "title": "str:section.chords"
+    },
+    {
+      "id": "methods",
+      "title": "str:section.methods"
     }
   ],
   "courses": [
@@ -324,6 +328,16 @@
         "lead-sheet-3"
       ],
       "journey": "courses/slash-chords/journey.json"
+    },
+    {
+      "id": "mikrokosmos-1",
+      "title": "str:course.mk1.title",
+      "description": "str:course.mk1.desc",
+      "section": "methods",
+      "requires": [
+        "piano-basics"
+      ],
+      "journey": "courses/mikrokosmos-1/journey.json"
     }
   ]
 }

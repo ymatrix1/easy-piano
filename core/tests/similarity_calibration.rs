@@ -56,6 +56,14 @@ fn is_drill(id: &str) -> bool {
         || id == "c-finder"
 }
 
+/// Method-book pieces (`mikrokosmos-NNN`): short modal studies that reuse their own
+/// material on purpose (No. 17 is No. 13 in contrary motion). Like drills, they stay
+/// out of the calibration set; they are still in the `content similar` corpus.
+fn is_method_piece(id: &str) -> bool {
+    id.rsplit_once('-')
+        .is_some_and(|(book, n)| book == "mikrokosmos" && n.len() == 3)
+}
+
 fn line(pitches: &[u8], beats: f64) -> Vec<MelodyNote> {
     pitches
         .iter()
@@ -116,7 +124,9 @@ fn threshold_separates_copies_from_unrelated_tunes() {
     let mut pd: Vec<(&str, Vec<MelodyNote>)> = Vec::new();
     let mut by_len: Vec<&Song> = all
         .iter()
-        .filter(|s| !is_drill(&s.id) && s.composition_license == "public-domain")
+        .filter(|s| {
+            !is_drill(&s.id) && !is_method_piece(&s.id) && s.composition_license == "public-domain"
+        })
         .filter(|s| basic.contains(&s.id))
         .collect();
     by_len.sort_by_key(|s| std::cmp::Reverse(s.bars.len()));

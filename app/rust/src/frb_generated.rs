@@ -1211,6 +1211,18 @@ impl SseDecode for Vec<String> {
     }
 }
 
+impl SseDecode for Vec<bool> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<bool>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::practice::FeedbackView> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1399,6 +1411,8 @@ impl SseDecode for crate::api::practice::TargetView {
         let mut var_bar = <u32>::sse_decode(deserializer);
         let mut var_pitches = <Vec<u8>>::sse_decode(deserializer);
         let mut var_fingers = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_stemDowns = <Vec<bool>>::sse_decode(deserializer);
+        let mut var_twoStems = <Vec<bool>>::sse_decode(deserializer);
         let mut var_state = <u8>::sse_decode(deserializer);
         return crate::api::practice::TargetView {
             beat: var_beat,
@@ -1406,6 +1420,8 @@ impl SseDecode for crate::api::practice::TargetView {
             bar: var_bar,
             pitches: var_pitches,
             fingers: var_fingers,
+            stem_downs: var_stemDowns,
+            two_stems: var_twoStems,
             state: var_state,
         };
     }
@@ -1706,6 +1722,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::TargetView {
             self.bar.into_into_dart().into_dart(),
             self.pitches.into_into_dart().into_dart(),
             self.fingers.into_into_dart().into_dart(),
+            self.stem_downs.into_into_dart().into_dart(),
+            self.two_stems.into_into_dart().into_dart(),
             self.state.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -1815,6 +1833,16 @@ impl SseEncode for Vec<String> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <String>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<bool> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <bool>::sse_encode(item, serializer);
         }
     }
 }
@@ -1952,6 +1980,8 @@ impl SseEncode for crate::api::practice::TargetView {
         <u32>::sse_encode(self.bar, serializer);
         <Vec<u8>>::sse_encode(self.pitches, serializer);
         <Vec<u8>>::sse_encode(self.fingers, serializer);
+        <Vec<bool>>::sse_encode(self.stem_downs, serializer);
+        <Vec<bool>>::sse_encode(self.two_stems, serializer);
         <u8>::sse_encode(self.state, serializer);
     }
 }

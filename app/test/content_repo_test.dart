@@ -35,7 +35,12 @@ void main() {
 
   test('sections and planned modules load', () {
     final repo = ContentRepo.fromFiles(files);
-    expect(repo.sections.map((s) => s.id), ['basic', 'soloist', 'chords']);
+    expect(repo.sections.map((s) => s.id), [
+      'basic',
+      'soloist',
+      'chords',
+      'methods',
+    ]);
     final planned = repo.courses.where((c) => c.planned).toList();
     // Every playable course resolves all of its levels.
     final ready = repo.courses.where((c) => !c.planned).toList();

@@ -32,6 +32,7 @@ pub struct CourseSong {
 
 /// Course songs (not generated) in learning order, each at its first node, plus
 /// each node's skill envelope (most of each skill seen up to that node).
+/// Nodes off the ramp (Methods courses) add no songs; their envelope is the last one.
 pub fn course_songs(
     walk: &[NodeTaught],
     songs: &BTreeMap<String, Song>,
@@ -39,11 +40,20 @@ pub fn course_songs(
 ) -> (Vec<CourseSong>, Vec<Skills>) {
     // Expected level ramps with the learning stage (prerequisite depth), so
     // parallel tracks after the same course expect the same level.
-    let top = walk.iter().map(|w| w.stage).fold(0.0, f64::max).max(1.0);
+    let top = walk
+        .iter()
+        .filter(|w| w.on_ramp)
+        .map(|w| w.stage)
+        .fold(0.0, f64::max)
+        .max(1.0);
     let [lo, hi] = model.course_levels;
     let (mut out, mut envs) = (Vec::<CourseSong>::new(), Vec::new());
     let mut env: Skills = [0.0; 8];
     for (i, w) in walk.iter().enumerate() {
+        if !w.on_ramp {
+            envs.push(env);
+            continue;
+        }
         for s in w
             .songs
             .iter()

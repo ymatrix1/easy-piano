@@ -20,7 +20,7 @@ DURATIONS = ("1", "1.", "2", "2.", "2..", "4", "4.", "4..", "8", "8.", "16", "16
 _STEP_SEMITONES = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 _PITCH_RE = re.compile(r"([A-G])(#|b)?(\d)")
 _CHORD_SYMBOL_RE = re.compile(r'^\{chord:"[^"\s]+"\}$')
-_TOKEN_RE = re.compile(r"^(?P<pitches>(?:[A-G](?:#|b)?\d)+|r):(?P<dur>\d+\.*)(?:@(?P<fingers>[1-5]+))?$")
+_TOKEN_RE = re.compile(r"^(?P<pitches>(?:[A-G](?:#|b)?\d)+|[rs]):(?P<dur>\d+\.*)(?:@(?P<fingers>[1-5]+))?$")
 
 
 class Unsupported(ValueError):
@@ -45,16 +45,17 @@ class Pitch:
 
 @dataclass
 class Event:
-    """One note, chord or rest."""
+    """One note, chord, rest or spacer."""
 
-    pitches: list[Pitch]  # empty = rest
+    pitches: list[Pitch]  # empty = rest or spacer
     dur: str
     fingers: list[int] = field(default_factory=list)  # empty = no fingering
     tie: bool = False  # tied into the next note (written as a following `{tie}` token)
+    is_spacer: bool = False
 
     @property
     def is_rest(self) -> bool:
-        return not self.pitches
+        return not self.pitches and not self.is_spacer
 
 
 def dur_beats(dur: str, denom: int) -> float:
@@ -93,18 +94,19 @@ def parse_hand(text: str) -> list[Event]:
         if dur not in DURATIONS:
             raise Unsupported(f"duration {dur!r}")
         raw = m.group("pitches")
-        pitches = [] if raw == "r" else [parse_pitch(p.group(0)) for p in _PITCH_RE.finditer(raw)]
+        is_spacer = raw == "s"
+        pitches = [] if raw in ("r", "s") else [parse_pitch(p.group(0)) for p in _PITCH_RE.finditer(raw)]
         fingers = [int(c) for c in m.group("fingers") or ""]
         if fingers and len(fingers) != len(pitches):
             raise Unsupported(f"finger count in {tok!r}")
-        events.append(Event(pitches, dur, fingers))
+        events.append(Event(pitches, dur, fingers, is_spacer=is_spacer))
     return events
 
 
 def format_hand(events: list[Event]) -> str:
     out = []
     for e in events:
-        head = "r" if e.is_rest else "".join(p.name for p in e.pitches)
+        head = "s" if e.is_spacer else ("r" if e.is_rest else "".join(p.name for p in e.pitches))
         fing = "@" + "".join(str(f) for f in e.fingers) if e.fingers else ""
         out.append(f"{head}:{e.dur}{fing}")
         if e.tie:

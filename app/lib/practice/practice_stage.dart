@@ -55,6 +55,15 @@ Staves stavesForUi(String ui) => switch (ui) {
   _ => Staves.grand,
 };
 
+/// A grand staff with nothing to show on one of its staves collapses to the
+/// other (e.g. a right-hand stage of a two-hand piece hides the bass staff).
+Staves fitStaves(Staves staves, Iterable<StaffNote> notes) {
+  if (staves != Staves.grand || notes.isEmpty) return staves;
+  if (!notes.any((n) => n.leftHand)) return Staves.treble;
+  if (!notes.any((n) => !n.leftHand)) return Staves.bass;
+  return staves;
+}
+
 /// One playable stage (wait / play_along / one_note), graded by the Rust core.
 ///
 /// Wait: the exercise is laid out on a still page; the highlight jumps to the
@@ -310,7 +319,19 @@ class _PracticeStageState extends State<PracticeStage>
         final f = k < t.fingers.length && t.fingers[k] > 0
             ? t.fingers[k]
             : null;
-        _notes.add(StaffNote(p, t.beat, t.beats, leftHand: p < 60, finger: f));
+        final down = k < t.stemDowns.length && t.stemDowns[k];
+        final two = k < t.twoStems.length && t.twoStems[k];
+        _notes.add(
+          StaffNote(
+            p,
+            t.beat,
+            t.beats,
+            leftHand: p < 60,
+            stemDown: down,
+            twoStems: two,
+            finger: f,
+          ),
+        );
         _noteTarget.add(i);
       }
     }
@@ -1242,7 +1263,10 @@ class _PracticeStageState extends State<PracticeStage>
                           playheadColor: StagePalette.playBar,
                           lineRatio: _playAlong ? _playLine : _waitAnchor,
                           showPlayLine: _playAlong,
-                          staves: widget.staves,
+                          // Streamed bars may add notes to either staff later.
+                          staves: widget.feed == null
+                              ? fitStaves(widget.staves, _notes)
+                              : widget.staves,
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
                           dimmed: _paused || _demo,

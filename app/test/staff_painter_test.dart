@@ -99,4 +99,44 @@ void main() {
     expect(mid, inInclusiveRange(1, 254));
     expect(alphaAround(200 + space * 0.6, cy), 255);
   });
+
+  testWidgets(
+    'stem directions, unison noteheads, voice-2 rest offset and hidden spacers',
+    (tester) async {
+      const size = Size(600, 400);
+      final now = ValueNotifier<double>(0);
+      final painter = StaffPainter(
+        notes: const [
+          // Spacer at beat 0: draws nothing
+          StaffNote(60, 0, 1, isSpacer: true),
+          // Note with stem down at beat 1
+          StaffNote(64, 1, 1, stemDown: true),
+          // Note with stem up at beat 2
+          StaffNote(64, 2, 1, stemDown: false),
+          // Unison note at beat 3 (twoStems)
+          StaffNote(64, 3, 1, twoStems: true),
+          // Rest voice 1 at beat 4
+          StaffNote(60, 4, 1, isRest: true, voice: 1),
+          // Rest voice 2 at beat 4 (offset down)
+          StaffNote(60, 4, 1, isRest: true, voice: 2),
+        ],
+        playheadBeat: now,
+        pixelsPerBeat: 60,
+        lineRatio: 0.1,
+        staves: Staves.treble,
+        playheadColor: const Color(0xFFFF0000),
+        inkColor: const Color(0xFF000000),
+      );
+      final rec = ui.PictureRecorder();
+      painter.paint(Canvas(rec), size);
+      final img = await tester.runAsync(
+        () =>
+            rec.endRecording().toImage(size.width.toInt(), size.height.toInt()),
+      );
+      final bytes = (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      expect(bytes.lengthInBytes, size.width.toInt() * size.height.toInt() * 4);
+    },
+  );
 }

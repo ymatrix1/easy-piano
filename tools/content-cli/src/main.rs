@@ -116,9 +116,15 @@ fn load_songs(root: &Path) -> (BTreeMap<String, Song>, Vec<(PathBuf, String)>) {
 }
 
 /// One journey node with the songs its levels play and everything taught so far.
+/// Sections whose courses are optional repertoire, not steps of the main path.
+const OFF_RAMP_SECTIONS: [&str; 1] = ["methods"];
+
 struct NodeTaught {
     course: String,
     node: String,
+    /// On the main learning path; optional Methods courses are not, so they stay
+    /// out of the difficulty ramp (docs/specs/difficulty.md).
+    on_ramp: bool,
     kind: String,
     songs: Vec<String>,
     taught: TaughtSet,
@@ -178,6 +184,10 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             .max()
             .unwrap_or(0);
         depth.insert(cid.to_string(), d);
+        let on_ramp = !course
+            .get("section")
+            .and_then(Value::as_str)
+            .is_some_and(|s| OFF_RAMP_SECTIONS.contains(&s));
         if course.get("status").and_then(Value::as_str) == Some("planned") {
             continue;
         }
@@ -255,6 +265,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             }
             out.push(NodeTaught {
                 course: cid.to_string(),
+                on_ramp,
                 node: node
                     .get("id")
                     .and_then(Value::as_str)
@@ -344,6 +355,7 @@ fn specs_report(root: &Path) -> (Value, Lint) {
                 "course": w.course,
                 "node": w.node,
                 "kind": w.kind,
+                "on_ramp": w.on_ramp,
                 "songs": w.songs,
                 "taught": w.taught.to_json(),
                 "spec": spec.map(|s| serde_json::json!({
@@ -1070,14 +1082,14 @@ mod tests {
     }
 
     #[test]
-    fn repo_skill_specs_cover_every_node_and_parse() {
+    fn repo_skill_specs_cover_every_main_path_node_and_parse() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../content");
         let (report, lint) = specs_report(&root);
         assert!(lint.errors.is_empty(), "{:?}", lint.errors);
         let nodes = report.as_array().unwrap();
         let missing: Vec<String> = nodes
             .iter()
-            .filter(|n| n["spec"].is_null())
+            .filter(|n| n["on_ramp"] == true && n["spec"].is_null())
             .map(|n| {
                 format!(
                     "{}/{}",
@@ -1139,6 +1151,16 @@ mod tests {
             last.id,
             last.level
         );
+    }
+
+    #[test]
+    fn methods_courses_stay_off_the_difficulty_ramp() {
+        let (songs, walk) = repo_walk();
+        let methods: Vec<_> = walk.iter().filter(|w| !w.on_ramp).collect();
+        assert!(methods.iter().any(|w| w.course == "mikrokosmos-1"));
+        let (list, envs) = level::course_songs(&walk, &songs, &Model::builtin());
+        assert_eq!(envs.len(), walk.len());
+        assert!(list.iter().all(|c| !c.node.starts_with("mikrokosmos-1/")));
     }
 
     #[test]

@@ -1,0 +1,85 @@
+{
+  "id": "mikrokosmos-021",
+  "title": "Mikrokosmos 21: Four Unison Melodies, no. 4",
+  "composer": "Béla Bartók",
+  "arranger": "Béla Bartók; MusicXML by Pedro Ramoneda (Mikrokosmos-difficulty)",
+  "source": "Mikrokosmos-difficulty",
+  "source_url": "https://github.com/PRamoneda/Mikrokosmos-difficulty/blob/main/musicxml/21.xml",
+  "license": "public-domain",
+  "composition_license": "public-domain",
+  "restricted_in": [
+    {
+      "region": "US",
+      "until": "2036-01-01"
+    }
+  ],
+  "bpm": 130,
+  "time": "3/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "A4:4 B4:4 C5:4",
+      "LH": "A2:4 B2:4 C3:4"
+    },
+    {
+      "RH": "B4:4 C5:4 D5:4",
+      "LH": "B2:4 C3:4 D3:4"
+    },
+    {
+      "RH": "C5:4 A4:2",
+      "LH": "C3:4 A2:2"
+    },
+    {
+      "RH": "D5:4 C5:4 B4:4",
+      "LH": "D3:4 C3:4 B2:4"
+    },
+    {
+      "RH": "C5:4 E5:2",
+      "LH": "C3:4 E3:2"
+    },
+    {
+      "RH": "D5:4 C5:4 B4:4",
+      "LH": "D3:4 C3:4 B2:4"
+    },
+    {
+      "RH": "A4:2 C5:4",
+      "LH": "A2:2 C3:4"
+    },
+    {
+      "RH": "B4:2.",
+      "LH": "B2:2."
+    },
+    {
+      "RH": "E5:4 D5:4 C5:4",
+      "LH": "r:2."
+    },
+    {
+      "RH": "r:2.",
+      "LH": "D3:4 C3:4 B2:4"
+    },
+    {
+      "RH": "C5:4 B4:4 A4:4",
+      "LH": "r:4 r:4 A2:4"
+    },
+    {
+      "RH": "B4:4 C5:4 D5:4",
+      "LH": "B2:4 C3:4 D3:4"
+    },
+    {
+      "RH": "E5:2. {tie}",
+      "LH": "E3:2. {tie}"
+    },
+    {
+      "RH": "E5:4 C5:4 D5:4",
+      "LH": "E3:2. {tie}"
+    },
+    {
+      "RH": "A4:4 r:4 r:4",
+      "LH": "E3:4 C3:4 D3:4"
+    },
+    {
+      "RH": "r:2.",
+      "LH": "A2:4 r:4 r:4"
+    }
+  ]
+}
