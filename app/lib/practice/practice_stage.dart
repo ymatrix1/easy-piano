@@ -389,13 +389,16 @@ class _PracticeStageState extends State<PracticeStage>
   bool get _hasSubdivisions =>
       _notes.any((n) => !n.isSpacer && !n.isRest && n.beats < 1.0);
 
-  /// Wait mode fits the whole exercise on one page when it can.
+  /// Wait mode fits 3-4 measures on screen maintaining readable horizontal
+  /// density without squashing long pieces across a single view.
   void _fitPage(double width) {
     _staffWidth = width;
     if (_playAlong || widget.feed != null) return;
     final usable = (0.92 - _waitAnchor) * width;
     final minPpb = _hasSubdivisions ? 95.0 : _minPpb;
-    _ppb = (usable / _totalBeats).clamp(minPpb, _maxPpb);
+    // Limit target measures to at most 4 bars per screen for spacious engraving
+    final targetBeats = math.min(_totalBeats, _beatsPerBar * 4.0);
+    _ppb = (usable / targetBeats).clamp(minPpb, _maxPpb);
   }
 
   int _usAt(double ms) => ((ms - _startMs) * 1000).round();
