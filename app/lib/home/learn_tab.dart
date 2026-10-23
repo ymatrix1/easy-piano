@@ -325,8 +325,6 @@ class _OuterTrailItem extends StatefulWidget {
 }
 
 class _OuterTrailItemState extends State<_OuterTrailItem> {
-  var _hovered = false;
-
   @override
   Widget build(BuildContext context) {
     final (Color fill, Color fg) = switch (widget.state) {
@@ -354,35 +352,30 @@ class _OuterTrailItemState extends State<_OuterTrailItem> {
     );
     if (widget.state == _State.current) marker = Bob(child: marker);
     // Stack, not IntrinsicHeight: the card animates its height when it
-    // expands. Hide the outer rail while expanded or hovered so it doesn't
-    // run beside the highlighted course content.
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: Stack(
-        children: [
-          if (!widget.last && !widget.expanded && !_hovered)
-            Positioned(
-              left: 18,
-              top: 58,
-              bottom: 4,
-              width: 4,
-              child: _FlowRail(
-                color: widget.state == _State.locked
-                    ? const Color(0xFF2A2850)
-                    : fill,
-                flowing:
-                    widget.state == _State.current ||
-                    widget.state == _State.done,
-              ),
+    // expands. Keep the connector in the gutter, ending before the card's
+    // chamfered bottom-left corner even when its hover transform lifts it.
+    return Stack(
+      children: [
+        if (!widget.last && !widget.expanded)
+          Positioned(
+            left: 18,
+            top: 58,
+            bottom: 16,
+            width: 4,
+            child: _FlowRail(
+              color: widget.state == _State.locked
+                  ? const Color(0xFF2A2850)
+                  : fill,
+              flowing:
+                  widget.state == _State.current || widget.state == _State.done,
             ),
-          Positioned(left: 0, top: 14, child: marker),
-          Padding(
-            padding: EdgeInsets.only(left: 54, bottom: widget.last ? 0 : 16),
-            child: widget.child,
           ),
-        ],
-      ),
+        Positioned(left: 0, top: 14, child: marker),
+        Padding(
+          padding: EdgeInsets.only(left: 54, bottom: widget.last ? 0 : 16),
+          child: widget.child,
+        ),
+      ],
     );
   }
 }

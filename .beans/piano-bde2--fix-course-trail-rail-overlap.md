@@ -14,7 +14,7 @@ Higher Goal: Keep course progress decoration clear and readable.
 
 Acceptance Criteria:
 - [x] The inner connector paints behind course node markers, including the yellow current marker and trophy icon.
-- [x] The outer course connector is hidden while its course is expanded or hovered.
+- [x] The outer course connector is hidden while its course is expanded and clears the next card bottom-left chamfer during hover lift.
 - [x] UI source formatting is clean.
 
 Out of Scope: Redesigning the course map.
