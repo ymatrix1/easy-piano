@@ -77,6 +77,10 @@ Ideas, bug reports and pull requests are welcome. Before you start:
 - Run `cargo test` in `core/` and `cargo run -- lint ../../content` in `tools/content-cli/` before opening a PR; for app changes also `flutter analyze` and `flutter test` in `app/`.
 - CI runs the same checks on every PR and push to `main` ([`ci.yml`](.github/workflows/ci.yml)); the web build runs in [`deploy-web.yml`](.github/workflows/deploy-web.yml).
 
+## Releases
+
+Push a version tag such as `v1.2.3` to build the web app and publish a downloadable zip with generated release notes on GitHub Releases. The workflow can also be run manually for an existing version tag. It needs the repository's default `GITHUB_TOKEN` with Actions write access to releases; it does not need Cloudflare secrets. Production hosting continues to deploy from `main` through `deploy-web.yml`.
+
 ## License
 
 - **Lessons and songs:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
