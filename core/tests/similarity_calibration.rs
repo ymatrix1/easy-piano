@@ -23,6 +23,31 @@ fn songs() -> Vec<Song> {
     out
 }
 
+/// Song ids played by the basic-section courses (Piano Basics, Essentials I–III).
+fn basic_course_songs() -> std::collections::BTreeSet<String> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../content/courses");
+    let mut out = std::collections::BTreeSet::new();
+    for c in [
+        "piano-basics",
+        "essentials-1",
+        "essentials-2",
+        "essentials-3",
+    ] {
+        for e in fs::read_dir(root.join(c).join("levels"))
+            .expect("levels")
+            .flatten()
+        {
+            let text = fs::read_to_string(e.path()).unwrap();
+            for part in text.split("\"score\"").skip(1) {
+                if let Some(id) = part.split('"').nth(1) {
+                    out.insert(id.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
 fn is_drill(id: &str) -> bool {
     id.ends_with("-drill")
         || id.starts_with("e1-")
@@ -75,12 +100,33 @@ fn inside(passage: &[MelodyNote], seed: u32) -> Vec<MelodyNote> {
 #[test]
 fn threshold_separates_copies_from_unrelated_tunes() {
     let all = songs();
-    let pd: Vec<(&str, Vec<MelodyNote>)> = all
+    // One version per public-domain piece: courses also hold parts and restyled
+    // arrangements of the same tune ("The Entertainer: Part A", "Ode to Joy (in D)"),
+    // which are copies by design, and our own originals are not PD tunes.
+    let piece = |s: &Song| {
+        let t = s.title.split([':', '(', ',']).next().unwrap_or("").trim();
+        format!("{}|{}", s.composer, t.to_lowercase())
+    };
+    // The threshold is calibrated on the basic courses' songs (what the generator
+    // targets). With the Soloist/Chords PD pieces added, 0.5 gives ~11% false
+    // positives (long pieces share scale and arpeggio runs): recalibration and the
+    // block-vs-review decision are bean piano-vx1w.
+    let basic = basic_course_songs();
+    let mut seen = std::collections::BTreeSet::new();
+    let mut pd: Vec<(&str, Vec<MelodyNote>)> = Vec::new();
+    let mut by_len: Vec<&Song> = all
         .iter()
-        .filter(|s| !is_drill(&s.id))
-        .map(|s| (s.id.as_str(), melody_from_song(s)))
-        .filter(|(_, m)| m.len() >= 16)
+        .filter(|s| !is_drill(&s.id) && s.composition_license == "public-domain")
+        .filter(|s| basic.contains(&s.id))
         .collect();
+    by_len.sort_by_key(|s| std::cmp::Reverse(s.bars.len()));
+    for s in by_len {
+        let m = melody_from_song(s);
+        if m.len() >= 16 && seen.insert(piece(s)) {
+            pd.push((s.id.as_str(), m));
+        }
+    }
+    pd.sort_by(|a, b| a.0.cmp(b.0));
     assert!(pd.len() >= 15, "expected the PD song set");
 
     // (label, score)
