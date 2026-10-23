@@ -135,5 +135,8 @@
   "styleChildren": "Enfantine",
   "stylePop": "Pop",
   "styleJazz": "Jazz",
-  "styleGame": "Jeu vidéo"
+  "styleGame": "Jeu vidéo",
+  "midiUnavailableApp": "L'entrée MIDI n'est pas disponible sur cet appareil.",
+  "micUnavailableApp": "L'entrée microphone n'est pas disponible sur cet appareil.",
+  "micDeniedApp": "L'accès au microphone est bloqué. Autorisez-le dans les réglages système de l'application, puis réessayez."
 }

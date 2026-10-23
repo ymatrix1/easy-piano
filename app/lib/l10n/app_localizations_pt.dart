@@ -471,6 +471,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get styleGame => 'Videojogo';
+
+  @override
+  String get midiUnavailableApp =>
+      'A entrada MIDI não está disponível neste dispositivo.';
+
+  @override
+  String get micUnavailableApp =>
+      'A entrada por microfone não está disponível neste dispositivo.';
+
+  @override
+  String get micDeniedApp =>
+      'O acesso ao microfone foi bloqueado. Permita nas configurações do sistema do app e tente de novo.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).

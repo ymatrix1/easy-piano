@@ -468,4 +468,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get styleGame => 'Game';
+
+  @override
+  String get midiUnavailableApp =>
+      'MIDI input is not available on this device.';
+
+  @override
+  String get micUnavailableApp =>
+      'Microphone input is not available on this device.';
+
+  @override
+  String get micDeniedApp =>
+      'Microphone access was blocked. Allow it in the app\'s system settings and try again.';
 }

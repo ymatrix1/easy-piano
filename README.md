@@ -56,12 +56,26 @@ Then open <http://localhost:8765> in Chrome or Edge (Web MIDI works best there).
 
 | Part | Tech |
 |---|---|
-| App (web first; Android, iOS, desktop later) | Flutter, in [`app/`](app/) |
+| App (web first; Android, Windows desktop build in CI) | Flutter, in [`app/`](app/) |
 | Timing, grading, notation parsing | Rust, in [`core/`](core/), shared with the app via flutter_rust_bridge |
 | Lessons and songs | JSON + compact note text, in [`content/`](content/) |
 | Content checks | [`tools/content-cli/`](tools/content-cli/) |
 
 More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Build for Windows
+
+On Windows, install Flutter, Rust (MSVC toolchain), and Visual Studio 2022 with the **Desktop development with C++** workload. Then run:
+
+```powershell
+rustup target add x86_64-pc-windows-msvc
+python tools/sync_content.py
+cd app
+flutter pub get
+flutter build windows --release
+```
+
+The executable and runtime files are in `app/build/windows/x64/runner/Release/`. CI packages that whole directory as `easy-piano-windows-x64.zip` on pull requests and pushes to `main`. Pushing a `v*` tag also publishes the ZIP as a GitHub Release asset. See [Windows build and release](docs/ARCHITECTURE.md#build-windows).
 
 ## Status
 

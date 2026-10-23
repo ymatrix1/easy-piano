@@ -7,7 +7,9 @@ Status: draft ([D5](../DECISIONS.md), mic: [D29](../DECISIONS.md), trained note 
 | Touch keyboard | 1 | Flutter `Listener` multi-touch → NoteEvent |
 | MIDI USB/BLE | 1 | Dart plugin per platform (Android `MidiManager`, iOS/macOS CoreMIDI, Web MIDI, Windows WinRT MIDI, Linux ALSA) → timestamp on audio clock → core |
 | Mic (web) | 3 | `getUserMedia` → AudioWorklet (`web/mic_worklet.js`) → trained note model in a Web Worker (`web/mic_model_worker.js`, onnxruntime-web, 88 keys) → NoteEvent, `Input::Mic`. Dart `NoteDetector` (onset + harmonic salience, up to 4 notes) listens until the model is ready and is the fallback |
-| Mic (native) | later | same detector over the native audio engine's input, or ported to Rust `core` |
+| MIDI (Android) | 2 | `MidiBridge.kt` (`android.media.midi`) → channel `dev.easypiano/midi/events` → NoteEvent on the `System.nanoTime` clock ([D36](../DECISIONS.md)) |
+| Mic (Android) | 2 | `MicBridge.kt` (`AudioRecord`, float PCM, `RECORD_AUDIO` asked at first use) → channel → same Dart `NoteDetector`, offset stored in `shared_preferences` |
+| Mic (iOS, desktop) | later | same detector over the native audio engine's input, or ported to Rust `core` |
 | Mic score-informed | done (web) | the expected notes pick the thresholds, for both detectors |
 | Mic, "My songs" transcription | research | Basic Pitch class model (D11) |
 
