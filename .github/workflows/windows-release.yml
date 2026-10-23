@@ -1,0 +1,99 @@
+# Build a portable Windows desktop bundle for CI and publish it on version tags.
+name: Windows desktop
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.7
+
+jobs:
+  build:
+    name: Build Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/rust -> ../build/easy_piano_bridge/build
+          cache-on-failure: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: Install Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Windows release
+        working-directory: app
+        run: flutter build windows --release
+
+      - name: Prepare portable bundle
+        shell: pwsh
+        run: |
+          $bundle = 'app/build/windows/x64/runner/Release'
+          if (-not (Test-Path "$bundle/easy_piano.exe")) {
+            throw "Windows executable was not produced: $bundle/easy_piano.exe"
+          }
+          if (-not (Test-Path "$bundle/easy_piano_bridge.dll")) {
+            throw "Rust bridge DLL was not included in the Windows bundle"
+          }
+          if (-not (Test-Path "$bundle/data/flutter_assets/AssetManifest.bin")) {
+            throw "Flutter assets were not included in the Windows bundle"
+          }
+          Copy-Item packaging/windows/README.txt "$bundle/README.txt"
+          Compress-Archive -Path "$bundle/*" -DestinationPath app/build/windows/easy-piano-windows-x64.zip -CompressionLevel Optimal
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: easy-piano-windows-x64
+          path: app/build/windows/easy-piano-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: easy-piano-windows-x64
+          path: release-assets
+
+      - name: Publish Windows bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
+          gh release upload "$TAG" release-assets/easy-piano-windows-x64.zip --repo "$GITHUB_REPOSITORY" --clobber
