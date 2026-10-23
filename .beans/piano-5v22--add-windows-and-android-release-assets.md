@@ -5,7 +5,7 @@ status: completed
 type: task
 priority: normal
 created_at: 2026-10-23T20:44:58Z
-updated_at: 2026-10-23T20:46:12Z
+updated_at: 2026-10-23T21:46:14Z
 parent: piano-bqkw
 ---
 
@@ -27,3 +27,11 @@ Summary of Changes:
 ## Summary of Changes
 
 Expanded tagged releases to build web, Windows x64, and Android arm64 assets in parallel, then publish them together. Documented artifact names and the debug-signing limitation for Android.
+
+## Follow-up
+
+The first tagged workflow run successfully built Windows and Android assets but the publish job failed because the release job does not check out the repository, so GitHub CLI could not infer a repository. Set `GH_REPO` explicitly in the publish step.
+
+## Summary of Changes
+
+Fixed the release publishing job by setting `GH_REPO` explicitly, allowing GitHub CLI to create the release from the artifact-only job without a checkout.
