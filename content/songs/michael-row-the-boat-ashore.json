@@ -1,0 +1,111 @@
+{
+  "id": "michael-row-the-boat-ashore",
+  "title": "Michael, Row the Boat Ashore",
+  "composer": "Traditional",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125 A3C4F4:2@125",
+      "LH": "F2:2@5 F2:2@5",
+      "ACC": "A4:4 A4:4 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "E4:4 D4:4 C4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125 A3C4F4:2@125",
+      "LH": "F2:2@5 F2:2@5",
+      "ACC": "A4:4 A4:4 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"G\"} B3D4G4:4@125 B3D4G4:4@125 B3D4G4:2@125",
+      "LH": "G2:2@5 G2:2@5",
+      "ACC": "D4:4 E4:4 D4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "C5:4. B4:8 A4:4 G4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:2 E4:4 G4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125 A3C4F4:2@125",
+      "LH": "F2:2@5 F2:2@5",
+      "ACC": "A4:4 A4:4 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "E4:4 D4:4 C4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:2@135",
+      "LH": "C3:2@5 C3:2@5",
+      "ACC": "G4:4. A4:8 G4:2",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125 A3C4F4:2@125",
+      "LH": "F2:2@5 F2:2@5",
+      "ACC": "A4:4 A4:4 G4:4 E4:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "ACC": "C4:1",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

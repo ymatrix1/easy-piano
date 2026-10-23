@@ -1,0 +1,53 @@
+{
+  "id": "i1-dminor-drill",
+  "title": "D Minor Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "Dm",
+  "bars": [
+    {
+      "RH": "D4:4@1 E4:4@2 F4:4@3 G4:4@4",
+      "LH": "D3:2@5 F3:2@3"
+    },
+    {
+      "RH": "A4:4@5 G4:4@4 F4:4@3 E4:4@2",
+      "LH": "A2:2@5 E3:2@3"
+    },
+    {
+      "RH": "F4:4@2 G4:4@3 A4:4@4 Bb4:4@5",
+      "LH": "Bb2:2@4 D3:2@2"
+    },
+    {
+      "RH": "A4:4@4 G4:4@3 F4:4@2 E4:4@1",
+      "LH": "A2:2@5 E3:2@2"
+    },
+    {
+      "RH": "A4:4@2 Bb4:4@3 A4:4@2 G4:4@1",
+      "LH": "D3:2@5 F3:2@3"
+    },
+    {
+      "RH": "F4:4@3 E4:4@2 D4:4@1 E4:4@2",
+      "LH": "Bb2:2@4 A2:2@5"
+    },
+    {
+      "RH": "A4:4@2 C#5:4@4 D5:2@5",
+      "LH": "A2:2@5 E3:2@3"
+    },
+    {
+      "RH": "D4:1@1",
+      "LH": "D3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      2,
+      6
+    ]
+  ]
+}

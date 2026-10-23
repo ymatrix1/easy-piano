@@ -1,0 +1,39 @@
+{
+  "id": "cs2-05-rock-anthem",
+  "title": "str:level.cs2.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "cs2-rock-anthem",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-rock-anthem",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "cs2-rock-anthem",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-rock-anthem",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-rock-anthem",
+      "tempo": 0.8,
+      "pass": 0.7
+    }
+  ]
+}

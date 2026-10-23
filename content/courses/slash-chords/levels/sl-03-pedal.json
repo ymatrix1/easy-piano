@@ -1,0 +1,31 @@
+{
+  "id": "sl-03-pedal",
+  "title": "str:level.sl.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sl-pedal"
+    },
+    {
+      "type": "wait",
+      "score": "sl-pedal-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-pedal-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sl-pedal-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

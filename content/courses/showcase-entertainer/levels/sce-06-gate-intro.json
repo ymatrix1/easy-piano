@@ -1,0 +1,14 @@
+{
+  "id": "sce-06-gate-intro",
+  "title": "str:level.sce.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sce-intro",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

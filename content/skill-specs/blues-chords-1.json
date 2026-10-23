@@ -1,0 +1,286 @@
+{
+  "course": "blues-chords-1",
+  "nodes": [
+    {
+      "node": "dom7",
+      "new_skill": "Dominant seventh chords C7, F7 and G7 as right-hand shapes.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        66,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "swing",
+      "new_skill": "Swing eighths: a long note then a short one in each beat.",
+      "required": [
+        {
+          "rhythm": "1/6"
+        },
+        {
+          "rhythm": "1/12"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        78,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "twelve-bar",
+      "new_skill": "The twelve-bar blues in C: C7, F7 and G7 chord stabs on beats two and four.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "RH"
+        },
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "frankie",
+      "new_skill": "Frankie and Johnny: a blues folk song with a shuffle bass.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "shuffle",
+      "new_skill": "Left hand shuffle: root, fifth, sixth, fifth.",
+      "required": [
+        {
+          "pitch": "A3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "careless-love",
+      "new_skill": "Careless Love: slow blues melody over a shuffle.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Three blues songs at full tempo.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        80,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boogie",
+      "new_skill": "Boogie walking bass: root, third, fifth, sixth, flat seventh and back.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        84,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "blues-scale",
+      "new_skill": "The C blues scale in right-hand riffs.",
+      "required": [
+        {
+          "accidental": "Eb",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "joshua",
+      "new_skill": "Joshua Fit the Battle of Jericho in A minor.",
+      "required": [
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        104,
+        120
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "rock-roll",
+      "new_skill": "Straight-eighth rock and roll: off-beat chords over an eighth-note bass.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        112,
+        128
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Three songs: spiritual, blues riffs and rock and roll.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        88,
+        120
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Boogie woogie capstone: swung walking bass under blues riffs.",
+      "required": [
+        {
+          "rhythm": "1/6"
+        },
+        {
+          "accidental": "Eb",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        24,
+        24
+      ],
+      "bpm": [
+        96,
+        112
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

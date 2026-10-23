@@ -1,0 +1,27 @@
+{
+  "id": "ar1-12-lh-bass",
+  "title": "str:level.ar1.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ar1-lh-bass-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-lh-bass-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-lh-bass-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

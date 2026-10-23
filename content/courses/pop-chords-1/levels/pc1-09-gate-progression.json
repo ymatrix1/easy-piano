@@ -1,0 +1,14 @@
+{
+  "id": "pc1-09-gate-progression",
+  "title": "str:level.pc1.09.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pc1-progression",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

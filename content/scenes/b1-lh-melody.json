@@ -1,0 +1,59 @@
+{
+  "id": "b1-lh-melody",
+  "duration_beats": 18,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.b1.lh.1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 1,
+      "press": "D4",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 4,
+      "press": "A2",
+      "label": "4"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 3,
+      "press": "B2",
+      "label": "3"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 1,
+      "press": "D3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "caption": "str:scene.b1.lh.2"
+    },
+    {
+      "at": 15,
+      "prompt": "your_turn"
+    }
+  ]
+}

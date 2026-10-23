@@ -1,0 +1,61 @@
+{
+  "id": "sl-ascend-drill",
+  "title": "Climbing bass line",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} C4E4G4:2@135 {chord:\"C/E\"} E4G4C5:2@125",
+      "LH": "C2:2@5 E2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F\"} F4A4C5:2@135 {chord:\"F/A\"} A3C4F4:2@125",
+      "LH": "F2:2@5 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G/B\"} B3D4G4:2@125 {chord:\"C\"} C4E4G4:2@135",
+      "LH": "B2:2@5 C3:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:2@135 {chord:\"C/E\"} E4G4C5:2@125",
+      "LH": "C2:2@5 E2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F\"} F4A4C5:2@135 {chord:\"F/A\"} A3C4F4:2@125",
+      "LH": "F2:2@5 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G/B\"} B3D4G4:2@125 {chord:\"C\"} C4E4G4:2@135",
+      "LH": "B2:2@5 C3:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"F\"} F4A4C5:2@135 {chord:\"G\"} G3B3D4:2@135",
+      "LH": "F2:2@5 G2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      3
+    ]
+  ]
+}

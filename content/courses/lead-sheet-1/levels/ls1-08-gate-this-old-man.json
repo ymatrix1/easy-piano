@@ -1,0 +1,14 @@
+{
+  "id": "ls1-08-gate-this-old-man",
+  "title": "str:level.ls1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "this-old-man",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

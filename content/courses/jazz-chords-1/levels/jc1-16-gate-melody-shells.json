@@ -1,0 +1,14 @@
+{
+  "id": "jc1-16-gate-melody-shells",
+  "title": "str:level.jc1.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jc1-melody-shell-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

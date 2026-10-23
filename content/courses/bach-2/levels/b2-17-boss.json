@@ -1,0 +1,27 @@
+{
+  "id": "b2-17-boss",
+  "title": "str:level.b2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bourree-in-e-minor",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bourree-in-e-minor",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bourree-in-e-minor",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

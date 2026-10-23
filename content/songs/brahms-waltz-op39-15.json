@@ -1,0 +1,85 @@
+{
+  "id": "brahms-waltz-op39-15",
+  "title": "Waltz Op. 39 No. 15",
+  "composer": "Johannes Brahms",
+  "arranger": "Easy Piano contributors",
+  "source": "mutopia",
+  "source_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=794",
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "public-domain",
+  "bpm": 96,
+  "time": "3/4",
+  "key": "Ab",
+  "bars": [
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 C5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 C5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "Db5:8@3 Eb5:16@4 Db5:16@3 C5:4@2 Bb4:4@1",
+      "LH": "Ab2:4@5 Db3F3Ab3:4@531 Db3F3Ab3:4@531"
+    },
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 Eb5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "F5:4.@5 C5:8@1 C5:8@1 Eb5:8@4",
+      "LH": "F2:4@5 F3Ab3C4:4@531 F3Ab3C4:4@531"
+    },
+    {
+      "RH": "F5:4.@5 C5:8@1 C5:8@1 Eb5:8@4",
+      "LH": "F2:4@5 F3Ab3C4:4@531 F3Ab3C4:4@531"
+    },
+    {
+      "RH": "G5:8@5 F5:8@4 Eb5:4@3 D5:4@2",
+      "LH": "Eb2:4@5 Eb3G3C4:4@521 D3F3B3:4@521"
+    },
+    {
+      "RH": "Eb5:4.@3 G4:8@1 G4:8@1 C5:8@2",
+      "LH": "C3:4@5 Eb3G3C4:4@521 Eb3G3:4@31"
+    },
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 C5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 C5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "Db5:8@3 Eb5:16@4 Db5:16@3 C5:4@2 Bb4:4@1",
+      "LH": "Ab2:4@5 Db3F3Ab3:4@531 Db3F3Ab3:4@531"
+    },
+    {
+      "RH": "C5:4.@5 Ab4:8@1 Ab4:8@1 Eb5:8@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:4@521 Eb3Ab3C4:4@521"
+    },
+    {
+      "RH": "F5:4.@5 C5:8@1 C5:8@1 Eb5:8@4",
+      "LH": "F2:4@5 F3Ab3C4:4@531 F3Ab3C4:4@531"
+    },
+    {
+      "RH": "F5:4.@5 C5:8@1 C5:8@1 Eb5:8@4",
+      "LH": "F2:4@5 F3Ab3C4:4@531 F3Ab3C4:4@531"
+    },
+    {
+      "RH": "G5:8@5 F5:8@4 Eb5:4@3 D5:4@2",
+      "LH": "Eb2:4@5 Eb3G3C4:4@521 D3F3B3:4@521"
+    },
+    {
+      "RH": "C5:2.@5",
+      "LH": "Ab2:4@5 Eb3Ab3C4:2@521"
+    }
+  ],
+  "critical": [
+    [
+      2,
+      3
+    ]
+  ]
+}

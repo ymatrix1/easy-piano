@@ -1,0 +1,31 @@
+{
+  "id": "jc1-01-voicings",
+  "title": "str:level.jc1.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "jc1-voicings"
+    },
+    {
+      "type": "wait",
+      "score": "jc1-voicing-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-voicing-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-voicing-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

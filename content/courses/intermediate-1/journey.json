@@ -1,0 +1,182 @@
+{
+  "course": "intermediate-1",
+  "nodes": [
+    {
+      "id": "crossing",
+      "kind": "lesson",
+      "title": "str:node.i1.crossing",
+      "icon": "note",
+      "levels": [
+        "i1-01-thumb-under",
+        "i1-02-finger-over"
+      ],
+      "next": [
+        "d-position"
+      ]
+    },
+    {
+      "id": "d-position",
+      "kind": "lesson",
+      "title": "str:node.i1.d-position",
+      "icon": "note",
+      "levels": [
+        "i1-03-d-position"
+      ],
+      "next": [
+        "morning-mood"
+      ]
+    },
+    {
+      "id": "morning-mood",
+      "kind": "song",
+      "title": "str:node.i1.morning-mood",
+      "icon": "play",
+      "levels": [
+        "i1-04-morning-mood"
+      ],
+      "next": [
+        "skaters-waltz"
+      ],
+      "songs": {
+        "default": "morning-mood",
+        "classical": "morning-mood"
+      }
+    },
+    {
+      "id": "skaters-waltz",
+      "kind": "song",
+      "title": "str:node.i1.skaters-waltz",
+      "icon": "play",
+      "levels": [
+        "i1-05-skaters-waltz"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "skaters-waltz",
+        "classical": "skaters-waltz"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.i1.gate-1",
+      "icon": "star",
+      "levels": [
+        "i1-06-gate-morning-mood",
+        "i1-07-gate-skaters-waltz",
+        "i1-08-gate-d-position"
+      ],
+      "next": [
+        "two-four"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "two-four",
+      "kind": "lesson",
+      "title": "str:node.i1.two-four",
+      "icon": "note",
+      "levels": [
+        "i1-09-two-four"
+      ],
+      "next": [
+        "synco"
+      ]
+    },
+    {
+      "id": "synco",
+      "kind": "lesson",
+      "title": "str:node.i1.synco",
+      "icon": "note",
+      "levels": [
+        "i1-10-syncopation"
+      ],
+      "next": [
+        "dotted"
+      ]
+    },
+    {
+      "id": "dotted",
+      "kind": "lesson",
+      "title": "str:node.i1.dotted",
+      "icon": "note",
+      "levels": [
+        "i1-11-dotted"
+      ],
+      "next": [
+        "d-minor"
+      ]
+    },
+    {
+      "id": "d-minor",
+      "kind": "lesson",
+      "title": "str:node.i1.d-minor",
+      "icon": "note",
+      "levels": [
+        "i1-12-d-minor"
+      ],
+      "next": [
+        "habanera"
+      ]
+    },
+    {
+      "id": "habanera",
+      "kind": "song",
+      "title": "str:node.i1.habanera",
+      "icon": "play",
+      "levels": [
+        "i1-13-habanera"
+      ],
+      "next": [
+        "broken"
+      ],
+      "songs": {
+        "default": "habanera",
+        "classical": "habanera"
+      }
+    },
+    {
+      "id": "broken",
+      "kind": "lesson",
+      "title": "str:node.i1.broken",
+      "icon": "note",
+      "levels": [
+        "i1-14-broken-fifths"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.i1.gate-2",
+      "icon": "star",
+      "levels": [
+        "i1-15-gate-habanera",
+        "i1-16-gate-broken-fifths",
+        "i1-17-gate-syncopation"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.i1.boss",
+      "icon": "play",
+      "levels": [
+        "i1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "can-can",
+        "classical": "can-can"
+      }
+    }
+  ]
+}

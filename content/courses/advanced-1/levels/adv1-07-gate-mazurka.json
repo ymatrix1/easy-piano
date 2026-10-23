@@ -1,0 +1,14 @@
+{
+  "id": "adv1-07-gate-mazurka",
+  "title": "str:level.adv1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "adv1-mazurka-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

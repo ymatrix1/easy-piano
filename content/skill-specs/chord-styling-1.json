@@ -1,0 +1,329 @@
+{
+  "course": "chord-styling-1",
+  "nodes": [
+    {
+      "node": "broken-rh",
+      "new_skill": "Right-hand broken chords: play the chord notes one at a time, 1-3-5-3.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "broken-lh",
+      "new_skill": "Left-hand broken bass: root, fifth, octave, fifth (1-5-8-5).",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "LH",
+      "time": "4/4"
+    },
+    {
+      "node": "split",
+      "new_skill": "Bass plus chord: low root note, then the chord above it in the left hand.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "lavenders-blue",
+      "new_skill": "A waltz with the bass-and-chord left hand under a folk melody.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "rhythm": "2."
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "am-home",
+      "new_skill": "A minor as home key: Am, F, C and G with broken chords over a bass-and-chord left hand.",
+      "required": [
+        {
+          "pitch": "A4",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "e-major",
+      "new_skill": "E major chord with G sharp, pulling back to A minor.",
+      "required": [
+        {
+          "accidental": "G#"
+        },
+        {
+          "chord": true,
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: broken chords, bass plus chord and A minor.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        16
+      ],
+      "bpm": [
+        72,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "drunken-sailor",
+      "new_skill": "D minor folk tune: bass and chord, then broken left hand.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "D3",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        100
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "styles",
+      "new_skill": "One melody in three accompaniment styles: block chords, bass plus chord, broken chords.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "six-eight",
+      "new_skill": "6/8 arpeggio: roll the left hand up and down the chord in two groups of three.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH"
+        },
+        {
+          "accidental": "G#",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        120,
+        120
+      ],
+      "hands": "both",
+      "time": "6/8"
+    },
+    {
+      "node": "rising-sun",
+      "new_skill": "A minor folk song in 6/8 with a bass-and-chord left hand.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "accidental": "G#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        108,
+        108
+      ],
+      "hands": "both",
+      "time": "6/8"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: D minor, three styles and 6/8.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        84,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: the Rising Sun melody over a rolling 6/8 left hand.",
+      "required": [
+        {
+          "rhythm": "8",
+          "hand": "LH",
+          "min_bar_share": 0.5
+        },
+        {
+          "accidental": "G#",
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        120,
+        120
+      ],
+      "hands": "both",
+      "time": "6/8"
+    }
+  ]
+}

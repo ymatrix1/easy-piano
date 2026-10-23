@@ -1,0 +1,53 @@
+{
+  "id": "ar1-hand-to-hand-drill",
+  "title": "Passing the Roll",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 60,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:2 E4:8@1 G4:8@2 C5:8@3 E5:8@5",
+      "LH": "C3:8@5 E3:8@3 G3:8@2 C4:8@1 r:2"
+    },
+    {
+      "RH": "E5:8@5 C5:8@3 G4:8@2 E4:8@1 r:2",
+      "LH": "r:2 C4:8@1 G3:8@2 E3:8@3 C3:8@5"
+    },
+    {
+      "RH": "r:2 B3:8@1 D4:8@2 G4:8@3 B4:8@5",
+      "LH": "G2:8@5 B2:8@3 D3:8@2 G3:8@1 r:2"
+    },
+    {
+      "RH": "B4:8@5 G4:8@3 D4:8@2 B3:8@1 r:2",
+      "LH": "r:2 G3:8@1 D3:8@2 B2:8@3 G2:8@5"
+    },
+    {
+      "RH": "r:2 C4:8@1 E4:8@2 A4:8@3 C5:8@5",
+      "LH": "A2:8@5 C3:8@3 E3:8@2 A3:8@1 r:2"
+    },
+    {
+      "RH": "C5:8@5 A4:8@3 E4:8@2 C4:8@1 r:2",
+      "LH": "r:2 A3:8@1 E3:8@2 C3:8@3 A2:8@5"
+    },
+    {
+      "RH": "r:2 A3:8@1 C4:8@2 F4:8@3 A4:8@5",
+      "LH": "F2:8@5 A2:8@3 C3:8@2 F3:8@1 r:2"
+    },
+    {
+      "RH": "A4:8@5 F4:8@3 C4:8@2 A3:8@1 r:2",
+      "LH": "r:2 F3:8@1 C3:8@2 A2:8@3 F2:8@5"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      4
+    ]
+  ]
+}

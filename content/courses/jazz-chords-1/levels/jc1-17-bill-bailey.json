@@ -1,0 +1,47 @@
+{
+  "id": "jc1-17-bill-bailey",
+  "title": "str:level.jc1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bill-bailey-easy",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey-easy",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "bill-bailey-easy",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey-easy",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey-easy",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey-easy",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

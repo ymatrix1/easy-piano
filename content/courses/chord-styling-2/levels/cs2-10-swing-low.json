@@ -1,0 +1,39 @@
+{
+  "id": "cs2-10-swing-low",
+  "title": "str:level.cs2.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "swing-low-sweet-chariot",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "swing-low-sweet-chariot",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "swing-low-sweet-chariot",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "swing-low-sweet-chariot",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "swing-low-sweet-chariot",
+      "tempo": 0.8,
+      "pass": 0.7
+    }
+  ]
+}

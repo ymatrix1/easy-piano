@@ -1,0 +1,213 @@
+{
+  "course": "pop-chords-3",
+  "nodes": [
+    {
+      "id": "d-major",
+      "kind": "lesson",
+      "title": "str:node.pc3.d-major",
+      "icon": "note",
+      "levels": [
+        "pc3-01-d-chord"
+      ],
+      "next": [
+        "loch-lomond"
+      ]
+    },
+    {
+      "id": "loch-lomond",
+      "kind": "song",
+      "title": "str:node.pc3.loch-lomond",
+      "icon": "play",
+      "levels": [
+        "pc3-02-loch-lomond"
+      ],
+      "next": [
+        "a-major"
+      ],
+      "songs": {
+        "default": "loch-lomond",
+        "folk_world": "loch-lomond"
+      }
+    },
+    {
+      "id": "a-major",
+      "kind": "lesson",
+      "title": "str:node.pc3.a-major",
+      "icon": "note",
+      "levels": [
+        "pc3-03-a-chord"
+      ],
+      "next": [
+        "e-major"
+      ]
+    },
+    {
+      "id": "e-major",
+      "kind": "lesson",
+      "title": "str:node.pc3.e-major",
+      "icon": "note",
+      "levels": [
+        "pc3-04-e-chord"
+      ],
+      "next": [
+        "b-minor"
+      ]
+    },
+    {
+      "id": "b-minor",
+      "kind": "lesson",
+      "title": "str:node.pc3.b-minor",
+      "icon": "note",
+      "levels": [
+        "pc3-05-b-minor"
+      ],
+      "next": [
+        "four-chords"
+      ]
+    },
+    {
+      "id": "four-chords",
+      "kind": "song",
+      "title": "str:node.pc3.four-chords",
+      "icon": "play",
+      "levels": [
+        "pc3-06-four-chords"
+      ],
+      "next": [
+        "wayfaring"
+      ],
+      "songs": {
+        "default": "pc3-four-chords",
+        "originals_pop": "pc3-four-chords"
+      }
+    },
+    {
+      "id": "wayfaring",
+      "kind": "song",
+      "title": "str:node.pc3.wayfaring",
+      "icon": "play",
+      "levels": [
+        "pc3-07-wayfaring-stranger"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "wayfaring-stranger",
+        "hymns_spirituals": "wayfaring-stranger"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.pc3.gate-1",
+      "icon": "star",
+      "levels": [
+        "pc3-08-gate-loch-lomond",
+        "pc3-09-gate-four-chords",
+        "pc3-10-gate-wayfaring-stranger"
+      ],
+      "next": [
+        "inversions"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "inversions",
+      "kind": "lesson",
+      "title": "str:node.pc3.inversions",
+      "icon": "note",
+      "levels": [
+        "pc3-11-inversions"
+      ],
+      "next": [
+        "voice-leading"
+      ]
+    },
+    {
+      "id": "voice-leading",
+      "kind": "lesson",
+      "title": "str:node.pc3.voice-leading",
+      "icon": "note",
+      "levels": [
+        "pc3-12-voice-leading"
+      ],
+      "next": [
+        "smooth-ride"
+      ]
+    },
+    {
+      "id": "smooth-ride",
+      "kind": "song",
+      "title": "str:node.pc3.smooth-ride",
+      "icon": "play",
+      "levels": [
+        "pc3-13-smooth-ride"
+      ],
+      "next": [
+        "inversions-d-a"
+      ],
+      "songs": {
+        "default": "pc3-smooth-ride",
+        "originals_pop": "pc3-smooth-ride"
+      }
+    },
+    {
+      "id": "inversions-d-a",
+      "kind": "lesson",
+      "title": "str:node.pc3.inversions-d-a",
+      "icon": "note",
+      "levels": [
+        "pc3-14-inversions-d-a"
+      ],
+      "next": [
+        "smooth-in-d"
+      ]
+    },
+    {
+      "id": "smooth-in-d",
+      "kind": "song",
+      "title": "str:node.pc3.smooth-in-d",
+      "icon": "play",
+      "levels": [
+        "pc3-15-smooth-in-d"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "pc3-d-inversions",
+        "originals_pop": "pc3-d-inversions"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.pc3.gate-2",
+      "icon": "star",
+      "levels": [
+        "pc3-16-gate-smooth-ride",
+        "pc3-17-gate-smooth-in-d",
+        "pc3-18-gate-loch-lomond-again"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.pc3.boss",
+      "icon": "play",
+      "levels": [
+        "pc3-19-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "the-water-is-wide",
+        "folk_world": "the-water-is-wide"
+      }
+    }
+  ]
+}

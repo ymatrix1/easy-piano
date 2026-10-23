@@ -1,0 +1,31 @@
+{
+  "id": "cs3-03-boom-chick",
+  "title": "str:level.cs3.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "cs3-boom-chick"
+    },
+    {
+      "type": "wait",
+      "score": "cs3-boom-chick-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "cs3-boom-chick-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "cs3-boom-chick-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

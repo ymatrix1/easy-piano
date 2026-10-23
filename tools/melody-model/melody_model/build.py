@@ -335,13 +335,13 @@ def main(argv):
                         continue
                     st["cut at a phrase end (over 64 bars)"] += 1
                     song["bars"] = song["bars"][:cut]
-                ok, why = playable(song)
-                if not ok:
-                    st["reject: " + why] += 1
-                    continue
                 try:
+                    ok, why = playable(song)
+                    if not ok:
+                        st["reject: " + why] += 1
+                        continue
                     encode_song(song)  # vocab coverage (keys, ranges, durations)
-                except Unsupported as e:
+                except Unsupported as e:  # e.g. triplets in our own advanced courses
                     st["reject: " + _reason(str(e))] += 1
                     continue
                 key = dedupe_key(song)

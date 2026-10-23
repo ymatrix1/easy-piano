@@ -1,0 +1,27 @@
+{
+  "id": "jc2-17-boss",
+  "title": "str:level.jc2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "st-james-infirmary",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "st-james-infirmary",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "st-james-infirmary",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "cs2-09-ballad-rock",
+  "title": "str:level.cs2.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "cs2-ballad-rock-drill",
+      "pre_listen": true
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-rock-drill",
+      "tempo": 0.6,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-rock-drill",
+      "tempo": 0.7,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "cs2-ballad-rock-drill",
+      "tempo": 0.9,
+      "pass": 0.7
+    }
+  ]
+}

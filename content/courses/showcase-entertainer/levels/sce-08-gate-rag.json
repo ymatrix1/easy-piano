@@ -1,0 +1,14 @@
+{
+  "id": "sce-08-gate-rag",
+  "title": "str:level.sce.08.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sce-rag-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

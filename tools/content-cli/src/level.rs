@@ -22,6 +22,8 @@ pub struct CourseSong {
     pub id: String,
     pub node: String,
     pub index: usize,
+    /// Prerequisite depth + node fraction (see `NodeTaught::stage`).
+    pub stage: f64,
     pub expected: f64,
     pub skills: Skills,
     pub level_score: f64,
@@ -36,11 +38,17 @@ pub fn course_songs(
     songs: &BTreeMap<String, Song>,
     model: &Model,
 ) -> (Vec<CourseSong>, Vec<Skills>) {
-    let n = walk.iter().filter(|w| w.on_ramp).count().max(2);
+    // Expected level ramps with the learning stage (prerequisite depth), so
+    // parallel tracks after the same course expect the same level.
+    let top = walk
+        .iter()
+        .filter(|w| w.on_ramp)
+        .map(|w| w.stage)
+        .fold(0.0, f64::max)
+        .max(1.0);
     let [lo, hi] = model.course_levels;
     let (mut out, mut envs) = (Vec::<CourseSong>::new(), Vec::new());
     let mut env: Skills = [0.0; 8];
-    let mut step = 0; // position on the ramp
     for (i, w) in walk.iter().enumerate() {
         if !w.on_ramp {
             envs.push(env);
@@ -62,14 +70,14 @@ pub fn course_songs(
                 id: s.id.clone(),
                 node: format!("{}/{}", w.course, w.node),
                 index: i,
-                expected: lo + (hi - lo) * step as f64 / (n - 1) as f64,
+                stage: w.stage,
+                expected: lo + (hi - lo) * w.stage / top,
                 skills: sk,
                 level_score: score,
                 level: model.level(&sk),
             });
         }
         envs.push(env);
-        step += 1;
     }
     (out, envs)
 }
@@ -167,7 +175,7 @@ pub fn run(args: &[String]) -> i32 {
     if course {
         let rows: Vec<Value> = course_list
             .iter()
-            .map(|c| json!({"id": c.id, "node": c.node, "index": c.index, "expected": round3(c.expected), "skills": c.skills.map(round3), "level_score": round3(c.level_score), "level": c.level}))
+            .map(|c| json!({"id": c.id, "node": c.node, "index": c.index, "stage": round3(c.stage), "expected": round3(c.expected), "skills": c.skills.map(round3), "level_score": round3(c.level_score), "level": c.level}))
             .collect();
         println!(
             "{}",

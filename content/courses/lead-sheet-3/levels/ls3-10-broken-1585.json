@@ -1,0 +1,31 @@
+{
+  "id": "ls3-10-broken-1585",
+  "title": "str:level.ls3.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls3-broken"
+    },
+    {
+      "type": "wait",
+      "score": "ls3-broken-1585",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-broken-1585",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-broken-1585",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

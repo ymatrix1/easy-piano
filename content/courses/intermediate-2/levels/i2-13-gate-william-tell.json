@@ -1,0 +1,14 @@
+{
+  "id": "i2-13-gate-william-tell",
+  "title": "str:level.i2.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "william-tell-overture",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

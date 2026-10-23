@@ -1,0 +1,14 @@
+{
+  "id": "i1-07-gate-skaters-waltz",
+  "title": "str:level.i1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "skaters-waltz",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

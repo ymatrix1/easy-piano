@@ -1,0 +1,60 @@
+{
+  "id": "sce-tips",
+  "duration_beats": 28,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.sce.tips.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "G3",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 3,
+      "press": "G3",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "caption": "str:scene.sce.tips.2"
+    },
+    {
+      "at": 14,
+      "caption": "str:scene.sce.tips.3"
+    },
+    {
+      "at": 20,
+      "caption": "str:scene.sce.tips.4"
+    },
+    {
+      "at": 24,
+      "prompt": "your_turn"
+    }
+  ]
+}

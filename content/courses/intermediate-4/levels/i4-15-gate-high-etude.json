@@ -1,0 +1,14 @@
+{
+  "id": "i4-15-gate-high-etude",
+  "title": "str:level.i4.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i4-high-etude",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

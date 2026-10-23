@@ -1,0 +1,14 @@
+{
+  "id": "jc2-14-gate-ball",
+  "title": "str:level.jc2.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "after-the-ball",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

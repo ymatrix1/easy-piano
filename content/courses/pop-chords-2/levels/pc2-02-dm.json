@@ -1,0 +1,31 @@
+{
+  "id": "pc2-02-dm",
+  "title": "str:level.pc2.02.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc2-dm-ii"
+    },
+    {
+      "type": "wait",
+      "score": "pc2-dm-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc2-dm-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc2-dm-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

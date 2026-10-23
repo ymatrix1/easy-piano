@@ -1,0 +1,205 @@
+{
+  "course": "showcase-entertainer",
+  "nodes": [
+    {
+      "id": "rag",
+      "kind": "lesson",
+      "title": "str:node.sce.rag",
+      "icon": "note",
+      "levels": [
+        "sce-01-rag"
+      ],
+      "next": [
+        "stride"
+      ]
+    },
+    {
+      "id": "stride",
+      "kind": "lesson",
+      "title": "str:node.sce.stride",
+      "icon": "note",
+      "levels": [
+        "sce-02-stride"
+      ],
+      "next": [
+        "dyads"
+      ]
+    },
+    {
+      "id": "dyads",
+      "kind": "lesson",
+      "title": "str:node.sce.dyads",
+      "icon": "note",
+      "levels": [
+        "sce-03-dyads"
+      ],
+      "next": [
+        "intro"
+      ]
+    },
+    {
+      "id": "intro",
+      "kind": "song",
+      "title": "str:node.sce.intro",
+      "icon": "play",
+      "levels": [
+        "sce-04-intro"
+      ],
+      "next": [
+        "part-a"
+      ],
+      "songs": {
+        "default": "sce-intro",
+        "jazz_blues": "sce-intro"
+      }
+    },
+    {
+      "id": "part-a",
+      "kind": "song",
+      "title": "str:node.sce.part-a",
+      "icon": "play",
+      "levels": [
+        "sce-05-part-a"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "sce-part-a",
+        "jazz_blues": "sce-part-a"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.sce.gate-1",
+      "icon": "star",
+      "levels": [
+        "sce-06-gate-intro",
+        "sce-07-gate-part-a",
+        "sce-08-gate-rag"
+      ],
+      "next": [
+        "runs"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "runs",
+      "kind": "lesson",
+      "title": "str:node.sce.runs",
+      "icon": "note",
+      "levels": [
+        "sce-09-runs"
+      ],
+      "next": [
+        "part-b"
+      ]
+    },
+    {
+      "id": "part-b",
+      "kind": "song",
+      "title": "str:node.sce.part-b",
+      "icon": "play",
+      "levels": [
+        "sce-10-part-b"
+      ],
+      "next": [
+        "link"
+      ],
+      "songs": {
+        "default": "sce-part-b",
+        "jazz_blues": "sce-part-b"
+      }
+    },
+    {
+      "id": "link",
+      "kind": "song",
+      "title": "str:node.sce.link",
+      "icon": "play",
+      "levels": [
+        "sce-11-link"
+      ],
+      "next": [
+        "f-major"
+      ],
+      "songs": {
+        "default": "sce-link",
+        "jazz_blues": "sce-link"
+      }
+    },
+    {
+      "id": "f-major",
+      "kind": "lesson",
+      "title": "str:node.sce.f-major",
+      "icon": "note",
+      "levels": [
+        "sce-12-f-major"
+      ],
+      "next": [
+        "part-c"
+      ]
+    },
+    {
+      "id": "part-c",
+      "kind": "song",
+      "title": "str:node.sce.part-c",
+      "icon": "play",
+      "levels": [
+        "sce-13-part-c"
+      ],
+      "next": [
+        "part-d"
+      ],
+      "songs": {
+        "default": "sce-part-c",
+        "jazz_blues": "sce-part-c"
+      }
+    },
+    {
+      "id": "part-d",
+      "kind": "song",
+      "title": "str:node.sce.part-d",
+      "icon": "play",
+      "levels": [
+        "sce-14-part-d"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "sce-part-d",
+        "jazz_blues": "sce-part-d"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.sce.gate-2",
+      "icon": "star",
+      "levels": [
+        "sce-15-gate-part-b",
+        "sce-16-gate-part-c",
+        "sce-17-gate-part-d"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.sce.boss",
+      "icon": "play",
+      "levels": [
+        "sce-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "the-entertainer",
+        "jazz_blues": "the-entertainer"
+      }
+    }
+  ]
+}

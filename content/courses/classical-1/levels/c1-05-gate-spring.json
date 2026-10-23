@@ -1,0 +1,14 @@
+{
+  "id": "c1-05-gate-spring",
+  "title": "str:level.c1.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "spring-vivaldi",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

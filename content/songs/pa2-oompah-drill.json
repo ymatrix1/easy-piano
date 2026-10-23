@@ -1,0 +1,51 @@
+{
+  "id": "pa2-oompah-drill",
+  "title": "Oom-Pah Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 G2:4@5 E3G3C4:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 G2:4@5 E3G3C4:4@531"
+    },
+    {
+      "LH": "F2:4@5 F3A3C4:4@531 C3:4@5 F3A3C4:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 G2:4@5 E3G3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 B2D3G3:4@531 D3:4@5 B2D3G3:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 G2:4@5 E3G3C4:4@531"
+    },
+    {
+      "LH": "F2:4@5 F3A3C4:4@531 C3:4@5 F3A3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 B2D3G3:4@531 D3:4@5 B2D3G3:4@531"
+    },
+    {
+      "LH": "C3:4@5 E3G3C4:4@531 G2:4@5 E3G3C4:4@531"
+    },
+    {
+      "LH": "F2:4@5 F3A3C4:4@531 C3:4@5 F3A3C4:4@531"
+    },
+    {
+      "LH": "G2:4@5 B2D3G3:4@531 D3:4@5 B2D3G3:4@531"
+    },
+    {
+      "LH": "C3:2@5 E3G3C4:2@531"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "pc1-amf-drill",
+  "title": "Am and F Chords",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"Am\"} A3C4E4:1@135",
+      "BASS": "A1:4 E2:4 A1:4 E2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:1@125",
+      "BASS": "F1:4 C2:4 F1:4 C2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} A3C4E4:2@135 {chord:\"F\"} A3C4F4:2@125",
+      "BASS": "A1:4 E2:4 F1:4 C2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:2@135 {chord:\"Am\"} A3C4E4:2@135",
+      "BASS": "C2:4 G2:4 A1:4 E2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:2@125 {chord:\"C\"} C4E4G4:2@135",
+      "BASS": "F1:4 C2:4 C2:4 G2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} A3C4E4:4@135 A3C4E4:4@135 {chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125",
+      "BASS": "A1:4 E2:4 F1:4 C2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:2@125 {chord:\"C\"} C4E4G4:2@135",
+      "BASS": "F1:4 C2:4 C2:4 G2:4",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "BASS": "C2:1",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

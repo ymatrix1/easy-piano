@@ -1,0 +1,13 @@
+{
+  "id": "cs2-12-gate-sloop",
+  "title": "str:level.cs2.12.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sloop-john-b",
+      "tempo": 1.0,
+      "pass": 0.7
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "sl-16-boss",
+  "title": "str:level.sl.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "canon-in-d",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "canon-in-d",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "canon-in-d",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "course": "lead-sheet-2",
+  "nodes": [
+    {
+      "node": "g-chords",
+      "new_skill": "Left-hand chords from chord symbols in G: G, C and D7.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "F#3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "d-em",
+      "new_skill": "New chords D major and E minor in the key of G.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "pitch": "E3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "polly",
+      "new_skill": "Folk song in G with eighth notes over G and D7 chords.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        92,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "dm",
+      "new_skill": "D minor and the C-Dm-G7-C progression in C.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "F3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "g7-inv",
+      "new_skill": "G7 in root position next to its inversion B-D-F.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "buffalo",
+      "new_skill": "Folk song in G with a wide range, C and D7 chords and F sharp.",
+      "required": [
+        {
+          "pitch": "E5",
+          "hand": "RH"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        96,
+        112
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: chords in G and C with melody and left-hand chords.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        17
+      ],
+      "bpm": [
+        76,
+        104
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "waltz",
+      "new_skill": "Waltz lead sheet: bass note then a small chord on beats two and three.",
+      "required": [
+        {
+          "rhythm": "2.",
+          "hand": "RH"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        88,
+        104
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "key-f",
+      "new_skill": "Key of F: F, Bb and C7 from chord symbols.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "hilltop",
+      "new_skill": "Song in F with Bb, Dm and C7 chords.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        96
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: F, G7 and inversions in lead sheet style.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        72,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "red-river",
+      "new_skill": "Classic folk song in G with G7, C and D7 chords and eighth notes.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course finale: Red River Valley with full chord accompaniment.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "4.",
+          "hand": "RH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

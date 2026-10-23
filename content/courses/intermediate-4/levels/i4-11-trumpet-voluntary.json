@@ -1,0 +1,53 @@
+{
+  "id": "i4-11-trumpet-voluntary",
+  "title": "str:level.i4.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "trumpet-voluntary",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "trumpet-voluntary",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "trumpet-voluntary",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "trumpet-voluntary",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "wait",
+      "score": "trumpet-voluntary",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "trumpet-voluntary",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "trumpet-voluntary",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

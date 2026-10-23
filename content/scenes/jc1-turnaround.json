@@ -1,0 +1,164 @@
+{
+  "id": "jc1-turnaround",
+  "duration_beats": 20,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.jc1.turnaround.1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 2,
+      "press": "E4",
+      "label": "2"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 3,
+      "press": "G4",
+      "label": "3"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 5,
+      "press": "B4",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 2,
+      "press": "E4",
+      "label": "2"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 3,
+      "press": "G4",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 2,
+      "press": "D4",
+      "label": "2"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 3,
+      "press": "F4",
+      "label": "3"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 5,
+      "press": "A4",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 1,
+      "press": "B3",
+      "label": "1"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 2,
+      "press": "D4",
+      "label": "2"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 3,
+      "press": "F4",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "hand": "R",
+      "finger": 5,
+      "press": "G4",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "caption": "str:scene.jc1.turnaround.2"
+    },
+    {
+      "at": 13,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 13,
+      "hand": "R",
+      "finger": 2,
+      "press": "E4",
+      "label": "2"
+    },
+    {
+      "at": 13,
+      "hand": "R",
+      "finger": 3,
+      "press": "G4",
+      "label": "3"
+    },
+    {
+      "at": 13,
+      "hand": "R",
+      "finger": 5,
+      "press": "B4",
+      "label": "5"
+    },
+    {
+      "at": 17,
+      "prompt": "your_turn"
+    }
+  ]
+}

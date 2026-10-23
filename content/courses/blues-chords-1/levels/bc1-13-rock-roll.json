@@ -1,0 +1,27 @@
+{
+  "id": "bc1-13-rock-roll",
+  "title": "str:level.bc1.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bc1-rock-roll",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-rock-roll",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-rock-roll",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

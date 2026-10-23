@@ -1,0 +1,61 @@
+{
+  "id": "ls2-f-chords",
+  "title": "Bright F",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "A4:4@3 C5:4@5 A4:4@3 F4:4@1",
+      "LH": "{chord:\"F\"} F2A2C3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:4@2 A4:4@3 F4:2@1",
+      "LH": "{chord:\"F\"} F2A2C3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "Bb4:4@4 A4:4@3 G4:2@2",
+      "LH": "{chord:\"Bb\"} Bb2D3F3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:4@3 F4:4@1 A4:2@3",
+      "LH": "{chord:\"F\"} F2A2C3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "Bb4:4@4 Bb4:4@4 C5:4@5 Bb4:4@4",
+      "LH": "{chord:\"Bb\"} Bb2D3F3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "A4:4@3 G4:4@2 F4:2@1",
+      "LH": "{chord:\"F\"} F2A2C3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "G4:4@2 Bb4:4@4 G4:2@2",
+      "LH": "{chord:\"C7\"} C3E3Bb3:1@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "F4:1@1",
+      "LH": "{chord:\"F\"} F2A2C3:1@531",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      2,
+      6
+    ]
+  ]
+}

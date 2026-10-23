@@ -1,0 +1,38 @@
+{
+  "id": "sct-03-thirds",
+  "title": "str:level.sct.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "sct-thirds"
+    },
+    {
+      "type": "wait",
+      "score": "sct-thirds-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-thirds-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-thirds-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "sct-thirds-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

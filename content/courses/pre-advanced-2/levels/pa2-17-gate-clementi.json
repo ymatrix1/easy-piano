@@ -1,0 +1,14 @@
+{
+  "id": "pa2-17-gate-clementi",
+  "title": "str:level.pa2.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "clementi-sonatina-op36-1",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

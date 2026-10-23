@@ -1,0 +1,51 @@
+{
+  "id": "sct-octave-drill",
+  "title": "Broken Octaves",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "2/4",
+  "key": "Am",
+  "bars": [
+    {
+      "LH": "C3:8@5 C4:8@3 E3:8@5 E4:8@1"
+    },
+    {
+      "LH": "C3:8@5 C4:8@3 E3:8@5 E4:8@1"
+    },
+    {
+      "LH": "A2:8@5 A3:8@3 C3:8@5 C4:8@1"
+    },
+    {
+      "LH": "A2:8@5 A3:8@3 C3:8@5 C4:8@1"
+    },
+    {
+      "LH": "D3:8@5 D4:8@3 F3:8@5 F4:8@1"
+    },
+    {
+      "LH": "E3:8@5 E4:8@1 B2:8@5 B3:8@4"
+    },
+    {
+      "LH": "A2:8@5 A3:8@5 E3:8@5 E4:8@1"
+    },
+    {
+      "LH": "A2:4@5 A3:4@1"
+    },
+    {
+      "LH": "A2:8@5 A3:8@1 A2:8@5 A3:8@1"
+    },
+    {
+      "LH": "A2:2@1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

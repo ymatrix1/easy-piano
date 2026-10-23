@@ -1,0 +1,69 @@
+{
+  "id": "jc2-dim-passing",
+  "title": "Passing Diminished",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 84,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E5:4@4 C5:4@2 E5:4@4 Bb4:4@1",
+      "LH": "E2G2B2:2@531 E2G2Bb2:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G1:4 C#2:4 G1:4"
+    },
+    {
+      "RH": "A4:4@1 C5:4@3 B4:4@2 D5:4@4",
+      "LH": "F2A2C3:2@531 F2B2:2@51",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 G1:4 D2:4"
+    },
+    {
+      "RH": "B4:4@3 G4:4@1 Bb4:4@3 Db5:4@5",
+      "LH": "G2B2D3:2@531 G2Bb2Db3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "E2:4 B1:4 Eb2:4 Bb1:4"
+    },
+    {
+      "RH": "C5:4@3 A4:4@1 B4:4@2 D5:4@4",
+      "LH": "F2A2C3:2@531 F2B2:2@51",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 G1:4 D2:4"
+    },
+    {
+      "RH": "G5:4@5 E5:4@4 C5:4@2 Bb4:4@1",
+      "LH": "E2G2B2:2@531 E2G2Bb2:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G1:4 C#2:4 G1:4"
+    },
+    {
+      "RH": "A4:4@2 C5:4@4 B4:4@3 G4:4@1",
+      "LH": "F2A2C3:2@531 F2B2:2@51",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 G1:4 D2:4"
+    },
+    {
+      "RH": "F5:4@5 D5:4@3 B4:4@1 D5:4@3",
+      "LH": "F2A2C3:2@531 F2B2:2@51",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 G1:4 D2:4"
+    },
+    {
+      "RH": "E5:2@3 C5:2@1",
+      "LH": "G2C3E3:2@531 G2C3E3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "C2:4 G1:4 C2:4 G1:4"
+    }
+  ],
+  "critical": [
+    [
+      2,
+      3
+    ]
+  ]
+}

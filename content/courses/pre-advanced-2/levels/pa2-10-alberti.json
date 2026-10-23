@@ -1,0 +1,31 @@
+{
+  "id": "pa2-10-alberti",
+  "title": "str:level.pa2.10.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pa2-alberti"
+    },
+    {
+      "type": "wait",
+      "score": "pa2-alberti-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-alberti-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-alberti-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

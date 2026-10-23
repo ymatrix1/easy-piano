@@ -1,0 +1,24 @@
+{
+  "id": "pa1-09-scales",
+  "title": "str:level.pa1.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pa1-scale-drill",
+      "pre_listen": true
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-scale-drill",
+      "tempo": 0.65,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-scale-drill",
+      "tempo": 0.95,
+      "pass": 0.7
+    }
+  ]
+}

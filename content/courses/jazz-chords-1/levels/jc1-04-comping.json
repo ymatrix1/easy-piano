@@ -1,0 +1,31 @@
+{
+  "id": "jc1-04-comping",
+  "title": "str:level.jc1.04.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "jc1-comping"
+    },
+    {
+      "type": "wait",
+      "score": "jc1-comping-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-comping-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "jc1-comping-drill",
+      "tempo": 0.95,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

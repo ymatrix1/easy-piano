@@ -1,0 +1,61 @@
+{
+  "id": "cs3-waltz-drill",
+  "title": "Oom Pah Pah",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 96,
+  "time": "3/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:2.@1",
+      "LH": "C3:4@5 E3G3:4@31 E3G3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "G4:2@3 E4:4@1",
+      "LH": "C3:4@5 E3G3:4@31 E3G3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "F4:2.@1",
+      "LH": "G2:4@5 B2F3:4@41 B2F3:4@41",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "B3:2@1 D4:4@3",
+      "LH": "G2:4@5 B2F3:4@41 B2F3:4@41",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "E4:2.@1",
+      "LH": "C3:4@5 E3G3:4@31 E3G3:4@31",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "F#4:2.@1",
+      "LH": "D2:4@5 C3F#3:4@41 C3F#3:4@41",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "D4:2@3 B3:4@1",
+      "LH": "G2:4@5 B2F3:4@41 B2F3:4@41",
+      "DRUMS": "C2F#2:4 F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "C4:2.@1",
+      "LH": "C3:2.@5",
+      "DRUMS": "C2C#3:2."
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

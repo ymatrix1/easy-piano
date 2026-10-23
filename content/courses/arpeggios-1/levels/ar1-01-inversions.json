@@ -1,0 +1,31 @@
+{
+  "id": "ar1-01-inversions",
+  "title": "str:level.ar1.01.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ar1-inversions"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-inversion-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-inversion-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-inversion-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "c1-10-minor",
+  "title": "str:level.c1.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "c1-minor"
+    },
+    {
+      "type": "wait",
+      "score": "c1-minor-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-minor-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "c1-minor-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

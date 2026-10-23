@@ -1,0 +1,14 @@
+{
+  "id": "pa1-17-gate-chords",
+  "title": "str:level.pa1.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pa1-chord-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

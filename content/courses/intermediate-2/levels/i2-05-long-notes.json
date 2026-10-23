@@ -1,0 +1,27 @@
+{
+  "id": "i2-05-long-notes",
+  "title": "str:level.i2.05.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "i2-long-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i2-long-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i2-long-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "i3-07-gate-chords",
+  "title": "str:level.i3.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "i3-chord-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "i3-17-rag",
+  "title": "str:level.i3.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i3-rag"
+    },
+    {
+      "type": "wait",
+      "score": "i3-rag-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-rag-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i3-rag-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

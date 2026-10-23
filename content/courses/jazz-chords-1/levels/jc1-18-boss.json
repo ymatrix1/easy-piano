@@ -1,0 +1,27 @@
+{
+  "id": "jc1-18-boss",
+  "title": "str:level.jc1.18.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "bill-bailey",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "bill-bailey",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

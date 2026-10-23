@@ -1,0 +1,14 @@
+{
+  "id": "bc1-16-gate-rock-roll",
+  "title": "str:level.bc1.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "bc1-rock-roll",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

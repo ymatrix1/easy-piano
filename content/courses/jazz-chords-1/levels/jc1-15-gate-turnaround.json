@@ -1,0 +1,14 @@
+{
+  "id": "jc1-15-gate-turnaround",
+  "title": "str:level.jc1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "jc1-turnaround-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

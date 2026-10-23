@@ -1,0 +1,186 @@
+{
+  "course": "pop-chords-2",
+  "nodes": [
+    {
+      "id": "key-f",
+      "kind": "lesson",
+      "title": "str:node.pc2.key-f",
+      "icon": "note",
+      "levels": [
+        "pc2-01-f-chords"
+      ],
+      "next": [
+        "dm"
+      ]
+    },
+    {
+      "id": "dm",
+      "kind": "lesson",
+      "title": "str:node.pc2.dm",
+      "icon": "note",
+      "levels": [
+        "pc2-02-dm"
+      ],
+      "next": [
+        "vi-ii-v"
+      ]
+    },
+    {
+      "id": "vi-ii-v",
+      "kind": "lesson",
+      "title": "str:node.pc2.vi-ii-v",
+      "icon": "note",
+      "levels": [
+        "pc2-03-vi-ii-v"
+      ],
+      "next": [
+        "iii-iv-v"
+      ]
+    },
+    {
+      "id": "iii-iv-v",
+      "kind": "lesson",
+      "title": "str:node.pc2.iii-iv-v",
+      "icon": "note",
+      "levels": [
+        "pc2-04-iii-iv-v"
+      ],
+      "next": [
+        "aura-lee"
+      ]
+    },
+    {
+      "id": "aura-lee",
+      "kind": "song",
+      "title": "str:node.pc2.aura-lee",
+      "icon": "play",
+      "levels": [
+        "pc2-05-aura-lee"
+      ],
+      "next": [
+        "pop-c"
+      ],
+      "songs": {
+        "default": "aura-lee",
+        "folk_world": "aura-lee",
+        "originals_pop": "aura-lee"
+      }
+    },
+    {
+      "id": "pop-c",
+      "kind": "song",
+      "title": "str:node.pc2.pop-c",
+      "icon": "play",
+      "levels": [
+        "pc2-06-pop-c"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "pc2-pop-c",
+        "originals_pop": "pc2-pop-c"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.pc2.gate-1",
+      "icon": "star",
+      "levels": [
+        "pc2-07-gate-aura-lee",
+        "pc2-08-gate-pop-c",
+        "pc2-09-gate-loop"
+      ],
+      "next": [
+        "melody-f"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "melody-f",
+      "kind": "lesson",
+      "title": "str:node.pc2.melody-f",
+      "icon": "note",
+      "levels": [
+        "pc2-10-melody-f"
+      ],
+      "next": [
+        "ballad-f"
+      ]
+    },
+    {
+      "id": "ballad-f",
+      "kind": "song",
+      "title": "str:node.pc2.ballad-f",
+      "icon": "play",
+      "levels": [
+        "pc2-11-ballad-f"
+      ],
+      "next": [
+        "waltz-bcc"
+      ],
+      "songs": {
+        "default": "pc2-ballad-f",
+        "originals_pop": "pc2-ballad-f"
+      }
+    },
+    {
+      "id": "waltz-bcc",
+      "kind": "lesson",
+      "title": "str:node.pc2.waltz-bcc",
+      "icon": "note",
+      "levels": [
+        "pc2-12-waltz-bcc"
+      ],
+      "next": [
+        "down-in-the-valley"
+      ]
+    },
+    {
+      "id": "down-in-the-valley",
+      "kind": "song",
+      "title": "str:node.pc2.down-in-the-valley",
+      "icon": "play",
+      "levels": [
+        "pc2-13-down-in-the-valley"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "down-in-the-valley",
+        "folk_world": "down-in-the-valley"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.pc2.gate-2",
+      "icon": "star",
+      "levels": [
+        "pc2-14-gate-valley",
+        "pc2-15-gate-ballad",
+        "pc2-16-gate-melody"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.pc2.boss",
+      "icon": "play",
+      "levels": [
+        "pc2-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "silent-night",
+        "hymns_spirituals": "silent-night"
+      }
+    }
+  ]
+}

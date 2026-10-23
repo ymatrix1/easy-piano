@@ -1,0 +1,14 @@
+{
+  "id": "b2-16-gate-suspensions",
+  "title": "str:level.b2.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "b2-suspension-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

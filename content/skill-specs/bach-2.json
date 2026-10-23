@@ -1,0 +1,313 @@
+{
+  "course": "bach-2",
+  "nodes": [
+    {
+      "node": "d-minor",
+      "new_skill": "D minor harmonic: B flat and the raised seventh, C sharp.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "C#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "g-minor",
+      "new_skill": "G minor: B flat, E flat and F sharp, with left hand support.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "Eb"
+        },
+        {
+          "accidental": "F#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minuet",
+      "new_skill": "A 3/4 minuet in G minor with eighth runs, both hands.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "phrases",
+      "new_skill": "Shape phrases of four to eight bars in one breath.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "air",
+      "new_skill": "A long singing line over a walking bass, held notes.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        60,
+        60
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "polonaise",
+      "new_skill": "A stately 3/4 dance with left hand chords in G minor.",
+      "required": [
+        {
+          "accidental": "Eb"
+        },
+        {
+          "accidental": "F#"
+        },
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        108,
+        108
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: minor keys, long phrases and both hands.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        60,
+        108
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "e-minor",
+      "new_skill": "E minor: F sharp and the raised seventh, D sharp.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "D#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "sixteenths",
+      "new_skill": "Sixteenth-note figures in the right hand over held left hand notes.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "leaps",
+      "new_skill": "Left hand leaps of a sixth or an octave.",
+      "required": [
+        {
+          "interval_min": 5,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "suspensions",
+      "new_skill": "Suspensions: hold a note while the bass moves, then resolve.",
+      "required": [
+        {
+          "accidental": "C#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: sixteenths, leaps and suspensions.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        66,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Capstone: Bach's Bourree in E minor with sixteenths and leaps in both hands.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "D#"
+        },
+        {
+          "rhythm": "16"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "hands": "both",
+      "time": "2/2"
+    }
+  ]
+}

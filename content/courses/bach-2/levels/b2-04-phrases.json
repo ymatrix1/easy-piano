@@ -1,0 +1,38 @@
+{
+  "id": "b2-04-phrases",
+  "title": "str:level.b2.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "b2-phrases"
+    },
+    {
+      "type": "wait",
+      "score": "b2-phrase-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "b2-phrase-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "b2-phrase-drill",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "b2-phrase-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

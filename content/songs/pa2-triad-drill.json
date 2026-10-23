@@ -1,0 +1,51 @@
+{
+  "id": "pa2-triad-drill",
+  "title": "Triad Shapes",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "LH": "C3E3G3:2@531 C3E3G3:2@531"
+    },
+    {
+      "LH": "E3G3C4:2@531 E3G3C4:2@531"
+    },
+    {
+      "LH": "G3C4E4:2@521 G3C4E4:2@521"
+    },
+    {
+      "LH": "C3E3G3:1@531"
+    },
+    {
+      "LH": "C3E3G3:2@531 C3F3A3:2@521"
+    },
+    {
+      "LH": "C3F3A3:2@521 C3E3G3:2@531"
+    },
+    {
+      "LH": "B2D3G3:2@531 B2D3G3:2@531"
+    },
+    {
+      "LH": "C3E3G3:1@531"
+    },
+    {
+      "LH": "C3E3G3:4@531 E3G3C4:4@531 G3C4E4:4@521 E3G3C4:4@531"
+    },
+    {
+      "LH": "C3F3A3:4@521 C3F3A3:4@521 B2D3G3:4@531 B2D3G3:4@531"
+    },
+    {
+      "LH": "C3E3G3:4@531 C3F3A3:4@521 B2D3G3:4@531 C3E3G3:4@531"
+    },
+    {
+      "LH": "C3E3G3:1@531"
+    }
+  ]
+}

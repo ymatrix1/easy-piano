@@ -1,0 +1,47 @@
+{
+  "id": "adv1-02-prelude-e-minor",
+  "title": "str:level.adv1.02.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "chopin-prelude-e-minor",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-e-minor",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "chopin-prelude-e-minor",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-e-minor",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-e-minor",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "chopin-prelude-e-minor",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

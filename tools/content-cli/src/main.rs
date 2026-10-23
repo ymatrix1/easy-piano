@@ -128,6 +128,10 @@ struct NodeTaught {
     kind: String,
     songs: Vec<String>,
     taught: TaughtSet,
+    /// Learning stage: the course's prerequisite depth (0 for courses with no
+    /// `requires`) plus the node's fraction of its journey. Parallel tracks at
+    /// the same depth share stages, unlike the position in the walk.
+    stage: f64,
 }
 
 /// Walks courses in `courses.json` order and nodes in journey order, adding each
@@ -144,6 +148,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
     let mut out = Vec::new();
     let mut taught = TaughtSet::default();
     let mut seen: BTreeSet<String> = BTreeSet::new();
+    let mut depth: BTreeMap<String, usize> = BTreeMap::new();
     let courses = read(courses_path.clone()).unwrap_or(Value::Null);
     for course in courses
         .get("courses")
@@ -169,6 +174,16 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
             }
         }
         seen.insert(cid.to_string());
+        let d = course
+            .get("requires")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .filter_map(|r| depth.get(r).map(|d| d + 1))
+            .max()
+            .unwrap_or(0);
+        depth.insert(cid.to_string(), d);
         let on_ramp = !course
             .get("section")
             .and_then(Value::as_str)
@@ -188,12 +203,14 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
         let Some(journey) = read(cdir.join("journey.json")) else {
             continue;
         };
-        for node in journey
+        let nodes: Vec<&Value> = journey
             .get("nodes")
             .and_then(Value::as_array)
             .into_iter()
             .flatten()
-        {
+            .collect();
+        let n_nodes = nodes.len().max(1) as f64;
+        for (j, node) in nodes.into_iter().enumerate() {
             let mut ids: Vec<String> = Vec::new();
             for level in node
                 .get("levels")
@@ -261,6 +278,7 @@ fn taught_walk(lint: &mut Lint, root: &Path, songs: &BTreeMap<String, Song>) -> 
                     .to_string(),
                 songs: ids,
                 taught: taught.clone(),
+                stage: d as f64 + j as f64 / n_nodes,
             });
         }
     }
@@ -1099,20 +1117,30 @@ mod tests {
         let (songs, walk) = repo_walk();
         let (list, _) = level::course_songs(&walk, &songs, &Model::builtin());
         assert!(list.len() >= 30);
-        // Kendall tau between level score and node index.
-        let (mut c, mut d) = (0i64, 0i64);
-        for (i, a) in list.iter().enumerate() {
-            for b in &list[i + 1..] {
-                let s = (b.index as f64 - a.index as f64) * (b.level_score - a.level_score);
-                if s > 0.0 {
-                    c += 1
-                } else if s < 0.0 {
-                    d += 1
+        // Kendall tau between level score and learning stage.
+        let tau = |list: &[&level::CourseSong]| {
+            let (mut c, mut d) = (0i64, 0i64);
+            for (i, a) in list.iter().enumerate() {
+                for b in &list[i + 1..] {
+                    let s = (b.stage - a.stage) * (b.level_score - a.level_score);
+                    if s > 0.0 {
+                        c += 1
+                    } else if s < 0.0 {
+                        d += 1
+                    }
                 }
             }
-        }
-        let tau = (c - d) as f64 / (c + d) as f64;
-        assert!(tau > 0.5, "tau {tau}");
+            (c - d) as f64 / (c + d) as f64
+        };
+        // Calibrated range (Piano Basics, Essentials): strict.
+        let basic: Vec<_> = list.iter().filter(|c| c.stage < 4.0).collect();
+        let t = tau(&basic);
+        assert!(t > 0.5, "basic tau {t}");
+        // Soloist and Chords tracks sit above the calibration data (piano-j1jn,
+        // review piano-bdi4): the whole path must still rise, more loosely.
+        let all: Vec<_> = list.iter().collect();
+        let t = tau(&all);
+        assert!(t > 0.4, "tau {t}");
         let first = &list[0];
         let last = list.iter().max_by_key(|c| c.index).unwrap();
         assert!(

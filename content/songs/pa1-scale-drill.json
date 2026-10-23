@@ -1,0 +1,57 @@
+{
+  "id": "pa1-scale-drill",
+  "title": "F and B-flat Major Scales",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "F",
+  "bars": [
+    {
+      "RH": "F4:8@1 G4:8@2 A4:8@3 Bb4:8@4 C5:8@1 D5:8@2 E5:8@3 F5:8@4",
+      "LH": "F2:1@5"
+    },
+    {
+      "RH": "F5:8@4 E5:8@3 D5:8@2 C5:8@1 Bb4:8@4 A4:8@3 G4:8@2 F4:8@1",
+      "LH": "C3:2@1 F2:2@5"
+    },
+    {
+      "RH": "F4:2@1 A4:2@3",
+      "LH": "F2:8@5 G2:8@4 A2:8@3 Bb2:8@2 C3:8@1 D3:8@3 E3:8@2 F3:8@1"
+    },
+    {
+      "RH": "C5:2@5 A4:2@3",
+      "LH": "F3:8@1 E3:8@2 D3:8@3 C3:8@1 Bb2:8@2 A2:8@3 G2:8@4 F2:8@5"
+    },
+    {
+      "RH": "Bb4:8@4 C5:8@1 D5:8@2 Eb5:8@3 F5:8@1 G5:8@2 A5:8@3 Bb5:8@4",
+      "LH": "Bb2:1@5"
+    },
+    {
+      "RH": "Bb5:8@4 A5:8@3 G5:8@2 F5:8@1 Eb5:8@3 D5:8@2 C5:8@1 Bb4:8@4",
+      "LH": "F3:2@1 Bb2:2@5"
+    },
+    {
+      "RH": "D5:2@2 Bb4:2@1",
+      "LH": "Bb2:8@3 C3:8@2 D3:8@1 Eb3:8@4 F3:8@3 Eb3:8@4 D3:8@1 C3:8@2"
+    },
+    {
+      "RH": "A4:4@3 G4:4@2 A4:4@3 F4:4@1",
+      "LH": "C3:2@1 F2:2@5"
+    },
+    {
+      "RH": "F4:1@1",
+      "LH": "F2:1@5"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

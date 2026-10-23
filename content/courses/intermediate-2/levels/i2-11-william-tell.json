@@ -1,0 +1,40 @@
+{
+  "id": "i2-11-william-tell",
+  "title": "str:level.i2.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "william-tell-overture",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "william-tell-overture",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "william-tell-overture",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "william-tell-overture",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "william-tell-overture",
+      "tempo": 0.8,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

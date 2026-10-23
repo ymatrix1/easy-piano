@@ -1,0 +1,87 @@
+{
+  "id": "pc3-d-major",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.pc3.d-major.1"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 5,
+      "press": "D3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "F#3",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.pc3.d-major.2"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 3,
+      "press": "B2",
+      "label": "3"
+    },
+    {
+      "at": 8,
+      "hand": "L",
+      "finger": 1,
+      "press": "D3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 5,
+      "press": "A2",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 3,
+      "press": "C#3",
+      "label": "3"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 1,
+      "press": "E3",
+      "label": "1"
+    },
+    {
+      "at": 14,
+      "prompt": "your_turn"
+    }
+  ]
+}
