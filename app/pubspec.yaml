@@ -76,6 +76,8 @@ flutter:
 
   assets:
     - assets/fonts/Bravura.otf # lazy, see lib/ui/staff/music_font.dart
+    - assets/fonts/Leland.otf
+    - assets/fonts/LelandText.otf
     - assets/piano/
     - assets/band/bass/
     - assets/band/strings/

@@ -250,4 +250,24 @@ void main() {
       expect(x, greaterThan(nominalX));
     });
   });
+
+  group('StaffPainter chord rendering and time signature', () {
+    test(
+      'systemLayout accounts for time signature width when beatsPerBar is set',
+      () {
+        const space = 10.0;
+        final withTs = StaffPainter.systemLayout(
+          Staves.treble,
+          space,
+          beatsPerBar: 4.0,
+        );
+        final withoutTs = StaffPainter.systemLayout(
+          Staves.treble,
+          space,
+          beatsPerBar: null,
+        );
+        expect(withTs.clefRight, greaterThan(withoutTs.clefRight));
+      },
+    );
+  });
 }

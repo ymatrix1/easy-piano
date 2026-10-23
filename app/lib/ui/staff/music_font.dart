@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// Bravura (SMuFL) is 373 KB, so it is not in the pubspec font manifest,
-/// which the web build fetches before the first frame. It loads in the
+/// SMuFL music font loader (Leland with Bravura fallback).
+/// Leland is the clean engraving font from MuseScore (86 KB), loaded in the
 /// background after boot; staff painters repaint when it lands.
 /// See docs/research/web-load-performance.md.
 final ValueNotifier<bool> musicFontReady = ValueNotifier(false);
@@ -10,8 +10,10 @@ final ValueNotifier<bool> musicFontReady = ValueNotifier(false);
 Future<void>? _loading;
 
 Future<void> loadMusicFont() => _loading ??= () async {
-  final loader = FontLoader('Bravura')
+  final lelandLoader = FontLoader('Leland')
+    ..addFont(rootBundle.load('assets/fonts/Leland.otf'));
+  final bravuraLoader = FontLoader('Bravura')
     ..addFont(rootBundle.load('assets/fonts/Bravura.otf'));
-  await loader.load();
+  await Future.wait([lelandLoader.load(), bravuraLoader.load()]);
   musicFontReady.value = true;
 }();

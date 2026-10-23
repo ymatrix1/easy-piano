@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'music_font.dart';
 import 'staff_note.dart';
 
-/// SMuFL code points (Bravura).
+/// SMuFL code points (Leland / Bravura standard).
 abstract final class Smufl {
   static const gClef = '';
   static const fClef = '';
@@ -18,6 +18,32 @@ abstract final class Smufl {
   static const restQuarter = '';
   static const rest8th = '';
   static const rest16th = '';
+
+  // Time signatures
+  static const timeSig0 = '';
+  static const timeSig1 = '';
+  static const timeSig2 = '';
+  static const timeSig3 = '';
+  static const timeSig4 = '';
+  static const timeSig5 = '';
+  static const timeSig6 = '';
+  static const timeSig7 = '';
+  static const timeSig8 = '';
+  static const timeSig9 = '';
+
+  static String? digitGlyph(int digit) => switch (digit) {
+    0 => timeSig0,
+    1 => timeSig1,
+    2 => timeSig2,
+    3 => timeSig3,
+    4 => timeSig4,
+    5 => timeSig5,
+    6 => timeSig6,
+    7 => timeSig7,
+    8 => timeSig8,
+    9 => timeSig9,
+    _ => null,
+  };
 }
 
 /// Which staves to draw; comes from the level's `ui` field.
@@ -190,7 +216,7 @@ class StaffPainter extends CustomPainter {
         text: TextSpan(
           text: g,
           style: TextStyle(
-            fontFamily: 'Bravura',
+            fontFamily: 'Leland',
             fontSize: size,
             color: c,
             height: 1,
@@ -222,13 +248,19 @@ class StaffPainter extends CustomPainter {
   /// clef sits one space after the line in both.
   static ({double systemX, double clefX, double clefRight}) systemLayout(
     Staves staves,
-    double space,
-  ) {
+    double space, {
+    double? beatsPerBar,
+  }) {
     final grand = staves == Staves.grand;
     final systemX = space * (grand ? 2.2 : 0.6);
     final clefX = systemX + space * 1.0;
-    // Clef glyphs are ~2.7 spaces wide; keep ~0.7 space clear after them.
-    return (systemX: systemX, clefX: clefX, clefRight: clefX + space * 3.4);
+    // Clef glyphs are ~2.7 spaces wide.
+    var right = clefX + space * 3.4;
+    if (beatsPerBar != null && beatsPerBar > 0) {
+      // Time signature digits sit after the clef (~2.0 spaces wide + padding).
+      right += space * 2.5;
+    }
+    return (systemX: systemX, clefX: clefX, clefRight: right);
   }
 
   /// Horizontal edge-fade mask for everything that scrolls (noteheads,
@@ -327,10 +359,12 @@ class StaffPainter extends CustomPainter {
     if (!_isSharp[n.pitch % 12]) return nominalX;
 
     // Find preceding note on the same staff/voice region within 2 beats.
+    // Notes with the exact same beat (chords) are not preceding horizontal notes.
     final onBass = n.leftHand;
     double? prevRight;
     for (var i = index - 1; i >= 0; i--) {
       final prev = notes[i];
+      if ((prev.beat - n.beat).abs() < 1e-6) continue;
       if (n.beat - prev.beat > 2.0) break;
       if (prev.isSpacer || prev.leftHand != onBass) continue;
       final px = anchorX + (prev.beat - nowBeat) * pixelsPerBeat;
@@ -413,25 +447,36 @@ class StaffPainter extends CustomPainter {
       ..strokeWidth = math.max(1.2, space * 0.09);
     final staffTop = _hasTreble ? trebleBottomY - space * 4 : bassTopY;
     final staffBottom = _hasBass ? bassTopY + space * 4 : trebleBottomY;
-    final sys = systemLayout(staves, space);
-    // Vertical band padding: includes Middle C and standard ledger notes inside the band
-    final vPad = space * 1.5;
-    final staffSpans = [
-      if (_hasTreble) (trebleBottomY - space * 4 - vPad, trebleBottomY + vPad),
-      if (_hasBass) (bassTopY - vPad, bassTopY + space * 4 + vPad),
-    ];
+    final bpb = beatsPerBar;
+    final sys = systemLayout(staves, space, beatsPerBar: bpb);
 
-    // Band, staff lines, clefs and brace.
+    // Band, staff lines, clefs, time signature and brace.
     void paintBackground() {
       if (bandColor != null) {
         final band = Paint()
           ..color = dimmed
               ? Color.lerp(bandColor!, const Color(0xFF8A8A8A), 0.85)!
               : bandColor!;
-        // One band per staff, stage colour between them (reference look).
-        for (final (top, bot) in staffSpans) {
+        // Clean open bands hugging each staff without heavy framing borders.
+        if (_hasTreble) {
           canvas.drawRect(
-            Rect.fromLTRB(sys.systemX, top, size.width, bot),
+            Rect.fromLTRB(
+              sys.systemX,
+              trebleBottomY - space * 4,
+              size.width,
+              trebleBottomY,
+            ),
+            band,
+          );
+        }
+        if (_hasBass) {
+          canvas.drawRect(
+            Rect.fromLTRB(
+              sys.systemX,
+              bassTopY,
+              size.width,
+              bassTopY + space * 4,
+            ),
             band,
           );
         }
@@ -454,6 +499,7 @@ class StaffPainter extends CustomPainter {
           );
         }
       }
+
       // Clefs: G clef origin on G4 line, F clef origin on F3 line.
       if (_hasTreble) {
         _drawGlyph(
@@ -473,20 +519,60 @@ class StaffPainter extends CustomPainter {
           staff,
         );
       }
-      // Each staff framed by a heavy rectangle.
-      final frame = Paint()
-        ..color = staff
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = ink.strokeWidth * 2;
-      final inset = frame.strokeWidth / 2;
-      for (final (top, bot) in staffSpans) {
-        canvas.drawRect(
-          Rect.fromLTRB(sys.systemX, top, size.width - inset, bot),
-          frame,
-        );
+
+      // Time signature: numerator on upper 2 spaces, denominator on lower 2 spaces.
+      if (bpb != null && bpb > 0) {
+        final numDigit = bpb.round();
+        final numGlyph = Smufl.digitGlyph(numDigit);
+        final denGlyph = Smufl.digitGlyph(
+          4,
+        ); // Default quarter note denominator
+        final tsX = sys.clefX + space * 3.4;
+        if (numGlyph != null && denGlyph != null) {
+          if (_hasTreble) {
+            _drawGlyph(
+              canvas,
+              numGlyph,
+              glyphSize,
+              Offset(tsX, trebleBottomY - space * 3),
+              staff,
+            );
+            _drawGlyph(
+              canvas,
+              denGlyph,
+              glyphSize,
+              Offset(tsX, trebleBottomY - space * 1),
+              staff,
+            );
+          }
+          if (_hasBass) {
+            _drawGlyph(
+              canvas,
+              numGlyph,
+              glyphSize,
+              Offset(tsX, bassTopY + space * 1),
+              staff,
+            );
+            _drawGlyph(
+              canvas,
+              denGlyph,
+              glyphSize,
+              Offset(tsX, bassTopY + space * 3),
+              staff,
+            );
+          }
+        }
       }
+
       if (staves == Staves.grand) {
-        // Brace left of the frames.
+        // System line joining treble and bass
+        canvas.drawLine(
+          Offset(sys.systemX, staffTop),
+          Offset(sys.systemX, staffBottom),
+          ink,
+        );
+
+        // Brace left of the system line.
         final x0 = sys.systemX - space * 1.9,
             top = staffTop,
             bot = staffBottom,
@@ -523,7 +609,6 @@ class StaffPainter extends CustomPainter {
 
     paintBackground();
     final clefRight = sys.clefRight;
-    final bpb = beatsPerBar;
     if (bpb != null && bpb > 0) {
       final now0 = scrollBeat.value;
       final firstBar = ((now0 - anchorX / pixelsPerBeat) / bpb).floor();
@@ -730,7 +815,63 @@ class StaffPainter extends CustomPainter {
           ..strokeWidth = math.max(1.2, space * 0.1);
         final sxUp = x + space * 1.18 - 0.6;
         final sxDown = x + 0.6;
-        if (n.twoStems || isDuplicate) {
+
+        // Check if there are other chord notes on the same beat and hand
+        var isLowestOfChord = true;
+        var isHighestOfChord = true;
+        var hasOtherChordNote = false;
+        for (var k = 0; k < notes.length; k++) {
+          if (k == i) continue;
+          final other = notes[k];
+          if ((other.beat - n.beat).abs() < 1e-6 &&
+              other.leftHand == n.leftHand &&
+              !other.isSpacer &&
+              !other.isRest) {
+            hasOtherChordNote = true;
+            if (other.pitch < n.pitch) isLowestOfChord = false;
+            if (other.pitch > n.pitch) isHighestOfChord = false;
+          }
+        }
+
+        if (hasOtherChordNote) {
+          // In a chord: draw connecting stem between notes, and extend the main stem
+          final stemDown = n.stemDown;
+          if (stemDown) {
+            // Downward stem extends from the lowest note downward
+            if (isLowestOfChord) {
+              canvas.drawLine(
+                Offset(sxDown, y),
+                Offset(sxDown, y + space * 3.5),
+                strokePaint,
+              );
+            }
+          } else {
+            // Upward stem extends from the highest note upward
+            if (isHighestOfChord) {
+              canvas.drawLine(
+                Offset(sxUp, y),
+                Offset(sxUp, y - space * 3.5),
+                strokePaint,
+              );
+            }
+          }
+          // Also connect this note to adjacent chord notes if needed
+          for (var k = i + 1; k < notes.length; k++) {
+            final other = notes[k];
+            if ((other.beat - n.beat).abs() < 1e-6 &&
+                other.leftHand == n.leftHand &&
+                !other.isSpacer &&
+                !other.isRest) {
+              final otherY = _noteY(other.pitch, onBass, l);
+              final connectX = stemDown ? sxDown : sxUp;
+              canvas.drawLine(
+                Offset(connectX, y),
+                Offset(connectX, otherY),
+                strokePaint,
+              );
+            }
+          }
+        } else if (n.twoStems || isDuplicate) {
           canvas.drawLine(
             Offset(sxUp, y),
             Offset(sxUp, y - space * 3.5),
@@ -846,15 +987,34 @@ class StaffPainter extends CustomPainter {
   /// Shows fingering if it has an active badge, if it's the first note for that hand,
   /// if the finger changed from the previous note played by the same hand,
   /// or if there is a hand position leap / large rest gap.
+  /// For chords (simultaneous notes on the same beat), fingerings are only shown
+  /// on the top note (or lowest if bass) to avoid overlapping text collisions.
   bool _shouldDrawFinger(int index) {
     final n = notes[index];
     if (n.finger == null) return false;
     if (badgeColorOf?.call(index) != null) return true;
 
+    // Check if this note is part of a chord on the same hand.
+    // If so, only show fingering on the topmost note of the chord to prevent overlaps.
+    for (var k = 0; k < notes.length; k++) {
+      if (k == index) continue;
+      final other = notes[k];
+      if ((other.beat - n.beat).abs() < 1e-6 &&
+          other.leftHand == n.leftHand &&
+          !other.isSpacer &&
+          !other.isRest) {
+        if (other.pitch > n.pitch) {
+          // A higher note exists in this chord; don't draw on this lower note
+          return false;
+        }
+      }
+    }
+
     // Look for previous playable note for the same hand
     StaffNote? prev;
     for (var k = index - 1; k >= 0; k--) {
       final cand = notes[k];
+      if ((cand.beat - n.beat).abs() < 1e-6) continue;
       if (!cand.isSpacer && !cand.isRest && cand.leftHand == n.leftHand) {
         prev = cand;
         break;
