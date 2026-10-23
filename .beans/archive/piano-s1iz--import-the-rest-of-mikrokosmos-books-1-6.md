@@ -1,10 +1,11 @@
 ---
 # piano-s1iz
 title: Import the rest of Mikrokosmos (Books 1-6)
-status: todo
+status: completed
 type: task
+priority: normal
 created_at: 2026-10-22T19:28:39Z
-updated_at: 2026-10-22T19:28:39Z
+updated_at: 2026-10-23T12:04:47Z
 parent: piano-bjig
 blocked_by:
     - piano-16vk
