@@ -1,0 +1,31 @@
+{
+  "id": "ls3-03-key-a",
+  "title": "str:level.ls3.03.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls3-a-key"
+    },
+    {
+      "type": "wait",
+      "score": "ls3-a-chords",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-a-chords",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls3-a-chords",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

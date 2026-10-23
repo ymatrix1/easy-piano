@@ -37,7 +37,8 @@ Same organization as Simply Piano (`DefaultCoursePaths`): touch section → basi
 | Classical I | Intermediate II | PD classical pieces |
 | Taste of Bach I–II | Classical I | Counterpoint, two-voice |
 | Pre-Advanced I–II | Intermediate IV | Longer pieces, ornaments |
-| Showcase pieces (e.g. Turkish March, The Entertainer) | Pre-Advanced I | Single-piece courses, PD only |
+| Advanced I | Pre-Advanced II + Taste of Bach II | Romantic pieces, ornaments, triplets against duplets |
+| Showcase pieces (The Entertainer, Turkish March, Moonlight Sonata) | Intermediate II / Pre-Advanced I / Advanced I | Single-piece courses, PD only |
 
 **Chords track** (accompaniment, pop/blues/jazz)
 
@@ -51,7 +52,7 @@ Same organization as Simply Piano (`DefaultCoursePaths`): touch section → basi
 | Lead Sheet I–III | Chord Styling II | Melody + chord symbols |
 | Slash Chords | Lead Sheet I | Bass-note chords |
 
-Map layout: 3-column grid (Soloist · shared · Chords), courses unlock by prereq. Song showcase courses use PD music only (licensed pop songs in SP are replaced with PD/original equivalents).
+Map layout: 3-column grid (Soloist · shared · Chords), courses unlock by prereq. Built today: `courses.json` sections `basic`, `soloist`, `chords`, listed one after another on the Learn tab; the grid is not built yet. Song showcase courses use PD music only (licensed pop songs in SP are replaced with PD/original equivalents).
 
 ## Piano Basics 1 skills (first build target)
 

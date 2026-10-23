@@ -1,0 +1,14 @@
+{
+  "id": "bc1-15-gate-blues-riff",
+  "title": "str:level.bc1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "bc1-blues-riff",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -44,7 +44,12 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 - [x] Essentials I (19 levels, 2 star gates)
 - [x] Essentials II (18 levels, 2 star gates)
 - [x] Essentials III (17 levels, 2 star gates)
-- [ ] Piano Basics 2–4, Pop Chords 1
+- [x] Soloist track: Classical I, Intermediate I–IV, A Taste of Bach I–II, Pre-Advanced I–II, Advanced I, showcases The Entertainer, Turkish March, Moonlight Sonata (13 courses, first pass, [course-map](specs/course-map.md))
+- [x] Chords track: Pop Chords I–III, Chord Styling I–III, Arpeggios I, Blues Chords I, Jazz Chords I–II, Lead Sheet I–III, Slash Chords (14 courses, first pass)
+- [ ] By-ear review of every PD arrangement in the Soloist and Chords tracks
+- [ ] Notation gaps vs method books ([gap table](research/method-books-sequence.md)): expression marks and pedal; ties, repeats, key/meter changes; two voices per hand (D34)
+- [ ] Keys and theory course: remaining keys, augmented triads, transposition, theory quizzes
+- [ ] Piano Basics 2–4 (the course map covers this ground with Essentials I–III; decide whether these courses are still wanted)
 - [x] Methods section: Mikrokosmos I, 32 of Book 1's 36 pieces from the Mikrokosmos-difficulty MusicXML (D33, [research](research/mikrokosmos-import.md)); region filter pending
 - [x] Localization: en, pt-BR, es, fr, de UI and content strings, language picker ([i18n](specs/i18n.md))
 - [x] Polyphonic mic research result (own trained model, synthetic + MAESTRO evidence; real devices pending, piano-m4r9)
@@ -60,4 +65,4 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 
 ## Later
 
-Sync, teacher tools, more tracks, store releases.
+Sync, teacher tools, more tracks, store releases. Music Theory course (quizzes, ear training; [course-map](specs/course-map.md#music-theory-later), piano-6gpx).

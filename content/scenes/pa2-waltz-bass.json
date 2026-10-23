@@ -1,0 +1,122 @@
+{
+  "id": "pa2-waltz-bass",
+  "duration_beats": 16,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.pa2.waltz.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 5,
+      "press": "E3",
+      "label": "5"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 3,
+      "press": "G3",
+      "label": "3"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 5,
+      "press": "E3",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 3,
+      "press": "G3",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.pa2.waltz.2"
+    },
+    {
+      "at": 9,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 5,
+      "press": "D3",
+      "label": "5"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 2,
+      "press": "G3",
+      "label": "2"
+    },
+    {
+      "at": 10,
+      "hand": "L",
+      "finger": 1,
+      "press": "B3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 5,
+      "press": "D3",
+      "label": "5"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 2,
+      "press": "G3",
+      "label": "2"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 1,
+      "press": "B3",
+      "label": "1"
+    },
+    {
+      "at": 13,
+      "prompt": "your_turn"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "pc1-01-triad",
+  "title": "str:level.pc1.01.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc1-triad"
+    },
+    {
+      "type": "wait",
+      "score": "pc1-triad-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-triad-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-triad-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "ar1-inversion-drill",
+  "title": "Four Chords, Three Shapes",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "C4E4G4:2@135 E4G4C5:2@125",
+      "LH": "C3:2@5 C3:2@5"
+    },
+    {
+      "RH": "A3C4E4:2@135 C4E4A4:2@125",
+      "LH": "A2:2@5 A2:2@5"
+    },
+    {
+      "RH": "C4F4A4:2@135 F4A4C5:2@135",
+      "LH": "F2:2@5 F2:2@5"
+    },
+    {
+      "RH": "B3D4G4:2@125 D4G4B4:2@135",
+      "LH": "G2:2@5 G2:2@5"
+    },
+    {
+      "RH": "C4E4G4:4@135 C4E4A4:4@125 C4F4A4:4@135 B3D4G4:4@125",
+      "LH": "C3:4@5 A2:4@5 F2:4@5 G2:4@5"
+    },
+    {
+      "RH": "D4G4B4:4@135 C4F4A4:4@135 C4E4A4:4@125 C4E4G4:4@135",
+      "LH": "G2:4@5 F2:4@5 A2:4@5 C3:4@5"
+    },
+    {
+      "RH": "E4G4C5:2@125 D4G4B4:2@135",
+      "LH": "C3:2@5 G2:2@5"
+    },
+    {
+      "RH": "C4E4G4:1@135",
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      7
+    ]
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "pc3-17-gate-smooth-in-d",
+  "title": "str:level.pc3.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pc3-d-inversions",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

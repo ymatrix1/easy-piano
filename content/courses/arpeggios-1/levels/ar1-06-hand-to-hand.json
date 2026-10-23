@@ -1,0 +1,31 @@
+{
+  "id": "ar1-06-hand-to-hand",
+  "title": "str:level.ar1.06.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ar1-hand-to-hand"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-hand-to-hand-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-hand-to-hand-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-hand-to-hand-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "i1-14-broken-fifths",
+  "title": "str:level.i1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "i1-broken"
+    },
+    {
+      "type": "wait",
+      "score": "i1-broken-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-broken-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i1-broken-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

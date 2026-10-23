@@ -1,0 +1,62 @@
+{
+  "id": "i1-broken",
+  "duration_beats": 14,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.i1.broken.1"
+    },
+    {
+      "at": 2,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 4,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 5,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "L",
+      "finger": 5,
+      "press": "C3",
+      "label": "5"
+    },
+    {
+      "at": 7,
+      "hand": "L",
+      "finger": 1,
+      "press": "A3",
+      "label": "1"
+    },
+    {
+      "at": 11,
+      "prompt": "your_turn"
+    }
+  ]
+}

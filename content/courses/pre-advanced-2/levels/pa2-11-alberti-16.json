@@ -1,0 +1,27 @@
+{
+  "id": "pa2-11-alberti-16",
+  "title": "str:level.pa2.11.title",
+  "ui": "bass",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pa2-alberti16-drill",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-alberti16-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "pa2-alberti16-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "LH"
+    }
+  ]
+}

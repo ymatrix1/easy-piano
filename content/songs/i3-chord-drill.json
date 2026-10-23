@@ -1,0 +1,53 @@
+{
+  "id": "i3-chord-drill",
+  "title": "Three Chords",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:4@3 G4:4@5 E4:4@3 C4:4@1",
+      "LH": "C3E3G3:1@531"
+    },
+    {
+      "RH": "F4:4@4 E4:4@3 F4:4@4 C4:4@1",
+      "LH": "C3F3A3:1@521"
+    },
+    {
+      "RH": "D4:4@1 F4:4@3 G4:4@4 F4:4@3",
+      "LH": "B2F3G3:1@521"
+    },
+    {
+      "RH": "E4:4@3 D4:4@2 C4:2@1",
+      "LH": "C3E3G3:1@531"
+    },
+    {
+      "RH": "E4:2@1 G4:2@3",
+      "LH": "C3:4@5 E3:4@3 G3:4@1 E3:4@3"
+    },
+    {
+      "RH": "F4:2@4 C4:2@1",
+      "LH": "C3:4@5 F3:4@2 A3:4@1 F3:4@2"
+    },
+    {
+      "RH": "D4:2@1 G4:2@4",
+      "LH": "B2:4@5 F3:4@2 G3:4@1 F3:4@2"
+    },
+    {
+      "RH": "C4:1@1",
+      "LH": "C3E3G3:1@531"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

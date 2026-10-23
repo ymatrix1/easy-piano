@@ -1,0 +1,328 @@
+{
+  "course": "jazz-chords-2",
+  "nodes": [
+    {
+      "node": "bm7b5",
+      "new_skill": "Half-diminished chord Bm7b5 (B D F A) as the ii chord of A minor.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "interval_min": 3
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minor-251-am",
+      "new_skill": "Minor ii-V-i in A minor: Bm7b5, E7, Am.",
+      "required": [
+        {
+          "accidental": "G#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        88,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minor-251-dm",
+      "new_skill": "Minor ii-V-i in D minor: Em7b5, A7, Dm.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        88,
+        88
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "minor-blues",
+      "new_skill": "Twelve-bar minor blues in A with swing eighths and comping chords.",
+      "required": [
+        {
+          "accidental": "G#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: minor ii-V-i and the minor blues.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        12
+      ],
+      "bpm": [
+        88,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "dim7",
+      "new_skill": "Diminished 7th passing chords between C and Dm7.",
+      "required": [
+        {
+          "accidental": "Bb"
+        },
+        {
+          "accidental": "Db"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "after-the-ball",
+      "new_skill": "3/4 parlor waltz in D with a passing diminished chord.",
+      "required": [
+        {
+          "accidental": "D#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        24,
+        24
+      ],
+      "bpm": [
+        116,
+        116
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "dom-chains",
+      "new_skill": "Chain of dominant 7ths a fourth apart: E7, A7, D7, G7 to C.",
+      "required": [
+        {
+          "accidental": "G#"
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "jazz-waltz",
+      "new_skill": "Jazz waltz: bass note then two chords, swung eighths in 3/4.",
+      "required": [
+        {
+          "rhythm": "1/6"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        120,
+        120
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "hard-times",
+      "new_skill": "Foster ballad as a jazz waltz with pickups and 7th chords.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        20,
+        20
+      ],
+      "bpm": [
+        112,
+        112
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "sixths-tag",
+      "new_skill": "6th chords and a tag ending on a held C6.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: diminished passing chords, jazz waltz, 6th chords.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        24
+      ],
+      "bpm": [
+        80,
+        116
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course capstone: a minor jazz blues with ii-V-i turnarounds.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "accidental": "C#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        24,
+        24
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "hands": "both",
+      "time": "4/4"
+    }
+  ]
+}

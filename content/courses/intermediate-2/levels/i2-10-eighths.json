@@ -1,0 +1,27 @@
+{
+  "id": "i2-10-eighths",
+  "title": "str:level.i2.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "i2-eighth-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i2-eighth-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "i2-eighth-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

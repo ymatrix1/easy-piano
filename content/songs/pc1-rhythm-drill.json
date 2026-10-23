@@ -1,0 +1,65 @@
+{
+  "id": "pc1-rhythm-drill",
+  "title": "Chord Rhythms",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:4@135 C4E4G4:4@135 C4E4G4:4@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"G\"} B3D4G4:4@125 B3D4G4:4@125 B3D4G4:4@125 B3D4G4:4@125",
+      "LH": "G2:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} A3C4E4:4@135 A3C4E4:4@135 A3C4E4:4@135 A3C4E4:4@135",
+      "LH": "A2:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:4@125 A3C4F4:4@125 A3C4F4:4@125 A3C4F4:4@125",
+      "LH": "F2:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:8@135 C4E4G4:8@135 C4E4G4:4@135 C4E4G4:4@135",
+      "LH": "C3:2@5 C3:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"G\"} B3D4G4:4@125 B3D4G4:8@125 B3D4G4:8@125 B3D4G4:4@125 B3D4G4:4@125",
+      "LH": "G2:2@5 G2:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"Am\"} A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135 A3C4E4:8@135",
+      "LH": "A2:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"F\"} A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125 A3C4F4:8@125",
+      "LH": "F2:1@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:4@135 C4E4G4:8@135 C4E4G4:8@135 C4E4G4:4@135 C4E4G4:4@135",
+      "LH": "C3:2@5 C3:2@5",
+      "DRUMS": "C2F#2:4 D2F#2:4 C2F#2:4 D2F#2:4"
+    },
+    {
+      "RH": "{chord:\"C\"} C4E4G4:1@135",
+      "LH": "C3:1@5",
+      "DRUMS": "C2C#3:1"
+    }
+  ]
+}

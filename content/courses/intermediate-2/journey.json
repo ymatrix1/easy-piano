@@ -1,0 +1,182 @@
+{
+  "course": "intermediate-2",
+  "nodes": [
+    {
+      "id": "shift",
+      "kind": "lesson",
+      "title": "str:node.i2.shift",
+      "icon": "note",
+      "levels": [
+        "i2-01-shift"
+      ],
+      "next": [
+        "stretch"
+      ]
+    },
+    {
+      "id": "stretch",
+      "kind": "lesson",
+      "title": "str:node.i2.stretch",
+      "icon": "note",
+      "levels": [
+        "i2-02-stretch"
+      ],
+      "next": [
+        "g-major"
+      ]
+    },
+    {
+      "id": "g-major",
+      "kind": "lesson",
+      "title": "str:node.i2.g-major",
+      "icon": "note",
+      "levels": [
+        "i2-03-g-major"
+      ],
+      "next": [
+        "turkey"
+      ]
+    },
+    {
+      "id": "turkey",
+      "kind": "song",
+      "title": "str:node.i2.turkey",
+      "icon": "play",
+      "levels": [
+        "i2-04-turkey"
+      ],
+      "next": [
+        "long-notes"
+      ],
+      "songs": {
+        "default": "turkey-in-the-straw",
+        "folk_world": "turkey-in-the-straw",
+        "originals_pop": "i2-g-drill"
+      }
+    },
+    {
+      "id": "long-notes",
+      "kind": "lesson",
+      "title": "str:node.i2.long-notes",
+      "icon": "note",
+      "levels": [
+        "i2-05-long-notes"
+      ],
+      "next": [
+        "gate-1"
+      ]
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.i2.gate-1",
+      "icon": "star",
+      "levels": [
+        "i2-06-gate-turkey",
+        "i2-07-gate-g-major",
+        "i2-08-gate-long-notes"
+      ],
+      "next": [
+        "repeat"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "repeat",
+      "kind": "lesson",
+      "title": "str:node.i2.repeat",
+      "icon": "note",
+      "levels": [
+        "i2-09-repeat"
+      ],
+      "next": [
+        "eighths"
+      ]
+    },
+    {
+      "id": "eighths",
+      "kind": "lesson",
+      "title": "str:node.i2.eighths",
+      "icon": "note",
+      "levels": [
+        "i2-10-eighths"
+      ],
+      "next": [
+        "william-tell"
+      ]
+    },
+    {
+      "id": "william-tell",
+      "kind": "song",
+      "title": "str:node.i2.william-tell",
+      "icon": "play",
+      "levels": [
+        "i2-11-william-tell"
+      ],
+      "next": [
+        "lh-octaves"
+      ],
+      "songs": {
+        "default": "william-tell-overture",
+        "classical": "william-tell-overture"
+      }
+    },
+    {
+      "id": "lh-octaves",
+      "kind": "lesson",
+      "title": "str:node.i2.lh-octaves",
+      "icon": "note",
+      "levels": [
+        "i2-12-lh-octaves"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.i2.gate-2",
+      "icon": "star",
+      "levels": [
+        "i2-13-gate-william-tell",
+        "i2-14-gate-eighths",
+        "i2-15-gate-octaves"
+      ],
+      "next": [
+        "minor-etude"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "minor-etude",
+      "kind": "song",
+      "title": "str:node.i2.minor-etude",
+      "icon": "play",
+      "levels": [
+        "i2-16-minor-etude"
+      ],
+      "next": [
+        "boss"
+      ],
+      "songs": {
+        "default": "i2-minor-etude",
+        "originals_pop": "i2-minor-etude"
+      }
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.i2.boss",
+      "icon": "play",
+      "levels": [
+        "i2-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "hall-of-the-mountain-king",
+        "classical": "hall-of-the-mountain-king"
+      }
+    }
+  ]
+}

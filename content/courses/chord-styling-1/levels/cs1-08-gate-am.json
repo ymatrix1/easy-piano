@@ -1,0 +1,14 @@
+{
+  "id": "cs1-08-gate-am",
+  "title": "str:level.cs1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "cs1-am-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

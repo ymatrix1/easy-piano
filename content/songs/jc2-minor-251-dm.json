@@ -1,0 +1,69 @@
+{
+  "id": "jc2-minor-251-dm",
+  "title": "Minor ii-V-i in D Minor",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 88,
+  "time": "4/4",
+  "key": "Dm",
+  "bars": [
+    {
+      "RH": "G5:4@5 E5:4@4 D5:4@3 Bb4:4@1",
+      "LH": "G2Bb2D3:2@531 G2Bb2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "E2:4 Bb1:4 E2:4 Bb1:4"
+    },
+    {
+      "RH": "C#5:8@3 E5:8@5 G5:8@5 E5:8@5 C#5:4@3 A4:4@1",
+      "LH": "C#3E3G3:2@531 C#3E3G3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "A1:4 E2:4 A1:4 E2:4"
+    },
+    {
+      "RH": "D5:2@1 F5:2@3",
+      "LH": "F2A2D3:4.@531 F2A2D3:8@531 F2A2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 D2:4 A1:4"
+    },
+    {
+      "RH": "A4:2@1 D5:2@4",
+      "LH": "F2A2D3:2@531 F2A2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 D2:4 A1:4"
+    },
+    {
+      "RH": "Bb4:4@1 D5:4@3 G5:4@5 E5:4@4",
+      "LH": "G2Bb2D3:2@531 G2Bb2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "E2:4 Bb1:4 E2:4 Bb1:4"
+    },
+    {
+      "RH": "G5:4@5 E5:4@5 C#5:4@3 A4:4@1",
+      "LH": "C#3E3G3:2@531 C#3E3G3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "A1:4 E2:4 A1:4 E2:4"
+    },
+    {
+      "RH": "F5:4@5 A4:4@1 D5:4@4 F5:4@5",
+      "LH": "F2A2D3:4.@531 F2A2D3:8@531 F2A2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 D2:4 A1:4"
+    },
+    {
+      "RH": "D5:1@1",
+      "LH": "F2A2D3:2@531 F2A2D3:2@531",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8",
+      "BASS": "D2:4 A1:4 D2:4 A1:4"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

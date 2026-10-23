@@ -1,0 +1,14 @@
+{
+  "id": "ls3-17-gate-waltz",
+  "title": "str:level.ls3.17.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls3-d-waltz",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

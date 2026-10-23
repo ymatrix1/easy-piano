@@ -1,0 +1,53 @@
+{
+  "id": "pa1-dotted-drill",
+  "title": "Dotted Eighth Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "4/4",
+  "key": "G",
+  "bars": [
+    {
+      "RH": "G4:8.@1 A4:16@2 B4:4@3 G4:4@1 B4:4@3",
+      "LH": "G2:2@5 D3:2@1"
+    },
+    {
+      "RH": "C5:8.@4 B4:16@3 A4:4@2 G4:2@1",
+      "LH": "C3:2@2 G2:2@5"
+    },
+    {
+      "RH": "B4:8.@3 C5:16@4 D5:4@5 B4:4@3 G4:4@1",
+      "LH": "G2:2@5 D3:2@1"
+    },
+    {
+      "RH": "A4:8.@3 G4:16@2 F#4:4@1 G4:2@2",
+      "LH": "D3:1@1"
+    },
+    {
+      "RH": "D5:8.@5 D5:16@5 B4:8.@3 G4:16@1 D5:4@5 B4:4@3",
+      "LH": "G2:2@5 B2:2@3"
+    },
+    {
+      "RH": "C5:8.@4 B4:16@3 A4:8.@3 G4:16@2 F#4:4@1 A4:4@3",
+      "LH": "C3:2@2 D3:2@1"
+    },
+    {
+      "RH": "G4:8.@1 A4:16@2 B4:8.@3 C5:16@4 D5:4@5 B4:4@3",
+      "LH": "G2:2@5 D3:2@1"
+    },
+    {
+      "RH": "G4:1@1",
+      "LH": "G2:1@5"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

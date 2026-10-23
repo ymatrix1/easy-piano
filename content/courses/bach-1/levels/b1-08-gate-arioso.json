@@ -1,0 +1,14 @@
+{
+  "id": "b1-08-gate-arioso",
+  "title": "str:level.b1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "arioso-bach",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

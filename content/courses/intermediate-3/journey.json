@@ -1,0 +1,172 @@
+{
+  "course": "intermediate-3",
+  "nodes": [
+    {
+      "id": "a-minor",
+      "kind": "lesson",
+      "title": "str:node.i3.a-minor",
+      "icon": "note",
+      "levels": [
+        "i3-01-a-minor"
+      ],
+      "next": [
+        "scarborough"
+      ]
+    },
+    {
+      "id": "scarborough",
+      "kind": "song",
+      "title": "str:node.i3.scarborough",
+      "icon": "play",
+      "levels": [
+        "i3-02-scarborough"
+      ],
+      "next": [
+        "chords"
+      ],
+      "songs": {
+        "default": "scarborough-fair",
+        "folk_world": "scarborough-fair"
+      }
+    },
+    {
+      "id": "chords",
+      "kind": "lesson",
+      "title": "str:node.i3.chords",
+      "icon": "note",
+      "levels": [
+        "i3-03-chords"
+      ],
+      "next": [
+        "brahms"
+      ]
+    },
+    {
+      "id": "brahms",
+      "kind": "song",
+      "title": "str:node.i3.brahms",
+      "icon": "play",
+      "levels": [
+        "i3-04-brahms"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "brahms-lullaby",
+        "classical": "brahms-lullaby"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.i3.gate-1",
+      "icon": "star",
+      "levels": [
+        "i3-05-gate-scarborough",
+        "i3-06-gate-brahms",
+        "i3-07-gate-chords"
+      ],
+      "next": [
+        "coordination"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "coordination",
+      "kind": "lesson",
+      "title": "str:node.i3.coordination",
+      "icon": "note",
+      "levels": [
+        "i3-08-parallel",
+        "i3-09-contrary"
+      ],
+      "next": [
+        "extended"
+      ]
+    },
+    {
+      "id": "extended",
+      "kind": "lesson",
+      "title": "str:node.i3.extended",
+      "icon": "note",
+      "levels": [
+        "i3-10-extended-f",
+        "i3-11-extended-d"
+      ],
+      "next": [
+        "scale-contrary"
+      ]
+    },
+    {
+      "id": "scale-contrary",
+      "kind": "lesson",
+      "title": "str:node.i3.scale-contrary",
+      "icon": "note",
+      "levels": [
+        "i3-12-scale-contrary"
+      ],
+      "next": [
+        "sole-mio"
+      ]
+    },
+    {
+      "id": "sole-mio",
+      "kind": "song",
+      "title": "str:node.i3.sole-mio",
+      "icon": "play",
+      "levels": [
+        "i3-13-sole-mio"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "o-sole-mio",
+        "classical": "o-sole-mio",
+        "folk_world": "o-sole-mio"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.i3.gate-2",
+      "icon": "star",
+      "levels": [
+        "i3-14-gate-sole-mio",
+        "i3-15-gate-contrary-scale",
+        "i3-16-gate-d-position"
+      ],
+      "next": [
+        "rag"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "rag",
+      "kind": "lesson",
+      "title": "str:node.i3.rag",
+      "icon": "note",
+      "levels": [
+        "i3-17-rag"
+      ],
+      "next": [
+        "boss"
+      ]
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.i3.boss",
+      "icon": "play",
+      "levels": [
+        "i3-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "maple-leaf-rag",
+        "jazz_blues": "maple-leaf-rag"
+      }
+    }
+  ]
+}

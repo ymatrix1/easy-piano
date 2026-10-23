@@ -1,0 +1,267 @@
+{
+  "course": "intermediate-3",
+  "nodes": [
+    {
+      "node": "a-minor",
+      "new_skill": "A minor: natural scale, then harmonic with G sharp.",
+      "required": [
+        {
+          "accidental": "G#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        84
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "scarborough",
+      "new_skill": "Modal tune in A minor in 3/4 with block chords on the left.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        80,
+        88
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "chords",
+      "new_skill": "Left hand I, IV and V7 in C: block, then broken.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "B2",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "brahms",
+      "new_skill": "3/4 lullaby with left hand oom-pah chords and a pickup.",
+      "required": [
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        62,
+        70
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: A minor, chords and 3/4.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        66,
+        88
+      ],
+      "hands": "both",
+      "time": "3/4"
+    },
+    {
+      "node": "coordination",
+      "new_skill": "Five-finger coordination: hands in parallel and contrary motion.",
+      "required": [
+        {
+          "hands_together": true
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "extended",
+      "new_skill": "Extended F and D positions: reach past five fingers.",
+      "required": [
+        {
+          "accidental": "Bb"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "RH",
+      "time": "4/4"
+    },
+    {
+      "node": "scale-contrary",
+      "new_skill": "C major scale hands together in contrary motion.",
+      "required": [
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C3",
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        68,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "sole-mio",
+      "new_skill": "4/4 song with dotted rhythm and left hand chords in quarters.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: stretches, scales and chords.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "rag",
+      "new_skill": "Syncopation preview: short-long-short against a steady left hand.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        84,
+        92
+      ],
+      "hands": "both",
+      "time": "2/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course review: a syncopated rag with stride left hand.",
+      "required": [
+        {
+          "rhythm": "16"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        80
+      ],
+      "hands": "both",
+      "time": "2/4"
+    }
+  ]
+}

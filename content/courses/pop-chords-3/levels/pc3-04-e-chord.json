@@ -1,0 +1,31 @@
+{
+  "id": "pc3-04-e-chord",
+  "title": "str:level.pc3.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "pc3-a-major"
+    },
+    {
+      "type": "wait",
+      "score": "pc3-e-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc3-e-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "pc3-e-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

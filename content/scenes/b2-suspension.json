@@ -1,0 +1,45 @@
+{
+  "id": "b2-suspension",
+  "duration_beats": 12,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.b2.susp.1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "D3",
+      "label": "5"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 4,
+      "press": "G4",
+      "label": "4"
+    },
+    {
+      "at": 5,
+      "caption": "str:scene.b2.susp.2"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 3,
+      "press": "F4",
+      "label": "3"
+    },
+    {
+      "at": 10,
+      "prompt": "your_turn"
+    }
+  ]
+}

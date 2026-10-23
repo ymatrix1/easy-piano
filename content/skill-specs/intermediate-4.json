@@ -1,0 +1,261 @@
+{
+  "course": "intermediate-4",
+  "nodes": [
+    {
+      "node": "g-scale",
+      "new_skill": "G major scale over one octave, hands separate then together, with F sharp.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "pitch": "G5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "g-chords",
+      "new_skill": "Primary chords in G: G, C over G and D7 in the left hand.",
+      "required": [
+        {
+          "chord": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "d-major",
+      "new_skill": "D major scale and primary chords D, G and A7 (F sharp and C sharp).",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "accidental": "C#"
+        }
+      ],
+      "bars": [
+        12,
+        12
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "simple-gifts",
+      "new_skill": "Shaker tune in D with eighth-note runs and chords in the left hand.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        16,
+        17
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "six-eight",
+      "new_skill": "6/8 time: two big beats, each split in three.",
+      "required": [
+        {
+          "rhythm": "4."
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        120,
+        120
+      ],
+      "hands": "both",
+      "time": "6/8"
+    },
+    {
+      "node": "barcarolle",
+      "new_skill": "Gondolier's rocking tune in 6/8, dotted quarters and eighth runs.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "rhythm": "8"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        126,
+        126
+      ],
+      "hands": "both",
+      "time": "6/8"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: G major, D major and 6/8 pieces.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        17
+      ],
+      "bpm": [
+        76,
+        126
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "triplets",
+      "new_skill": "Eighth-note triplets: three even notes in one beat.",
+      "required": [
+        {
+          "rhythm": "1/12"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "trumpet-voluntary",
+      "new_skill": "Baroque fanfare in D with dotted rhythm and high notes up to A5.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "pitch": "A5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        17,
+        17
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "high-c",
+      "new_skill": "High C position: C5 to G5 and shifts from G.",
+      "required": [
+        {
+          "pitch": "C5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: triplets, high notes and the Baroque fanfare.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        12,
+        17
+      ],
+      "bpm": [
+        76,
+        92
+      ],
+      "hands": "both",
+      "time": "4/4"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course review: a Baroque dance in D in 2/4 with a drone-style left hand.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        92,
+        92
+      ],
+      "hands": "both",
+      "time": "2/4"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "ls2-15-gate-smooth",
+  "title": "str:level.ls2.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "ls2-g7-inv",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "i1-cross-lh-drill",
+  "title": "Finger Over Drill",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "r:1",
+      "LH": "C3:4@5 D3:4@4 E3:4@3 F3:4@2"
+    },
+    {
+      "RH": "r:1",
+      "LH": "G3:4@1 A3:4@3 B3:4@2 C4:4@1"
+    },
+    {
+      "RH": "r:1",
+      "LH": "C4:4@1 B3:4@2 A3:4@3 G3:4@1"
+    },
+    {
+      "RH": "r:1",
+      "LH": "F3:4@2 E3:4@3 D3:4@4 C3:4@5"
+    },
+    {
+      "RH": "r:1",
+      "LH": "C3:8@5 D3:8@4 E3:8@3 F3:8@2 G3:8@1 A3:8@3 B3:8@2 C4:8@1"
+    },
+    {
+      "RH": "r:1",
+      "LH": "C4:8@1 B3:8@2 A3:8@3 G3:8@1 F3:8@2 E3:8@3 D3:8@4 C3:8@5"
+    },
+    {
+      "RH": "r:1",
+      "LH": "G3:4@1 F3:4@2 E3:4@3 D3:4@4"
+    },
+    {
+      "RH": "r:1",
+      "LH": "C3:1@5"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "course": "advanced-1",
+  "nodes": [
+    {
+      "id": "em-chords",
+      "kind": "lesson",
+      "title": "str:node.adv1.em-chords",
+      "icon": "note",
+      "levels": [
+        "adv1-01-em-chords"
+      ],
+      "next": [
+        "prelude-e-minor"
+      ]
+    },
+    {
+      "id": "prelude-e-minor",
+      "kind": "song",
+      "title": "str:node.adv1.prelude-e-minor",
+      "icon": "play",
+      "levels": [
+        "adv1-02-prelude-e-minor"
+      ],
+      "next": [
+        "mazurka"
+      ],
+      "songs": {
+        "default": "chopin-prelude-e-minor",
+        "classical": "chopin-prelude-e-minor"
+      }
+    },
+    {
+      "id": "mazurka",
+      "kind": "lesson",
+      "title": "str:node.adv1.mazurka",
+      "icon": "note",
+      "levels": [
+        "adv1-03-mazurka"
+      ],
+      "next": [
+        "prelude-a-major"
+      ]
+    },
+    {
+      "id": "prelude-a-major",
+      "kind": "song",
+      "title": "str:node.adv1.prelude-a-major",
+      "icon": "play",
+      "levels": [
+        "adv1-04-prelude-a-major"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "chopin-prelude-a-major",
+        "classical": "chopin-prelude-a-major"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.adv1.gate-1",
+      "icon": "star",
+      "levels": [
+        "adv1-05-gate-prelude-e-minor",
+        "adv1-06-gate-prelude-a-major",
+        "adv1-07-gate-mazurka"
+      ],
+      "next": [
+        "wide-lh"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "wide-lh",
+      "kind": "lesson",
+      "title": "str:node.adv1.wide-lh",
+      "icon": "note",
+      "levels": [
+        "adv1-08-wide-lh"
+      ],
+      "next": [
+        "gymnopedie"
+      ]
+    },
+    {
+      "id": "gymnopedie",
+      "kind": "song",
+      "title": "str:node.adv1.gymnopedie",
+      "icon": "play",
+      "levels": [
+        "adv1-09-gymnopedie"
+      ],
+      "next": [
+        "triplets"
+      ],
+      "songs": {
+        "default": "gymnopedie-1",
+        "classical": "gymnopedie-1"
+      }
+    },
+    {
+      "id": "triplets",
+      "kind": "lesson",
+      "title": "str:node.adv1.triplets",
+      "icon": "note",
+      "levels": [
+        "adv1-10-triplets"
+      ],
+      "next": [
+        "liebestraum"
+      ]
+    },
+    {
+      "id": "liebestraum",
+      "kind": "song",
+      "title": "str:node.adv1.liebestraum",
+      "icon": "play",
+      "levels": [
+        "adv1-11-liebestraum"
+      ],
+      "next": [
+        "ornaments"
+      ],
+      "songs": {
+        "default": "liebestraum-3",
+        "classical": "liebestraum-3"
+      }
+    },
+    {
+      "id": "ornaments",
+      "kind": "lesson",
+      "title": "str:node.adv1.ornaments",
+      "icon": "note",
+      "levels": [
+        "adv1-12-ornaments"
+      ],
+      "next": [
+        "chromatic"
+      ]
+    },
+    {
+      "id": "chromatic",
+      "kind": "lesson",
+      "title": "str:node.adv1.chromatic",
+      "icon": "note",
+      "levels": [
+        "adv1-13-chromatic"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.adv1.gate-2",
+      "icon": "star",
+      "levels": [
+        "adv1-14-gate-gymnopedie",
+        "adv1-15-gate-liebestraum",
+        "adv1-16-gate-triplets"
+      ],
+      "next": [
+        "nocturne-style"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "nocturne-style",
+      "kind": "lesson",
+      "title": "str:node.adv1.nocturne-style",
+      "icon": "note",
+      "levels": [
+        "adv1-17-nocturne-style"
+      ],
+      "next": [
+        "boss"
+      ]
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.adv1.boss",
+      "icon": "play",
+      "levels": [
+        "adv1-18-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "nocturne-op9-no2",
+        "classical": "nocturne-op9-no2"
+      }
+    }
+  ]
+}

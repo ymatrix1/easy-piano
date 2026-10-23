@@ -1,0 +1,14 @@
+{
+  "id": "i1-15-gate-habanera",
+  "title": "str:level.i1.15.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "habanera",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

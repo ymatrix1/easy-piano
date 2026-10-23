@@ -1,0 +1,14 @@
+{
+  "id": "sct-13-gate-part-c",
+  "title": "str:level.sct.13.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "sct-part-c",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

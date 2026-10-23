@@ -1,0 +1,317 @@
+{
+  "course": "classical-1",
+  "nodes": [
+    {
+      "node": "dotted",
+      "new_skill": "Dotted quarter plus eighth: a long-short lilt as in Baroque music.",
+      "required": [
+        {
+          "rhythm": "4.",
+          "hand": "RH"
+        },
+        {
+          "rhythm": "8",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "pickup",
+      "new_skill": "Pickup bars: start on the last beat, with a short first bar.",
+      "required": [
+        {
+          "rest": true
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        80,
+        80
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "spring",
+      "new_skill": "Baroque theme with dotted rhythm and pickups, both hands.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        100,
+        100
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "new-world",
+      "new_skill": "Slow Romantic melody with pickups and dotted halves, both hands.",
+      "required": [
+        {
+          "rhythm": "2."
+        },
+        {
+          "rest": true
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        66,
+        66
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "gate-1",
+      "new_skill": "Review: dotted rhythm and pickups.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        66,
+        100
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "bass-walk",
+      "new_skill": "Left hand walks step by step under a long-note melody.",
+      "required": [
+        {
+          "rhythm": "4",
+          "hand": "LH",
+          "min_bar_share": 0.5
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "surprise",
+      "new_skill": "Classical 2/4 theme in G with a stepwise left-hand bass and a closing chord.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "rhythm": "8"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "time": "2/4",
+      "hands": "both"
+    },
+    {
+      "node": "minor",
+      "new_skill": "A minor with G sharp, left hand on A, C and E.",
+      "required": [
+        {
+          "accidental": "G#"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "fifths",
+      "new_skill": "Left hand plays two-note fifths and sixths.",
+      "required": [
+        {
+          "chord": true,
+          "hand": "LH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "k331",
+      "new_skill": "Classical 6/8 theme with dotted quarters, both hands.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        72,
+        72
+      ],
+      "time": "6/8",
+      "hands": "both"
+    },
+    {
+      "node": "reach",
+      "new_skill": "Right hand shifts up to reach D5 and E5.",
+      "required": [
+        {
+          "pitch": "D5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        8,
+        8
+      ],
+      "bpm": [
+        76,
+        76
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "gate-2",
+      "new_skill": "Review: Classical themes, minor key and 6/8.",
+      "required": [
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        8,
+        16
+      ],
+      "bpm": [
+        72,
+        84
+      ],
+      "time": "2/4",
+      "hands": "both"
+    },
+    {
+      "node": "phrases",
+      "new_skill": "Longer two-hand phrases: sixteen bars with a moving bass.",
+      "required": [
+        {
+          "rhythm": "4."
+        },
+        {
+          "hands_together": true
+        }
+      ],
+      "bars": [
+        16,
+        16
+      ],
+      "bpm": [
+        84,
+        84
+      ],
+      "time": "4/4",
+      "hands": "both"
+    },
+    {
+      "node": "boss",
+      "new_skill": "Course capstone: a Classical showpiece with fifths in the left hand and D5 in the right.",
+      "required": [
+        {
+          "accidental": "F#"
+        },
+        {
+          "chord": true,
+          "hand": "LH"
+        },
+        {
+          "pitch": "D5",
+          "hand": "RH"
+        }
+      ],
+      "bars": [
+        20,
+        20
+      ],
+      "bpm": [
+        104,
+        104
+      ],
+      "time": "4/4",
+      "hands": "both"
+    }
+  ]
+}

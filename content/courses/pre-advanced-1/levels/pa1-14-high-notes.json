@@ -1,0 +1,24 @@
+{
+  "id": "pa1-14-high-notes",
+  "title": "str:level.pa1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pa1-range-drill",
+      "pre_listen": true
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-range-drill",
+      "tempo": 0.65,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "pa1-range-drill",
+      "tempo": 0.95,
+      "pass": 0.7
+    }
+  ]
+}

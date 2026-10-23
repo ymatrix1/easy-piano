@@ -1,0 +1,47 @@
+{
+  "id": "ar1-07-fountain",
+  "title": "str:level.ar1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "ar1-fountain",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-fountain",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-fountain",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-fountain",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-fountain",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-fountain",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

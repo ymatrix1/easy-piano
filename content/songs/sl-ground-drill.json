@@ -1,0 +1,66 @@
+{
+  "id": "sl-ground-drill",
+  "title": "Ground bass in D",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 66,
+  "time": "4/4",
+  "key": "D",
+  "bars": [
+    {
+      "RH": "{chord:\"D\"} D4F#4A4:2@135 {chord:\"A\"} A3C#4E4:2@125",
+      "LH": "D3:2@4 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"Bm\"} B3D4F#4:2@125 {chord:\"F#m\"} C#4F#4A4:2@125",
+      "LH": "B2:2@5 F#2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G\"} B3D4G4:2@125 {chord:\"D\"} A3D4F#4:2@125",
+      "LH": "G2:2@5 D3:2@4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "{chord:\"G\"} B3D4G4:2@125 {chord:\"A\"} A3C#4E4:2@125",
+      "LH": "G2:2@5 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "F#4:4@2 A4:4@4 E4:4@1 A4:4@4",
+      "LH": "D3:2@4 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4:4@1 F#4:4@3 C#4:4@1 F#4:4@4",
+      "LH": "B2:2@5 F#2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "B3:4@1 D4:4@3 A3:4@1 D4:4@4",
+      "LH": "G2:2@5 D3:2@4",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "B3:4@2 D4:4@4 C#4:4@3 E4:4@5",
+      "LH": "G2:2@5 A2:2@5",
+      "DRUMS": "C2F#2:8 F#2:8 D2F#2:8 F#2:8 C2F#2:8 C2F#2:8 D2F#2:8 F#2:8"
+    },
+    {
+      "RH": "D4F#4A4:1@135",
+      "LH": "D3:1@4",
+      "DRUMS": "C2C#3:1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      8
+    ]
+  ]
+}

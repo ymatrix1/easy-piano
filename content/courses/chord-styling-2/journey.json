@@ -1,0 +1,185 @@
+{
+  "course": "chord-styling-2",
+  "nodes": [
+    {
+      "id": "rock-bass",
+      "kind": "lesson",
+      "title": "str:node.cs2.rock-bass",
+      "icon": "note",
+      "levels": [
+        "cs2-01-rock-bass"
+      ],
+      "next": [
+        "chord-pulse"
+      ]
+    },
+    {
+      "id": "chord-pulse",
+      "kind": "lesson",
+      "title": "str:node.cs2.chord-pulse",
+      "icon": "note",
+      "levels": [
+        "cs2-02-chord-pulse"
+      ],
+      "next": [
+        "push"
+      ]
+    },
+    {
+      "id": "push",
+      "kind": "lesson",
+      "title": "str:node.cs2.push",
+      "icon": "note",
+      "levels": [
+        "cs2-03-push"
+      ],
+      "next": [
+        "sloop-john-b"
+      ]
+    },
+    {
+      "id": "sloop-john-b",
+      "kind": "song",
+      "title": "str:node.cs2.sloop-john-b",
+      "icon": "play",
+      "levels": [
+        "cs2-04-sloop-john-b"
+      ],
+      "next": [
+        "rock-anthem"
+      ],
+      "songs": {
+        "default": "sloop-john-b",
+        "folk_world": "sloop-john-b"
+      }
+    },
+    {
+      "id": "rock-anthem",
+      "kind": "song",
+      "title": "str:node.cs2.rock-anthem",
+      "icon": "play",
+      "levels": [
+        "cs2-05-rock-anthem"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "cs2-rock-anthem",
+        "originals_pop": "cs2-rock-anthem"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.cs2.gate-1",
+      "icon": "star",
+      "levels": [
+        "cs2-12-gate-sloop",
+        "cs2-13-gate-rock-anthem",
+        "cs2-14-gate-push"
+      ],
+      "next": [
+        "ballad"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "ballad",
+      "kind": "lesson",
+      "title": "str:node.cs2.ballad",
+      "icon": "note",
+      "levels": [
+        "cs2-06-ballad"
+      ],
+      "next": [
+        "top-note"
+      ]
+    },
+    {
+      "id": "top-note",
+      "kind": "lesson",
+      "title": "str:node.cs2.top-note",
+      "icon": "note",
+      "levels": [
+        "cs2-07-top-note"
+      ],
+      "next": [
+        "ballad-song"
+      ]
+    },
+    {
+      "id": "ballad-song",
+      "kind": "song",
+      "title": "str:node.cs2.ballad-song",
+      "icon": "play",
+      "levels": [
+        "cs2-08-ballad-song"
+      ],
+      "next": [
+        "ballad-rock"
+      ],
+      "songs": {
+        "default": "cs2-ballad-song",
+        "originals_pop": "cs2-ballad-song"
+      }
+    },
+    {
+      "id": "ballad-rock",
+      "kind": "lesson",
+      "title": "str:node.cs2.ballad-rock",
+      "icon": "note",
+      "levels": [
+        "cs2-09-ballad-rock"
+      ],
+      "next": [
+        "swing-low"
+      ]
+    },
+    {
+      "id": "swing-low",
+      "kind": "song",
+      "title": "str:node.cs2.swing-low",
+      "icon": "play",
+      "levels": [
+        "cs2-10-swing-low"
+      ],
+      "next": [
+        "gate-2"
+      ],
+      "songs": {
+        "default": "swing-low-sweet-chariot",
+        "hymns_spirituals": "swing-low-sweet-chariot"
+      }
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.cs2.gate-2",
+      "icon": "star",
+      "levels": [
+        "cs2-15-gate-swing-low",
+        "cs2-16-gate-ballad-song",
+        "cs2-17-gate-ballad-rock"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.cs2.boss",
+      "icon": "play",
+      "levels": [
+        "cs2-11-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "danny-boy",
+        "folk_world": "danny-boy"
+      }
+    }
+  ]
+}

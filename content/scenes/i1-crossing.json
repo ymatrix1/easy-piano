@@ -1,0 +1,108 @@
+{
+  "id": "i1-crossing",
+  "duration_beats": 20,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.i1.crossing.1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 2,
+      "press": "D4",
+      "label": "2"
+    },
+    {
+      "at": 4,
+      "hand": "R",
+      "finger": 3,
+      "press": "E4",
+      "label": "3"
+    },
+    {
+      "at": 5,
+      "hand": "R",
+      "finger": 1,
+      "press": "F4",
+      "label": "1"
+    },
+    {
+      "at": 6,
+      "hand": "R",
+      "finger": 2,
+      "press": "G4",
+      "label": "2"
+    },
+    {
+      "at": 7,
+      "hand": "R",
+      "finger": 3,
+      "press": "A4",
+      "label": "3"
+    },
+    {
+      "at": 9,
+      "caption": "str:scene.i1.crossing.2"
+    },
+    {
+      "at": 11,
+      "hand": "L",
+      "finger": 3,
+      "press": "E3",
+      "label": "3"
+    },
+    {
+      "at": 12,
+      "hand": "L",
+      "finger": 2,
+      "press": "F3",
+      "label": "2"
+    },
+    {
+      "at": 13,
+      "hand": "L",
+      "finger": 1,
+      "press": "G3",
+      "label": "1"
+    },
+    {
+      "at": 14,
+      "hand": "L",
+      "finger": 3,
+      "press": "A3",
+      "label": "3"
+    },
+    {
+      "at": 15,
+      "hand": "L",
+      "finger": 2,
+      "press": "B3",
+      "label": "2"
+    },
+    {
+      "at": 16,
+      "hand": "L",
+      "finger": 1,
+      "press": "C4",
+      "label": "1"
+    },
+    {
+      "at": 18,
+      "prompt": "your_turn"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "ls1-02-c-g7",
+  "title": "str:level.ls1.02.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls1-c-g7"
+    },
+    {
+      "type": "wait",
+      "score": "ls1-cg-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls1-cg-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls1-cg-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

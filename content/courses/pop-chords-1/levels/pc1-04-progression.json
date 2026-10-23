@@ -1,0 +1,27 @@
+{
+  "id": "pc1-04-progression",
+  "title": "str:level.pc1.04.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "pc1-progression",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-progression",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "pc1-progression",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

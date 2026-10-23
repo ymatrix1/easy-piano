@@ -1,0 +1,31 @@
+{
+  "id": "ar1-03-arp-down",
+  "title": "str:level.ar1.03.title",
+  "ui": "treble",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ar1-cross-over"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-arp-down-drill",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-down-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-arp-down-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "RH"
+    }
+  ]
+}

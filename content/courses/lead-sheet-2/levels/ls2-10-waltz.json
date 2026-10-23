@@ -1,0 +1,31 @@
+{
+  "id": "ls2-10-waltz",
+  "title": "str:level.ls2.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls2-waltz-bass"
+    },
+    {
+      "type": "wait",
+      "score": "ls2-waltz",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-waltz",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-waltz",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

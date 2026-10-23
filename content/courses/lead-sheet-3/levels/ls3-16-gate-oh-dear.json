@@ -1,0 +1,14 @@
+{
+  "id": "ls3-16-gate-oh-dear",
+  "title": "str:level.ls3.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "oh-dear-what-can-the-matter-be",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

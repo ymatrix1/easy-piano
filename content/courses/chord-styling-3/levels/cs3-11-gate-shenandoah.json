@@ -1,0 +1,14 @@
+{
+  "id": "cs3-11-gate-shenandoah",
+  "title": "str:level.cs3.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "shenandoah",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

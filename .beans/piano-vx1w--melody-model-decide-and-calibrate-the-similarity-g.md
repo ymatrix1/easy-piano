@@ -26,3 +26,7 @@ Generated tunes never reproduce a recognisable copyrighted melody, without block
 Retraining.
 
 ## Summary of Changes
+
+## Note 2026-10-23
+
+With the Soloist/Chords PD pieces (PR #76), threshold 0.5 gives 613 false positives in 5537 PD-vs-PD and generic pairs (11%); 0.8 gives 45 (0.8%) at recall 0.961. Long pieces share scale and arpeggio runs. `core/tests/similarity_calibration.rs` now calibrates on the basic courses' songs only; recalibrate on the full set here.

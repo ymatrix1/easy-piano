@@ -1,0 +1,184 @@
+{
+  "course": "chord-styling-3",
+  "nodes": [
+    {
+      "id": "alt-bass",
+      "kind": "lesson",
+      "title": "str:node.cs3.alt-bass",
+      "icon": "note",
+      "levels": [
+        "cs3-01-alt-bass"
+      ],
+      "next": [
+        "shenandoah"
+      ]
+    },
+    {
+      "id": "shenandoah",
+      "kind": "song",
+      "title": "str:node.cs3.shenandoah",
+      "icon": "play",
+      "levels": [
+        "cs3-02-shenandoah"
+      ],
+      "next": [
+        "boom-chick"
+      ],
+      "songs": {
+        "default": "shenandoah",
+        "folk_world": "shenandoah"
+      }
+    },
+    {
+      "id": "boom-chick",
+      "kind": "lesson",
+      "title": "str:node.cs3.boom-chick",
+      "icon": "note",
+      "levels": [
+        "cs3-03-boom-chick"
+      ],
+      "next": [
+        "campfire"
+      ]
+    },
+    {
+      "id": "campfire",
+      "kind": "song",
+      "title": "str:node.cs3.campfire",
+      "icon": "play",
+      "levels": [
+        "cs3-04-campfire"
+      ],
+      "next": [
+        "waltz-style"
+      ],
+      "songs": {
+        "default": "cs3-campfire",
+        "originals_pop": "cs3-campfire"
+      }
+    },
+    {
+      "id": "waltz-style",
+      "kind": "lesson",
+      "title": "str:node.cs3.waltz-style",
+      "icon": "note",
+      "levels": [
+        "cs3-05-waltz-style"
+      ],
+      "next": [
+        "clementine"
+      ]
+    },
+    {
+      "id": "clementine",
+      "kind": "song",
+      "title": "str:node.cs3.clementine",
+      "icon": "play",
+      "levels": [
+        "cs3-06-clementine"
+      ],
+      "next": [
+        "gate-1"
+      ],
+      "songs": {
+        "default": "clementine",
+        "folk_world": "clementine"
+      }
+    },
+    {
+      "id": "gate-1",
+      "kind": "star_gate",
+      "title": "str:node.cs3.gate-1",
+      "icon": "star",
+      "levels": [
+        "cs3-11-gate-shenandoah",
+        "cs3-12-gate-campfire",
+        "cs3-13-gate-clementine"
+      ],
+      "next": [
+        "key-g"
+      ],
+      "stars_needed": 6
+    },
+    {
+      "id": "key-g",
+      "kind": "lesson",
+      "title": "str:node.cs3.key-g",
+      "icon": "note",
+      "levels": [
+        "cs3-07-key-g"
+      ],
+      "next": [
+        "laredo"
+      ]
+    },
+    {
+      "id": "laredo",
+      "kind": "song",
+      "title": "str:node.cs3.laredo",
+      "icon": "play",
+      "levels": [
+        "cs3-08-laredo"
+      ],
+      "next": [
+        "mixing"
+      ],
+      "songs": {
+        "default": "streets-of-laredo",
+        "folk_world": "streets-of-laredo"
+      }
+    },
+    {
+      "id": "mixing",
+      "kind": "lesson",
+      "title": "str:node.cs3.mixing",
+      "icon": "note",
+      "levels": [
+        "cs3-09-mixing"
+      ],
+      "next": [
+        "passing"
+      ]
+    },
+    {
+      "id": "passing",
+      "kind": "lesson",
+      "title": "str:node.cs3.passing",
+      "icon": "note",
+      "levels": [
+        "cs3-10-passing"
+      ],
+      "next": [
+        "gate-2"
+      ]
+    },
+    {
+      "id": "gate-2",
+      "kind": "star_gate",
+      "title": "str:node.cs3.gate-2",
+      "icon": "star",
+      "levels": [
+        "cs3-14-gate-laredo",
+        "cs3-15-gate-mixing",
+        "cs3-16-gate-passing"
+      ],
+      "next": [
+        "boss"
+      ],
+      "stars_needed": 7
+    },
+    {
+      "id": "boss",
+      "kind": "boss",
+      "title": "str:node.cs3.boss",
+      "icon": "play",
+      "levels": [
+        "cs3-17-boss"
+      ],
+      "next": [],
+      "songs": {
+        "default": "shenandoah-styles"
+      }
+    }
+  ]
+}

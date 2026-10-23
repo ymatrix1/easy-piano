@@ -1,0 +1,31 @@
+{
+  "id": "ar1-14-sixteenths",
+  "title": "str:level.ar1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ar1-prelude-pattern"
+    },
+    {
+      "type": "wait",
+      "score": "ar1-sixteenth-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-sixteenth-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ar1-sixteenth-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

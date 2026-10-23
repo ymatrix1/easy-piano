@@ -1,0 +1,53 @@
+{
+  "id": "i3-rag-drill",
+  "title": "Off the Beat",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 88,
+  "time": "2/4",
+  "key": "C",
+  "bars": [
+    {
+      "RH": "E4:16@3 G4:8@5 E4:16@3 C4:4@1",
+      "LH": "C3:4@5 E3G3:4@31"
+    },
+    {
+      "RH": "D4:16@2 F4:8@4 D4:16@2 G4:4@5",
+      "LH": "B2:4@5 F3G3:4@21"
+    },
+    {
+      "RH": "E4:16@3 G4:8@5 E4:16@3 G4:4@5",
+      "LH": "C3:4@5 E3G3:4@31"
+    },
+    {
+      "RH": "D4:8@2 E4:8@3 C4:4@1",
+      "LH": "B2:4@5 F3G3:4@21"
+    },
+    {
+      "RH": "G4:16@5 E4:8@3 G4:16@5 C4:4@1",
+      "LH": "C3:4@5 E3G3:4@31"
+    },
+    {
+      "RH": "F4:16@4 D4:8@2 F4:16@4 G4:4@5",
+      "LH": "B2:4@5 F3G3:4@21"
+    },
+    {
+      "RH": "E4:16@3 G4:8@5 E4:16@3 D4:4@2",
+      "LH": "C3:4@5 E3G3:4@31"
+    },
+    {
+      "RH": "C4:2@1",
+      "LH": "C3E3G3:2@531"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      5
+    ]
+  ]
+}

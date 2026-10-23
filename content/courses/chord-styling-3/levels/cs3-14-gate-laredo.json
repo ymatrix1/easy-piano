@@ -1,0 +1,14 @@
+{
+  "id": "cs3-14-gate-laredo",
+  "title": "str:level.cs3.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "streets-of-laredo",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

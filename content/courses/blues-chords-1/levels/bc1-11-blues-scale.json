@@ -1,0 +1,31 @@
+{
+  "id": "bc1-11-blues-scale",
+  "title": "str:level.bc1.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "bc1-blues"
+    },
+    {
+      "type": "wait",
+      "score": "bc1-blues-riff",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-blues-riff",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "bc1-blues-riff",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

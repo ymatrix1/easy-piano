@@ -1,0 +1,14 @@
+{
+  "id": "adv1-14-gate-gymnopedie",
+  "title": "str:level.adv1.14.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "gymnopedie-1",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

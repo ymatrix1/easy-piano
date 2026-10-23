@@ -1,0 +1,27 @@
+{
+  "id": "ar1-19-boss",
+  "title": "str:level.ar1.19.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "prelude-in-c-bwv846",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "prelude-in-c-bwv846",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "prelude-in-c-bwv846",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

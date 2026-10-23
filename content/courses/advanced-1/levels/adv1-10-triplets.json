@@ -1,0 +1,31 @@
+{
+  "id": "adv1-10-triplets",
+  "title": "str:level.adv1.10.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "adv1-triplets"
+    },
+    {
+      "type": "wait",
+      "score": "adv1-triplet-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-triplet-drill",
+      "tempo": 0.65,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "adv1-triplet-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

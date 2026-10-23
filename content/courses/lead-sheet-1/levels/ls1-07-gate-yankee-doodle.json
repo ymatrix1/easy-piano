@@ -1,0 +1,14 @@
+{
+  "id": "ls1-07-gate-yankee-doodle",
+  "title": "str:level.ls1.07.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "yankee-doodle",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "scm-16-boss",
+  "title": "str:level.scm.16.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "moonlight-sonata",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "moonlight-sonata",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "moonlight-sonata",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

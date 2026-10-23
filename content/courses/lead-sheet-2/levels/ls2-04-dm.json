@@ -1,0 +1,31 @@
+{
+  "id": "ls2-04-dm",
+  "title": "str:level.ls2.04.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "animation",
+      "scene": "ls2-minor"
+    },
+    {
+      "type": "wait",
+      "score": "ls2-dm-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-dm-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "ls2-dm-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

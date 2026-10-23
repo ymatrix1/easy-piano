@@ -1,0 +1,53 @@
+{
+  "id": "b2-phrase-drill",
+  "title": "One Long Breath",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 72,
+  "time": "4/4",
+  "key": "Dm",
+  "bars": [
+    {
+      "RH": "A4:4@1 D5:4@4 F5:4@5 E5:4@5",
+      "LH": "D3:1@1"
+    },
+    {
+      "RH": "D5:4@2 C#5:4@1 D5:4@2 E5:4@3",
+      "LH": "A2:1@1"
+    },
+    {
+      "RH": "F5:4@5 E5:4@4 D5:4@3 Bb4:4@1",
+      "LH": "Bb2:1@1"
+    },
+    {
+      "RH": "A4:2@2 G4:2@1",
+      "LH": "G2:2@2 A2:2@1"
+    },
+    {
+      "RH": "A4:4@1 D5:4@4 F5:4@5 A5:4@5",
+      "LH": "D3:1@1"
+    },
+    {
+      "RH": "G5:4@4 F5:4@3 E5:4@2 D5:4@1",
+      "LH": "Bb2:2@1 A2:2@2"
+    },
+    {
+      "RH": "C#5:4@3 E5:4@5 D5:4@4 A4:4@1",
+      "LH": "A2:1@1"
+    },
+    {
+      "RH": "D5:1@1",
+      "LH": "D3:1@1"
+    }
+  ],
+  "critical": [
+    [
+      0,
+      8
+    ]
+  ]
+}

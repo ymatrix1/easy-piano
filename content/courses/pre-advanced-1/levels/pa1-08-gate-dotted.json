@@ -1,0 +1,14 @@
+{
+  "id": "pa1-08-gate-dotted",
+  "title": "str:level.pa1.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "pa1-dotted-drill",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

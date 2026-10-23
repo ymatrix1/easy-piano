@@ -1,0 +1,14 @@
+{
+  "id": "b2-08-gate-air",
+  "title": "str:level.b2.08.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "play_along",
+      "score": "air-on-the-g-string",
+      "tempo": 1.0,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

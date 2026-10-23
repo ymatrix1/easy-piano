@@ -1,0 +1,45 @@
+{
+  "id": "sct-turn-drill",
+  "title": "Sixteenth Turns",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 80,
+  "time": "2/4",
+  "key": "Am",
+  "bars": [
+    {
+      "RH": "B4:16@3 A4:16@2 G#4:16@1 A4:16@2 C5:4@4"
+    },
+    {
+      "RH": "B4:16@3 A4:16@2 G#4:16@1 A4:16@2 E5:4@5"
+    },
+    {
+      "RH": "C5:8@2 r:8 D5:16@3 C5:16@2 B4:16@1 C5:16@2"
+    },
+    {
+      "RH": "E5:8@2 r:8 F5:16@3 E5:16@2 D#5:16@1 E5:16@2"
+    },
+    {
+      "RH": "B4:16@3 A4:16@2 G#4:16@1 A4:16@2 B4:16@3 A4:16@2 G#4:16@1 A4:16@2"
+    },
+    {
+      "RH": "C5:16@3 B4:16@2 A4:16@1 B4:16@2 C5:16@3 B4:16@2 A4:16@1 B4:16@2"
+    },
+    {
+      "RH": "E5:16@5 D#5:16@5 E5:16@5 B4:16@3 C5:16@4 B4:16@3 A4:16@2 G#4:16@1"
+    },
+    {
+      "RH": "A4:2@1"
+    }
+  ],
+  "critical": [
+    [
+      4,
+      6
+    ]
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "scm-09-connecting",
+  "title": "str:level.scm.09.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "scm-link-drill",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-link-drill",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "scm-link-drill",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

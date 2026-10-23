@@ -1,0 +1,27 @@
+{
+  "id": "ls3-19-boss",
+  "title": "str:level.ls3.19.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "beautiful-dreamer",
+      "pre_listen": true,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "beautiful-dreamer",
+      "tempo": 0.7,
+      "pass": 0.7,
+      "hand": "both"
+    },
+    {
+      "type": "play_along",
+      "score": "beautiful-dreamer",
+      "tempo": 0.9,
+      "pass": 0.7,
+      "hand": "both"
+    }
+  ]
+}

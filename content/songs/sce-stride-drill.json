@@ -1,0 +1,57 @@
+{
+  "id": "sce-stride-drill",
+  "title": "Oom-Pah Left Hand",
+  "composer": "Easy Piano contributors",
+  "arranger": "Easy Piano contributors",
+  "source": "original",
+  "source_url": null,
+  "license": "CC-BY-SA-4.0",
+  "composition_license": "CC-BY-SA-4.0",
+  "bpm": 76,
+  "time": "2/4",
+  "key": "C",
+  "bars": [
+    {
+      "LH": "C3:8@5 E3G3C4:8@531 G2:8@5 E3G3C4:8@531"
+    },
+    {
+      "LH": "C3:8@5 E3G3C4:8@531 G2:8@5 E3G3C4:8@531"
+    },
+    {
+      "LH": "F2:8@5 F3A3C4:8@531 C3:8@5 F3A3C4:8@531"
+    },
+    {
+      "LH": "C3:8@5 E3G3C4:8@531 G2:8@5 E3G3C4:8@531"
+    },
+    {
+      "LH": "G2:8@5 F3G3B3:8@531 D3:8@5 F3G3B3:8@531"
+    },
+    {
+      "LH": "G2:8@5 F3G3B3:8@531 B2:8@5 F3G3B3:8@531"
+    },
+    {
+      "LH": "C3:8@5 E3G3C4:8@531 G2:8@5 E3G3C4:8@531"
+    },
+    {
+      "LH": "C3:8@1 G2:8@3 C2:8@5 r:8"
+    },
+    {
+      "LH": "F2:8@5 F3A3C4:8@531 F2:8@5 F3A3C4:8@531"
+    },
+    {
+      "LH": "G2:8@5 F3G3B3:8@531 G2:8@5 F3G3B3:8@531"
+    },
+    {
+      "LH": "E3:8@1 E3G3C4:8@531 G2:8@5 E3G3C4:8@531"
+    },
+    {
+      "LH": "C3:8@1 G2:8@3 C2:8@5 r:8"
+    }
+  ],
+  "critical": [
+    [
+      5,
+      6
+    ]
+  ]
+}

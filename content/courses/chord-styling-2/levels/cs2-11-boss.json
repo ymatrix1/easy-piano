@@ -1,0 +1,45 @@
+{
+  "id": "cs2-11-boss",
+  "title": "str:level.cs2.11.title",
+  "ui": "both",
+  "stages": [
+    {
+      "type": "wait",
+      "score": "danny-boy",
+      "pre_listen": true,
+      "hand": "RH"
+    },
+    {
+      "type": "play_along",
+      "score": "danny-boy",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "RH"
+    },
+    {
+      "type": "wait",
+      "score": "danny-boy",
+      "pre_listen": true,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "danny-boy",
+      "tempo": 0.6,
+      "pass": 0.7,
+      "hand": "LH"
+    },
+    {
+      "type": "play_along",
+      "score": "danny-boy",
+      "tempo": 0.7,
+      "pass": 0.7
+    },
+    {
+      "type": "play_along",
+      "score": "danny-boy",
+      "tempo": 0.9,
+      "pass": 0.7
+    }
+  ]
+}

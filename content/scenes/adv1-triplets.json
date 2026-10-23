@@ -1,0 +1,94 @@
+{
+  "id": "adv1-triplets",
+  "duration_beats": 15,
+  "bpm": 60,
+  "layers": [
+    "keyboard",
+    "hands",
+    "caption"
+  ],
+  "tracks": [
+    {
+      "at": 0,
+      "caption": "str:scene.adv1.tri.1"
+    },
+    {
+      "at": 2,
+      "hand": "R",
+      "finger": 1,
+      "press": "G4",
+      "label": "1"
+    },
+    {
+      "at": 2.333,
+      "hand": "R",
+      "finger": 3,
+      "press": "B4",
+      "label": "3"
+    },
+    {
+      "at": 2.667,
+      "hand": "R",
+      "finger": 5,
+      "press": "D5",
+      "label": "5"
+    },
+    {
+      "at": 2,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 2.5,
+      "hand": "L",
+      "finger": 1,
+      "press": "D3",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "R",
+      "finger": 5,
+      "press": "G5",
+      "label": "5"
+    },
+    {
+      "at": 3.333,
+      "hand": "R",
+      "finger": 3,
+      "press": "D5",
+      "label": "3"
+    },
+    {
+      "at": 3.667,
+      "hand": "R",
+      "finger": 1,
+      "press": "B4",
+      "label": "1"
+    },
+    {
+      "at": 3,
+      "hand": "L",
+      "finger": 5,
+      "press": "G2",
+      "label": "5"
+    },
+    {
+      "at": 3.5,
+      "hand": "L",
+      "finger": 1,
+      "press": "D3",
+      "label": "1"
+    },
+    {
+      "at": 7,
+      "caption": "str:scene.adv1.tri.2"
+    },
+    {
+      "at": 12,
+      "prompt": "your_turn"
+    }
+  ]
+}
