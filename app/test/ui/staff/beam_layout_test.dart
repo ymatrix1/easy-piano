@@ -79,5 +79,35 @@ void main() {
       final maxSlope = (space * 0.8) / dx;
       expect(g.slope.abs(), lessThanOrEqualTo(maxSlope + 1e-6));
     });
+
+    test('4/4 meter beams four consecutive eighth notes in half-measure (beats 0-2)', () {
+      final notes = [
+        const StaffNote(60, 0.0, 0.5),
+        const StaffNote(62, 0.5, 0.5),
+        const StaffNote(64, 1.0, 0.5),
+        const StaffNote(65, 1.5, 0.5),
+        // Beat 2-4:
+        const StaffNote(67, 2.0, 0.5),
+        const StaffNote(69, 2.5, 0.5),
+        const StaffNote(71, 3.0, 0.5),
+        const StaffNote(72, 3.5, 0.5),
+      ];
+
+      final groups = BeamLayout.computeBeamGroups(
+        notes: notes,
+        first: 0,
+        lastBeat: 4.0,
+        onBass: (_) => false,
+        noteY: (pitch, _) => 100.0,
+        noteXs: {for (var i = 0; i < notes.length; i++) i: i * 20.0},
+        space: 10.0,
+        beatsPerBar: 4.0,
+      );
+
+      // Must be split into two 4-note groups at beat 2.0 (half-measure boundary)
+      expect(groups.length, equals(2));
+      expect(groups[0].indices, equals([0, 1, 2, 3]));
+      expect(groups[1].indices, equals([4, 5, 6, 7]));
+    });
   });
 }

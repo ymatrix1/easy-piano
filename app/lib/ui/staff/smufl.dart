@@ -32,6 +32,18 @@ abstract final class Smufl {
   static const timeSig8 = '';
   static const timeSig9 = '';
 
+  // Tuplet digits (SMuFL range U+E880 - U+E889)
+  static const tuplet0 = '\uE880';
+  static const tuplet1 = '\uE881';
+  static const tuplet2 = '\uE882';
+  static const tuplet3 = '\uE883';
+  static const tuplet4 = '\uE884';
+  static const tuplet5 = '\uE885';
+  static const tuplet6 = '\uE886';
+  static const tuplet7 = '\uE887';
+  static const tuplet8 = '\uE888';
+  static const tuplet9 = '\uE889';
+
   static String? digitGlyph(int digit) => switch (digit) {
     0 => timeSig0,
     1 => timeSig1,
@@ -43,6 +55,20 @@ abstract final class Smufl {
     7 => timeSig7,
     8 => timeSig8,
     9 => timeSig9,
+    _ => null,
+  };
+
+  static String? tupletDigitGlyph(int digit) => switch (digit) {
+    0 => tuplet0,
+    1 => tuplet1,
+    2 => tuplet2,
+    3 => tuplet3,
+    4 => tuplet4,
+    5 => tuplet5,
+    6 => tuplet6,
+    7 => tuplet7,
+    8 => tuplet8,
+    9 => tuplet9,
     _ => null,
   };
 }

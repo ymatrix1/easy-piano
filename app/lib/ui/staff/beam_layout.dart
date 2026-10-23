@@ -64,17 +64,16 @@ abstract final class BeamLayout {
         final indices = List<int>.from(currentGroup);
         final firstIdx = indices.first;
         final onB = onBass(notes[firstIdx]);
-        final midPitch = onB ? 50 : 71; // D3 on bass, B4 on treble
 
         var downVotes = 0;
         for (final idx in indices) {
-          if (notes[idx].pitch > midPitch) {
+          if (notes[idx].isStemDown(onB)) {
             downVotes++;
-          } else if (notes[idx].pitch < midPitch) {
+          } else {
             downVotes--;
           }
         }
-        final stemDown = downVotes > 0;
+        final stemDown = downVotes >= 0;
 
         final stemXs = <int, double>{};
         final strokeWidth = math.max(1.2, space * 0.1);
@@ -160,12 +159,20 @@ abstract final class BeamLayout {
           continue;
         }
         final sameBar = barOf(n.beat) == barOf(prev.beat);
-        final sameBeat = beatGroupOf(n.beat) == beatGroupOf(prev.beat);
+        final isEighthOnly =
+            (n.beats - 0.5).abs() < 1e-4 && (prev.beats - 0.5).abs() < 1e-4;
+        final bool sameMetricUnit;
+        if (bpb == 4.0 && isEighthOnly) {
+          // Half-measure beaming for eighths in 4/4 (Gould / MuseScore rule)
+          sameMetricUnit = (n.beat / 2.0).floor() == (prev.beat / 2.0).floor();
+        } else {
+          sameMetricUnit = beatGroupOf(n.beat) == beatGroupOf(prev.beat);
+        }
         final sameStaff = onBass(n) == onBass(prev);
         final sameHand = n.leftHand == prev.leftHand;
         final contiguous = (n.beat - (prev.beat + prev.beats)).abs() < 1e-4;
 
-        if (sameBar && sameBeat && sameStaff && sameHand && contiguous) {
+        if (sameBar && sameMetricUnit && sameStaff && sameHand && contiguous) {
           currentGroup.add(i);
         } else {
           finishGroup();
