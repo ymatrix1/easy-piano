@@ -79,7 +79,7 @@ Ideas, bug reports and pull requests are welcome. Before you start:
 
 ## Releases
 
-Push a version tag such as `v1.2.3` to build the web app and publish a downloadable zip with generated release notes on GitHub Releases. The workflow can also be run manually for an existing version tag. It needs the repository's default `GITHUB_TOKEN` with Actions write access to releases; it does not need Cloudflare secrets. Production hosting continues to deploy from `main` through `deploy-web.yml`.
+Push a version tag such as `v1.2.3` to build the web app, Windows x64 app bundle, and Android arm64 APK, then publish all three with generated release notes on GitHub Releases. The workflow can also be run manually for an existing version tag. It needs the repository's default `GITHUB_TOKEN` with Actions write access to releases; it does not need Cloudflare secrets. The Android APK uses the project's current debug signing key, so it is for sideloading and is not suitable for Google Play or upgrades signed with another key. Production hosting continues to deploy from `main` through `deploy-web.yml`.
 
 ## License
 
