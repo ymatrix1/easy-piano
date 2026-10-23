@@ -115,6 +115,7 @@ class _LearnTabState extends State<LearnTab> {
                             child: _OuterTrailItem(
                               number: i + 1,
                               last: last,
+                              expanded: _open.contains(c.id),
                               state: c.planned
                                   ? _State.locked
                                   : progress.courseStars(c) ==
@@ -308,12 +309,14 @@ class _OuterTrailItem extends StatelessWidget {
   const _OuterTrailItem({
     required this.number,
     required this.last,
+    required this.expanded,
     required this.state,
     required this.child,
   });
 
   final int number;
   final bool last;
+  final bool expanded;
   final _State state;
   final Widget child;
 
@@ -344,10 +347,11 @@ class _OuterTrailItem extends StatelessWidget {
     );
     if (state == _State.current) marker = Bob(child: marker);
     // Stack, not IntrinsicHeight: the card animates its height when it
-    // expands, and the rail must follow every frame.
+    // expands. Hide the outer rail in that state so it doesn't run beside
+    // the submodule tiles.
     return Stack(
       children: [
-        if (!last)
+        if (!last && !expanded)
           Positioned(
             left: 18,
             top: 58,
