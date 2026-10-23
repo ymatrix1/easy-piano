@@ -60,6 +60,20 @@ Used only to pick which PD works fit a level (our arrangements are our own or ba
 | Augmented triads, transposition | Missing | Content | piano-0caa |
 | Scale degrees, interval and key-signature theory | Captions only, no quiz stages | Content | piano-0caa |
 
+### How the gaps reach the courses
+
+No course is rebuilt. Course, node and level ids stay (progress is keyed by them); each gap adds lessons and edits songs in place:
+
+| Bean | Course change |
+|---|---|
+| piano-boat | New lesson nodes (Classical I, Intermediate I–II); existing songs gain marks, notes unchanged |
+| piano-h90n | New lesson nodes (Intermediate II–IV); restruck notes become ties, written-out repeats become signs, Spanish Romance gets its major strain back |
+| piano-5zp3 | New lesson node in A Taste of Bach I; ~8–10 pieces re-arranged with RH2/LH2 |
+| piano-0caa | New nodes or a new course only |
+| piano-bdi4 | Note fixes song by song |
+
+Order: piano-boat and piano-h90n before the by-ear review (piano-bdi4), so each song is reviewed once with its final notation. New lessons go in as new journey nodes; inserting a node keeps learners' progress.
+
 ## Follow-ups
 
 - The gap beans above.
