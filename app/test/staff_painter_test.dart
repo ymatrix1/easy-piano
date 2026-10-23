@@ -139,4 +139,85 @@ void main() {
       expect(bytes.lengthInBytes, size.width.toInt() * size.height.toInt() * 4);
     },
   );
+
+  group('barLineX', () {
+    const space = 14.0;
+    const anchorX = 200.0;
+    const nowBeat = 0.0;
+    const ppb = 70.0;
+
+    test('without preceding notes: nominal offset space * 0.8', () {
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: const [],
+      );
+      final barX = anchorX + 4.0 * ppb;
+      expect(bx, closeTo(barX - space * 0.8, 0.001));
+    });
+
+    test('with quarter note before bar: nominal offset retained', () {
+      final notes = [const StaffNote(60, 3.0, 1.0)];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * ppb;
+      expect(bx, closeTo(barX - space * 0.8, 0.001));
+    });
+
+    test('with eighth note before bar: balanced between stem and next bar', () {
+      // Eighth note at beat 3.5, bar line at 4.0, next note at 4.0
+      final notes = [
+        const StaffNote(62, 3.5, 0.5), // D4 eighth note
+        const StaffNote(64, 4.0, 1.0), // E4 quarter note
+      ];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: ppb,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * ppb;
+      final prevRight = anchorX + 3.5 * ppb + space * 1.18;
+      final nominalBx = barX - space * 0.8;
+
+      // Centered between prevRight and barX
+      expect(bx, closeTo((prevRight + barX) / 2, 0.001));
+      // Gives strictly more space to the eighth note stem than nominalBx
+      expect(bx - prevRight, greaterThan(nominalBx - prevRight));
+      expect(bx - prevRight, closeTo(barX - bx, 0.001));
+    });
+
+    test('with accidental on next note: stays clear of the sharp sign', () {
+      const density = 95.0; // density for subdivisions
+      final notes = [
+        const StaffNote(62, 3.5, 0.5),
+        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.4 sp)
+      ];
+      final bx = StaffPainter.barLineX(
+        barBeat: 4.0,
+        nowBeat: nowBeat,
+        anchorX: anchorX,
+        pixelsPerBeat: density,
+        space: space,
+        notes: notes,
+      );
+      final barX = anchorX + 4.0 * density;
+      final accidentalLeft = barX - space * 1.4;
+      final prevRight = anchorX + 3.5 * density + space * 1.18;
+      // Bar line must be between the preceding note stem and the accidental
+      expect(bx, lessThan(accidentalLeft));
+      expect(bx, greaterThan(prevRight));
+    });
+  });
 }
