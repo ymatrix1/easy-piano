@@ -35,6 +35,9 @@ class FlutterWindow : public Win32Window {
   // Returns the resize hit-test code if |screen_point| is on a window edge.
   std::optional<LRESULT> HitTestResizeBorder(HWND hwnd, POINT screen_point);
 
+  // Sizes the Flutter view to the client area minus the resize border.
+  void LayoutFlutterView();
+
   // Converts device-independent pixels to physical pixels for |dpi|.
   static int Scale(int dip, UINT dpi);
 

@@ -43,6 +43,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  LayoutFlutterView();
 
   window_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       flutter_controller_->engine()->messenger(), kWindowChannelName,
@@ -126,6 +127,21 @@ std::optional<LRESULT> FlutterWindow::HitTestResizeBorder(HWND hwnd,
   return std::nullopt;
 }
 
+void FlutterWindow::LayoutFlutterView() {
+  if (!flutter_controller_) {
+    return;
+  }
+  HWND hwnd = GetHandle();
+  // The Flutter view must not cover the resize border: child windows take the
+  // mouse, so the border would never reach the parent's WM_NCHITTEST. When not
+  // maximized, inset the view by the border and paint that strip ourselves.
+  const int border = IsZoomed(hwnd) ? 0 : Scale(kResizeBorderDip, GetDpiForWindow(hwnd));
+  RECT area = GetClientArea();
+  MoveWindow(flutter_controller_->view()->GetNativeWindow(), area.left + border,
+             area.top + border, area.right - area.left - 2 * border,
+             area.bottom - area.top - 2 * border, TRUE);
+}
+
 int FlutterWindow::Scale(int dip, UINT dpi) {
   return MulDiv(dip, dpi, 96);
 }
@@ -150,6 +166,20 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
         params->rgrc[0].bottom -= inset;
       }
       return 0;
+    }
+
+    case WM_SIZE:
+      LayoutFlutterView();
+      return 0;
+
+    case WM_ERASEBKGND: {
+      // Paints the resize-border strip in the app background colour.
+      HBRUSH brush = CreateSolidBrush(RGB(0x08, 0x07, 0x26));
+      RECT client;
+      GetClientRect(hwnd, &client);
+      FillRect(reinterpret_cast<HDC>(wparam), &client, brush);
+      DeleteObject(brush);
+      return 1;
     }
 
     case WM_NCHITTEST: {
