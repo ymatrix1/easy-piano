@@ -298,7 +298,11 @@ class _TopBar extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      StarCounter(value: stars),
+                      // Narrow Windows window: the caption buttons take the
+                      // top-right corner, so the star counter is hidden.
+                      if (!(usesCustomTitleBar &&
+                          MediaQuery.sizeOf(context).width < 600))
+                        StarCounter(value: stars),
                     ],
                   ),
                 ),
