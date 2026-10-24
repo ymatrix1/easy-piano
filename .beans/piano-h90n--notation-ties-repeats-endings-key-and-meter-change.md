@@ -1,24 +1,32 @@
----
-# piano-h90n
-title: 'Notation: ties, repeats, endings, key and meter changes'
-status: todo
-type: feature
-created_at: 2026-10-22T19:35:14Z
-updated_at: 2026-10-22T19:35:14Z
-parent: piano-bjig
----
+# piano-h90n: Notation: ties, repeats, endings, key and meter changes
+
+**Status:** todo  
+**Type:** feature  
+**Parent:** piano-bjig  
 
 ## Context
-Courses restrike tied notes, write repeats and D.C./D.S. out in full, and cannot change key or meter mid-song (Spanish Romance lost its major strain). Blocked by: none.
+Pieces currently restrike tied notes, write repeats and D.C./D.S. out in full, and cannot change key or meter mid-song (e.g. Spanish Romance lost its major strain). Key signature at song start has been added (`key_signature.dart`), but mid-song changes, repeat barlines, voltas (1st/2nd endings), and navigation markers are required for authentic sheet reading (`docs/specs/sheet-engraving.md`).
+
+Algorithmic reference: MuseScore `references/MuseScore/src/engraving/rendering/score/measurelayout.cpp`, `barline.cpp`, and `systemheaderlayout.cpp`.
+
+Blocked by: none.
 
 ## Higher Goal
-Read real sheet-music structure like the method books teach.
+Read authentic sheet-music structure like standard method books and MuseScore scores teach.
 
 ## Acceptance Criteria
-- [ ] Proposed decision: {tie} as a real tie in grading (one strike), repeat/volta/D.C./coda markers expanded to a play order, per-bar key and time changes
-- [ ] core + lint + tests; app draws ties, repeat signs, endings, new key/time
-- [ ] Re-arrange songs that worked around these (list from course-map known limits)
-- [ ] Teaching lessons (scene + drill + song): ties vs slurs, repeat signs, 1st/2nd endings, D.C./D.S. al Fine and al Coda, key change and meter change inside a piece; placed in Intermediate II-IV
+- [ ] Core play order expansion: `{repeat_start}`, `{repeat_end}`, `{volta: [1]}`, `{volta: [2]}`, `{dc_al_fine}`, `{coda}`, `{segno}`.
+- [ ] Mid-measure / mid-piece key and time signature changes.
+- [ ] Engraving rendering (`repeat_layout.dart`):
+  - Repeat barlines with dual dots in staff spaces 2 and 3 (`|:` and `:|`).
+  - Volta brackets above measures with number labels ("1.", "2.").
+  - Mid-stream key signature and time signature cancellation/new signature layout.
+- [ ] Core + lint + tests; app draws ties, repeat signs, endings, new key/time.
+- [ ] Re-arrange songs that worked around these limitations (list from course-map known limits).
+- [ ] Teaching lessons (scene + drill + song): repeat signs, 1st/2nd endings, D.C./D.S. al Fine and al Coda, key change and meter change inside a piece.
 
 ## Out of Scope
-- Expression marks
+- Dynamics and pedal marks (`piano-boat`).
+
+## Summary of Changes
+*(To be completed upon finishing)*
