@@ -434,6 +434,78 @@ class StaffPainter extends CustomPainter {
     return result;
   }
 
+  /// Pre-computes accidental glyphs for all notes honoring MuseScore measure-level
+  /// accidental memory and barline resets (`key.cpp` / `measure.cpp`).
+  static Map<int, AccidentalType> computeAccidentals({
+    required List<StaffNote> notes,
+    required int keyFifths,
+    required double? beatsPerBar,
+    required bool Function(StaffNote) onBass,
+  }) {
+    final noteAccidentals = <int, AccidentalType>{};
+    if (notes.isEmpty) return noteAccidentals;
+
+    // Detect tied continuation notes (tied from an earlier note with same pitch & hand)
+    final tiedContinuations = <int>{};
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].tie) {
+        for (var k = i + 1; k < notes.length; k++) {
+          final nextN = notes[k];
+          if (nextN.isSpacer || nextN.isRest) continue;
+          if (nextN.pitch == notes[i].pitch &&
+              nextN.leftHand == notes[i].leftHand) {
+            tiedContinuations.add(k);
+            break;
+          }
+        }
+      }
+    }
+
+    // Sort indices chronologically by beat
+    final sortedIndices = List<int>.generate(notes.length, (i) => i);
+    sortedIndices.sort((a, b) => notes[a].beat.compareTo(notes[b].beat));
+
+    final trebleState = AccidentalState(keyFifths: keyFifths);
+    final bassState = AccidentalState(keyFifths: keyFifths);
+    int? currentMeasure;
+
+    for (final idx in sortedIndices) {
+      final n = notes[idx];
+      if (n.isSpacer || n.isRest) continue;
+
+      if (beatsPerBar != null && beatsPerBar > 0) {
+        final measure = (n.beat / beatsPerBar).floor();
+        if (currentMeasure == null || measure != currentMeasure) {
+          trebleState.reset();
+          bassState.reset();
+          currentMeasure = measure;
+        }
+      }
+
+      final isBass = onBass(n);
+      final state = isBass ? bassState : trebleState;
+      final step = diatonicStep(n.pitch);
+      final explicit = switch (n.accidental) {
+        'sharp' => AccidentalType.sharp,
+        'flat' => AccidentalType.flat,
+        'natural' => AccidentalType.natural,
+        _ => null,
+      };
+
+      final acc = state.processNote(
+        step: step,
+        pitch: n.pitch,
+        explicit: explicit,
+        isTiedContinuation: tiedContinuations.contains(idx),
+      );
+      if (acc != null) {
+        noteAccidentals[idx] = acc;
+      }
+    }
+
+    return noteAccidentals;
+  }
+
   /// Grand staff: spaces between the treble bottom line and the bass top
   /// line (reference: about 2; 3 leaves room for middle-C ledgers).
   static const staffGap = 3.0;
@@ -934,6 +1006,78 @@ class StaffPainter extends CustomPainter {
       chordHeadOffsets.addAll(offsets);
     }
 
+    final noteAccidentals = computeAccidentals(
+      notes: notes,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+      onBass: _onBass,
+    );
+
+    // MuseScore parity: accidental staggering and dot conflict resolution for chords
+    final chordAccidentalOffsets = <int, double>{};
+    final chordDotOffsets = <int, (double, double)>{};
+    for (final entry in chordIndicesByGroup.entries) {
+      final group = entry.value;
+      final onB = entry.key.$2;
+
+      // Accidental staggering in chords (MuseScore accidentalslayout.cpp)
+      final accNotes = <int>[];
+      for (final idx in group) {
+        if (noteAccidentals.containsKey(idx)) accNotes.add(idx);
+      }
+      if (accNotes.length <= 1) {
+        for (final idx in accNotes) {
+          chordAccidentalOffsets[idx] = 0.0;
+        }
+      } else {
+        accNotes.sort((a, b) => notes[a].pitch.compareTo(notes[b].pitch));
+        var col = 0;
+        double? lastY;
+        for (var k = accNotes.length - 1; k >= 0; k--) {
+          final idx = accNotes[k];
+          final ny = _noteY(notes[idx].pitch, onB, l);
+          if (lastY != null && (lastY - ny).abs() < space * 2.2) {
+            col++;
+          }
+          chordAccidentalOffsets[idx] = -col * space * 1.15;
+          lastY = ny;
+        }
+      }
+
+      // Dot alignment and space conflict resolution (MuseScore chordlayout.cpp getNoteListForDots)
+      final dottedNotes = group
+          .where((idx) => _isDotted(notes[idx].beats))
+          .toList();
+      if (dottedNotes.isNotEmpty) {
+        var maxHeadX = -1e9;
+        for (final idx in group) {
+          final hx = chordHeadOffsets[idx] ?? 0.0;
+          final hw = (notes[idx].beats >= 4 ? 1.5 : 1.3) * space;
+          if (hx + hw > maxHeadX) maxHeadX = hx + hw;
+        }
+        final dotBaseX = maxHeadX + space * 0.45;
+        dottedNotes.sort((a, b) => notes[b].pitch.compareTo(notes[a].pitch));
+        final occupiedSpaces = <int>{};
+        for (final idx in dottedNotes) {
+          final st = diatonicStep(notes[idx].pitch);
+          int dotSpace;
+          if (st.isOdd) {
+            dotSpace = st;
+          } else {
+            if (!occupiedSpaces.contains(st + 1)) {
+              dotSpace = st + 1;
+            } else {
+              dotSpace = st - 1;
+            }
+          }
+          occupiedSpaces.add(dotSpace);
+          final dy = -(dotSpace - st) * half;
+          final headOffset = chordHeadOffsets[idx] ?? 0.0;
+          chordDotOffsets[idx] = (dotBaseX - headOffset, dy);
+        }
+      }
+    }
+
     final drawnUnisons = <(double, int, bool)>{};
     final drawnLedgerLines = <(double, bool, int)>{};
     for (var i = first; i < notes.length; i++) {
@@ -1042,16 +1186,7 @@ class StaffPainter extends CustomPainter {
             : Smufl.noteheadBlack;
         _drawGlyph(canvas, head, glyphSize, Offset(noteXPos, y), color);
 
-        final acc = KeySignatureLayout.accidentalFor(
-          pitch: n.pitch,
-          keyFifths: keyFifths,
-          explicit: switch (n.accidental) {
-            'sharp' => AccidentalType.sharp,
-            'flat' => AccidentalType.flat,
-            'natural' => AccidentalType.natural,
-            _ => null,
-          },
-        );
+        final acc = noteAccidentals[i];
         if (acc != null) {
           final glyph = switch (acc) {
             AccidentalType.sharp => Smufl.accidentalSharp,
@@ -1067,19 +1202,21 @@ class StaffPainter extends CustomPainter {
               if (hx < leftmostHeadX) leftmostHeadX = hx;
             }
           }
+          final extraShift = chordAccidentalOffsets[i] ?? 0.0;
           _drawGlyph(
             canvas,
             glyph,
             glyphSize,
-            Offset(leftmostHeadX - space * 1.3, y),
+            Offset(leftmostHeadX - space * 1.3 + extraShift, y),
             color,
           );
         }
         if (_isDotted(n.beats)) {
-          // Dot sits in a space: nudge up when the note is on a line.
-          final dy = step.isEven ? -half : 0.0;
+          // Dot aligns to chord and resolves vertical space conflicts (MuseScore getNoteListForDots)
+          final (dotDx, dy) =
+              chordDotOffsets[i] ?? (space * 1.75, step.isEven ? -half : 0.0);
           canvas.drawCircle(
-            Offset(noteXPos + space * 1.75, y + dy),
+            Offset(noteXPos + dotDx, y + dy),
             space * 0.2,
             Paint()..color = color,
           );
@@ -1102,6 +1239,21 @@ class StaffPainter extends CustomPainter {
                     xCache: xCache,
                   );
               final nextY = _noteY(nextN.pitch, onBass, l);
+              // MuseScore slurtielayout.cpp: in chords, ties bow outwards away from chord center
+              final bool tieAbove;
+              if (chordGroup != null && chordGroup.length > 1) {
+                final minPitch = chordPitches!.reduce(math.min);
+                final maxPitch = chordPitches.reduce(math.max);
+                if (n.pitch == maxPitch) {
+                  tieAbove = true;
+                } else if (n.pitch == minPitch) {
+                  tieAbove = false;
+                } else {
+                  tieAbove = (n.pitch - minPitch) >= (maxPitch - n.pitch);
+                }
+              } else {
+                tieAbove = noteStemDown;
+              }
               EngravingDecorations.drawTie(
                 canvas,
                 x1: noteXPos,
@@ -1110,7 +1262,7 @@ class StaffPainter extends CustomPainter {
                 y2: nextY,
                 space: space,
                 color: color,
-                tieAbove: noteStemDown,
+                tieAbove: tieAbove,
               );
               break;
             }

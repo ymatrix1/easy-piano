@@ -62,4 +62,54 @@ void main() {
       expect(KeySignatureLayout.accidentalFor(pitch: 60, keyFifths: 0), isNull);
     });
   });
+
+  group('AccidentalState (MuseScore measure-level accidental memory)', () {
+    test(
+      'repeated accidental in same measure does not draw redundant glyph',
+      () {
+        final state = AccidentalState(keyFifths: 0); // C major
+        // Step for C4 is 28
+        const stepC4 = 28;
+
+        // First C#4: requires sharp glyph
+        final acc1 = state.processNote(step: stepC4, pitch: 61);
+        expect(acc1, equals(AccidentalType.sharp));
+
+        // Second C#4 in same measure: already sharp, no glyph
+        final acc2 = state.processNote(step: stepC4, pitch: 61);
+        expect(acc2, isNull);
+
+        // Subsequent C4 natural in same measure: requires natural glyph
+        final acc3 = state.processNote(step: stepC4, pitch: 60);
+        expect(acc3, equals(AccidentalType.natural));
+
+        // Repeated C4 natural in same measure: already natural, no glyph
+        final acc4 = state.processNote(step: stepC4, pitch: 60);
+        expect(acc4, isNull);
+
+        // Next measure: reset() resets to key signature (C is natural)
+        state.reset();
+        final acc5 = state.processNote(step: stepC4, pitch: 60);
+        expect(acc5, isNull);
+      },
+    );
+
+    test('tied continuation note does not draw accidental glyph', () {
+      final state = AccidentalState(keyFifths: 0);
+      const stepC4 = 28;
+
+      // First note: C#4 -> sharp
+      expect(
+        state.processNote(step: stepC4, pitch: 61),
+        equals(AccidentalType.sharp),
+      );
+
+      // Tied note across barline: reset called, but isTiedContinuation is true
+      state.reset();
+      expect(
+        state.processNote(step: stepC4, pitch: 61, isTiedContinuation: true),
+        isNull,
+      );
+    });
+  });
 }

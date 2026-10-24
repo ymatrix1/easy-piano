@@ -164,3 +164,76 @@ abstract final class KeySignatureLayout {
     }
   }
 }
+
+/// Tracks accidental alterations within a measure per MuseScore `AccidentalState` (`key.cpp` / `measure.cpp`).
+///
+/// Within a measure, accidentals apply to all subsequent notes of that pitch/step
+/// until the barline. Tied continuation notes across barlines or beats do not
+/// repeat accidentals. When crossing a barline, the accidental state resets to the key signature.
+class AccidentalState {
+  AccidentalState({required this.keyFifths});
+
+  final int keyFifths;
+  final Map<int, AccidentalType> _state = {};
+
+  /// Resets accidental memory back to the key signature for the start of a new measure.
+  void reset() {
+    _state.clear();
+  }
+
+  /// Default alteration for a diatonic step according to the key signature.
+  AccidentalType defaultForKey(int step) {
+    final stepMod7 = ((step % 7) + 7) % 7;
+    // Diatonic step mapping: 0=C, 1=D, 2=E, 3=F, 4=G, 5=A, 6=B.
+    final count = keyFifths.abs();
+    if (keyFifths > 0) {
+      // Sharps sequence steps: F(3), C(0), G(4), D(1), A(5), E(2), B(6)
+      const sharpSteps = [3, 0, 4, 1, 5, 2, 6];
+      for (var i = 0; i < count && i < sharpSteps.length; i++) {
+        if (sharpSteps[i] == stepMod7) return AccidentalType.sharp;
+      }
+    } else if (keyFifths < 0) {
+      // Flats sequence steps: B(6), E(2), A(5), D(1), G(4), C(0), F(3)
+      const flatSteps = [6, 2, 5, 1, 4, 0, 3];
+      for (var i = 0; i < count && i < flatSteps.length; i++) {
+        if (flatSteps[i] == stepMod7) return AccidentalType.flat;
+      }
+    }
+    return AccidentalType.natural;
+  }
+
+  /// Calculates the accidental symbol to display (if any) for a note at [step] with [pitch] and optional [explicit].
+  ///
+  /// Updates the internal state for [step].
+  AccidentalType? processNote({
+    required int step,
+    required int pitch,
+    AccidentalType? explicit,
+    bool isTiedContinuation = false,
+  }) {
+    if (isTiedContinuation && explicit == null) {
+      return null;
+    }
+
+    final defaultKeyAlt = defaultForKey(step);
+    final accAgainstKey = KeySignatureLayout.accidentalFor(
+      pitch: pitch,
+      keyFifths: keyFifths,
+      explicit: explicit,
+    );
+    final soundingAlt = accAgainstKey ?? defaultKeyAlt;
+    final currentAlt = _state[step] ?? defaultKeyAlt;
+
+    if (explicit != null) {
+      _state[step] = explicit;
+      return explicit;
+    }
+
+    if (soundingAlt != currentAlt) {
+      _state[step] = soundingAlt;
+      return soundingAlt;
+    }
+
+    return null;
+  }
+}

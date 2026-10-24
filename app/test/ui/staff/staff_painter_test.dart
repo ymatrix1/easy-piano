@@ -379,5 +379,78 @@ void main() {
         );
       },
     );
+
+    test('chord with staggered accidentals, dotted collision resolution and ties renders cleanly', () {
+      final rec = ui.PictureRecorder();
+      final notes = [
+        // Chord with two close sharps (C#4 and E#4) and dots, plus forward tie
+        const StaffNote(
+          61,
+          0.0,
+          1.5,
+          accidental: 'sharp',
+          tie: true,
+        ), // C#4 (line)
+        const StaffNote(
+          65,
+          0.0,
+          1.5,
+          accidental: 'sharp',
+          tie: true,
+        ), // F4/E#4 (space)
+        const StaffNote(61, 1.5, 1.0),
+        const StaffNote(65, 1.5, 1.0),
+      ];
+      final painter = StaffPainter(
+        notes: notes,
+        playheadBeat: ValueNotifier<double>(0.0),
+        pixelsPerBeat: 50.0,
+        lineRatio: 0.5,
+        staves: Staves.treble,
+        beatsPerBar: 4.0,
+        inkColor: const Color(0xFF000000),
+        playheadColor: const Color(0xFFFF0000),
+      );
+      expect(
+        () => painter.paint(Canvas(rec), const Size(400, 300)),
+        returnsNormally,
+      );
+    });
+
+    test('computeAccidentals remembers accidentals in measure and resets at barline', () {
+      final notes = [
+        // Measure 0 (beats 0.0 - 4.0):
+        const StaffNote(61, 0.0, 1.0, accidental: 'sharp'), // C#4 -> sharp
+        const StaffNote(61, 1.0, 1.0), // C#4 -> remembered, no accidental
+        const StaffNote(60, 2.0, 1.0), // C4 -> natural
+        const StaffNote(
+          60,
+          3.0,
+          1.0,
+        ), // C4 -> remembered natural, no accidental
+        // Measure 1 (beats 4.0 - 8.0):
+        const StaffNote(
+          61,
+          4.0,
+          1.0,
+          accidental: 'sharp',
+        ), // C#4 -> sharp again after barline
+        const StaffNote(60, 5.0, 1.0), // C4 natural -> natural
+      ];
+
+      final accs = StaffPainter.computeAccidentals(
+        notes: notes,
+        keyFifths: 0,
+        beatsPerBar: 4.0,
+        onBass: (n) => false,
+      );
+
+      expect(accs[0], equals(AccidentalType.sharp));
+      expect(accs.containsKey(1), isFalse);
+      expect(accs[2], equals(AccidentalType.natural));
+      expect(accs.containsKey(3), isFalse);
+      expect(accs[4], equals(AccidentalType.sharp));
+      expect(accs[5], equals(AccidentalType.natural));
+    });
   });
 }
