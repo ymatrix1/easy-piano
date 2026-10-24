@@ -200,6 +200,39 @@ void main() {
     expect(_keyboard, findsNothing);
   });
 
+  testWidgets('pause during the demo freezes demo time until resume', (
+    tester,
+  ) async {
+    final clock = await pumpStage(tester);
+    expect(find.text('Listen first…'), findsOneWidget);
+
+    clock.ms = 1100;
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.byTooltip('Pause'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    clock.ms += 5000;
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Listen first…'), findsNothing);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('Listen first…'), findsOneWidget);
+
+    clock.ms += 200;
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Listen first…'), findsOneWidget);
+
+    clock.ms += 6000;
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Listen first…'), findsNothing);
+    expect(_keyboard, findsOneWidget);
+  });
+
   testWidgets('keyboard toggle is disabled during the demo only', (
     tester,
   ) async {

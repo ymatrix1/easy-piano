@@ -482,18 +482,29 @@ class _PracticeStageState extends State<PracticeStage>
     await pianoSynth.load();
     if (!mounted || !_demo) return;
     _demoStartMs = widget.midi.now() + 400;
-    final lead = 0.4;
+    _scheduleDemo(fromBeat: 0);
+    _startMs = widget.midi.now();
+  }
+
+  void _scheduleDemo({required double fromBeat}) {
+    final now = widget.midi.now();
     for (final t in _initialTargets) {
-      for (final p in t.pitches) {
-        pianoSynth.schedule(
-          p,
-          lead + t.beat * _msPerBeat / 1000,
-          t.beats * _msPerBeat / 1000 * 0.95,
-          force: true,
-        );
+      if (t.beat + t.beats <= fromBeat) continue;
+      final startSec = (_demoStartMs + t.beat * _msPerBeat - now) / 1000;
+      final durSec = t.beats * _msPerBeat / 1000 * 0.95;
+      if (startSec < 0) {
+        final remaining = durSec + startSec;
+        if (remaining > 0.05) {
+          for (final p in t.pitches) {
+            pianoSynth.schedule(p, 0.01, remaining, force: true);
+          }
+        }
+      } else {
+        for (final p in t.pitches) {
+          pianoSynth.schedule(p, startSec, durSec, force: true);
+        }
       }
     }
-    _startMs = widget.midi.now();
   }
 
   void _endDemo() {
@@ -550,8 +561,14 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _resume() => setState(() {
+    final pausedDuration = widget.midi.now() - _pausedAtMs!;
     // Shift stage time so the song continues where it was paused.
-    _startMs += widget.midi.now() - _pausedAtMs!;
+    _startMs += pausedDuration;
+    if (_demo) {
+      _demoStartMs += pausedDuration;
+      final currentBeat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
+      _scheduleDemo(fromBeat: currentBeat);
+    }
     _pausedAtMs = null;
     if (_playAlong && !_demo) _scheduleBacking(_scroll.value);
   });
