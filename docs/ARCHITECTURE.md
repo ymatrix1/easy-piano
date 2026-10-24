@@ -25,7 +25,7 @@ Status: accepted ([D1](DECISIONS.md), [D2](DECISIONS.md)). Nothing built yet.
 | Path | Lang | Role |
 |---|---|---|
 | `app/` | Dart/Flutter | UI, navigation, rendering, persistence |
-| `core/` | Rust | Pure logic: notation, grading, session state machine. No I/O. 100% unit-tested |
+| `core/` | Rust | Pure logic: notation, grading, session state machine, score import (`score_import`: MusicXML, MIDI, ABC, LilyPond subset into `ImportedScore`; see [score-import spec](specs/score-import-and-page-view.md) §5 and [D37](DECISIONS.md)). No I/O. 100% unit-tested |
 | `audio/` | Rust | One engine for every platform ([D30](DECISIONS.md)): sampler, mix and effects with a CI parity test vs web (stage 1); native output via cpal (WASAPI/CoreAudio/AAudio) behind `PianoSynth` on Android, iOS and desktop (stage 2); web AudioWorklet, mic capture and pitch detection to come |
 | `content/` | JSON + text | Courses, journeys, levels, songs, scenes, strings |
 | `tools/content-cli/` | Rust | `lint`, `preview`, `import-midi`, `import-musicxml`, `stats` |

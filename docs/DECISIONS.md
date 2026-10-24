@@ -395,3 +395,30 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** One detector for web and Android, unit-tested in Dart; no dependency to vet or keep up with Flutter; the channel needs little code. The audio-clock rule (rule 7) is kept as far as the web path does: events are stamped on a monotonic clock, grading stays in `core`.
 - **Alternatives:** `flutter_midi_command` / `record` plugins (more platforms, but extra dependencies and their own timestamps); Oboe/cpal input in the Rust engine (lower latency, but detector would need porting or an FFI audio stream); detector in Rust `core`.
 - **Impact:** `app/android/.../MidiBridge.kt`, `MicBridge.kt`, `AndroidManifest.xml`; `app/lib/input/native_bridge.dart`, `midi_input_native.dart`, `mic/mic_input_native.dart` replace the stubs; strings `midiUnavailableApp`, `micUnavailableApp`, `micDeniedApp`. AudioRecord adds buffering latency (not measured yet); the calibration step absorbs a constant offset. Bean piano-0h6i.
+
+### D37. Score import parsers live in `core` behind one `ImportedScore` AST
+
+- **Status:** proposed
+- **Context:** Phase 3 "My songs" and the score-import spec need MusicXML, MIDI, ABC and LilyPond read into one model. D3 (accepted) says MusicXML and MIDI are import sources "via CLI" and does not mention ABC or LilyPond. The spec ([score-import](specs/score-import-and-page-view.md) §2.1) asks for parsing in Rust `core` with FFI, for Web, desktop and mobile.
+- **Decision:** `core/src/score_import/` parses each format into `ImportedScore`: piano notes with start and length in quarter-note beats, a hand per note, measures with time and key, tempo, title and composer. It is format-independent and holds no content-format data. Conversion into the content `Song` (bars per hand) is a separate step, tracked in `piano-t6rt`. The CLI (`tools/content-cli`, `import-midi`, `import-musicxml`) may call the same parsers later.
+- **Why:** One tested parser for the app, the CLI and the web build. Keeping `ImportedScore` apart from `Song` lets the same parse serve play-along, study view and content authoring, without forcing lesson rules onto raw files.
+- **Alternatives:** Parse straight into content `Song` (couples the parser to bar strings and lint rules); keep parsers in `tools/content-cli` only (not reachable from the app, so "My songs" would need a second implementation); a Dart parser (no shared tests with the grader, and a second implementation of MIDI and XML).
+- **Impact:** New module `core/src/score_import/`. D3 stays accepted. Its "import via CLI" line is now too narrow; if this is accepted, D3 needs a note or a new decision that says import also runs in the app. ABC and LilyPond are new import sources not named in D3. The app gets an FFI function in `piano-t6rt`.
+
+### D38. New dependencies in `core`: `quick-xml` 0.37 and `zip` 2 (deflate only)
+
+- **Status:** proposed
+- **Context:** `core` has no I/O by rule. MusicXML needs an XML reader. Compressed `.mxl` needs unzip. The MIDI reader is written in-house (D39).
+- **Decision:** Add `quick-xml = "0.37"` (XML reader, no features) and `zip = { version = "2", default-features = false, features = ["deflate"] }` (reads `.mxl` from a byte slice, no file access). Both take bytes in and return bytes or errors, so `core` stays free of file I/O. Versions are pinned in `core/Cargo.lock`; a newer major needs a new decision.
+- **Why:** Writing a correct XML and zip reader would cost more than the parsers themselves and carry more risk. Both crates are widely used, have no native code, and build for Web (wasm) and mobile. `zip` default features (AES, bzip2, zstd) are off to keep the dependency tree and the wasm size small; MusicXML `.mxl` only uses deflate.
+- **Alternatives:** `roxmltree` (research list mentions it; DOM-style, holds the whole document, fine for the file sizes here, but a second XML crate would not be needed); hand-written XML subset (fragile on real exporter output); `zip` with default features (larger build, unused codecs).
+- **Impact:** `core/Cargo.toml`, `core/Cargo.lock`. Checked for licence (MIT or Apache-2.0) and build on Windows. Not yet checked for the wasm target; that check belongs with `piano-t6rt`, where the FFI build for web runs.
+
+### D39. MIDI reader written in `core`, not a crate
+
+- **Status:** proposed
+- **Context:** The Standard MIDI File format is small: header, tracks, variable-length values, running status and a few meta events. The sightread reference uses `@tonejs/midi` (JavaScript).
+- **Decision:** `core/src/score_import/midi.rs` reads format 0 and 1 with metrical timing. It supports running status, note-on with velocity 0 as note-off, and tempo, time signature and key signature meta events. Track and channel rules are described in [spec §5.2](specs/score-import-and-page-view.md). SMPTE timing is rejected.
+- **Why:** About 250 lines, fully tested with inline byte fixtures, no extra dependency, and the hand-split rules are ours, not a library's default.
+- **Alternatives:** A Rust MIDI crate (`midly`): well maintained, but it would add a dependency for a format we read in a few hundred lines, and it would not give us the hand split; port `@tonejs/midi` (JavaScript, not a clean port).
+- **Impact:** None outside `core`. Known gaps are listed in spec §5.2 (SMPTE, hand heuristic, controllers ignored).
