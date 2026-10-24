@@ -750,12 +750,19 @@ class StaffPainter extends CustomPainter {
         xCache: xCache,
       );
       if (ex >= clefRight && ex <= size.width) {
-        // MuseScore end barline: thin line, gap, then a thick line.
+        // MuseScore end barline (tdraw.cpp, BarLineType::END): thin line of
+        // barWidth, then a thick line of endBarWidth centred endBarDistance
+        // after the thin line's edge. Style defaults: 0.18, 0.55, 0.37 sp.
+        final thinW = space * 0.18;
+        final thickW = space * 0.55;
+        final thin = Paint()
+          ..color = staff
+          ..strokeWidth = thinW;
         final thick = Paint()
           ..color = staff
-          ..strokeWidth = space * 0.4;
-        canvas.drawLine(Offset(ex, staffTop), Offset(ex, staffBottom), ink);
-        final tx = ex + space * 0.45;
+          ..strokeWidth = thickW;
+        canvas.drawLine(Offset(ex, staffTop), Offset(ex, staffBottom), thin);
+        final tx = ex + thinW / 2 + space * 0.37 + thickW / 2;
         canvas.drawLine(Offset(tx, staffTop), Offset(tx, staffBottom), thick);
       }
     }
