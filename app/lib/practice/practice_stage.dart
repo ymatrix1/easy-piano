@@ -575,6 +575,8 @@ class _PracticeStageState extends State<PracticeStage>
     _startMs = widget.midi.now();
   }
 
+  /// Pre-listen notes use the same voice as the learner's key presses
+  /// (velocity 90, live bus, no band glue or limiter), so it is one piano.
   void _scheduleDemo({required double fromBeat}) {
     final now = widget.midi.now();
     for (final t in _initialTargets) {
@@ -585,16 +587,26 @@ class _PracticeStageState extends State<PracticeStage>
         final remaining = durSec + startSec;
         if (remaining > 0.05) {
           for (final p in t.pitches) {
-            pianoSynth.schedule(p, 0.01, remaining, force: true);
+            _schedulePianoKey(p, 0.01, remaining);
           }
         }
       } else {
         for (final p in t.pitches) {
-          pianoSynth.schedule(p, startSec, durSec, force: true);
+          _schedulePianoKey(p, startSec, durSec);
         }
       }
     }
   }
+
+  void _schedulePianoKey(int pitch, double startSec, double durSec) =>
+      pianoSynth.schedule(
+        pitch,
+        startSec,
+        durSec,
+        velocity: 90,
+        force: true,
+        part: 'live',
+      );
 
   void _endDemo() {
     pianoSynth.stopAll();
