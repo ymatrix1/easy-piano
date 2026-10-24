@@ -95,6 +95,42 @@ void main() {
         isTrue,
       );
     });
+
+    test('Grand staff (piano) defaults RH stems UP and LH stems DOWN', () {
+      // In Rondo alla Turca, D5 (74), C5 (72), B5 (83) in treble on grand staff
+      // point UP to stay clear of the LH accompaniment in the inter-staff gap.
+      expect(
+        StemLayout.computeStemDown(
+          pitch: 74,
+          onBass: false,
+          isGrandStaff: true,
+        ),
+        isFalse,
+      );
+      expect(
+        StemLayout.computeStemDown(
+          pitch: 83,
+          onBass: false,
+          isGrandStaff: true,
+        ),
+        isFalse,
+      );
+      // LH chords/notes in bass staff point DOWN
+      expect(
+        StemLayout.computeStemDown(pitch: 57, onBass: true, isGrandStaff: true),
+        isTrue,
+      );
+      // Explicit override is still honored on grand staff
+      expect(
+        StemLayout.computeStemDown(
+          pitch: 74,
+          onBass: false,
+          isGrandStaff: true,
+          explicitStemDown: true,
+        ),
+        isTrue,
+      );
+    });
   });
 
   group('StemLayout stem tip and ledger line elongation', () {

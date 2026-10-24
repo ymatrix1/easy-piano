@@ -39,6 +39,7 @@ abstract final class TupletLayout {
     required bool Function(StaffNote) onBass,
     required Set<int> beamedIndices,
     required double space,
+    bool isGrandStaff = false,
   }) {
     final groups = <TupletGroup>[];
     var currentGroup = <int>[];
@@ -63,7 +64,10 @@ abstract final class TupletLayout {
         // Place tuplet above or below based on stem direction (Gould: opposite stems)
         var downVotes = 0;
         for (final idx in indices) {
-          if (notes[idx].isStemDown(onBass(notes[idx]))) {
+          if (notes[idx].isStemDown(
+            onBass(notes[idx]),
+            isGrandStaff: isGrandStaff,
+          )) {
             downVotes++;
           } else {
             downVotes--;

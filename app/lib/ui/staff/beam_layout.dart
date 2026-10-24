@@ -48,6 +48,7 @@ abstract final class BeamLayout {
     required Map<int, double> noteXs,
     required double space,
     required double? beatsPerBar,
+    bool isGrandStaff = false,
   }) {
     final bpb = beatsPerBar ?? 4.0;
 
@@ -75,6 +76,7 @@ abstract final class BeamLayout {
         noteXs: noteXs,
         space: space,
         bpb: bpb,
+        isGrandStaff: isGrandStaff,
       ),
     );
     groups.addAll(
@@ -86,6 +88,7 @@ abstract final class BeamLayout {
         noteXs: noteXs,
         space: space,
         bpb: bpb,
+        isGrandStaff: isGrandStaff,
       ),
     );
 
@@ -100,6 +103,7 @@ abstract final class BeamLayout {
     required Map<int, double> noteXs,
     required double space,
     required double bpb,
+    bool isGrandStaff = false,
   }) {
     final groups = <BeamGroup>[];
     int beatGroupOf(double b) => (bpb == 6 ? (b / 1.5) : b).floor();
@@ -136,6 +140,7 @@ abstract final class BeamLayout {
           onBass: isBass,
           explicitStemDown: explicitDown,
           chordPitches: allPitches,
+          isGrandStaff: isGrandStaff,
         );
 
         final stemXs = <int, double>{};

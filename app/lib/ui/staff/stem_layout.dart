@@ -19,7 +19,9 @@ abstract final class StemLayout {
   ///
   /// Respects [explicitStemDown] if provided. Otherwise uses MuseScore's
   /// auto-stem direction algorithm:
-  /// - Single note: `step >= middleLineStep` -> DOWN (true), else UP (false).
+  /// - Grand Staff (piano): upper staff (RH) stems point UP, lower staff (LH)
+  ///   stems point DOWN, avoiding inter-staff collisions (Gould p. 306-308).
+  /// - Single staff: `step >= middleLineStep` -> DOWN (true), else UP (false).
   /// - Chord: examines the extreme notes (highest and lowest). The note
   ///   farthest from the middle line dictates the direction. If equidistant,
   ///   defaults to DOWN (standard Gould rule).
@@ -28,8 +30,17 @@ abstract final class StemLayout {
     required bool onBass,
     bool? explicitStemDown,
     List<int>? chordPitches,
+    bool isGrandStaff = false,
   }) {
     if (explicitStemDown != null) return explicitStemDown;
+
+    if (isGrandStaff) {
+      // In keyboard music on a grand staff (Elaine Gould, Behind Bars p. 306-308 /
+      // MuseScore chordlayout.cpp & beamlayout.cpp):
+      // Upper staff (RH) stems point UP to avoid colliding with LH in the inter-staff gap.
+      // Lower staff (LH) stems point DOWN.
+      return onBass;
+    }
 
     final mid = middleLineStep(onBass);
 

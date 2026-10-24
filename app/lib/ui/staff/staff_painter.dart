@@ -948,6 +948,7 @@ class StaffPainter extends CustomPainter {
       noteXs: xCache,
       space: space,
       beatsPerBar: bpb,
+      isGrandStaff: staves == Staves.grand,
     );
     final beamedIndices = <int>{};
     for (final g in beamGroups) {
@@ -976,6 +977,7 @@ class StaffPainter extends CustomPainter {
       onBass: _onBass,
       beamedIndices: beamedIndices,
       space: space,
+      isGrandStaff: staves == Staves.grand,
     );
     for (final tuplet in tuplets) {
       TupletLayout.drawTupletGroup(
@@ -1151,7 +1153,11 @@ class StaffPainter extends CustomPainter {
       final chordKey = (n.beat, onBass);
       final chordGroup = chordIndicesByGroup[chordKey];
       final chordPitches = chordGroup?.map((idx) => notes[idx].pitch).toList();
-      final noteStemDown = n.isStemDown(onBass, chordPitches: chordPitches);
+      final noteStemDown = n.isStemDown(
+        onBass,
+        chordPitches: chordPitches,
+        isGrandStaff: staves == Staves.grand,
+      );
 
       if (!isDuplicate) {
         double minHeadX = noteXPos;

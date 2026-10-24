@@ -54,13 +54,17 @@ class StaffNote {
   final int? tuplet;
 
   /// Computes effective stem direction (true = down, false = up).
-  bool isStemDown(bool onBass, {List<int>? chordPitches}) =>
-      StemLayout.computeStemDown(
-        pitch: pitch,
-        onBass: onBass,
-        explicitStemDown: stemDown,
-        chordPitches: chordPitches,
-      );
+  bool isStemDown(
+    bool onBass, {
+    List<int>? chordPitches,
+    bool isGrandStaff = false,
+  }) => StemLayout.computeStemDown(
+    pitch: pitch,
+    onBass: onBass,
+    explicitStemDown: stemDown,
+    chordPitches: chordPitches,
+    isGrandStaff: isGrandStaff,
+  );
 }
 
 /// Ode to Joy (Beethoven, public domain), simplified, own arrangement.
