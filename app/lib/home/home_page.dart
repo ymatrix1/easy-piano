@@ -14,6 +14,7 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
 import '../ui/staff/staff_spike_page.dart';
+import '../ui/window/window_title_bar.dart';
 import 'learn_tab.dart';
 import 'other_tabs.dart';
 
@@ -153,6 +154,12 @@ class _HomePageState extends State<HomePage> {
                       top: 0,
                       child: _TopBar(stars: progress.totalStars),
                     ),
+                    if (usesCustomTitleBar)
+                      const Positioned(
+                        top: 0,
+                        right: 0,
+                        child: WindowControls(),
+                      ),
                   ],
                 ),
               ),
@@ -230,7 +237,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Edge-to-edge glass bar, mirroring the bottom nav: the content scrolls
     // under it, blurred; same edge colour and shadow, content capped at 520.
-    return DecoratedBox(
+    final bar = DecoratedBox(
       decoration: const BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -267,7 +274,11 @@ class _TopBar extends StatelessWidget {
                   maxWidth: homeMaxWidth(context) + 32,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  // On Windows the caption buttons float over the right end.
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: usesCustomTitleBar ? 16 + kCaptionWidth : 16,
+                  ),
                   child: Row(
                     children: [
                       Image.asset(
@@ -290,6 +301,8 @@ class _TopBar extends StatelessWidget {
         ),
       ),
     );
+    // The header doubles as the window's drag handle on Windows.
+    return usesCustomTitleBar ? WindowDragArea(child: bar) : bar;
   }
 }
 

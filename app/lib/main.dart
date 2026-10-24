@@ -15,7 +15,6 @@ import 'ui/key_geometry.dart';
 import 'ui/keyboard_painter.dart';
 import 'ui/staff/music_font.dart';
 import 'ui/staff/staff_spike_page.dart';
-import 'ui/window/window_title_bar.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,15 +86,6 @@ class _EasyPianoAppState extends State<EasyPianoApp>
       child: MaterialApp(
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         debugShowCheckedModeBanner: false,
-        // Windows uses a frameless window: draw the title bar above the app.
-        builder: usesCustomTitleBar
-            ? (context, child) => Column(
-                children: [
-                  const WindowTitleBar(),
-                  Expanded(child: child ?? const SizedBox.shrink()),
-                ],
-              )
-            : null,
         locale: widget.appLocale.current.locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

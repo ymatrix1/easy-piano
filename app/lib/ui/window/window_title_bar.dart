@@ -2,32 +2,39 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../l10n/app_localizations.dart';
-
 /// True when the app runs in the frameless Windows window and must draw its
-/// own title bar (see windows/runner/flutter_window.cpp).
+/// own caption buttons (see windows/runner/flutter_window.cpp).
 bool get usesCustomTitleBar =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
 /// Method channel implemented by the Windows runner.
 const windowChannel = MethodChannel('easy_piano/window');
 
-/// Height of the custom title bar, in logical pixels.
-const double kTitleBarHeight = 36;
+/// Height of the caption-button strip, in logical pixels.
+const double kCaptionHeight = 36;
 
-/// Slim title bar that blends into the app background (no separate bar
-/// colour), with drag area, logo, title and minimize / maximize / close.
-class WindowTitleBar extends StatefulWidget {
-  const WindowTitleBar({super.key, this.channel = windowChannel});
+/// Width of one caption button.
+const double kCaptionButtonWidth = 46;
+
+/// Total width taken by the caption buttons. Screens that reach the top-right
+/// corner add this much end padding so their content stays clear of them.
+const double kCaptionWidth = kCaptionButtonWidth * 3;
+
+/// Minimize / maximize / close buttons pinned to the top-right corner.
+///
+/// Lives above the Navigator (via MaterialApp.builder) and therefore must not
+/// use widgets that need an Overlay (e.g. Tooltip).
+class WindowControls extends StatefulWidget {
+  const WindowControls({super.key, this.channel = windowChannel});
 
   /// Overridable for widget tests.
   final MethodChannel channel;
 
   @override
-  State<WindowTitleBar> createState() => _WindowTitleBarState();
+  State<WindowControls> createState() => _WindowControlsState();
 }
 
-class _WindowTitleBarState extends State<WindowTitleBar> {
+class _WindowControlsState extends State<WindowControls> {
   bool _maximized = false;
 
   @override
@@ -56,58 +63,27 @@ class _WindowTitleBarState extends State<WindowTitleBar> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final title = AppLocalizations.of(context).appTitle;
-
     return SizedBox(
-      height: kTitleBarHeight,
+      height: kCaptionHeight,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: (_) => _call('startDrag'),
-              onDoubleTap: () => _call('toggleMaximize'),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/brand/logo.png',
-                      height: 18,
-                      filterQuality: FilterQuality.medium,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           _CaptionButton(
             key: const Key('window-minimize'),
             icon: Icons.remove,
-            tooltip: 'Minimize',
+            label: 'Minimize',
             onPressed: () => _call('minimize'),
           ),
           _CaptionButton(
             key: const Key('window-maximize'),
             icon: _maximized ? Icons.filter_none : Icons.crop_square,
-            tooltip: _maximized ? 'Restore' : 'Maximize',
+            label: _maximized ? 'Restore' : 'Maximize',
             onPressed: () => _call('toggleMaximize'),
           ),
           _CaptionButton(
             key: const Key('window-close'),
             icon: Icons.close,
-            tooltip: 'Close',
+            label: 'Close',
             hoverColor: const Color(0xFFE81123),
             onPressed: () => _call('close'),
           ),
@@ -117,17 +93,39 @@ class _WindowTitleBarState extends State<WindowTitleBar> {
   }
 }
 
+/// Makes [child] drag the window (and double-click to maximize). Only the
+/// pan / double-tap gestures are claimed; taps still reach [child].
+class WindowDragArea extends StatelessWidget {
+  const WindowDragArea({
+    super.key,
+    required this.child,
+    this.channel = windowChannel,
+  });
+
+  final Widget child;
+  final MethodChannel channel;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: (_) => channel.invokeMethod<void>('startDrag'),
+      onDoubleTap: () => channel.invokeMethod<void>('toggleMaximize'),
+      child: child,
+    );
+  }
+}
+
 class _CaptionButton extends StatefulWidget {
   const _CaptionButton({
     super.key,
     required this.icon,
-    required this.tooltip,
+    required this.label,
     required this.onPressed,
     this.hoverColor,
   });
 
   final IconData icon;
-  final String tooltip;
+  final String label;
   final VoidCallback onPressed;
   final Color? hoverColor;
 
@@ -140,24 +138,27 @@ class _CaptionButtonState extends State<_CaptionButton> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final hoverColor =
-        widget.hoverColor ?? scheme.onSurface.withValues(alpha: 0.08);
-    final foreground = _hover && widget.hoverColor != null
-        ? Colors.white
-        : scheme.onSurface;
+    final isClose = widget.hoverColor != null;
+    final background = _hover
+        ? (widget.hoverColor ?? Colors.white.withValues(alpha: 0.08))
+        : Colors.transparent;
+    // The app is always dark: fixed light glyphs, not onSurface (which is dark here).
+    final foreground = _hover && isClose ? Colors.white : Colors.white70;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: Tooltip(
-        message: widget.tooltip,
-        child: InkWell(
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: widget.onPressed,
           child: Container(
-            width: 46,
-            height: kTitleBarHeight,
-            color: _hover ? hoverColor : Colors.transparent,
+            width: kCaptionButtonWidth,
+            height: kCaptionHeight,
+            color: background,
             alignment: Alignment.center,
             child: Icon(widget.icon, size: 16, color: foreground),
           ),
