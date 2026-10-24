@@ -641,9 +641,18 @@ class SystemStaffPainter extends CustomPainter {
     0xFF9061F9,
   ); // Sightread purple highlight
 
-  // Staff coordinates aligned with StaffPainter
-  static const _trebleBottomStep = 30; // E4
-  static const _bassTopStep = 28; // A3
+  // Diatonic step calculation matching StaffPainter:
+  // diatonicStep(pitch) = (pitch ~/ 12 - 1) * 7 + _stepOf[pitch % 12]
+  // Bottom line of treble is E4 (pitch 64) -> step 23
+  // Top line of bass is A3 (pitch 57) -> step 19
+  // Middle C is C4 (pitch 60) -> step 21
+  static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
+
+  static int diatonicStep(int pitch) =>
+      (pitch ~/ 12 - 1) * 7 + _stepOf[pitch % 12];
+
+  static final _trebleBottomStep = diatonicStep(64); // E4 = 23
+  static final _bassTopStep = diatonicStep(57); // A3 = 19
 
   double _noteY(
     int pitch,
@@ -898,18 +907,18 @@ class SystemStaffPainter extends CustomPainter {
 
         // Accurate ledger lines calculation:
         // On treble staff:
-        // - Lines are: E4(30), G4(32), B4(34), D5(36), F5(38).
-        // - Above treble: A5 is space (39), C6 is line (40). Ledgers start at step 40 for treble top.
-        // - Below treble: D4 is space (29), Middle C is line (28), A3 is line (26). Ledgers start at step 28.
+        // - Treble lines: E4(23), G4(25), B4(27), D5(29), F5(31).
+        // - Above treble: A5 is space (32), C6 is line (33). Ledgers start at step 33.
+        // - Below treble: D4 is space (22), Middle C is line (21), A3 is line (19). Ledgers start at step 21.
         // On bass staff:
-        // - Lines are: G2(18), B2(20), D3(22), F3(24), A3(26).
-        // - Above bass: C4 (Middle C) is line (28).
-        // - Below bass: F2 is space (17), E2 is line (16), C2 is line (14).
+        // - Bass lines: G2(11), B2(13), D3(15), F3(17), A3(19).
+        // - Above bass: C4 (Middle C) is line (21).
+        // - Below bass: F2 is space (10), E2 is line (9), C2 is line (7).
         if (!note.leftHand) {
-          if (step >= 40) {
-            // Lines above treble: 40, 42, 44...
-            final maxLine = (step.isEven) ? step : step - 1;
-            for (var s = 40; s <= maxLine; s += 2) {
+          if (step >= 33) {
+            // Lines above treble: 33 (C6), 35, 37...
+            final maxLine = (step.isOdd) ? step : step - 1;
+            for (var s = 33; s <= maxLine; s += 2) {
               final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -917,10 +926,10 @@ class SystemStaffPainter extends CustomPainter {
                 staffPaint,
               );
             }
-          } else if (step <= 28) {
-            // Lines below treble: 28 (Middle C), 26, 24...
-            final minLine = (step.isEven) ? step : step + 1;
-            for (var s = 28; s >= minLine; s -= 2) {
+          } else if (step <= 21) {
+            // Lines below treble: 21 (Middle C), 19 (A3), 17...
+            final minLine = (step.isOdd) ? step : step + 1;
+            for (var s = 21; s >= minLine; s -= 2) {
               final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -930,10 +939,10 @@ class SystemStaffPainter extends CustomPainter {
             }
           }
         } else {
-          if (step >= 28) {
-            // Lines above bass: 28 (Middle C)...
-            final maxLine = (step.isEven) ? step : step - 1;
-            for (var s = 28; s <= maxLine; s += 2) {
+          if (step >= 21) {
+            // Lines above bass: 21 (Middle C), 23...
+            final maxLine = (step.isOdd) ? step : step - 1;
+            for (var s = 21; s <= maxLine; s += 2) {
               final ly = bassTopY + (_bassTopStep - s) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -941,10 +950,10 @@ class SystemStaffPainter extends CustomPainter {
                 staffPaint,
               );
             }
-          } else if (step <= 16) {
-            // Lines below bass: 16, 14, 12...
-            final minLine = (step.isEven) ? step : step + 1;
-            for (var s = 16; s >= minLine; s -= 2) {
+          } else if (step <= 9) {
+            // Lines below bass: 9 (E2), 7 (C2)...
+            final minLine = (step.isOdd) ? step : step + 1;
+            for (var s = 9; s >= minLine; s -= 2) {
               final ly = bassTopY + (_bassTopStep - s) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),

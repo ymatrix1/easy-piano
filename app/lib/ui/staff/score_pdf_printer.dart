@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 
 import 'score_page_layout.dart';
 import 'score_page_view.dart';
+import 'staff_note.dart';
 import 'staff_painter.dart';
 
 /// Renders genuine print-ready vector/raster PDF pages of the score and triggers
@@ -23,7 +24,41 @@ abstract final class ScorePdfPrinter {
   }) async {
     final pdf = pw.Document();
 
-    for (final page in pages) {
+    // Use standard A4 page format (595.28 x 841.89 points) for print output
+    final printConfig = ScorePageConfig(
+      pageWidth: 800.0,
+      pageHeight: 1130.0,
+      marginTop: 56.0,
+      marginBottom: 56.0,
+      marginLeft: 48.0,
+      marginRight: 48.0,
+      grandStaffHeight: 140.0,
+      systemDistance: 72.0,
+      minMeasureWidth: 140.0,
+      maxMeasuresPerSystem: 3,
+      systemHeaderWidth: 72.0,
+    );
+
+    // Re-layout specifically for print page dimensions
+    final allNotes = <StaffNote>[];
+    for (final p in pages) {
+      for (final s in p.systems) {
+        for (final m in s.measures) {
+          allNotes.addAll(m.notes);
+        }
+      }
+    }
+    allNotes.sort((a, b) => a.beat.compareTo(b.beat));
+
+    final totalBeats = pages.isEmpty ? 0.0 : pages.last.endBeat;
+    final printPages = ScorePageLayout.layoutScore(
+      notes: allNotes,
+      beatsPerBar: beatsPerBar,
+      totalBeats: totalBeats,
+      config: printConfig,
+    );
+
+    for (final page in printPages) {
       // Rasterize each page sheet using high-DPI canvas to guarantee
       // 100% faithful SMuFL typography and engraving fidelity
       final recorder = ui.PictureRecorder();
@@ -32,7 +67,7 @@ abstract final class ScorePdfPrinter {
       // White background for print
       final bgPaint = Paint()..color = Colors.white;
       canvas.drawRect(
-        Rect.fromLTWH(0, 0, config.pageWidth, config.pageHeight),
+        Rect.fromLTWH(0, 0, printConfig.pageWidth, printConfig.pageHeight),
         bgPaint,
       );
 
@@ -49,10 +84,10 @@ abstract final class ScorePdfPrinter {
             ),
           ),
           textDirection: TextDirection.ltr,
-        )..layout(maxWidth: config.printableWidth);
+        )..layout(maxWidth: printConfig.printableWidth);
         titlePainter.paint(
           canvas,
-          Offset(config.marginLeft, config.marginTop * 0.4),
+          Offset(printConfig.marginLeft, printConfig.marginTop * 0.4),
         );
 
         if (composer.isNotEmpty) {
@@ -71,8 +106,10 @@ abstract final class ScorePdfPrinter {
           composerPainter.paint(
             canvas,
             Offset(
-              config.pageWidth - config.marginRight - composerPainter.width,
-              config.marginTop * 0.4 + 6,
+              printConfig.pageWidth -
+                  printConfig.marginRight -
+                  composerPainter.width,
+              printConfig.marginTop * 0.4 + 6,
             ),
           );
         }
@@ -93,22 +130,22 @@ abstract final class ScorePdfPrinter {
       pageNumPainter.paint(
         canvas,
         Offset(
-          (config.pageWidth - pageNumPainter.width) / 2,
-          config.pageHeight - config.marginBottom * 0.6,
+          (printConfig.pageWidth - pageNumPainter.width) / 2,
+          printConfig.pageHeight - printConfig.marginBottom * 0.6,
         ),
       );
 
       // Render each system on the page
       var currentY = title.isNotEmpty
-          ? config.marginTop * 1.3
-          : config.marginTop;
+          ? printConfig.marginTop * 1.3
+          : printConfig.marginTop;
       for (final system in page.systems) {
         canvas.save();
-        canvas.translate(config.marginLeft, currentY);
+        canvas.translate(printConfig.marginLeft, currentY);
 
         final painter = SystemStaffPainter(
           system: system,
-          config: config,
+          config: printConfig,
           staves: staves,
           keyFifths: keyFifths,
           beatsPerBar: beatsPerBar,
@@ -117,18 +154,18 @@ abstract final class ScorePdfPrinter {
 
         painter.paint(
           canvas,
-          Size(config.printableWidth, config.grandStaffHeight),
+          Size(printConfig.printableWidth, printConfig.grandStaffHeight),
         );
         canvas.restore();
 
-        currentY += config.grandStaffHeight + config.systemDistance;
+        currentY += printConfig.grandStaffHeight + printConfig.systemDistance;
       }
 
       final picture = recorder.endRecording();
       // Render at 2.0x scale (150-300 DPI) for crisp vector-like print output
       final img = await picture.toImage(
-        config.pageWidth.toInt() * 2,
-        config.pageHeight.toInt() * 2,
+        printConfig.pageWidth.toInt() * 2,
+        printConfig.pageHeight.toInt() * 2,
       );
       final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) continue;
@@ -138,10 +175,7 @@ abstract final class ScorePdfPrinter {
 
       pdf.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat(
-            config.pageWidth * PdfPageFormat.point,
-            config.pageHeight * PdfPageFormat.point,
-          ),
+          pageFormat: PdfPageFormat.a4,
           margin: pw.EdgeInsets.zero,
           build: (context) {
             return pw.FullPage(

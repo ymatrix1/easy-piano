@@ -1282,6 +1282,19 @@ class _PracticeStageState extends State<PracticeStage>
               tooltip: 'Study / Static Score View',
               onPressed: () {
                 _pause();
+                String songTitle = '';
+                String composer = '';
+                try {
+                  final decoded = jsonDecode(widget.songJson);
+                  if (decoded is Map<String, dynamic>) {
+                    songTitle = decoded['title'] as String? ?? '';
+                    composer = decoded['composer'] as String? ?? '';
+                  }
+                } catch (_) {}
+                if (songTitle.isEmpty) {
+                  songTitle = widget.stage.score ?? 'Score';
+                }
+
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ScorePageView(
@@ -1290,7 +1303,8 @@ class _PracticeStageState extends State<PracticeStage>
                       beatsPerBar: _beatsPerBar,
                       keyFifths: _keyFifths,
                       staves: widget.staves,
-                      title: widget.stage.type,
+                      title: songTitle,
+                      composer: composer,
                     ),
                   ),
                 );

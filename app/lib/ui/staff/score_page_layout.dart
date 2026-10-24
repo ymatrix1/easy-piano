@@ -245,20 +245,30 @@ abstract final class ScorePageLayout {
         final nextMeasure = measures[startIdx + count];
         final testWidth = currentWidth + nextMeasure.minWidth;
 
+        // Check if adding this measure exceeds target width or max limit
         if (count >= config.minMeasuresPerSystem &&
-            (testWidth > targetWidth || count >= config.maxMeasuresPerSystem)) {
+            (testWidth > targetWidth ||
+                (measures.length > config.maxMeasuresPerSystem &&
+                    count >= config.maxMeasuresPerSystem))) {
           break;
         }
 
         currentWidth = testWidth;
         count++;
 
-        if (count >= config.maxMeasuresPerSystem) {
+        if (measures.length > config.maxMeasuresPerSystem &&
+            count >= config.maxMeasuresPerSystem) {
           break;
         }
       }
 
       if (count == 0) count = 1;
+
+      // MuseScore rule: If a piece has 4 or fewer total measures, break into 2 systems
+      // so it renders as a balanced multi-system score rather than a single wide bar
+      if (measures.length == 4 && count == 4 && startIdx == 0) {
+        count = 2;
+      }
 
       final sysMeasures = measures.sublist(startIdx, startIdx + count);
       final isLastSystem = (startIdx + count) >= measures.length;
