@@ -91,3 +91,31 @@ impl SampleBank {
         bank
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_bytes_are_rejected() {
+        assert!(decode_mp3(Vec::new()).is_err());
+    }
+
+    #[test]
+    fn garbage_bytes_are_rejected() {
+        assert!(decode_mp3(b"definitely not an mp3 file".to_vec()).is_err());
+    }
+
+    #[test]
+    fn folder_without_assets_loads_an_empty_bank() {
+        let dir =
+            std::env::temp_dir().join(format!("easy-piano-audio-empty-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let bank = SampleBank::load_app_assets(&dir);
+        assert!(bank.drums.is_empty());
+        assert!(bank.soft_hat.is_none());
+        assert!(bank.click.is_none());
+        assert!(bank.click_accent.is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+}
