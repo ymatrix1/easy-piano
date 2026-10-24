@@ -14,6 +14,7 @@ import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
 import '../ui/staff/staff_spike_page.dart';
+import '../ui/window/window_title_bar.dart';
 import 'learn_tab.dart';
 import 'other_tabs.dart';
 
@@ -153,6 +154,12 @@ class _HomePageState extends State<HomePage> {
                       top: 0,
                       child: _TopBar(stars: progress.totalStars),
                     ),
+                    if (usesCustomTitleBar)
+                      const Positioned(
+                        top: 0,
+                        right: 0,
+                        child: WindowControls(),
+                      ),
                   ],
                 ),
               ),
@@ -216,6 +223,10 @@ class Progress {
   );
 }
 
+/// On Windows the caption buttons take the top-right corner; below this width
+/// the star counter would sit under them, so it is hidden.
+const _starHideWidth = 1200.0;
+
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.stars});
 
@@ -230,7 +241,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Edge-to-edge glass bar, mirroring the bottom nav: the content scrolls
     // under it, blurred; same edge colour and shadow, content capped at 520.
-    return DecoratedBox(
+    final bar = DecoratedBox(
       decoration: const BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -278,9 +289,27 @@ class _TopBar extends StatelessWidget {
                         semanticLabel: AppLocalizations.of(context).logoLabel,
                       ),
                       const SizedBox(width: 10),
-                      GameText(AppLocalizations.of(context).appTitle, size: 18),
-                      const Spacer(),
-                      StarCounter(value: stars),
+                      // The title takes the free space and shrinks on narrow
+                      // windows instead of overflowing; the star counter stays
+                      // at the right edge of the column.
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: GameText(
+                              AppLocalizations.of(context).appTitle,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Narrow Windows window: the caption buttons take the
+                      // top-right corner, so the star counter is hidden.
+                      if (!(usesCustomTitleBar &&
+                          MediaQuery.sizeOf(context).width < _starHideWidth))
+                        StarCounter(value: stars),
                     ],
                   ),
                 ),
@@ -290,6 +319,8 @@ class _TopBar extends StatelessWidget {
         ),
       ),
     );
+    // The header doubles as the window's drag handle on Windows.
+    return usesCustomTitleBar ? WindowDragArea(child: bar) : bar;
   }
 }
 
