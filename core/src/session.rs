@@ -198,6 +198,7 @@ pub struct Target {
     pub two_stems: Vec<bool>,
     pub left_hands: Vec<bool>,
     pub note_beats: Vec<f64>,
+    pub ties: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -345,6 +346,7 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
         let mut two_stems = Vec::new();
         let mut left_hands = Vec::new();
         let mut note_beats = Vec::new();
+        let mut ties = Vec::new();
 
         for &p in &pitches {
             let p_notes: Vec<&&TimedNote> = group.iter().filter(|n| n.pitch == p).collect();
@@ -352,6 +354,7 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
             fingers.push(finger);
             left_hands.push(p_notes[0].left_hand);
             note_beats.push(p_notes[0].beats);
+            ties.push(p_notes.iter().any(|n| n.tie));
 
             let is_unison =
                 p_notes.iter().any(|n| n.voice == 1) && p_notes.iter().any(|n| n.voice == 2);
@@ -394,6 +397,7 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
             two_stems,
             left_hands,
             note_beats,
+            ties,
         });
 
         i = j;
@@ -1559,5 +1563,33 @@ mod tests {
         // Target 0 has unison C4: graded once, two_stems is true
         assert_eq!(ts[0].pitches, BTreeSet::from([60]));
         assert_eq!(ts[0].two_stems, vec![true]);
+    }
+
+    #[test]
+    fn ties_are_preserved_in_targets() {
+        let s = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"C4:2 D4:2 {tie}"},{"RH":"D4:2 E4:2"}],
+            "critical":[[0,2]]}"#,
+        )
+        .unwrap();
+
+        let session = Session::new(
+            &s,
+            Settings {
+                mode: Mode::PlayAlong,
+                hand: HandFilter::Right,
+                ..Default::default()
+            },
+        );
+
+        let ts = session.targets();
+        assert_eq!(ts.len(), 4);
+        assert_eq!(ts[0].ties, vec![false]);
+        assert_eq!(ts[1].ties, vec![true]);
+        assert_eq!(ts[2].ties, vec![false]);
+        assert_eq!(ts[3].ties, vec![false]);
     }
 }

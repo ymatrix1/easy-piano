@@ -370,6 +370,7 @@ class _PracticeStageState extends State<PracticeStage>
         final two = k < t.twoStems.length && t.twoStems[k];
         final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
         final dur = k < t.noteBeats.length ? t.noteBeats[k] : t.beats;
+        final hasTie = k < t.ties.length && t.ties[k];
         pending.add((
           beat: t.beat,
           note: StaffNote(
@@ -380,6 +381,7 @@ class _PracticeStageState extends State<PracticeStage>
             stemDown: down ? true : null,
             twoStems: two,
             finger: f,
+            tie: hasTie,
           ),
           targetIdx: i,
         ));

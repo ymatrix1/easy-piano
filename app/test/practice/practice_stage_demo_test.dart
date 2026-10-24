@@ -60,6 +60,7 @@ class _FakeSession implements PracticeSession {
         twoStems: const [false],
         leftHands: const [false],
         noteBeats: Float64List.fromList([1.0]),
+        ties: [i == 0],
         state: 0,
       ),
   ];
@@ -249,4 +250,22 @@ void main() {
     await tester.pump();
     expect(toggles, 1);
   });
+
+  testWidgets(
+    'PracticeStage creates StaffNotes with tie flag from TargetView',
+    (tester) async {
+      await pumpStage(tester);
+      await tester.tap(find.text('Skip'));
+      await tester.pump();
+
+      final customPaint = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .firstWhere((cp) => cp.painter is StaffPainter);
+      final painter = customPaint.painter as StaffPainter;
+      final note60 = painter.notes.firstWhere((n) => n.pitch == 60);
+      final note62 = painter.notes.firstWhere((n) => n.pitch == 62);
+      expect(note60.tie, isTrue);
+      expect(note62.tie, isFalse);
+    },
+  );
 }
