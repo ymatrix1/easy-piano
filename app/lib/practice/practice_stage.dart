@@ -1423,6 +1423,7 @@ class _PracticeStageState extends State<PracticeStage>
                           keyFifths: _keyFifths,
                           dynamics: _songMarks.dynamics,
                           hairpins: _songMarks.hairpins,
+                          pedals: _songMarks.pedals,
                           // Streamed feeds do not know their end yet.
                           endBeat:
                               widget.feed == null && _initialTargets.isNotEmpty

@@ -8,6 +8,7 @@ import 'dynamics_layout.dart';
 import 'engraving_decorations.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
+import 'pedal_layout.dart';
 import 'segment_layout.dart';
 import 'smufl.dart';
 import 'staff_note.dart';
@@ -112,6 +113,7 @@ class StaffPainter extends CustomPainter {
     this.beatPulse,
     this.dynamics = const [],
     this.hairpins = const [],
+    this.pedals = const [],
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -206,6 +208,9 @@ class StaffPainter extends CustomPainter {
 
   /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
   final List<StaffHairpin> hairpins;
+
+  /// Damper pedal spans, drawn below the bottom staff (`Ped.`, `*`, line).
+  final List<StaffPedal> pedals;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -1595,7 +1600,7 @@ class StaffPainter extends CustomPainter {
 
     // Dynamics and hairpins (MuseScore dynamicslayout.cpp, tlayout.cpp
     // layoutHairpinSegment, systemlayout.cpp centerItemGroup, autoplace).
-    if (hairpins.isNotEmpty || dynamics.isNotEmpty) {
+    if (hairpins.isNotEmpty || dynamics.isNotEmpty || pedals.isNotEmpty) {
       final grand = staves == Staves.grand;
       final gapMidY = (trebleBottomY + bassTopY) / 2;
 
@@ -1819,6 +1824,58 @@ class StaffPainter extends CustomPainter {
             staff,
           );
         }
+      }
+
+      // Damper pedal (MuseScore dom/pedal.cpp linePos, tlayout.cpp
+      // layoutPedalSegment). Below the bottom staff, clear of noteheads.
+      for (final p in pedals) {
+        final downX = xAt(p.startBeat);
+        final endPointX =
+            xAt(p.endBeat) -
+            (p.released ? PedalLayout.releaseOffsetSp * space : 0.0);
+        final pedWidth = _glyph(PedalLayout.pedGlyph, glyphSize, staff).width;
+        final starWidth = _glyph(PedalLayout.starGlyph, glyphSize, staff).width;
+        final x0 = downX - PedalLayout.startOffsetSp * space;
+        final x1 =
+            endPointX +
+            (p.released ? PedalLayout.starGapSp * space + starWidth : 0.0);
+        if (x1 < 0 || x0 > size.width) continue;
+        final lineY = PedalLayout.lineY(
+          bottomStaffY: staffBottom,
+          space: space,
+          x0: x0,
+          x1: x1,
+          obstacles: noteBoxes,
+        );
+        final g = PedalLayout.geometry(
+          space: space,
+          lineY: lineY,
+          downX: downX,
+          endPointX: endPointX,
+          released: p.released,
+          changeX: [
+            for (final c in p.changeBeats)
+              xAt(c) - PedalLayout.changeOffsetSp * space,
+          ],
+          pedWidth: pedWidth,
+        );
+        _drawGlyph(
+          canvas,
+          PedalLayout.pedGlyph,
+          glyphSize,
+          Offset(g.pedX, g.lineY),
+          staff,
+        );
+        if (g.released) {
+          _drawGlyph(
+            canvas,
+            PedalLayout.starGlyph,
+            glyphSize,
+            Offset(g.starX, g.lineY),
+            staff,
+          );
+        }
+        PedalLayout.draw(canvas, g, space: space, color: staff);
       }
     }
 

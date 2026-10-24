@@ -112,6 +112,64 @@ void main() {
     expect(m.hairpins.single.leftHand, isFalse);
   });
 
+  test('ped ... ped-up makes one released pedal span', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    final p = m.pedals.single;
+    expect(p.startBeat, 0);
+    expect(p.endBeat, 2);
+    expect(p.released, isTrue);
+    expect(p.changeBeats, isEmpty);
+  });
+
+  test('ped while already down is a change at that beat', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH': 'C4:4 D4:4 E4:4 F4:4',
+          'LH': '{ped} C3:4 {ped} C3:4 {ped-up} C3:4',
+        },
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, [1]);
+    expect(m.pedals.single.endBeat, 2);
+  });
+
+  test('pedal left down runs to the end of the song, unreleased', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:1'},
+        {'RH': 'C4:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.pedals.single.endBeat, 8);
+    expect(m.pedals.single.released, isFalse);
+  });
+
+  test('a pedal pressed and lifted on the same beat draws nothing', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:4 {ped} {ped-up} C3:4 C3:2'},
+      ]),
+    );
+    expect(m.pedals, isEmpty);
+  });
+
+  test('ped directive in both hands is kept once', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{ped} C4:2 {ped-up} D4:2', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, isEmpty);
+  });
+
   test('same directive in both hands stays on the treble staff', () {
     final m = SongMarksParser.parse(
       _song([

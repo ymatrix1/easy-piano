@@ -2,16 +2,22 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics and hairpins of one song, in beats.
+/// Dynamics, hairpins and damper pedal spans of one song, in beats.
 class SongMarks {
-  const SongMarks({required this.dynamics, required this.hairpins});
+  const SongMarks({
+    required this.dynamics,
+    required this.hairpins,
+    this.pedals = const [],
+  });
 
   static const empty = SongMarks(dynamics: [], hairpins: []);
 
   final List<StaffDynamic> dynamics;
   final List<StaffHairpin> hairpins;
+  final List<StaffPedal> pedals;
 }
 
 /// Reads dynamic and hairpin directives from a song JSON string.
@@ -20,10 +26,14 @@ class SongMarks {
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{ped}` presses the damper pedal. Pressed while already down, it is a
+///   pedal change.
+/// - `{ped-up}` releases the damper pedal.
 ///
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
-/// end of the song. Unknown dynamic text is ignored here; lint is responsible
-/// for rejecting it in content.
+/// end of the song. A pedal span left down runs to the end of the song without
+/// a release. Unknown dynamic text is ignored here; lint is responsible for
+/// rejecting it in content.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
 
@@ -111,6 +121,8 @@ abstract final class SongMarksParser {
       '{cresc}' => _Event(beat, _Kind.open, hairpin: HairpinKind.crescendo),
       '{dim}' => _Event(beat, _Kind.open, hairpin: HairpinKind.diminuendo),
       '{end}' => _Event(beat, _Kind.end),
+      '{ped}' => _Event(beat, _Kind.pedal),
+      '{ped-up}' => _Event(beat, _Kind.pedalUp),
       _ => null,
     };
   }
@@ -119,6 +131,7 @@ abstract final class SongMarksParser {
     events.sort((a, b) => a.beat.compareTo(b.beat));
     final dynamics = <StaffDynamic>[];
     final hairpins = <StaffHairpin>[];
+    final pedals = <StaffPedal>[];
 
     HairpinKind? openKind;
     var openAt = 0.0;
@@ -141,6 +154,27 @@ abstract final class SongMarksParser {
       openKind = null;
     }
 
+    double? pedalDownAt;
+    var pedalChanges = <double>[];
+
+    void closePedal(double beat, {required bool released}) {
+      if (pedalDownAt == null) return;
+      final end = math.min(beat, totalBeats);
+      // A pedal pressed and released on the same beat draws nothing.
+      if (end > pedalDownAt!) {
+        pedals.add(
+          StaffPedal(
+            startBeat: pedalDownAt!,
+            endBeat: end,
+            changeBeats: pedalChanges,
+            released: released,
+          ),
+        );
+      }
+      pedalDownAt = null;
+      pedalChanges = <double>[];
+    }
+
     for (final e in events) {
       switch (e.kind) {
         case _Kind.dynamic:
@@ -153,14 +187,23 @@ abstract final class SongMarksParser {
           openLeftHand = e.leftHand;
         case _Kind.end:
           closeAt(e.beat);
+        case _Kind.pedal:
+          if (pedalDownAt == null) {
+            pedalDownAt = e.beat;
+          } else if (e.beat > pedalDownAt!) {
+            pedalChanges.add(e.beat);
+          }
+        case _Kind.pedalUp:
+          closePedal(e.beat, released: true);
       }
     }
     closeAt(totalBeats);
-    return SongMarks(dynamics: dynamics, hairpins: hairpins);
+    closePedal(totalBeats, released: false);
+    return SongMarks(dynamics: dynamics, hairpins: hairpins, pedals: pedals);
   }
 }
 
-enum _Kind { dynamic, open, end }
+enum _Kind { dynamic, open, end, pedal, pedalUp }
 
 class _Event {
   const _Event(
