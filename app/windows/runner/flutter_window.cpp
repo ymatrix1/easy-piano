@@ -16,6 +16,12 @@ namespace {
 #ifndef DWMWA_COLOR_NONE
 #define DWMWA_COLOR_NONE 0xFFFFFFFE
 #endif
+#ifndef DWMWA_WINDOW_CORNER_PREFERENCE
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#endif
+#ifndef DWMWCP_ROUND
+#define DWMWCP_ROUND 2
+#endif
 
 constexpr const char kWindowChannelName[] = "easy_piano/window";
 
@@ -38,6 +44,11 @@ bool FlutterWindow::OnCreate() {
   // around the window once it became resizable, so no extension is used.
   MARGINS margins = {0, 0, 0, 0};
   DwmExtendFrameIntoClientArea(GetHandle(), &margins);
+
+  // Without a frame extension Windows 11 squares the corners; ask for round.
+  DWORD corner_preference = DWMWCP_ROUND;
+  DwmSetWindowAttribute(GetHandle(), DWMWA_WINDOW_CORNER_PREFERENCE,
+                        &corner_preference, sizeof(corner_preference));
 
   // Windows draws an accent-coloured 1px border around frameless windows.
   // Ask for no border colour so the app's own edge is the only one.

@@ -285,19 +285,22 @@ class _TopBar extends StatelessWidget {
                         semanticLabel: AppLocalizations.of(context).logoLabel,
                       ),
                       const SizedBox(width: 10),
-                      // Shrinks the title on narrow windows instead of
-                      // overflowing the row (which shows the debug stripe).
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
+                      // The title takes the free space and shrinks on narrow
+                      // windows instead of overflowing; the star counter stays
+                      // at the right edge of the column.
+                      Expanded(
+                        child: Align(
                           alignment: Alignment.centerLeft,
-                          child: GameText(
-                            AppLocalizations.of(context).appTitle,
-                            size: 18,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: GameText(
+                              AppLocalizations.of(context).appTitle,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
-                      const Spacer(),
                       // Narrow Windows window: the caption buttons take the
                       // top-right corner, so the star counter is hidden.
                       if (!(usesCustomTitleBar &&
