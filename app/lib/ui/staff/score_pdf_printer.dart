@@ -59,11 +59,16 @@ abstract final class ScorePdfPrinter {
       config: printConfig,
     );
 
+    const dpiScale = 2.0;
+    final imgWidth = (printConfig.pageWidth * dpiScale).round();
+    final imgHeight = (printConfig.pageHeight * dpiScale).round();
+
     for (final page in printPages) {
       // Rasterize each page sheet using high-DPI canvas to guarantee
       // 100% faithful SMuFL typography and engraving fidelity
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
+      canvas.scale(dpiScale, dpiScale);
 
       // White background for print
       final bgPaint = Paint()..color = Colors.white;
@@ -72,8 +77,8 @@ abstract final class ScorePdfPrinter {
         bgPaint,
       );
 
-      // Header: Title & Composer
-      if (title.isNotEmpty || composer.isNotEmpty) {
+      // Header: Title & Composer (Page 1)
+      if (page.pageIndex == 0 && (title.isNotEmpty || composer.isNotEmpty)) {
         final titlePainter = TextPainter(
           text: TextSpan(
             text: title,
@@ -85,11 +90,8 @@ abstract final class ScorePdfPrinter {
             ),
           ),
           textDirection: TextDirection.ltr,
-        )..layout(maxWidth: printConfig.printableWidth);
-        titlePainter.paint(
-          canvas,
-          Offset(printConfig.marginLeft, printConfig.marginTop * 0.4),
-        );
+        )..layout(maxWidth: printConfig.printableWidth * 0.7);
+        titlePainter.paint(canvas, Offset(printConfig.marginLeft, 24.0));
 
         if (composer.isNotEmpty) {
           final composerPainter = TextPainter(
@@ -110,7 +112,7 @@ abstract final class ScorePdfPrinter {
               printConfig.pageWidth -
                   printConfig.marginRight -
                   composerPainter.width,
-              printConfig.marginTop * 0.4 + 6,
+              30.0,
             ),
           );
         }
@@ -139,7 +141,7 @@ abstract final class ScorePdfPrinter {
       // Render each system on the page
       var currentY =
           (page.pageIndex == 0 && (title.isNotEmpty || composer.isNotEmpty))
-          ? printConfig.marginTop * 1.65
+          ? 96.0
           : printConfig.marginTop;
       for (final system in page.systems) {
         canvas.save();
@@ -165,10 +167,7 @@ abstract final class ScorePdfPrinter {
 
       final picture = recorder.endRecording();
       // Render at 2.0x scale (150-300 DPI) for crisp vector-like print output
-      final img = await picture.toImage(
-        printConfig.pageWidth.toInt() * 2,
-        printConfig.pageHeight.toInt() * 2,
-      );
+      final img = await picture.toImage(imgWidth, imgHeight);
       final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) continue;
 
