@@ -228,6 +228,7 @@ class _PracticeStageState extends State<PracticeStage>
   final _bursts = <HitBurst>[];
   final _feedback = <FeedbackMark>[]; // play-along error animations
   List<int> _targetStates = const [];
+  int _keyFifths = 0;
   late final Ticker _ticker;
   late final double _introStartSec; // notes rise in (reference intro)
   late final AnimationController _pageAnim;
@@ -257,6 +258,15 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   void initState() {
     super.initState();
+    final songRaw = widget.feed?.json ?? widget.songJson;
+    try {
+      final decoded = jsonDecode(songRaw);
+      if (decoded is Map<String, dynamic>) {
+        _keyFifths = KeySignatureLayout.parseKey(decoded['key'] as String?);
+      }
+    } catch (_) {
+      _keyFifths = 0;
+    }
     final info = inspectSong(json: widget.songJson);
     _beatsPerBar = info.beatsPerBar.toDouble();
     _bpm = info.bpm;
@@ -345,12 +355,13 @@ class _PracticeStageState extends State<PracticeStage>
         final down = k < t.stemDowns.length && t.stemDowns[k];
         final two = k < t.twoStems.length && t.twoStems[k];
         final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
+        final dur = k < t.noteBeats.length ? t.noteBeats[k] : t.beats;
         pending.add((
           beat: t.beat,
           note: StaffNote(
             p,
             t.beat,
-            t.beats,
+            dur,
             leftHand: isLh,
             stemDown: down ? true : null,
             twoStems: two,
@@ -411,6 +422,10 @@ class _PracticeStageState extends State<PracticeStage>
     final before = _scheduledBars * _beatsPerBar;
     try {
       _session.extend(songJson: widget.feed!.json);
+      final decoded = jsonDecode(widget.feed!.json);
+      if (decoded is Map<String, dynamic> && decoded['key'] != null) {
+        _keyFifths = KeySignatureLayout.parseKey(decoded['key'] as String?);
+      }
     } catch (_) {
       return; // a bad push never stops the stage; the next one may fit
     }
@@ -1373,6 +1388,7 @@ class _PracticeStageState extends State<PracticeStage>
                               : widget.staves,
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
+                          keyFifths: _keyFifths,
                           // Streamed feeds do not know their end yet.
                           endBeat:
                               widget.feed == null && _initialTargets.isNotEmpty

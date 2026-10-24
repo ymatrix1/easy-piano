@@ -7,6 +7,7 @@ import 'chord_layout.dart';
 import 'engraving_decorations.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
+import 'segment_layout.dart';
 import 'smufl.dart';
 import 'staff_note.dart';
 import 'stem_layout.dart';
@@ -16,6 +17,7 @@ export 'beam_layout.dart';
 export 'chord_layout.dart';
 export 'engraving_decorations.dart';
 export 'key_signature.dart';
+export 'segment_layout.dart';
 export 'smufl.dart';
 export 'stem_layout.dart';
 export 'tuplet_layout.dart';
@@ -279,6 +281,7 @@ class StaffPainter extends CustomPainter {
     required double space,
     List<StaffNote>? notes,
     Map<int, double>? xCache,
+    Map<int, AccidentalType>? noteAccidentals,
   }) {
     final barX = anchorX + (barBeat - nowBeat) * pixelsPerBeat;
     if (notes == null || notes.isEmpty) return barX - space * 0.8;
@@ -310,7 +313,10 @@ class StaffPainter extends CustomPainter {
       if (n.beat - barBeat > 0.05) break;
       if (n.isSpacer) continue;
       final nx = xCache?[i] ?? (anchorX + (n.beat - nowBeat) * pixelsPerBeat);
-      final left = _isSharp[n.pitch % 12] ? nx - space * 1.3 : nx;
+      final hasAcc = noteAccidentals != null
+          ? noteAccidentals.containsKey(i)
+          : _isSharp[n.pitch % 12];
+      final left = hasAcc ? nx - space * 1.3 : nx;
       if (nextLeft == null || left < nextLeft) {
         nextLeft = left;
       }
@@ -783,20 +789,23 @@ class StaffPainter extends CustomPainter {
     final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final first = _lowerBound(firstBeat);
 
-    final xCache = <int, double>{};
-    for (var i = math.max(0, first - 10); i < notes.length; i++) {
-      if (notes[i].beat > lastBeat + 2.0) break;
-      noteX(
-        index: i,
-        notes: notes,
-        anchorX: anchorX,
-        nowBeat: now,
-        pixelsPerBeat: pixelsPerBeat,
-        space: space,
-        xCache: xCache,
-        beatsPerBar: bpb,
-      );
-    }
+    final noteAccidentals = computeAccidentals(
+      notes: notes,
+      keyFifths: keyFifths,
+      beatsPerBar: bpb,
+      onBass: _onBass,
+    );
+
+    final segments = SegmentLayout.buildSegments(
+      notes: notes,
+      anchorX: anchorX,
+      nowBeat: now,
+      pixelsPerBeat: pixelsPerBeat,
+      space: space,
+      beatsPerBar: bpb?.toDouble(),
+      noteAccidentals: noteAccidentals,
+    );
+    final xCache = SegmentLayout.computeNoteXs(segments);
 
     if (bpb != null && bpb > 0) {
       final now0 = scrollBeat.value;
@@ -816,6 +825,7 @@ class StaffPainter extends CustomPainter {
           space: space,
           notes: notes,
           xCache: xCache,
+          noteAccidentals: noteAccidentals,
         );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
@@ -832,6 +842,7 @@ class StaffPainter extends CustomPainter {
         space: space,
         notes: notes,
         xCache: xCache,
+        noteAccidentals: noteAccidentals,
       );
       if (ex >= clefRight && ex <= size.width) {
         // MuseScore end barline (tdraw.cpp, BarLineType::END): thin line of
@@ -890,10 +901,10 @@ class StaffPainter extends CustomPainter {
     final beamA = waitBeamOpacity?.call() ?? 0;
     final cur0 = currentIndex?.call();
     if (beamA > 0 && cur0 != null && cur0 < notes.length) {
-      final bx =
-          anchorX +
-          (notes[cur0].beat - scrollBeat.value) * pixelsPerBeat +
-          space * 0.6;
+      final noteXPos =
+          xCache[cur0] ??
+          (anchorX + (notes[cur0].beat - scrollBeat.value) * pixelsPerBeat);
+      final bx = noteXPos + space * (notes[cur0].beats >= 4 ? 0.75 : 0.65);
       final w = space * 2.4;
       final rect = Rect.fromLTRB(bx - w / 2, 0, bx + w / 2, size.height);
       canvas.drawRect(
@@ -1005,13 +1016,6 @@ class StaffPainter extends CustomPainter {
       );
       chordHeadOffsets.addAll(offsets);
     }
-
-    final noteAccidentals = computeAccidentals(
-      notes: notes,
-      keyFifths: keyFifths,
-      beatsPerBar: beatsPerBar,
-      onBass: _onBass,
-    );
 
     // MuseScore parity: accidental staggering and dot conflict resolution for chords
     final chordAccidentalOffsets = <int, double>{};

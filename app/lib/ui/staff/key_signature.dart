@@ -8,6 +8,51 @@ enum AccidentalType { natural, sharp, flat }
 
 /// Manages key signatures and accidental spelling following MuseScore (`keysig.cpp`).
 abstract final class KeySignatureLayout {
+  /// Parses a key name (e.g. 'C', 'G', 'F', 'Am', 'C#m') into the number of fifths
+  /// (+ for sharps, - for flats, 0 for C major / A minor).
+  static int parseKey(String? key) {
+    if (key == null || key.isEmpty) return 0;
+    const majorFifths = {
+      'C': 0,
+      'G': 1,
+      'D': 2,
+      'A': 3,
+      'E': 4,
+      'B': 5,
+      'F#': 6,
+      'C#': 7,
+      'F': -1,
+      'Bb': -2,
+      'Eb': -3,
+      'Ab': -4,
+      'Db': -5,
+      'Gb': -6,
+      'Cb': -7,
+    };
+    const minorFifths = {
+      'Am': 0,
+      'Em': 1,
+      'Bm': 2,
+      'F#m': 3,
+      'C#m': 4,
+      'G#m': 5,
+      'D#m': 6,
+      'A#m': 7,
+      'Dm': -1,
+      'Gm': -2,
+      'Cm': -3,
+      'Fm': -4,
+      'Bbm': -5,
+      'Ebm': -6,
+      'Abm': -7,
+    };
+    final trimmed = key.trim();
+    if (trimmed.endsWith('m')) {
+      return minorFifths[trimmed] ?? 0;
+    }
+    return majorFifths[trimmed] ?? 0;
+  }
+
   // Sharps sequence: F, C, G, D, A, E, B
   static const sharpPitchClasses = [6, 1, 8, 3, 10, 5, 0];
   // Flats sequence: B, E, A, D, G, C, F

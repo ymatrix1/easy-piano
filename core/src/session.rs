@@ -197,6 +197,7 @@ pub struct Target {
     pub stem_downs: Vec<bool>,
     pub two_stems: Vec<bool>,
     pub left_hands: Vec<bool>,
+    pub note_beats: Vec<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -343,12 +344,14 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
         let mut stem_downs = Vec::new();
         let mut two_stems = Vec::new();
         let mut left_hands = Vec::new();
+        let mut note_beats = Vec::new();
 
         for &p in &pitches {
             let p_notes: Vec<&&TimedNote> = group.iter().filter(|n| n.pitch == p).collect();
             let finger = p_notes.iter().find_map(|n| n.finger);
             fingers.push(finger);
             left_hands.push(p_notes[0].left_hand);
+            note_beats.push(p_notes[0].beats);
 
             let is_unison =
                 p_notes.iter().any(|n| n.voice == 1) && p_notes.iter().any(|n| n.voice == 2);
@@ -390,6 +393,7 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
             stem_downs,
             two_stems,
             left_hands,
+            note_beats,
         });
 
         i = j;

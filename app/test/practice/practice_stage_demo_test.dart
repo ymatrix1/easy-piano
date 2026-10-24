@@ -59,6 +59,7 @@ class _FakeSession implements PracticeSession {
         stemDowns: const [false],
         twoStems: const [false],
         leftHands: const [false],
+        noteBeats: Float64List.fromList([1.0]),
         state: 0,
       ),
   ];
