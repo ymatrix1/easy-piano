@@ -4,18 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../audio/piano_synth.dart';
+import '../game/game_theme.dart';
 import 'music_font.dart';
 import 'score_page_layout.dart';
 import 'score_pdf_printer.dart';
 import 'staff_note.dart';
 import 'staff_painter.dart';
 
-/// Full interactive score visualizer (sightread.dev / Flowkey parity):
-/// - MuseScore-grade static engraving (Leland font, G/F clefs, key & time sigs, stems, ledger lines)
+/// Full interactive score visualizer (sightread.dev / Flowkey parity & Easy Piano visual style):
+/// - Clean edge-to-edge responsive layout matching sightread.dev (no wasted black borders)
+/// - Authentic diatonic pitch mapping with correct G/F clef coordinates and ledgers
 /// - Multi-system justified pages with measure numbering
 /// - Real-time animated playhead / cursor tracking musical beat time across systems and pages
-/// - Transport Bar (Play/Pause, Seek scrub timeline, Speed modifier 50%-100%, Metronome toggle, Hand filter)
-/// - Print / PDF support for sheet music
+/// - Transport Bar styled with Easy Piano game theme (Play/Pause, Scrub timeline, Speed modifier, Metronome)
+/// - High-resolution PDF export & Print
 class ScorePageView extends StatefulWidget {
   const ScorePageView({
     super.key,
@@ -55,7 +57,6 @@ class _ScorePageViewState extends State<ScorePageView>
   double _currentBeat = 0.0;
   double _speedModifier = 1.0;
   bool _metronomeOn = false;
-  final String _handFilter = 'both'; // 'both', 'right', 'left'
 
   double _lastTickMs = 0.0;
   double _lastMetronomeBeat = -1.0;
@@ -101,9 +102,6 @@ class _ScorePageViewState extends State<ScorePageView>
     // Play note audio as playhead reaches notes
     for (final n in widget.notes) {
       if (n.isRest || n.isSpacer) continue;
-      if (_handFilter == 'right' && n.leftHand) continue;
-      if (_handFilter == 'left' && !n.leftHand) continue;
-
       if (_currentBeat <= n.beat && nextBeat > n.beat) {
         pianoSynth.noteOn(n.pitch, velocity: 85);
       }
@@ -164,23 +162,25 @@ class _ScorePageViewState extends State<ScorePageView>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final pageWidth = math.max(
-          680.0,
-          math.min(constraints.maxWidth - 40, 920.0),
-        );
-        final pageHeight = math.max(900.0, constraints.maxHeight - 140);
+        // Fully responsive sheet width matching sightread.dev (expands to fill the window)
+        final availableW = constraints.maxWidth;
+        final availableH = constraints.maxHeight;
+
+        // On desktop/tablet, score expands edge-to-edge with standard padding
+        final sheetWidth = math.max(640.0, availableW - 48.0);
+        final sheetHeight = math.max(780.0, availableH - 128.0);
 
         final config = ScorePageConfig(
-          pageWidth: pageWidth,
-          pageHeight: pageHeight,
-          marginTop: 64.0,
-          marginBottom: 48.0,
-          marginLeft: 44.0,
-          marginRight: 44.0,
+          pageWidth: sheetWidth,
+          pageHeight: sheetHeight,
+          marginTop: 48.0,
+          marginBottom: 40.0,
+          marginLeft: 36.0,
+          marginRight: 36.0,
           grandStaffHeight: 140.0,
-          systemDistance: 70.0,
-          minMeasureWidth: 120.0,
-          systemHeaderWidth: 68.0,
+          systemDistance: 64.0,
+          minMeasureWidth: 110.0,
+          systemHeaderWidth: 70.0,
         );
 
         final pages = ScorePageLayout.layoutScore(
@@ -212,7 +212,8 @@ class _ScorePageViewState extends State<ScorePageView>
             : 1;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF141419),
+          // Warm ivory canvas background matching sightread.dev
+          backgroundColor: const Color(0xFFF7F5F0),
           appBar: _buildTopBar(pages.length, pages, config),
           body: Column(
             children: [
@@ -221,35 +222,33 @@ class _ScorePageViewState extends State<ScorePageView>
                     ? const Center(
                         child: Text(
                           'No score data available',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: GameColors.ink, fontSize: 16),
                         ),
                       )
-                    : Center(
-                        child: Transform.scale(
-                          scale: _scale,
-                          child: PageView.builder(
-                            controller: _pageController,
-                            itemCount: pages.length,
-                            onPageChanged: (i) =>
-                                setState(() => _currentPage = i),
-                            itemBuilder: (context, index) {
-                              final page = pages[index];
-                              return Center(
-                                child: SingleChildScrollView(
-                                  child: ScorePageSheet(
-                                    page: page,
-                                    config: config,
-                                    staves: widget.staves,
-                                    keyFifths: widget.keyFifths,
-                                    beatsPerBar: widget.beatsPerBar,
-                                    playheadBeat: _currentBeat,
-                                    title: index == 0 ? widget.title : '',
-                                    composer: index == 0 ? widget.composer : '',
-                                  ),
+                    : Transform.scale(
+                        scale: _scale,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: pages.length,
+                          onPageChanged: (i) =>
+                              setState(() => _currentPage = i),
+                          itemBuilder: (context, index) {
+                            final page = pages[index];
+                            return Center(
+                              child: SingleChildScrollView(
+                                child: ScorePageSheet(
+                                  page: page,
+                                  config: config,
+                                  staves: widget.staves,
+                                  keyFifths: widget.keyFifths,
+                                  beatsPerBar: widget.beatsPerBar,
+                                  playheadBeat: _currentBeat,
+                                  title: index == 0 ? widget.title : '',
+                                  composer: index == 0 ? widget.composer : '',
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       ),
               ),
@@ -267,10 +266,11 @@ class _ScorePageViewState extends State<ScorePageView>
     ScorePageConfig config,
   ) {
     return AppBar(
-      backgroundColor: const Color(0xFF0F1014),
-      elevation: 0,
+      backgroundColor: const Color(0xFFFAF8F5),
+      elevation: 0.5,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back, color: GameColors.ink),
         onPressed: widget.onClose ?? () => Navigator.of(context).pop(),
       ),
       title: Column(
@@ -278,24 +278,28 @@ class _ScorePageViewState extends State<ScorePageView>
         children: [
           Text(
             widget.title.isEmpty ? 'Score View' : widget.title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: GameColors.ink,
+            ),
           ),
           if (widget.composer.isNotEmpty)
             Text(
               widget.composer,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF6B6780)),
             ),
         ],
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.print_rounded, color: Colors.white),
-          tooltip: 'Print Score',
+          icon: const Icon(Icons.print_rounded, color: GameColors.ink),
+          tooltip: 'Print Score / PDF',
           onPressed: () => _printScore(pages, config),
         ),
         const SizedBox(width: 4),
         IconButton(
-          icon: const Icon(Icons.zoom_out, color: Colors.white),
+          icon: const Icon(Icons.zoom_out, color: GameColors.ink),
           tooltip: 'Zoom Out',
           onPressed: () {
             if (_scale > 0.6) setState(() => _scale -= 0.1);
@@ -304,11 +308,15 @@ class _ScorePageViewState extends State<ScorePageView>
         Center(
           child: Text(
             '${(_scale * 100).round()}%',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: const TextStyle(
+              color: GameColors.ink,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.zoom_in, color: Colors.white),
+          icon: const Icon(Icons.zoom_in, color: GameColors.ink),
           tooltip: 'Zoom In',
           onPressed: () {
             if (_scale < 1.6) setState(() => _scale += 0.1);
@@ -319,11 +327,22 @@ class _ScorePageViewState extends State<ScorePageView>
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                'Page ${_currentPage + 1} / $totalPages',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Page ${_currentPage + 1} / $totalPages',
+                  style: const TextStyle(
+                    color: GameColors.ink,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -347,15 +366,21 @@ class _ScorePageViewState extends State<ScorePageView>
 
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF141419),
-        border: Border(top: BorderSide(color: Color(0xFF23242B))),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: GameColors.bgMid,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.replay_rounded, color: Colors.white70),
+            icon: const Icon(Icons.replay_rounded, color: GameColors.textDim),
             tooltip: 'Restart',
             onPressed: () => _seekToBeat(0.0),
           ),
@@ -364,22 +389,23 @@ class _ScorePageViewState extends State<ScorePageView>
               _isPlaying
                   ? Icons.pause_circle_filled_rounded
                   : Icons.play_circle_filled_rounded,
-              color: const Color(0xFF8B5CF6), // Violet accent
-              size: 40,
+              color: GameColors.cyan,
+              size: 44,
             ),
             tooltip: _isPlaying ? 'Pause' : 'Play',
             onPressed: _togglePlay,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           // Timeline scrub bar
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                activeTrackColor: const Color(0xFF8B5CF6),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                activeTrackColor: GameColors.cyan,
                 inactiveTrackColor: Colors.white24,
                 thumbColor: Colors.white,
+                overlayColor: GameColors.cyan.withValues(alpha: 0.2),
               ),
               child: Slider(
                 value: progress.clamp(0.0, 1.0),
@@ -387,8 +413,8 @@ class _ScorePageViewState extends State<ScorePageView>
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // Time and Measure indicator
+          const SizedBox(width: 16),
+          // Time & Measure indicator
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -405,7 +431,7 @@ class _ScorePageViewState extends State<ScorePageView>
               Text(
                 'MEASURE $currentMeasureNum',
                 style: const TextStyle(
-                  color: Color(0xFFA78BFA),
+                  color: GameColors.gold,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -413,12 +439,12 @@ class _ScorePageViewState extends State<ScorePageView>
               ),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           // Metronome toggle
           IconButton(
             icon: Icon(
               Icons.av_timer_rounded,
-              color: _metronomeOn ? const Color(0xFF8B5CF6) : Colors.white38,
+              color: _metronomeOn ? GameColors.cyan : GameColors.textDim,
             ),
             tooltip: 'Metronome',
             onPressed: () => setState(() => _metronomeOn = !_metronomeOn),
@@ -427,7 +453,7 @@ class _ScorePageViewState extends State<ScorePageView>
           PopupMenuButton<double>(
             initialValue: _speedModifier,
             tooltip: 'Playback Speed',
-            color: const Color(0xFF1E2028),
+            color: GameColors.panel,
             onSelected: (s) => setState(() => _speedModifier = s),
             itemBuilder: (_) => const [
               PopupMenuItem(
@@ -444,15 +470,15 @@ class _ScorePageViewState extends State<ScorePageView>
               ),
             ],
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E2028),
-                borderRadius: BorderRadius.circular(6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: ShapeDecoration(
+                shape: chamfer(6),
+                color: GameColors.panelHi,
               ),
               child: Text(
                 '${(_speedModifier * 100).round()}%',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: GameColors.cyan,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -465,7 +491,7 @@ class _ScorePageViewState extends State<ScorePageView>
   }
 }
 
-/// Renders an individual sheet music page with paper background,
+/// Renders an individual sheet music page with white paper background,
 /// margins, page number, and vertically stacked systems.
 class ScorePageSheet extends StatelessWidget {
   const ScorePageSheet({
@@ -494,15 +520,15 @@ class ScorePageSheet extends StatelessWidget {
     return Container(
       width: config.pageWidth,
       height: config.pageHeight,
-      margin: const EdgeInsets.symmetric(vertical: 20),
+      margin: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF8F5), // Sightread-style warm ivory paper
-        borderRadius: BorderRadius.circular(4),
+        color: const Color(0xFFFCFCF9), // Pure sightread paper
+        borderRadius: BorderRadius.circular(2),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black45,
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            color: Colors.black12,
+            blurRadius: 14,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -511,7 +537,7 @@ class ScorePageSheet extends StatelessWidget {
           // Header: Title and Composer (Page 1)
           if (title.isNotEmpty || composer.isNotEmpty)
             Positioned(
-              top: config.marginTop * 0.4,
+              top: config.marginTop * 0.35,
               left: config.marginLeft,
               right: config.marginRight,
               child: Row(
@@ -561,7 +587,7 @@ class ScorePageSheet extends StatelessWidget {
 
           // Systems
           Positioned.fill(
-            top: title.isNotEmpty ? config.marginTop * 1.3 : config.marginTop,
+            top: title.isNotEmpty ? config.marginTop * 1.2 : config.marginTop,
             bottom: config.marginBottom,
             left: config.marginLeft,
             right: config.marginRight,
@@ -611,8 +637,11 @@ class SystemStaffPainter extends CustomPainter {
   final double playheadBeat;
 
   static const Color ink = Color(0xFF1A1A1A);
-  static const Color playheadColor = Color(0xFF8B5CF6);
+  static const Color playheadColor = Color(
+    0xFF9061F9,
+  ); // Sightread purple highlight
 
+  // Staff coordinates aligned with StaffPainter
   static const _trebleBottomStep = 30; // E4
   static const _bassTopStep = 28; // A3
 
@@ -662,6 +691,7 @@ class SystemStaffPainter extends CustomPainter {
       ..strokeWidth = 2.4;
 
     final space = config.space;
+    // Standard grand staff spacing: 4 spaces treble + 3 spaces gap + 4 spaces bass
     final trebleBottomY = space * 5.0;
     final bassTopY = trebleBottomY + 3.0 * space;
     final staffTop = trebleBottomY - 4 * space;
@@ -677,7 +707,7 @@ class SystemStaffPainter extends CustomPainter {
       canvas.drawLine(Offset(0, yB), Offset(size.width, yB), staffPaint);
     }
 
-    // 2. System initial vertical connector & brace
+    // 2. Initial system line & brace
     canvas.drawLine(Offset(0, staffTop), Offset(0, staffBottom), bracePaint);
 
     final x0 = -space * 1.8,
@@ -775,7 +805,6 @@ class SystemStaffPainter extends CustomPainter {
       final mLeft = headerW + system.measureXs[i];
       final x = mLeft + system.measureWidths[i];
 
-      // Measure number above first beat of measure
       final measureNumText = TextPainter(
         text: TextSpan(
           text: '${m.index + 1}',
@@ -793,7 +822,6 @@ class SystemStaffPainter extends CustomPainter {
         Offset(mLeft + space * 0.6, staffTop - space * 1.5),
       );
 
-      // Right barline
       if (x <= size.width + 1.0) {
         canvas.drawLine(
           Offset(x, staffTop),
@@ -805,7 +833,6 @@ class SystemStaffPainter extends CustomPainter {
 
     // 6. Real-time Playhead Cursor (Sightread-style purple highlight band)
     if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
-      // Find measure containing playhead
       for (var i = 0; i < system.measures.length; i++) {
         final m = system.measures[i];
         if (playheadBeat >= m.startBeat && playheadBeat <= m.endBeat) {
@@ -867,13 +894,22 @@ class SystemStaffPainter extends CustomPainter {
           trebleBottomY,
           bassTopY,
         );
-
-        // Ledger lines
         final step = diatonicStep(note.pitch);
+
+        // Accurate ledger lines calculation:
+        // On treble staff:
+        // - Lines are: E4(30), G4(32), B4(34), D5(36), F5(38).
+        // - Above treble: A5 is space (39), C6 is line (40). Ledgers start at step 40 for treble top.
+        // - Below treble: D4 is space (29), Middle C is line (28), A3 is line (26). Ledgers start at step 28.
+        // On bass staff:
+        // - Lines are: G2(18), B2(20), D3(22), F3(24), A3(26).
+        // - Above bass: C4 (Middle C) is line (28).
+        // - Below bass: F2 is space (17), E2 is line (16), C2 is line (14).
         if (!note.leftHand) {
-          if (step >= 38) {
-            // Above treble
-            for (var s = 38; s <= step; s += 2) {
+          if (step >= 40) {
+            // Lines above treble: 40, 42, 44...
+            final maxLine = (step.isEven) ? step : step - 1;
+            for (var s = 40; s <= maxLine; s += 2) {
               final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -882,8 +918,9 @@ class SystemStaffPainter extends CustomPainter {
               );
             }
           } else if (step <= 28) {
-            // Below treble (Middle C = 28)
-            for (var s = 28; s >= step; s -= 2) {
+            // Lines below treble: 28 (Middle C), 26, 24...
+            final minLine = (step.isEven) ? step : step + 1;
+            for (var s = 28; s >= minLine; s -= 2) {
               final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -893,9 +930,10 @@ class SystemStaffPainter extends CustomPainter {
             }
           }
         } else {
-          if (step >= 30) {
-            // Above bass
-            for (var s = 30; s <= step; s += 2) {
+          if (step >= 28) {
+            // Lines above bass: 28 (Middle C)...
+            final maxLine = (step.isEven) ? step : step - 1;
+            for (var s = 28; s <= maxLine; s += 2) {
               final ly = bassTopY + (_bassTopStep - s) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -903,9 +941,10 @@ class SystemStaffPainter extends CustomPainter {
                 staffPaint,
               );
             }
-          } else if (step <= 18) {
-            // Below bass
-            for (var s = 18; s >= step; s -= 2) {
+          } else if (step <= 16) {
+            // Lines below bass: 16, 14, 12...
+            final minLine = (step.isEven) ? step : step + 1;
+            for (var s = 16; s >= minLine; s -= 2) {
               final ly = bassTopY + (_bassTopStep - s) * (space / 2);
               canvas.drawLine(
                 Offset(nx - space * 0.8, ly),
@@ -926,7 +965,8 @@ class SystemStaffPainter extends CustomPainter {
 
         // Stem
         if (note.beats < 4.0) {
-          final stemDown = note.isStemDown(note.leftHand);
+          // Elaine Gould / MuseScore rule: RH stems point UP, LH stems point DOWN on grand staff
+          final stemDown = note.isStemDown(note.leftHand, isGrandStaff: true);
           final stemX = StemLayout.stemX(
             noteheadX: nx,
             stemDown: stemDown,
