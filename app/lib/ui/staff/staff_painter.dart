@@ -905,6 +905,7 @@ class StaffPainter extends CustomPainter {
     }
 
     final drawnUnisons = <(double, int, bool)>{};
+    final drawnLedgerLines = <(double, bool, int)>{};
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
@@ -934,9 +935,11 @@ class StaffPainter extends CustomPainter {
       final onBass = _onBass(n);
       final color = colorOf?.call(i) ?? inkColor;
       if (n.isRest) {
+        // Whole rest hangs down from line 4; half rest sits on line 3 (MuseScore restlayout.cpp)
         final restY =
             (onBass ? bassTopY + 2 * space : trebleBottomY - 2 * space) +
-            (n.voice == 2 ? (onBass ? -2 : 2) * space : 0.0);
+            (n.voice == 2 ? (onBass ? -2 : 2) * space : 0.0) -
+            (n.beats >= 4 ? space : 0.0);
         final restGlyph = n.beats >= 4
             ? Smufl.restWhole
             : n.beats >= 2
@@ -966,6 +969,16 @@ class StaffPainter extends CustomPainter {
       final noteStemDown = n.isStemDown(onBass, chordPitches: chordPitches);
 
       if (!isDuplicate) {
+        double minHeadX = noteXPos;
+        double maxHeadX = noteXPos + (n.beats >= 4 ? 1.5 : 1.3) * space;
+        if (chordGroup != null) {
+          for (final idx in chordGroup) {
+            final hx = x + (chordHeadOffsets[idx] ?? 0.0);
+            final hw = (notes[idx].beats >= 4 ? 1.5 : 1.3) * space;
+            if (hx < minHeadX) minHeadX = hx;
+            if (hx + hw > maxHeadX) maxHeadX = hx + hw;
+          }
+        }
         _drawLedgers(
           canvas,
           noteXPos,
@@ -978,6 +991,10 @@ class StaffPainter extends CustomPainter {
           bassTopY,
           ink,
           headWidth: (n.beats >= 4 ? 1.5 : 1.3) * space,
+          minX: minHeadX,
+          maxX: maxHeadX,
+          drawnLedgers: drawnLedgerLines,
+          beat: n.beat,
         );
         if (i == current && currentGlow != null) {
           canvas.drawCircle(
@@ -1445,32 +1462,45 @@ class StaffPainter extends CustomPainter {
     double bassTopY,
     Paint ink, {
     required double headWidth,
+    double? minX,
+    double? maxX,
+    Set<(double, bool, int)>? drawnLedgers,
+    double beat = 0.0,
   }) {
     // Ledger lines extend past the notehead equally on both sides.
-    final left = x - space * 0.45;
-    final w = headWidth + space * 0.9;
+    // In chords, spans from the leftmost to the rightmost notehead (MuseScore chordlayout.cpp).
+    final left = (minX ?? x) - space * 0.45;
+    final right = (maxX ?? (x + headWidth)) + space * 0.45;
+
+    void drawLine(int s, double ly) {
+      if (drawnLedgers != null && !drawnLedgers.add((beat, bass, s))) {
+        return;
+      }
+      canvas.drawLine(Offset(left, ly), Offset(right, ly), ink);
+    }
+
     if (!bass && step < _trebleBottomStep) {
       for (var s = _trebleBottomStep - 2; s >= step; s -= 2) {
         final ly = trebleBottomY + (_trebleBottomStep - s) * half;
-        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+        drawLine(s, ly);
       }
     }
     if (!bass && step > _trebleBottomStep + 8) {
       for (var s = _trebleBottomStep + 10; s <= step; s += 2) {
         final ly = trebleBottomY - (s - _trebleBottomStep) * half;
-        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+        drawLine(s, ly);
       }
     }
     if (bass && step > _bassTopStep) {
       for (var s = _bassTopStep + 2; s <= step; s += 2) {
         final ly = bassTopY - (s - _bassTopStep) * half;
-        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+        drawLine(s, ly);
       }
     }
     if (bass && step < _bassTopStep - 8) {
       for (var s = _bassTopStep - 10; s >= step; s -= 2) {
         final ly = bassTopY + (_bassTopStep - s) * half;
-        canvas.drawLine(Offset(left, ly), Offset(left + w, ly), ink);
+        drawLine(s, ly);
       }
     }
   }

@@ -308,5 +308,31 @@ void main() {
         returnsNormally,
       );
     });
+
+    test(
+      'whole rest hangs from line 4 and chords on ledger lines render cleanly',
+      () {
+        final rec = ui.PictureRecorder();
+        final notes = [
+          const StaffNote(-1, 0.0, 4.0), // whole rest
+          const StaffNote(81, 4.0, 1.0), // A5 (ledger line above)
+          const StaffNote(83, 4.0, 1.0), // B5 (second above A5 on ledger lines)
+        ];
+        final painter = StaffPainter(
+          notes: notes,
+          playheadBeat: ValueNotifier<double>(0.0),
+          pixelsPerBeat: 50.0,
+          lineRatio: 0.5,
+          staves: Staves.treble,
+          beatsPerBar: 4.0,
+          inkColor: const Color(0xFF000000),
+          playheadColor: const Color(0xFFFF0000),
+        );
+        expect(
+          () => painter.paint(Canvas(rec), const Size(400, 300)),
+          returnsNormally,
+        );
+      },
+    );
   });
 }
