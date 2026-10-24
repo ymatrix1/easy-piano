@@ -135,5 +135,8 @@
   "styleChildren": "Kinderlied",
   "stylePop": "Pop",
   "styleJazz": "Jazz",
-  "styleGame": "Spiel"
+  "styleGame": "Spiel",
+  "midiUnavailableApp": "MIDI-Eingabe ist auf diesem Gerät nicht verfügbar.",
+  "micUnavailableApp": "Mikrofoneingabe ist auf diesem Gerät nicht verfügbar.",
+  "micDeniedApp": "Der Mikrofonzugriff wurde blockiert. Erlaube ihn in den Systemeinstellungen der App und versuche es erneut."
 }

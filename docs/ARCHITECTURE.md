@@ -53,7 +53,7 @@ Local SQLite: profile, per-level best score, stars, attempts, streak, settings, 
 
 ## Deploy (web)
 
-[D15](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`.
+[D15](DECISIONS.md) (proposed). `.github/workflows/deploy-web.yml` builds on GitHub Actions (`tools/sync_content.py` → `flutter_rust_bridge_codegen build-web --release` → `flutter build web --release`) and uploads `app/build/web` to Cloudflare Pages project `easy-piano`: production on push to `main`, a preview per PR (URL in a PR comment). `app/web/_headers` sets COOP/COEP/CORP and asset caching. Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit), `CLOUDFLARE_ACCOUNT_ID`. `.github/workflows/release.yml` builds the web app, Windows x64 bundle, and Android arm64 APK from `vMAJOR.MINOR.PATCH` tags, then attaches versioned assets to GitHub Releases with generated notes. The Android APK is debug-signed for sideloading; it is not a Play Store package. Release builds do not deploy the tagged web build to Pages.
 
 ## Build (Android)
 
@@ -74,11 +74,29 @@ Native-library notes:
 
 CI (`ci.yml`, job `android`) builds the arm64 APK, checks its native libraries, uploads it as artifact `easy-piano-arm64-apk`, and boots the app to the home screen on an API 34 x86_64 emulator (`integration_test/app_smoke_test.dart`). Cargo (cargokit target dir), Gradle, Flutter/pub and the AVD snapshot are cached.
 
+## Build (Windows)
+
+Build the x64 desktop app on Windows with Flutter, Rust's `x86_64-pc-windows-msvc` target, and Visual Studio 2022's **Desktop development with C++** workload:
+
+```powershell
+rustup target add x86_64-pc-windows-msvc
+python tools/sync_content.py
+cd app
+flutter pub get
+flutter build windows --release
+```
+
+Flutter writes the runnable bundle to `app/build/windows/x64/runner/Release/`. The ordinary `.exe` requires its sibling DLLs and `data` directory. CI also uses Enigma Virtual Box 11.30 to embed that bundle into a portable single-file executable. Both downloads are unsigned; SmartScreen or antivirus software may warn about the packed EXE, so the ZIP remains available as a fallback. Users need Windows 10 or later (64-bit) and the [Microsoft Visual C++ v14 Redistributable for x64](https://aka.ms/vc14/vc_redist.x64.exe). Neither package installs an updater or Start menu shortcut.
+
+CI (`.github/workflows/windows-release.yml`) builds the bundle and portable single-file EXE on pull requests, pushes to `main`, and manual runs. It uploads both as 14-day workflow artifacts. The tagged release workflow builds and publishes the same Windows ZIP and portable EXE alongside web and Android assets. Enigma Virtual Box is downloaded from its official site over HTTPS, SHA-256 pinned, and signature checked; its project generator is pinned in `tools/windows-packaging/package-lock.json` and installed with `npm ci` from that package directory.
+
+This pipeline verifies packaging and compilation. Windows MIDI and microphone input, installer signing, and in-place updates are outside this delivery.
+
 ## Platform matrix
 
 | Target | MIDI | Mic | Notes |
 |---|---|---|---|
-| Android | `android.media.midi` (USB + BLE) | Oboe | min SDK 26 |
+| Android | `android.media.midi` (USB + BLE) via channel | `AudioRecord` via channel, Dart detector ([D36](DECISIONS.md)) | min SDK 26 |
 | iOS/iPadOS | CoreMIDI (USB + BLE) | AVAudioEngine | |
 | Web (Chrome/Edge/Firefox) | Web MIDI | AudioWorklet | COOP/COEP headers for wasm threads |
 | Web Safari | none → mic/touch | AudioWorklet | banner |

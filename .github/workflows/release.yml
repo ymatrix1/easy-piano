@@ -1,0 +1,254 @@
+# Build downloadable web, Windows, and Android assets for version tags.
+# Production hosting remains deployed from main by deploy-web.yml.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release (for example v1.2.3)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.47.7
+  FRB_VERSION: 2.13.0
+  WASM_PACK_VERSION: 0.15.0
+
+jobs:
+  prepare:
+    name: Validate release tag
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate version tag
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_REF: ${{ github.ref }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="$INPUT_TAG"
+            git rev-parse -q --verify "refs/tags/$tag" >/dev/null || git fetch --no-tags origin "refs/tags/$tag:refs/tags/$tag"
+          else
+            tag="${PUSH_REF#refs/tags/}"
+          fi
+          if [[ ! "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "Expected a version tag like v1.2.3; got: $tag" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+  build-web-android:
+    name: Build web and Android
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+          targets: wasm32-unknown-unknown,aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/rust
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install bridge tools
+        run: cargo binstall -y --force flutter_rust_bridge_codegen@${{ env.FRB_VERSION }} wasm-pack@${{ env.WASM_PACK_VERSION }}
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: Vendor onnxruntime-web for practice mode (sha256-pinned)
+        run: python tools/melody-model/web/fetch_ort.py --dest app/web/melody/vendor --wasm-only
+
+      - name: Stage the melody model (sha256 against the release manifest)
+        run: python tools/melody-model/web/stage_app_model.py --release
+
+      - name: Build Rust core for web
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter_rust_bridge_codegen build-web --release
+
+      - name: Build Flutter web
+        working-directory: app
+        run: flutter build web --release --build-name=${{ needs.prepare.outputs.version }} --build-number=${{ github.run_number }}
+
+      - name: Check COOP/COEP headers file is in the build
+        run: grep -q "Cross-Origin-Embedder-Policy" app/build/web/_headers
+
+      - name: Package web build
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          cd app/build/web
+          zip -qr "$GITHUB_WORKSPACE/easy-piano-web-${RELEASE_TAG}.zip" .
+
+      - name: Build Android APK (arm64-v8a)
+        working-directory: app
+        run: flutter build apk --release --target-platform android-arm64 --build-name=${{ needs.prepare.outputs.version }} --build-number=${{ github.run_number }}
+
+      - name: Check Android APK contains required arm64 libraries
+        run: |
+          unzip -l app/build/app/outputs/flutter-apk/app-release.apk > apk.txt
+          grep -q 'lib/arm64-v8a/libflutter.so' apk.txt
+          grep -q 'lib/arm64-v8a/libeasy_piano_bridge.so' apk.txt
+
+      - name: Package Android APK
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: cp app/build/app/outputs/flutter-apk/app-release.apk "easy-piano-android-arm64-${RELEASE_TAG}.apk"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: web-android-assets
+          path: |
+            easy-piano-web-${{ needs.prepare.outputs.tag }}.zip
+            easy-piano-android-arm64-${{ needs.prepare.outputs.tag }}.apk
+          if-no-files-found: error
+          retention-days: 1
+
+  build-windows:
+    name: Build Windows desktop
+    needs: prepare
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install pinned EVB project generator
+        working-directory: tools/windows-packaging
+        run: npm ci --ignore-scripts
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/rust
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: Build Windows desktop
+        working-directory: app
+        run: |
+          flutter config --enable-windows-desktop
+          flutter pub get
+          flutter build windows --release --build-name=${{ needs.prepare.outputs.version }} --build-number=${{ github.run_number }}
+
+      - name: Install Enigma Virtual Box 11.30
+        shell: pwsh
+        run: ./packaging/windows/install-enigma-virtual-box.ps1 -Destination "$env:RUNNER_TEMP/enigmavb"
+
+      - name: Package portable Windows executable
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          $bundle = 'app/build/windows/x64/runner/Release'
+          $output = "app/build/windows/easy-piano-windows-x64-$env:RELEASE_TAG-portable.exe"
+          node tools/windows-packaging/package-single-exe.cjs $bundle $output
+          $console = Join-Path $env:RUNNER_TEMP 'enigmavb/enigmavbconsole.exe'
+          & $console 'app/build/windows/easy-piano-portable.evb'
+          if ($LASTEXITCODE -ne 0) { throw "Enigma packaging failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path -LiteralPath $output)) { throw 'Enigma did not produce the portable executable.' }
+          if ((Get-Item -LiteralPath $output).Length -le (Get-Item -LiteralPath "$bundle/easy_piano.exe").Length) {
+            throw 'Packed executable is not larger than the Flutter launcher.'
+          }
+
+      - name: Package Windows app
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          Copy-Item packaging/windows/README.txt app/build/windows/x64/runner/Release/README.txt
+          Compress-Archive -Path app/build/windows/x64/runner/Release/* -DestinationPath "easy-piano-windows-x64-$env:RELEASE_TAG.zip"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows-assets
+          path: |
+            easy-piano-windows-x64-${{ needs.prepare.outputs.tag }}.zip
+            app/build/windows/easy-piano-windows-x64-${{ needs.prepare.outputs.tag }}-portable.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish GitHub Release
+    needs: [prepare, build-web-android, build-windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish release and attach platform assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          mapfile -t assets < <(find release-assets -type f \( -name '*.apk' -o -name '*.zip' -o -name '*-portable.exe' \) -print | sort)
+          if [ "${#assets[@]}" -ne 4 ]; then
+            echo "Expected 4 release files (.apk, .zip, .exe); found ${#assets[@]}" >&2
+            find release-assets -maxdepth 3 -print >&2
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --generate-notes --title "Easy Piano ${RELEASE_TAG}"
+          fi

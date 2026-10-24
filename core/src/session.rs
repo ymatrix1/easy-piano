@@ -296,6 +296,8 @@ pub struct Session {
     /// current run is a slow practice run, and the lowest tempo used.
     section: usize,
     section_fails: u32,
+    /// Training: wrong-key presses made during each section's current run.
+    section_wrong: Vec<usize>,
     practicing: bool,
     min_tempo: f64,
     section_event: Option<SectionEvent>,
@@ -403,6 +405,7 @@ impl Session {
         } else {
             song.critical.clone()
         };
+        let section_count = critical.len();
         let wait_beat = targets.first().map_or(0.0, |t| t.beat);
         Session {
             us_per_beat: 60e6 / (song.bpm * settings.tempo),
@@ -418,6 +421,7 @@ impl Session {
             streak: 0,
             section: 0,
             section_fails: 0,
+            section_wrong: vec![0; section_count],
             practicing: false,
             min_tempo: settings.tempo,
             section_event: None,
@@ -523,6 +527,9 @@ impl Session {
             .min_by_key(|&(_, d)| d);
         let Some((i, _)) = best else {
             self.wrong += 1;
+            if self.settings.training && self.section < self.section_wrong.len() {
+                self.section_wrong[self.section] += 1;
+            }
             self.streak = 0;
             self.feedback.push(Feedback::Wrong {
                 pitch: e.pitch,
@@ -670,8 +677,9 @@ impl Session {
             .filter(|t| matches!(t.state, ChordState::Hit { .. }))
             .count();
         let misses = ts.iter().filter(|t| t.state == ChordState::Missed).count();
+        let errors = misses + self.section_wrong[self.section];
         let judged = hits + misses == total;
-        let early_fail = misses as f64 > (1.0 - thr) * total as f64;
+        let early_fail = errors as f64 > (1.0 - thr) * total as f64;
         if !judged && !early_fail {
             return;
         }
@@ -725,6 +733,9 @@ impl Session {
         self.us_per_beat = 60e6 / (bpm * tempo);
         self.min_tempo = self.min_tempo.min(tempo);
         self.cursor = from;
+        if let Some(errors) = self.section_wrong.get_mut(self.section) {
+            *errors = 0;
+        }
         self.streak = 0;
         self.feedback.clear();
         self.now_us = i64::MIN / 2;
@@ -1422,6 +1433,45 @@ mod tests {
         );
         // Slow runs count as an assist in the score.
         assert_eq!(s.result().assists, 0.75);
+    }
+
+    #[test]
+    fn training_counts_wrong_keys_toward_replay_and_slow_practice() {
+        let mut s = training();
+        press(&mut s, 70, 0);
+        s.tick(0);
+        assert_eq!(s.take_section_event(), None);
+        press(&mut s, 70, 0);
+        s.tick(0);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Replay {
+                section: 0,
+                beat: 0.0,
+                tempo: 1.0,
+                practice: false,
+                intro: false,
+                passed: false
+            })
+        );
+
+        press(&mut s, 70, 0);
+        s.tick(0);
+        assert_eq!(s.take_section_event(), None);
+        press(&mut s, 70, 0);
+        s.tick(0);
+        assert_eq!(
+            s.take_section_event(),
+            Some(SectionEvent::Replay {
+                section: 0,
+                beat: 0.0,
+                tempo: 0.75,
+                practice: true,
+                intro: true,
+                passed: false
+            })
+        );
+        assert!(s.practicing());
     }
 
     #[test]

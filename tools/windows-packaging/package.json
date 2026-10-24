@@ -1,0 +1,9 @@
+{
+  "name": "easy-piano-windows-packaging",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build tooling for the portable Windows release package",
+  "devDependencies": {
+    "generate-evb": "1.0.3"
+  }
+}

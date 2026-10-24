@@ -1,0 +1,103 @@
+# Build Windows ZIP and single-EXE artifacts for CI. Tagged releases are published by release.yml.
+name: Windows desktop
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.7
+
+jobs:
+  build:
+    name: Build Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/rust -> ../build/easy_piano_bridge/build
+          cache-on-failure: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          pub-cache-key: flutter-pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install pinned EVB project generator
+        run: npm ci --ignore-scripts --prefix tools/windows-packaging
+
+      - name: Copy content into app assets
+        run: python tools/sync_content.py
+
+      - name: Install Flutter dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Windows release
+        working-directory: app
+        run: flutter build windows --release
+
+      - name: Install Enigma Virtual Box 11.30
+        shell: pwsh
+        run: ./packaging/windows/install-enigma-virtual-box.ps1 -Destination "$env:RUNNER_TEMP/enigmavb"
+
+      - name: Create portable single-file executable
+        shell: pwsh
+        run: |
+          $bundle = 'app/build/windows/x64/runner/Release'
+          $output = 'app/build/windows/easy-piano-windows-x64-portable.exe'
+          node tools/windows-packaging/package-single-exe.cjs $bundle $output
+          $console = Join-Path $env:RUNNER_TEMP 'enigmavb/enigmavbconsole.exe'
+          & $console 'app/build/windows/easy-piano-portable.evb'
+          if ($LASTEXITCODE -ne 0) { throw "Enigma packaging failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path -LiteralPath $output)) { throw 'Enigma did not produce the portable executable.' }
+          if ((Get-Item -LiteralPath $output).Length -le (Get-Item -LiteralPath "$bundle/easy_piano.exe").Length) {
+            throw 'Packed executable is not larger than the Flutter launcher.'
+          }
+
+      - name: Prepare portable bundle
+        shell: pwsh
+        run: |
+          $bundle = 'app/build/windows/x64/runner/Release'
+          if (-not (Test-Path "$bundle/easy_piano.exe")) {
+            throw "Windows executable was not produced: $bundle/easy_piano.exe"
+          }
+          if (-not (Test-Path "$bundle/easy_piano_bridge.dll")) {
+            throw "Rust bridge DLL was not included in the Windows bundle"
+          }
+          if (-not (Test-Path "$bundle/data/flutter_assets/AssetManifest.bin")) {
+            throw "Flutter assets were not included in the Windows bundle"
+          }
+          Copy-Item packaging/windows/README.txt "$bundle/README.txt"
+          Compress-Archive -Path "$bundle/*" -DestinationPath app/build/windows/easy-piano-windows-x64.zip -CompressionLevel Optimal
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: easy-piano-windows-x64
+          path: |
+            app/build/windows/easy-piano-windows-x64.zip
+            app/build/windows/easy-piano-windows-x64-portable.exe
+          if-no-files-found: error
+          retention-days: 14

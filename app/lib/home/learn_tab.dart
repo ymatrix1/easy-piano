@@ -117,6 +117,7 @@ class _LearnTabState extends State<LearnTab> {
                             child: _OuterTrailItem(
                               number: i + 1,
                               last: last,
+                              expanded: _open.contains(c.id),
                               state: c.planned
                                   ? _State.locked
                                   : progress.courseStars(c) ==
@@ -306,22 +307,29 @@ class _SectionHeader extends StatelessWidget {
 
 /// One stop on the outer trail: numbered marker and connector on the left,
 /// the module card on the right.
-class _OuterTrailItem extends StatelessWidget {
+class _OuterTrailItem extends StatefulWidget {
   const _OuterTrailItem({
     required this.number,
     required this.last,
+    required this.expanded,
     required this.state,
     required this.child,
   });
 
   final int number;
   final bool last;
+  final bool expanded;
   final _State state;
   final Widget child;
 
   @override
+  State<_OuterTrailItem> createState() => _OuterTrailItemState();
+}
+
+class _OuterTrailItemState extends State<_OuterTrailItem> {
+  @override
   Widget build(BuildContext context) {
-    final (Color fill, Color fg) = switch (state) {
+    final (Color fill, Color fg) = switch (widget.state) {
       _State.done => (GameColors.success, GameColors.ink),
       _State.current => (GameColors.yellow, GameColors.ink),
       _State.open => (GameColors.panelHi, Colors.white),
@@ -338,32 +346,35 @@ class _OuterTrailItem extends StatelessWidget {
         color: fill,
       ),
       alignment: Alignment.center,
-      child: state == _State.done
+      child: widget.state == _State.done
           ? Icon(Icons.check_rounded, color: fg, size: 24)
-          : state == _State.locked
+          : widget.state == _State.locked
           ? Icon(Icons.lock_rounded, color: fg, size: 18)
-          : GameText('$number', size: 18, color: fg, shadow: false),
+          : GameText('${widget.number}', size: 18, color: fg, shadow: false),
     );
-    if (state == _State.current) marker = Bob(child: marker);
+    if (widget.state == _State.current) marker = Bob(child: marker);
     // Stack, not IntrinsicHeight: the card animates its height when it
-    // expands, and the rail must follow every frame.
+    // expands.
     return Stack(
       children: [
-        if (!last)
+        if (!widget.last)
           Positioned(
             left: 18,
             top: 58,
             bottom: 4,
             width: 4,
             child: _FlowRail(
-              color: state == _State.locked ? const Color(0xFF2A2850) : fill,
-              flowing: state == _State.current || state == _State.done,
+              color: widget.state == _State.locked
+                  ? const Color(0xFF2A2850)
+                  : fill,
+              flowing:
+                  widget.state == _State.current || widget.state == _State.done,
             ),
           ),
         Positioned(left: 0, top: 14, child: marker),
         Padding(
-          padding: EdgeInsets.only(left: 54, bottom: last ? 0 : 16),
-          child: child,
+          padding: EdgeInsets.only(left: 54, bottom: widget.last ? 0 : 16),
+          child: widget.child,
         ),
       ],
     );
@@ -586,28 +597,35 @@ class _InnerTrail extends StatelessWidget {
         shape: chamfer(14, side: const BorderSide(color: GameColors.panelEdge)),
         color: GameColors.panel.withValues(alpha: 0.88),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        children: [
-          for (final (i, n) in nodes.indexed)
-            SlideIn(
-              delay: Duration(milliseconds: 40 * i),
-              offset: const Offset(-18, 0),
-              child: _SubmoduleRow(
-                index: i + 1,
-                title: repo.t(n.title),
-                kind: _kind(AppLocalizations.of(context), n.kind),
-                icon: _icon(n.kind),
-                tasks: n.levels.length,
-                stars: progress.nodeStars(n),
-                isNext: n == next,
-                first: i == 0,
-                last: i == nodes.length - 1,
-                accent: accent,
-                onTap: () => onNode(n),
-              ),
-            ),
-        ],
+      // ShapeDecoration paints the bevel but does not clip descendants. The
+      // hover wash is rectangular, so clip it to this same shape.
+      child: ClipPath(
+        clipper: ShapeBorderClipper(shape: chamfer(14)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            children: [
+              for (final (i, n) in nodes.indexed)
+                SlideIn(
+                  delay: Duration(milliseconds: 40 * i),
+                  offset: const Offset(-18, 0),
+                  child: _SubmoduleRow(
+                    index: i + 1,
+                    title: repo.t(n.title),
+                    kind: _kind(AppLocalizations.of(context), n.kind),
+                    icon: _icon(n.kind),
+                    tasks: n.levels.length,
+                    stars: progress.nodeStars(n),
+                    isNext: n == next,
+                    first: i == 0,
+                    last: i == nodes.length - 1,
+                    accent: accent,
+                    onTap: () => onNode(n),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -693,16 +711,29 @@ class _SubmoduleRow extends StatelessWidget {
             children: [
               SizedBox(
                 width: 36,
-                child: Column(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
                   children: [
-                    Expanded(child: first ? const SizedBox() : rail),
-                    AnimatedScale(
-                      scale: hover ? 1.12 : 1,
-                      duration: const Duration(milliseconds: 180),
-                      curve: Curves.easeOutBack,
-                      child: node,
+                    Positioned.fill(
+                      child: Column(
+                        children: [
+                          Expanded(child: first ? const SizedBox() : rail),
+                          const SizedBox(height: 36),
+                          Expanded(child: last ? const SizedBox() : rail),
+                        ],
+                      ),
                     ),
-                    Expanded(child: last ? const SizedBox() : rail),
+                    Positioned.fill(
+                      child: Align(
+                        child: AnimatedScale(
+                          scale: hover ? 1.12 : 1,
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutBack,
+                          child: node,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

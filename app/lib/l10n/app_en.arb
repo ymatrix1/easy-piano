@@ -253,5 +253,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "midiUnavailableApp": "MIDI input is not available on this device.",
+  "micUnavailableApp": "Microphone input is not available on this device.",
+  "micDeniedApp": "Microphone access was blocked. Allow it in the app's system settings and try again."
 }

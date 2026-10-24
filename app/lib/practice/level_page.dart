@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -85,10 +86,10 @@ class _LevelPageState extends State<LevelPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(switch (micInput.error) {
-                MicError.denied => l.micDenied,
+                MicError.denied => kIsWeb ? l.micDenied : l.micDeniedApp,
                 MicError.notFound => l.micNotFound,
                 MicError.busy => l.micBusy,
-                _ => l.micUnavailable,
+                _ => kIsWeb ? l.micUnavailable : l.micUnavailableApp,
               }),
             ),
           );
@@ -131,7 +132,9 @@ class _LevelPageState extends State<LevelPage> {
           content: Text(
             ok
                 ? AppLocalizations.of(context).midiNotFound
-                : AppLocalizations.of(context).midiUnavailable,
+                : (kIsWeb
+                      ? AppLocalizations.of(context).midiUnavailable
+                      : AppLocalizations.of(context).midiUnavailableApp),
           ),
         ),
       );

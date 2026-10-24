@@ -474,4 +474,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get styleGame => 'Jeu vidéo';
+
+  @override
+  String get midiUnavailableApp =>
+      'L\'entrée MIDI n\'est pas disponible sur cet appareil.';
+
+  @override
+  String get micUnavailableApp =>
+      'L\'entrée microphone n\'est pas disponible sur cet appareil.';
+
+  @override
+  String get micDeniedApp =>
+      'L\'accès au microphone est bloqué. Autorisez-le dans les réglages système de l\'application, puis réessayez.';
 }
