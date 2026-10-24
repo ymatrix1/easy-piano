@@ -72,7 +72,6 @@ class StaffPainter extends CustomPainter {
     this.burstColor = const Color(0xFF4FC3FF),
     this.clockSec,
     this.beatsPerBar,
-    this.endBeat,
     this.keyFifths = 0,
     this.dimmed = false,
     this.waitBeamOpacity,
@@ -148,11 +147,6 @@ class StaffPainter extends CustomPainter {
 
   /// Draws bar lines every this many beats when set.
   final double? beatsPerBar;
-
-  /// Beat where the piece ends. When set, a final barline (thin line plus
-  /// thick line, MuseScore end barline) is drawn there instead of a regular
-  /// bar line.
-  final double? endBeat;
 
   /// Key signature in fifths (positive = sharps, negative = flats, 0 = C maj).
   final int keyFifths;
@@ -721,11 +715,8 @@ class StaffPainter extends CustomPainter {
           .ceil();
       for (var b = firstBar; b <= lastBar; b++) {
         if (b <= 0) continue;
-        final barBeat = b * bpb.toDouble();
-        // The final barline replaces the regular one at the end of the piece.
-        if (endBeat != null && barBeat >= endBeat! - 1e-6) continue;
         final bx = barLineX(
-          barBeat: barBeat,
+          barBeat: b * bpb.toDouble(),
           nowBeat: now0,
           anchorX: anchorX,
           pixelsPerBeat: pixelsPerBeat,
@@ -735,28 +726,6 @@ class StaffPainter extends CustomPainter {
         );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
-      }
-    }
-
-    final end = endBeat;
-    if (end != null && end > 0) {
-      final ex = barLineX(
-        barBeat: end,
-        nowBeat: scrollBeat.value,
-        anchorX: anchorX,
-        pixelsPerBeat: pixelsPerBeat,
-        space: space,
-        notes: notes,
-        xCache: xCache,
-      );
-      if (ex >= clefRight && ex <= size.width) {
-        // MuseScore end barline: thin line, gap, then a thick line.
-        final thick = Paint()
-          ..color = staff
-          ..strokeWidth = space * 0.4;
-        canvas.drawLine(Offset(ex, staffTop), Offset(ex, staffBottom), ink);
-        final tx = ex + space * 0.45;
-        canvas.drawLine(Offset(tx, staffTop), Offset(tx, staffBottom), thick);
       }
     }
 
@@ -1484,7 +1453,6 @@ class StaffPainter extends CustomPainter {
       old.showEndCheck != showEndCheck ||
       old.dimmed != dimmed ||
       old.beatsPerBar != beatsPerBar ||
-      old.endBeat != endBeat ||
       old.staves != staves ||
       old.lineRatio != lineRatio ||
       old.introStartSec != introStartSec ||

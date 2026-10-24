@@ -140,50 +140,6 @@ void main() {
     },
   );
 
-  testWidgets('end barline: thin line then thick line at the end beat', (
-    tester,
-  ) async {
-    // Treble, height 400 => space 20; anchor at x 200, 40 px per beat, so
-    // beat 4 sits at x 360 and the nominal bar line at 360 - 0.8 * space.
-    const size = Size(400, 400);
-    const y = 190.0; // between staff lines (staff spans y 160..240)
-    Future<Uint8List> render(double? endBeat) async {
-      final rec = ui.PictureRecorder();
-      StaffPainter(
-        notes: const [],
-        playheadBeat: ValueNotifier<double>(0),
-        pixelsPerBeat: 40,
-        lineRatio: 0.5,
-        staves: Staves.treble,
-        endBeat: endBeat,
-        showPlayLine: false,
-        playheadColor: const Color(0xFFFF0000),
-        inkColor: const Color(0xFF000000),
-      ).paint(Canvas(rec), size);
-      final img = await tester.runAsync(
-        () => rec.endRecording().toImage(400, 400),
-      );
-      return (await tester.runAsync(
-        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
-      ))!.buffer.asUint8List();
-    }
-
-    int alphaAt(Uint8List px, int x) => px[(y.toInt() * 400 + x) * 4 + 3];
-
-    final withEnd = await render(4);
-    final without = await render(null);
-    const barX = 344; // 360 - 0.8 * 20
-    // Thin line (1.8 px wide, centred on 344) and thick line (8 px wide,
-    // centred on 353) with a clear gap between them.
-    expect(alphaAt(withEnd, barX), inInclusiveRange(200, 255)); // antialiased
-    expect(alphaAt(withEnd, 347), 0);
-    expect(alphaAt(withEnd, 351), 255);
-    expect(alphaAt(withEnd, 358), 0);
-    // Without endBeat nothing is drawn there.
-    expect(alphaAt(without, 351), 0);
-    expect(alphaAt(without, barX), 0);
-  });
-
   group('barLineX', () {
     const space = 14.0;
     const anchorX = 200.0;
