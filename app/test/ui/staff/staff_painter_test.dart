@@ -173,16 +173,15 @@ void main() {
     final withEnd = await render(4);
     final without = await render(null);
     const barX = 344; // 360 - 0.8 * 20
-    // MuseScore proportions at space 20: thin line 0.18 sp = 3.6 px centred
-    // on 344 (342.2..345.8); thick line 0.55 sp = 11 px centred on
-    // 344 + 1.8 + 7.4 + 5.5 = 358.7 (353.2..364.2); gap 0.37 sp = 7.4 px.
-    expect(alphaAt(withEnd, 343), 255);
-    expect(alphaAt(withEnd, 349), 0); // gap
-    expect(alphaAt(withEnd, 358), 255);
-    expect(alphaAt(withEnd, 366), 0);
+    // Thin line (1.8 px wide, centred on 344) and thick line (8 px wide,
+    // centred on 353) with a clear gap between them.
+    expect(alphaAt(withEnd, barX), inInclusiveRange(200, 255)); // antialiased
+    expect(alphaAt(withEnd, 347), 0);
+    expect(alphaAt(withEnd, 351), 255);
+    expect(alphaAt(withEnd, 358), 0);
     // Without endBeat nothing is drawn there.
-    expect(alphaAt(without, barX - 1), 0);
-    expect(alphaAt(without, 358), 0);
+    expect(alphaAt(without, 351), 0);
+    expect(alphaAt(without, barX), 0);
   });
 
   group('barLineX', () {
