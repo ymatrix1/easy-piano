@@ -48,7 +48,7 @@ class ScorePageView extends StatefulWidget {
 
 class _ScorePageViewState extends State<ScorePageView>
     with SingleTickerProviderStateMixin {
-  final _pageController = PageController();
+  final _scrollController = ScrollController();
   late final Ticker _ticker;
 
   int _currentPage = 0;
@@ -60,19 +60,52 @@ class _ScorePageViewState extends State<ScorePageView>
 
   double _lastTickMs = 0.0;
   double _lastMetronomeBeat = -1.0;
+  int _lastActiveSysKey = -1;
+
+  ScorePageConfig? _lastConfig;
+  List<ScorePage> _lastPages = const [];
 
   @override
   void initState() {
     super.initState();
     _ticker = createTicker(_onTick);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _ticker.dispose();
-    _pageController.dispose();
+    _scrollController.dispose();
     pianoSynth.stopAll();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || _lastConfig == null) return;
+    final pageH = (_lastConfig!.pageHeight + 24.0) * _scale;
+    if (pageH <= 0) return;
+    final page = (_scrollController.offset / pageH)
+        .floor()
+        .clamp(0, math.max(0, _lastPages.length - 1))
+        .toInt();
+    if (page != _currentPage) {
+      setState(() => _currentPage = page);
+    }
+  }
+
+  void _scrollToPage(int targetPage) {
+    if (!_scrollController.hasClients || _lastConfig == null) return;
+    final pageH = (_lastConfig!.pageHeight + 24.0) * _scale;
+    final targetOffset = (targetPage * pageH).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOutCubic,
+    );
+    setState(() => _currentPage = targetPage);
   }
 
   void _onTick(Duration elapsed) {
@@ -117,6 +150,44 @@ class _ScorePageViewState extends State<ScorePageView>
       return;
     }
 
+    // Auto-scroll vertically following playhead downwards across systems and pages (MuseScore style)
+    if (_lastPages.isNotEmpty &&
+        _lastConfig != null &&
+        _scrollController.hasClients) {
+      final config = _lastConfig!;
+      for (var p = 0; p < _lastPages.length; p++) {
+        final page = _lastPages[p];
+        if (nextBeat >= page.startBeat && nextBeat <= page.endBeat) {
+          for (var s = 0; s < page.systems.length; s++) {
+            final sys = page.systems[s];
+            if (nextBeat >= sys.startBeat && nextBeat <= sys.endBeat) {
+              final sysKey = p * 1000 + s;
+              if (sysKey != _lastActiveSysKey) {
+                _lastActiveSysKey = sysKey;
+                final pageH = (config.pageHeight + 24.0) * _scale;
+                final sysY =
+                    (p == 0 && widget.title.isNotEmpty
+                        ? config.marginTop * 1.2
+                        : config.marginTop) +
+                    s * (config.grandStaffHeight + config.systemDistance);
+                final targetScroll = (p * pageH + sysY * _scale - 100.0).clamp(
+                  0.0,
+                  _scrollController.position.maxScrollExtent,
+                );
+                _scrollController.animateTo(
+                  targetScroll,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+
     setState(() {
       _currentBeat = nextBeat;
     });
@@ -129,6 +200,10 @@ class _ScorePageViewState extends State<ScorePageView>
         if (_currentBeat >= widget.totalBeats) {
           _currentBeat = 0.0;
           _lastMetronomeBeat = -1.0;
+          _lastActiveSysKey = -1;
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0.0);
+          }
         }
         _lastTickMs = 0.0;
         _ticker.start();
@@ -143,7 +218,49 @@ class _ScorePageViewState extends State<ScorePageView>
     setState(() {
       _currentBeat = beat.clamp(0.0, widget.totalBeats);
       _lastMetronomeBeat = _currentBeat.floorToDouble() - 1.0;
+      _lastActiveSysKey = -1;
     });
+
+    if (_lastPages.isNotEmpty &&
+        _lastConfig != null &&
+        _scrollController.hasClients) {
+      if (_currentBeat <= 0.05) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+        return;
+      }
+      final config = _lastConfig!;
+      for (var p = 0; p < _lastPages.length; p++) {
+        final page = _lastPages[p];
+        if (_currentBeat >= page.startBeat && _currentBeat <= page.endBeat) {
+          for (var s = 0; s < page.systems.length; s++) {
+            final sys = page.systems[s];
+            if (_currentBeat >= sys.startBeat && _currentBeat <= sys.endBeat) {
+              final pageH = (config.pageHeight + 24.0) * _scale;
+              final sysY =
+                  (p == 0 && widget.title.isNotEmpty
+                      ? config.marginTop * 1.2
+                      : config.marginTop) +
+                  s * (config.grandStaffHeight + config.systemDistance);
+              final targetScroll = (p * pageH + sysY * _scale - 100.0).clamp(
+                0.0,
+                _scrollController.position.maxScrollExtent,
+              );
+              _scrollController.animateTo(
+                targetScroll,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+              );
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
   }
 
   void _printScore(List<ScorePage> pages, ScorePageConfig config) {
@@ -190,22 +307,8 @@ class _ScorePageViewState extends State<ScorePageView>
           config: config,
         );
 
-        // Auto-page turn following playhead
-        if (_isPlaying && pages.isNotEmpty) {
-          for (var p = 0; p < pages.length; p++) {
-            if (_currentBeat >= pages[p].startBeat &&
-                _currentBeat <= pages[p].endBeat) {
-              if (_currentPage != p && _pageController.hasClients) {
-                _pageController.animateToPage(
-                  p,
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeInOut,
-                );
-              }
-              break;
-            }
-          }
-        }
+        _lastConfig = config;
+        _lastPages = pages;
 
         final currentMeasureNum = widget.beatsPerBar > 0
             ? (_currentBeat / widget.beatsPerBar).floor() + 1
@@ -225,31 +328,36 @@ class _ScorePageViewState extends State<ScorePageView>
                           style: TextStyle(color: GameColors.ink, fontSize: 16),
                         ),
                       )
-                    : Transform.scale(
-                        scale: _scale,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: pages.length,
-                          onPageChanged: (i) =>
-                              setState(() => _currentPage = i),
-                          itemBuilder: (context, index) {
-                            final page = pages[index];
-                            return Center(
-                              child: SingleChildScrollView(
-                                child: ScorePageSheet(
-                                  page: page,
-                                  config: config,
-                                  staves: widget.staves,
-                                  keyFifths: widget.keyFifths,
-                                  beatsPerBar: widget.beatsPerBar,
-                                  playheadBeat: _currentBeat,
-                                  title: index == 0 ? widget.title : '',
-                                  composer: index == 0 ? widget.composer : '',
+                    : ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        itemCount: pages.length,
+                        itemBuilder: (context, index) {
+                          final page = pages[index];
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 24.0),
+                              child: SizedBox(
+                                width: config.pageWidth * _scale,
+                                height: config.pageHeight * _scale,
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: ScorePageSheet(
+                                    page: page,
+                                    config: config,
+                                    staves: widget.staves,
+                                    keyFifths: widget.keyFifths,
+                                    beatsPerBar: widget.beatsPerBar,
+                                    playheadBeat: _currentBeat,
+                                    title: index == 0 ? widget.title : '',
+                                    composer: index == 0 ? widget.composer : '',
+                                  ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
               ),
               _buildTransportBar(currentMeasureNum),
@@ -322,28 +430,53 @@ class _ScorePageViewState extends State<ScorePageView>
             if (_scale < 1.6) setState(() => _scale += 0.1);
           },
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         if (totalPages > 0)
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Page ${_currentPage + 1} / $totalPages',
-                  style: const TextStyle(
-                    color: GameColors.ink,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.keyboard_arrow_up_rounded,
+                      color: GameColors.ink,
+                    ),
+                    tooltip: 'Previous Page',
+                    onPressed: _currentPage > 0
+                        ? () => _scrollToPage(_currentPage - 1)
+                        : null,
                   ),
-                ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Page ${_currentPage + 1} / $totalPages',
+                      style: const TextStyle(
+                        color: GameColors.ink,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: GameColors.ink,
+                    ),
+                    tooltip: 'Next Page',
+                    onPressed: _currentPage < totalPages - 1
+                        ? () => _scrollToPage(_currentPage + 1)
+                        : null,
+                  ),
+                ],
               ),
             ),
           ),
