@@ -650,6 +650,9 @@ class ScorePageSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasHeader =
+        page.pageIndex == 0 && (title.isNotEmpty || composer.isNotEmpty);
+
     return Container(
       width: config.pageWidth,
       height: config.pageHeight,
@@ -668,9 +671,9 @@ class ScorePageSheet extends StatelessWidget {
       child: Stack(
         children: [
           // Header: Title and Composer (Page 1)
-          if (title.isNotEmpty || composer.isNotEmpty)
+          if (hasHeader)
             Positioned(
-              top: config.marginTop * 0.35,
+              top: 24.0,
               left: config.marginLeft,
               right: config.marginRight,
               child: Row(
@@ -720,7 +723,7 @@ class ScorePageSheet extends StatelessWidget {
 
           // Systems
           Positioned.fill(
-            top: title.isNotEmpty ? config.marginTop * 1.2 : config.marginTop,
+            top: hasHeader ? 88.0 : config.marginTop,
             bottom: config.marginBottom,
             left: config.marginLeft,
             right: config.marginRight,

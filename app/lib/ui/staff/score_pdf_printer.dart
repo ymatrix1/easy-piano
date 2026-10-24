@@ -137,8 +137,9 @@ abstract final class ScorePdfPrinter {
       );
 
       // Render each system on the page
-      var currentY = title.isNotEmpty
-          ? printConfig.marginTop * 1.3
+      var currentY =
+          (page.pageIndex == 0 && (title.isNotEmpty || composer.isNotEmpty))
+          ? printConfig.marginTop * 1.65
           : printConfig.marginTop;
       for (final system in page.systems) {
         canvas.save();
