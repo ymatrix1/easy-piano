@@ -2,6 +2,7 @@
 //! student plays. Pure and deterministic: the caller feeds note events and
 //! audio-clock ticks in microseconds; the engine never reads a clock itself.
 
+use crate::dynamics::{self, Grade, Layout, Onset};
 use crate::song::{Song, TimedNote};
 use std::collections::BTreeSet;
 
@@ -105,6 +106,8 @@ pub fn effective_threshold(pass_ratio: f64, failed_attempts: u32) -> f64 {
 pub struct NoteEvent {
     pub pitch: u8,
     pub on: bool,
+    /// MIDI note-on velocity (0-127). Ignored by mic and touch input.
+    pub velocity: u8,
     /// Audio-clock time in microseconds since the stage started.
     pub t_us: i64,
 }
@@ -240,6 +243,9 @@ pub struct StageResult {
     pub score: f64,
     /// Continuous 0–3 stars from `score` (play-along); equals `stars` in wait mode.
     pub stars_exact: f64,
+    /// Dynamics and hairpins graded from note velocity (MIDI only). Not part
+    /// of the stars yet.
+    pub dynamics: Grade,
 }
 
 /// Reference timing score: 0.8 × spread score + 0.2 × mean score, where an
@@ -303,6 +309,11 @@ pub struct Session {
     practicing: bool,
     min_tempo: f64,
     section_event: Option<SectionEvent>,
+    /// Dynamics and hairpins of the song, on the beat line.
+    layout: Layout,
+    song_beats: f64,
+    /// Matched MIDI onsets with their velocity, for dynamics grading.
+    onsets: Vec<Onset>,
 }
 
 /// Whether the student plays this (non-accompaniment) note under [hand].
@@ -433,6 +444,9 @@ impl Session {
             practicing: false,
             min_tempo: settings.tempo,
             section_event: None,
+            layout: dynamics::layout(&song.marks(), song.total_beats()),
+            song_beats: song.total_beats(),
+            onsets: Vec::new(),
         }
     }
 
@@ -459,6 +473,8 @@ impl Session {
         let added = all.len() - n;
         self.targets.extend(all.into_iter().skip(n));
         self.critical = vec![[0, song.bars.len()]];
+        self.layout = dynamics::layout(&song.marks(), song.total_beats());
+        self.song_beats = song.total_beats();
         if self.settings.mode == Mode::Wait && n > 0 && self.cursor == n && added > 0 {
             // The learner finished the old part: the next note is current from now.
             self.wait_beat = self.targets[n].beat;
@@ -495,6 +511,16 @@ impl Session {
             self.wrong += 1;
             return;
         }
+        let beat = t.beat;
+        if self.settings.input == Input::Midi {
+            self.onsets.push(Onset {
+                beat,
+                velocity: e.velocity,
+            });
+        }
+        let Some(t) = self.targets.get_mut(self.cursor) else {
+            return;
+        };
         t.played_us.insert(e.pitch, e.t_us);
         if t.played_us.len() < t.pitches.len() {
             return;
@@ -546,6 +572,12 @@ impl Session {
             return;
         };
         let target_us = self.target_us(&self.targets[i]);
+        if self.settings.input == Input::Midi {
+            self.onsets.push(Onset {
+                beat: self.targets[i].beat,
+                velocity: e.velocity,
+            });
+        }
         let t = &mut self.targets[i];
         t.played.insert(e.pitch);
         t.deltas_us.push(e.t_us - target_us);
@@ -893,6 +925,7 @@ impl Session {
             assists,
             score,
             stars_exact,
+            dynamics: dynamics::grade(&self.layout, &self.onsets, self.song_beats),
         }
     }
 
@@ -929,6 +962,7 @@ mod tests {
         s.on_note(NoteEvent {
             pitch,
             on: true,
+            velocity: 80,
             t_us,
         });
     }
@@ -1591,5 +1625,51 @@ mod tests {
         assert_eq!(ts[1].ties, vec![true]);
         assert_eq!(ts[2].ties, vec![false]);
         assert_eq!(ts[3].ties, vec![false]);
+    }
+
+    fn marked_song() -> Song {
+        Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C",
+            "bars":[{"RH":"{dyn:\"p\"} C4:4 D4:4 E4:4 F4:4"}]}"#,
+        )
+        .unwrap()
+    }
+
+    fn play_marked(input: Input, velocity: u8) -> StageResult {
+        let mut s = Session::new(
+            &marked_song(),
+            Settings {
+                mode: Mode::PlayAlong,
+                input,
+                ..Settings::default()
+            },
+        );
+        for (i, p) in [60, 62, 64, 65].into_iter().enumerate() {
+            s.on_note(NoteEvent {
+                pitch: p,
+                on: true,
+                velocity,
+                t_us: i as i64 * 1_000_000 + 10_000,
+            });
+        }
+        s.tick(s.end_us());
+        s.result()
+    }
+
+    #[test]
+    fn midi_velocity_grades_the_dynamic() {
+        let soft = play_marked(Input::Midi, 50);
+        assert_eq!(soft.dynamics.dynamics_total, 1);
+        assert_eq!(soft.dynamics.dynamics_passed, 1);
+        let loud = play_marked(Input::Midi, 110);
+        assert_eq!(loud.dynamics.dynamics_passed, 0);
+    }
+
+    #[test]
+    fn mic_input_is_not_graded_for_dynamics() {
+        let r = play_marked(Input::Mic, 110);
+        assert_eq!(r.dynamics, crate::dynamics::Grade::default());
     }
 }

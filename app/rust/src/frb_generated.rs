@@ -218,6 +218,7 @@ fn wire__crate__api__practice__PracticeSession_on_note_impl(
             >>::sse_decode(&mut deserializer);
             let api_pitch = <u8>::sse_decode(&mut deserializer);
             let api_on = <bool>::sse_decode(&mut deserializer);
+            let api_velocity = <u8>::sse_decode(&mut deserializer);
             let api_t_us = <i64>::sse_decode(&mut deserializer);
             deserializer.end();
             transform_result_sse::<_, ()>((move || {
@@ -240,6 +241,7 @@ fn wire__crate__api__practice__PracticeSession_on_note_impl(
                         &mut *api_that_guard,
                         api_pitch,
                         api_on,
+                        api_velocity,
                         api_t_us,
                     );
                 })?;
@@ -1342,6 +1344,10 @@ impl SseDecode for crate::api::practice::ResultView {
         let mut var_assists = <f64>::sse_decode(deserializer);
         let mut var_score = <f64>::sse_decode(deserializer);
         let mut var_starsExact = <f64>::sse_decode(deserializer);
+        let mut var_dynamicsPassed = <u32>::sse_decode(deserializer);
+        let mut var_dynamicsTotal = <u32>::sse_decode(deserializer);
+        let mut var_hairpinsPassed = <u32>::sse_decode(deserializer);
+        let mut var_hairpinsTotal = <u32>::sse_decode(deserializer);
         return crate::api::practice::ResultView {
             passed: var_passed,
             stars: var_stars,
@@ -1357,6 +1363,10 @@ impl SseDecode for crate::api::practice::ResultView {
             assists: var_assists,
             score: var_score,
             stars_exact: var_starsExact,
+            dynamics_passed: var_dynamicsPassed,
+            dynamics_total: var_dynamicsTotal,
+            hairpins_passed: var_hairpinsPassed,
+            hairpins_total: var_hairpinsTotal,
         };
     }
 }
@@ -1653,6 +1663,10 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::ResultView {
             self.assists.into_into_dart().into_dart(),
             self.score.into_into_dart().into_dart(),
             self.stars_exact.into_into_dart().into_dart(),
+            self.dynamics_passed.into_into_dart().into_dart(),
+            self.dynamics_total.into_into_dart().into_dart(),
+            self.hairpins_passed.into_into_dart().into_dart(),
+            self.hairpins_total.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1953,6 +1967,10 @@ impl SseEncode for crate::api::practice::ResultView {
         <f64>::sse_encode(self.assists, serializer);
         <f64>::sse_encode(self.score, serializer);
         <f64>::sse_encode(self.stars_exact, serializer);
+        <u32>::sse_encode(self.dynamics_passed, serializer);
+        <u32>::sse_encode(self.dynamics_total, serializer);
+        <u32>::sse_encode(self.hairpins_passed, serializer);
+        <u32>::sse_encode(self.hairpins_total, serializer);
     }
 }
 

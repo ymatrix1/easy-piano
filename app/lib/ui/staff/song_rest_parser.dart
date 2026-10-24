@@ -57,7 +57,7 @@ abstract final class SongRestParser {
           final voice = handKey.endsWith('2') ? 2 : 1;
 
           var t = 0.0;
-          for (final rawTok in _tokenize(text)) {
+          for (final rawTok in tokenize(text)) {
             final tok = rawTok.trim();
             if (tok.isEmpty || tok.startsWith('{')) continue;
 
@@ -75,7 +75,7 @@ abstract final class SongRestParser {
             final atIdx = tail.indexOf('@');
             if (atIdx != -1) tail = tail.substring(0, atIdx);
 
-            final tokenBeats = _parseDurBeats(tail, den);
+            final tokenBeats = parseDurBeats(tail, den);
             if (head == 'r') {
               rests.add(
                 SongRest(
@@ -96,7 +96,8 @@ abstract final class SongRestParser {
     return rests;
   }
 
-  static List<String> _tokenize(String bar) {
+  /// Splits one hand's bar string into tokens; `{...}` directives keep spaces.
+  static List<String> tokenize(String bar) {
     final out = <String>[];
     int? start;
     var depth = 0;
@@ -123,7 +124,8 @@ abstract final class SongRestParser {
     return out;
   }
 
-  static double _parseDurBeats(String s, double den) {
+  /// Length of a duration token (`4`, `2.`, `3/8`) in beats of a `den` unit.
+  static double parseDurBeats(String s, double den) {
     if (s.contains('/')) {
       final parts = s.split('/');
       final n = double.tryParse(parts[0]) ?? 1.0;

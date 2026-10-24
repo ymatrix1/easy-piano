@@ -107,6 +107,7 @@ abstract class RustLibApi extends BaseApi {
     required PracticeSession that,
     required int pitch,
     required bool on_,
+    required int velocity,
     required PlatformInt64 tUs,
   });
 
@@ -346,6 +347,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required PracticeSession that,
     required int pitch,
     required bool on_,
+    required int velocity,
     required PlatformInt64 tUs,
   }) {
     return handler.executeSync(
@@ -358,6 +360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
           sse_encode_u_8(pitch, serializer);
           sse_encode_bool(on_, serializer);
+          sse_encode_u_8(velocity, serializer);
           sse_encode_i_64(tUs, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
@@ -366,7 +369,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: null,
         ),
         constMeta: kCrateApiPracticePracticeSessionOnNoteConstMeta,
-        argValues: [that, pitch, on_, tUs],
+        argValues: [that, pitch, on_, velocity, tUs],
         apiImpl: this,
       ),
     );
@@ -375,7 +378,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiPracticePracticeSessionOnNoteConstMeta =>
       const TaskConstMeta(
         debugName: "PracticeSession_on_note",
-        argNames: ["that", "pitch", "on_", "tUs"],
+        argNames: ["that", "pitch", "on_", "velocity", "tUs"],
       );
 
   @override
@@ -1244,8 +1247,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ResultView dco_decode_result_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 14)
-      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    if (arr.length != 18)
+      throw Exception('unexpected arr length: expect 18 but see ${arr.length}');
     return ResultView(
       passed: dco_decode_bool(arr[0]),
       stars: dco_decode_u_8(arr[1]),
@@ -1261,6 +1264,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       assists: dco_decode_f_64(arr[11]),
       score: dco_decode_f_64(arr[12]),
       starsExact: dco_decode_f_64(arr[13]),
+      dynamicsPassed: dco_decode_u_32(arr[14]),
+      dynamicsTotal: dco_decode_u_32(arr[15]),
+      hairpinsPassed: dco_decode_u_32(arr[16]),
+      hairpinsTotal: dco_decode_u_32(arr[17]),
     );
   }
 
@@ -1622,6 +1629,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_assists = sse_decode_f_64(deserializer);
     var var_score = sse_decode_f_64(deserializer);
     var var_starsExact = sse_decode_f_64(deserializer);
+    var var_dynamicsPassed = sse_decode_u_32(deserializer);
+    var var_dynamicsTotal = sse_decode_u_32(deserializer);
+    var var_hairpinsPassed = sse_decode_u_32(deserializer);
+    var var_hairpinsTotal = sse_decode_u_32(deserializer);
     return ResultView(
       passed: var_passed,
       stars: var_stars,
@@ -1637,6 +1648,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       assists: var_assists,
       score: var_score,
       starsExact: var_starsExact,
+      dynamicsPassed: var_dynamicsPassed,
+      dynamicsTotal: var_dynamicsTotal,
+      hairpinsPassed: var_hairpinsPassed,
+      hairpinsTotal: var_hairpinsTotal,
     );
   }
 
@@ -2000,6 +2015,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_64(self.assists, serializer);
     sse_encode_f_64(self.score, serializer);
     sse_encode_f_64(self.starsExact, serializer);
+    sse_encode_u_32(self.dynamicsPassed, serializer);
+    sse_encode_u_32(self.dynamicsTotal, serializer);
+    sse_encode_u_32(self.hairpinsPassed, serializer);
+    sse_encode_u_32(self.hairpinsTotal, serializer);
   }
 
   @protected
@@ -2104,11 +2123,13 @@ class PracticeSessionImpl extends RustOpaque implements PracticeSession {
   void onNote({
     required int pitch,
     required bool on_,
+    required int velocity,
     required PlatformInt64 tUs,
   }) => RustLib.instance.api.crateApiPracticePracticeSessionOnNote(
     that: this,
     pitch: pitch,
     on_: on_,
+    velocity: velocity,
     tUs: tUs,
   );
 

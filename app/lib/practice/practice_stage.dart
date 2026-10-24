@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/song_marks_parser.dart';
 import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
@@ -208,6 +209,8 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int>
   _targetFirstNote; // target index → first staff note index
   int _parsedRestBars = 0;
+  // Dynamics and hairpins from the song's directives, redrawn with the staff.
+  SongMarks _songMarks = SongMarks.empty;
   late final double _beatsPerBar;
   late double _usPerBeat; // changes when training slows a section down
   late final double _bpm;
@@ -331,7 +334,7 @@ class _PracticeStageState extends State<PracticeStage>
       _begin();
     }
     _sub = widget.midi.events.listen(
-      (e) => _onNote(e.pitch, e.on, e.timestampMs),
+      (e) => _onNote(e.pitch, e.on, e.timestampMs, e.velocity),
     );
     _ticker = createTicker((_) => _tick())..start();
     _introStartSec = _nowSec;
@@ -340,6 +343,7 @@ class _PracticeStageState extends State<PracticeStage>
   /// Adds staff notes for targets past the ones already drawn, interleaved with rests.
   void _addTargets(List<TargetView> all) {
     final songJson = widget.feed?.json ?? widget.songJson;
+    _songMarks = SongMarksParser.parse(songJson);
     final totalBars = _barCount(songJson);
     final rawRests = SongRestParser.parseRests(
       songJson,
@@ -641,7 +645,9 @@ class _PracticeStageState extends State<PracticeStage>
 
   double get _nowSec => widget.midi.now() / 1000;
 
-  void _onNote(int pitch, bool on, double timestampMs) {
+  /// [velocity] is the MIDI note-on velocity, or 0 when the input has none
+  /// (touch, microphone). Only MIDI velocity is graded.
+  void _onNote(int pitch, bool on, double timestampMs, int velocity) {
     if (!widget.micMode) {
       on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
     }
@@ -668,6 +674,7 @@ class _PracticeStageState extends State<PracticeStage>
     _session.onNote(
       pitch: pitch,
       on_: on,
+      velocity: velocity,
       tUs: PlatformInt64Util.from(_usAt(timestampMs)),
     );
   }
@@ -1038,12 +1045,12 @@ class _PracticeStageState extends State<PracticeStage>
     ).pitchAt(p);
     if (pitch == null) return;
     _pointerPitch[pointer] = pitch;
-    _onNote(pitch, true, widget.midi.now());
+    _onNote(pitch, true, widget.midi.now(), 0);
   }
 
   void _touchUp(int pointer) {
     final pitch = _pointerPitch.remove(pointer);
-    if (pitch != null) _onNote(pitch, false, widget.midi.now());
+    if (pitch != null) _onNote(pitch, false, widget.midi.now(), 0);
   }
 
   @override
@@ -1414,6 +1421,8 @@ class _PracticeStageState extends State<PracticeStage>
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
                           keyFifths: _keyFifths,
+                          dynamics: _songMarks.dynamics,
+                          hairpins: _songMarks.hairpins,
                           // Streamed feeds do not know their end yet.
                           endBeat:
                               widget.feed == null && _initialTargets.isNotEmpty

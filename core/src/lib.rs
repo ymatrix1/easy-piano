@@ -4,6 +4,7 @@
 pub mod accompany;
 pub mod arrange;
 pub mod difficulty;
+pub mod dynamics;
 pub mod notation;
 pub mod pitch;
 pub mod rubric;

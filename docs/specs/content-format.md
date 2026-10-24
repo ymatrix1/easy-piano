@@ -98,6 +98,18 @@ Examples: `C4E4G4:2@135` C major chord half note, fingers 1-3-5; `r:4` quarter r
 
 Each bar's hand string must sum to the time signature (lint error otherwise). Differs from Simply Piano grammar on purpose (denominator durations, `@` fingering, `{}` directives).
 
+## Directives: dynamics and hairpins
+
+Status: rendering (piano-boat PR 1), lint and MIDI velocity grading (piano-rdr4) implemented. Grading is informational and does not change stars yet. Core: core/src/dynamics.rs. Zero length, placed in a hand string like a note: `{dyn:"mf"} C4:4 {cresc} D4:4 E4:4 {end} F4:4`.
+
+- `{dyn:"<text>"}`: dynamic at that beat. Supported text: `p pp ppp mp mf f ff fff fp sf sfz`. Other text is ignored by the app and must be rejected by lint.
+- `{cresc}` / `{dim}`: open a crescendo or diminuendo hairpin at that beat.
+- `{end}`: close the open hairpin. A hairpin also closes at the next `{dyn}`, the next hairpin, or the end of the song.
+
+The same directive in both hands at the same beat is drawn once.
+**Grading (informational).** For MIDI input, each matched note-on carries its velocity. A dynamic passes when at least half of the onsets from its beat to the next dynamic classify as it (MuseScore velocities: ppp 16, pp 33, p 49, mp 64, mf 80, f 96, ff 112, fff 126; nearest centre wins). `fp`, `sf` and `sfz` are not graded. A crescendo passes when the mean velocity of its second half exceeds the first by 8 or more (a diminuendo, the reverse). Mic and touch input have no velocity and are not graded.
+ Parsed by `app/lib/ui/staff/song_marks_parser.dart`.
+
 ## Two voices per hand (`RH2`, `LH2`)
 
 Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.

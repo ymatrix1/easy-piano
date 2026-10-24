@@ -1,6 +1,7 @@
 //! Song files (docs/specs/content-format.md): metadata, license, bars per hand.
 //! `validate` is what `content lint` runs; `timeline` feeds the session engine.
 
+use crate::dynamics::{Mark, TimedMark};
 use crate::notation::{bar_length, parse_bar, Dur, Event};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -257,6 +258,13 @@ impl Song {
                 match parse_bar(text) {
                     Err(e) => errs.push(format!("bar {} {hand}: {e}", i + 1)),
                     Ok(events) => {
+                        for e in &events {
+                            if let Event::Directive { name, arg } = e {
+                                if let Err(msg) = Mark::from_directive(name, arg.as_deref()) {
+                                    errs.push(format!("bar {} {hand}: {msg}", i + 1));
+                                }
+                            }
+                        }
                         let len = bar_length(&events);
                         if len != bar_len {
                             errs.push(format!(
@@ -360,6 +368,40 @@ impl Song {
     }
 
     /// Notes in beats from the start of the song (assumes `validate` passed).
+    /// Length of the song in beats (bars times the numerator).
+    pub fn total_beats(&self) -> f64 {
+        let (num, _) = self.time_signature().unwrap_or((4, 4));
+        (self.bars.len() as u32 * num) as f64
+    }
+
+    /// Dynamic and hairpin marks on the beat line, deduplicated across hands.
+    /// Malformed directives are skipped here; `validate` reports them.
+    pub fn marks(&self) -> Vec<TimedMark> {
+        let (num, unit) = self.time_signature().unwrap_or((4, 4));
+        let mut out: Vec<TimedMark> = Vec::new();
+        for (i, bar) in self.bars.iter().enumerate() {
+            let bar_start = (i as u32 * num) as f64;
+            for text in bar.values() {
+                let mut t = Dur::ZERO;
+                for e in parse_bar(text).unwrap_or_default() {
+                    if let Event::Directive { name, arg } = &e {
+                        if let Ok(Some(mark)) = Mark::from_directive(name, arg.as_deref()) {
+                            let beat = bar_start + t.beats(unit);
+                            let seen = out
+                                .iter()
+                                .any(|m| (m.beat - beat).abs() < 1e-9 && m.mark == mark);
+                            if !seen {
+                                out.push(TimedMark { beat, mark });
+                            }
+                        }
+                    }
+                    t = t.add(e.dur());
+                }
+            }
+        }
+        out
+    }
+
     pub fn timeline(&self) -> Vec<TimedNote> {
         let (num, unit) = self.time_signature().unwrap_or((4, 4));
         let mut out = Vec::new();
@@ -665,5 +707,33 @@ mod tests {
         assert!(t[1].tie); // D4 in bar 0 has {tie}
         assert!(!t[2].tie);
         assert!(!t[3].tie);
+    }
+
+    #[test]
+    fn unknown_dynamic_is_a_lint_error() {
+        let s = Song::from_json(&song(r#"[{"RH":"{dyn:\"x\"} C4:1","LH":"C3:1"}]"#, "")).unwrap();
+        let errs = s.validate();
+        assert!(
+            errs.iter().any(|e| e.contains("unknown dynamic")),
+            "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn dynamics_and_hairpins_sit_on_the_beat_line() {
+        let s = Song::from_json(&song(
+            r#"[{"RH":"{dyn:\"p\"} C4:4 {cresc} D4:4 E4:4 F4:4","LH":"C3:1"},
+                {"RH":"{dyn:\"f\"} C4:1","LH":"C3:1"}]"#,
+            "",
+        ))
+        .unwrap();
+        assert!(s.validate().is_empty(), "{:?}", s.validate());
+        let marks = s.marks();
+        let beats: Vec<f64> = marks.iter().map(|m| m.beat).collect();
+        assert_eq!(beats, vec![0.0, 1.0, 4.0]);
+        let l = crate::dynamics::layout(&marks, s.total_beats());
+        assert_eq!(l.dynamics.len(), 2);
+        assert_eq!(l.hairpins.len(), 1);
+        assert_eq!(l.hairpins[0].end, 4.0);
     }
 }
