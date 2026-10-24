@@ -1301,8 +1301,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TargetView dco_decode_target_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return TargetView(
       beat: dco_decode_f_64(arr[0]),
       beats: dco_decode_f_64(arr[1]),
@@ -1311,7 +1311,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       fingers: dco_decode_list_prim_u_8_strict(arr[4]),
       stemDowns: dco_decode_list_bool(arr[5]),
       twoStems: dco_decode_list_bool(arr[6]),
-      state: dco_decode_u_8(arr[7]),
+      leftHands: dco_decode_list_bool(arr[7]),
+      noteBeats: dco_decode_list_prim_f_64_strict(arr[8]),
+      state: dco_decode_u_8(arr[9]),
     );
   }
 
@@ -1687,6 +1689,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_fingers = sse_decode_list_prim_u_8_strict(deserializer);
     var var_stemDowns = sse_decode_list_bool(deserializer);
     var var_twoStems = sse_decode_list_bool(deserializer);
+    var var_leftHands = sse_decode_list_bool(deserializer);
+    var var_noteBeats = sse_decode_list_prim_f_64_strict(deserializer);
     var var_state = sse_decode_u_8(deserializer);
     return TargetView(
       beat: var_beat,
@@ -1696,6 +1700,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       fingers: var_fingers,
       stemDowns: var_stemDowns,
       twoStems: var_twoStems,
+      leftHands: var_leftHands,
+      noteBeats: var_noteBeats,
       state: var_state,
     );
   }
@@ -2029,6 +2035,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_prim_u_8_strict(self.fingers, serializer);
     sse_encode_list_bool(self.stemDowns, serializer);
     sse_encode_list_bool(self.twoStems, serializer);
+    sse_encode_list_bool(self.leftHands, serializer);
+    sse_encode_list_prim_f_64_strict(self.noteBeats, serializer);
     sse_encode_u_8(self.state, serializer);
   }
 

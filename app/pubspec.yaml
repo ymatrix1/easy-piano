@@ -73,9 +73,17 @@ flutter:
     - family: Audiowide
       fonts:
         - asset: assets/fonts/audiowide/Audiowide-Regular.ttf
+    - family: Leland
+      fonts:
+        - asset: assets/fonts/Leland.otf
+    - family: Bravura
+      fonts:
+        - asset: assets/fonts/Bravura.otf
 
   assets:
     - assets/fonts/Bravura.otf # lazy, see lib/ui/staff/music_font.dart
+    - assets/fonts/Leland.otf
+    - assets/fonts/LelandText.otf
     - assets/piano/
     - assets/band/bass/
     - assets/band/strings/

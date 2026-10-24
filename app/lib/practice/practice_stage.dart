@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
 import 'generated/song_feed.dart';
@@ -59,8 +60,10 @@ Staves stavesForUi(String ui) => switch (ui) {
 /// other (e.g. a right-hand stage of a two-hand piece hides the bass staff).
 Staves fitStaves(Staves staves, Iterable<StaffNote> notes) {
   if (staves != Staves.grand || notes.isEmpty) return staves;
-  if (!notes.any((n) => n.leftHand)) return Staves.treble;
-  if (!notes.any((n) => !n.leftHand)) return Staves.bass;
+  final playableNotes = notes.where((n) => !n.isRest && !n.isSpacer);
+  final refNotes = playableNotes.isNotEmpty ? playableNotes : notes;
+  if (!refNotes.any((n) => n.leftHand)) return Staves.treble;
+  if (!refNotes.any((n) => !n.leftHand)) return Staves.bass;
   return staves;
 }
 
@@ -204,6 +207,7 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int> _noteTarget; // staff note index → target index
   late final List<int>
   _targetFirstNote; // target index → first staff note index
+  int _parsedRestBars = 0;
   late final double _beatsPerBar;
   late double _usPerBeat; // changes when training slows a section down
   late final double _bpm;
@@ -224,6 +228,7 @@ class _PracticeStageState extends State<PracticeStage>
   final _bursts = <HitBurst>[];
   final _feedback = <FeedbackMark>[]; // play-along error animations
   List<int> _targetStates = const [];
+  int _keyFifths = 0;
   late final Ticker _ticker;
   late final double _introStartSec; // notes rise in (reference intro)
   late final AnimationController _pageAnim;
@@ -253,6 +258,15 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   void initState() {
     super.initState();
+    final songRaw = widget.feed?.json ?? widget.songJson;
+    try {
+      final decoded = jsonDecode(songRaw);
+      if (decoded is Map<String, dynamic>) {
+        _keyFifths = KeySignatureLayout.parseKey(decoded['key'] as String?);
+      }
+    } catch (_) {
+      _keyFifths = 0;
+    }
     final info = inspectSong(json: widget.songJson);
     _beatsPerBar = info.beatsPerBar.toDouble();
     _bpm = info.bpm;
@@ -276,10 +290,24 @@ class _PracticeStageState extends State<PracticeStage>
     widget.feed?.addListener(_onFeed);
     _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 350),
+          )
           ..addListener(() {
             final tw = _pageTween;
             if (tw != null) _scroll.value = tw.value;
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              final cur = _currentNoteIndex();
+              if (!_playAlong && cur != null) {
+                final targetIdx = cur < _noteTarget.length
+                    ? _noteTarget[cur]
+                    : -1;
+                if (targetIdx >= 0) _maybeTurnPage(targetIdx);
+              }
+            }
           });
     if (_playAlong) {
       _backing = _companionNotes();
@@ -309,11 +337,30 @@ class _PracticeStageState extends State<PracticeStage>
     _introStartSec = _nowSec;
   }
 
-  /// Adds staff notes for targets past the ones already drawn.
+  /// Adds staff notes for targets past the ones already drawn, interleaved with rests.
   void _addTargets(List<TargetView> all) {
+    final songJson = widget.feed?.json ?? widget.songJson;
+    final totalBars = _barCount(songJson);
+    final rawRests = SongRestParser.parseRests(
+      songJson,
+      startBar: _parsedRestBars,
+      endBar: totalBars,
+    );
+    _parsedRestBars = totalBars;
+
+    final Iterable<SongRest> rests;
+    if (widget.staves == Staves.treble || widget.stage.hand == 'RH') {
+      rests = rawRests.where((r) => !r.leftHand);
+    } else if (widget.staves == Staves.bass || widget.stage.hand == 'LH') {
+      rests = rawRests.where((r) => r.leftHand);
+    } else {
+      rests = rawRests;
+    }
+
+    final pending = <({double beat, StaffNote note, int targetIdx})>[];
+
     for (var i = _initialTargets.length; i < all.length; i++) {
       final t = all[i];
-      _targetFirstNote.add(_notes.length);
       for (var k = 0; k < t.pitches.length; k++) {
         final p = t.pitches[k];
         final f = k < t.fingers.length && t.fingers[k] > 0
@@ -321,20 +368,61 @@ class _PracticeStageState extends State<PracticeStage>
             : null;
         final down = k < t.stemDowns.length && t.stemDowns[k];
         final two = k < t.twoStems.length && t.twoStems[k];
-        _notes.add(
-          StaffNote(
+        final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
+        final dur = k < t.noteBeats.length ? t.noteBeats[k] : t.beats;
+        pending.add((
+          beat: t.beat,
+          note: StaffNote(
             p,
             t.beat,
-            t.beats,
-            leftHand: p < 60,
-            stemDown: down,
+            dur,
+            leftHand: isLh,
+            stemDown: down ? true : null,
             twoStems: two,
             finger: f,
           ),
-        );
-        _noteTarget.add(i);
+          targetIdx: i,
+        ));
       }
     }
+
+    for (final r in rests) {
+      pending.add((
+        beat: r.beat,
+        note: StaffNote(
+          r.leftHand ? 48 : 72,
+          r.beat,
+          r.beats,
+          leftHand: r.leftHand,
+          voice: r.voice,
+          isRest: true,
+        ),
+        targetIdx: -1,
+      ));
+    }
+
+    pending.sort((a, b) => a.beat.compareTo(b.beat));
+
+    var lastTarget = -1;
+    for (final item in pending) {
+      final tIdx = item.targetIdx;
+      if (tIdx >= 0) {
+        if (tIdx != lastTarget) {
+          while (_targetFirstNote.length <= tIdx) {
+            _targetFirstNote.add(_notes.length);
+          }
+          lastTarget = tIdx;
+        }
+        _noteTarget.add(tIdx);
+      } else {
+        _noteTarget.add(-1);
+      }
+      _notes.add(item.note);
+    }
+    while (_targetFirstNote.length < all.length) {
+      _targetFirstNote.add(_notes.length);
+    }
+
     final old = _initialTargets.length;
     _targetStates = [..._targetStates, for (final t in all.skip(old)) t.state];
     _initialTargets = all;
@@ -348,6 +436,10 @@ class _PracticeStageState extends State<PracticeStage>
     final before = _scheduledBars * _beatsPerBar;
     try {
       _session.extend(songJson: widget.feed!.json);
+      final decoded = jsonDecode(widget.feed!.json);
+      if (decoded is Map<String, dynamic> && decoded['key'] != null) {
+        _keyFifths = KeySignatureLayout.parseKey(decoded['key'] as String?);
+      }
     } catch (_) {
       return; // a bad push never stops the stage; the next one may fit
     }
@@ -369,8 +461,16 @@ class _PracticeStageState extends State<PracticeStage>
   /// Streaming: bars of the song whose backing is already scheduled.
   late int _scheduledBars = _barCount(widget.songJson);
 
-  static int _barCount(String json) =>
-      ((jsonDecode(json) as Map<String, dynamic>)['bars'] as List).length;
+  static int _barCount(String json) {
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map<String, dynamic>) {
+        final bars = decoded['bars'];
+        if (bars is List) return bars.length;
+      }
+    } catch (_) {}
+    return 0;
+  }
 
   bool get _streaming => widget.feed != null && !widget.feed!.ended;
 
@@ -382,20 +482,27 @@ class _PracticeStageState extends State<PracticeStage>
       BackingNote(n.pitch, n.beat, n.beats, n.partName),
   ];
 
-  double get _totalBeats => _initialTargets.isEmpty
-      ? 1
-      : _initialTargets.last.beat + _initialTargets.last.beats;
+  double get _totalBeats {
+    final songEnd = _scheduledBars * _beatsPerBar;
+    final targetEnd = _initialTargets.isEmpty
+        ? 1.0
+        : _initialTargets.last.beat + _initialTargets.last.beats;
+    return math.max(songEnd, targetEnd);
+  }
 
   bool get _hasSubdivisions =>
       _notes.any((n) => !n.isSpacer && !n.isRest && n.beats < 1.0);
 
-  /// Wait mode fits the whole exercise on one page when it can.
+  /// Wait mode fits 3-4 measures on screen maintaining readable horizontal
+  /// density without squashing long pieces across a single view.
   void _fitPage(double width) {
     _staffWidth = width;
     if (_playAlong || widget.feed != null) return;
     final usable = (0.92 - _waitAnchor) * width;
     final minPpb = _hasSubdivisions ? 95.0 : _minPpb;
-    _ppb = (usable / _totalBeats).clamp(minPpb, _maxPpb);
+    // Limit target measures to at most 4 bars per screen for spacious engraving
+    final targetBeats = math.min(_totalBeats, _beatsPerBar * 4.0);
+    _ppb = (usable / targetBeats).clamp(minPpb, _maxPpb);
   }
 
   int _usAt(double ms) => ((ms - _startMs) * 1000).round();
@@ -478,19 +585,42 @@ class _PracticeStageState extends State<PracticeStage>
     await pianoSynth.load();
     if (!mounted || !_demo) return;
     _demoStartMs = widget.midi.now() + 400;
-    final lead = 0.4;
-    for (final t in _initialTargets) {
-      for (final p in t.pitches) {
-        pianoSynth.schedule(
-          p,
-          lead + t.beat * _msPerBeat / 1000,
-          t.beats * _msPerBeat / 1000 * 0.95,
-          force: true,
-        );
-      }
-    }
+    _scheduleDemo(fromBeat: 0);
     _startMs = widget.midi.now();
   }
+
+  /// Pre-listen notes use the same voice as the learner's key presses
+  /// (velocity 90, live bus, no band glue or limiter), so it is one piano.
+  void _scheduleDemo({required double fromBeat}) {
+    final now = widget.midi.now();
+    for (final t in _initialTargets) {
+      if (t.beat + t.beats <= fromBeat) continue;
+      final startSec = (_demoStartMs + t.beat * _msPerBeat - now) / 1000;
+      final durSec = t.beats * _msPerBeat / 1000 * 0.95;
+      if (startSec < 0) {
+        final remaining = durSec + startSec;
+        if (remaining > 0.05) {
+          for (final p in t.pitches) {
+            _schedulePianoKey(p, 0.01, remaining);
+          }
+        }
+      } else {
+        for (final p in t.pitches) {
+          _schedulePianoKey(p, startSec, durSec);
+        }
+      }
+    }
+  }
+
+  void _schedulePianoKey(int pitch, double startSec, double durSec) =>
+      pianoSynth.schedule(
+        pitch,
+        startSec,
+        durSec,
+        velocity: 90,
+        force: true,
+        part: 'live',
+      );
 
   void _endDemo() {
     pianoSynth.stopAll();
@@ -546,8 +676,14 @@ class _PracticeStageState extends State<PracticeStage>
   }
 
   void _resume() => setState(() {
+    final pausedDuration = widget.midi.now() - _pausedAtMs!;
     // Shift stage time so the song continues where it was paused.
-    _startMs += widget.midi.now() - _pausedAtMs!;
+    _startMs += pausedDuration;
+    if (_demo) {
+      _demoStartMs += pausedDuration;
+      final currentBeat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
+      _scheduleDemo(fromBeat: currentBeat);
+    }
     _pausedAtMs = null;
     if (_playAlong && !_demo) _scheduleBacking(_scroll.value);
   });
@@ -559,15 +695,12 @@ class _PracticeStageState extends State<PracticeStage>
     final x = (nextBeat - _scroll.value) * _ppb;
     if (_pageAnim.isAnimating) return;
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
-      // Reference: slide so the next note returns to the left margin, but
-      // never past the point where the end of the piece is already in view.
-      final lastVisible = _streaming
-          ? nextBeat
-          : _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
-      final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
+      // Slide so the next note returns to the wait anchor, keeping notes clearly
+      // visible and preventing the active target from running off the right edge.
+      final end = math.min(nextBeat, _totalBeats);
       if (end <= _scroll.value + 0.01) return;
       _pageTween = Tween(begin: _scroll.value, end: end).animate(
-        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutSine),
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
       );
       _pageAnim.forward(from: 0);
     }
@@ -836,6 +969,9 @@ class _PracticeStageState extends State<PracticeStage>
 
   Color _targetNoteColor(int i) {
     final ti = _noteTarget[i];
+    if (ti < 0 || ti >= _targetStates.length) {
+      return StagePalette.ink;
+    }
     switch (_targetStates[ti]) {
       case 1:
         return StagePalette.done;
@@ -851,7 +987,9 @@ class _PracticeStageState extends State<PracticeStage>
   /// Only the note to play next gets a badge; the others show a plain number.
   Color? _badgeColor(int i) {
     if (_playAlong) return null;
-    return _noteTarget[i] == _activeIndex ? StagePalette.badgeCurrent : null;
+    final ti = _noteTarget[i];
+    if (ti < 0) return null;
+    return ti == _activeIndex ? StagePalette.badgeCurrent : null;
   }
 
   /// Target highlighted now: the demo position during pre-listen, else the cursor.
@@ -1273,6 +1411,12 @@ class _PracticeStageState extends State<PracticeStage>
                               : widget.staves,
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
+                          keyFifths: _keyFifths,
+                          // Streamed feeds do not know their end yet.
+                          endBeat:
+                              widget.feed == null && _initialTargets.isNotEmpty
+                              ? _totalBeats
+                              : null,
                           dimmed: _paused || _demo,
                           waitBeamOpacity: _playAlong || waitDone
                               ? null
