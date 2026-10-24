@@ -641,18 +641,13 @@ class SystemStaffPainter extends CustomPainter {
     0xFF9061F9,
   ); // Sightread purple highlight
 
-  // Diatonic step calculation matching StaffPainter:
-  // diatonicStep(pitch) = (pitch ~/ 12 - 1) * 7 + _stepOf[pitch % 12]
-  // Bottom line of treble is E4 (pitch 64) -> step 23
-  // Top line of bass is A3 (pitch 57) -> step 19
-  // Middle C is C4 (pitch 60) -> step 21
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
 
   static int diatonicStep(int pitch) =>
       (pitch ~/ 12 - 1) * 7 + _stepOf[pitch % 12];
 
-  static final _trebleBottomStep = diatonicStep(64); // E4 = 23
-  static final _bassTopStep = diatonicStep(57); // A3 = 19
+  static final _trebleBottomStep = diatonicStep(64); // E4 = 30
+  static final _bassTopStep = diatonicStep(57); // A3 = 26
 
   double _noteY(
     int pitch,
@@ -672,7 +667,7 @@ class SystemStaffPainter extends CustomPainter {
     Canvas canvas,
     String glyph,
     double size,
-    Offset offset,
+    Offset origin,
     Color color,
   ) {
     final tp = TextPainter(
@@ -682,7 +677,58 @@ class SystemStaffPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(canvas, Offset(offset.dx, offset.dy - tp.height / 2));
+    final baseline = tp.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    tp.paint(canvas, Offset(origin.dx, origin.dy - baseline));
+  }
+
+  void _drawLedgerLines({
+    required Canvas canvas,
+    required double nx,
+    required int step,
+    required bool onBass,
+    required double space,
+    required double trebleBottomY,
+    required double bassTopY,
+    required Paint staffPaint,
+  }) {
+    final half = space / 2;
+    final left = nx - space * 0.45;
+    final right = nx + space * 1.75;
+
+    void drawLine(double ly) {
+      canvas.drawLine(Offset(left, ly), Offset(right, ly), staffPaint);
+    }
+
+    if (!onBass && step < _trebleBottomStep) {
+      // Below treble staff: C4 (Middle C), A3, etc.
+      for (var s = _trebleBottomStep - 2; s >= step; s -= 2) {
+        final ly = trebleBottomY + (_trebleBottomStep - s) * half;
+        drawLine(ly);
+      }
+    }
+    if (!onBass && step > _trebleBottomStep + 8) {
+      // Above treble staff: A5, C6, etc.
+      for (var s = _trebleBottomStep + 10; s <= step; s += 2) {
+        final ly = trebleBottomY - (s - _trebleBottomStep) * half;
+        drawLine(ly);
+      }
+    }
+    if (onBass && step > _bassTopStep) {
+      // Above bass staff: C4 (Middle C), E4, etc.
+      for (var s = _bassTopStep + 2; s <= step; s += 2) {
+        final ly = bassTopY - (s - _bassTopStep) * half;
+        drawLine(ly);
+      }
+    }
+    if (onBass && step < _bassTopStep - 8) {
+      // Below bass staff: E2, C2, etc.
+      for (var s = _bassTopStep - 10; s >= step; s -= 2) {
+        final ly = bassTopY + (_bassTopStep - s) * half;
+        drawLine(ly);
+      }
+    }
   }
 
   @override
@@ -700,20 +746,26 @@ class SystemStaffPainter extends CustomPainter {
       ..strokeWidth = 2.4;
 
     final space = config.space;
-    // Standard grand staff spacing: 4 spaces treble + 3 spaces gap + 4 spaces bass
+    final headerW = config.systemHeaderWidth;
     final trebleBottomY = space * 5.0;
     final bassTopY = trebleBottomY + 3.0 * space;
     final staffTop = trebleBottomY - 4 * space;
     final staffBottom = bassTopY + 4 * space;
     final glyphSize = space * 4.0;
 
-    // 1. Staff lines (5 treble, 5 bass)
+    // 1. Staff lines (5 treble, 5 bass) spanning justified system width
+    final systemW =
+        headerW +
+        (system.measureXs.isNotEmpty
+            ? (system.measureXs.last + system.measureWidths.last)
+            : size.width);
+
     for (var i = 0; i < 5; i++) {
       final yT = trebleBottomY - i * space;
-      canvas.drawLine(Offset(0, yT), Offset(size.width, yT), staffPaint);
+      canvas.drawLine(Offset(0, yT), Offset(systemW, yT), staffPaint);
 
       final yB = bassTopY + i * space;
-      canvas.drawLine(Offset(0, yB), Offset(size.width, yB), staffPaint);
+      canvas.drawLine(Offset(0, yB), Offset(systemW, yB), staffPaint);
     }
 
     // 2. Initial system line & brace
@@ -768,47 +820,71 @@ class SystemStaffPainter extends CustomPainter {
       ink,
     );
 
-    // 4. Time signature on first system
+    // 4. Key signature & Time signature on first system
+    var headerCurX = clefX + space * 3.4;
+    if (keyFifths != 0) {
+      KeySignatureLayout.drawKeySignature(
+        canvas: canvas,
+        startX: headerCurX,
+        fifths: keyFifths,
+        onBass: false,
+        space: space,
+        trebleBottomY: trebleBottomY,
+        bassTopY: bassTopY,
+        color: ink,
+        drawGlyph: _drawGlyph,
+      );
+      KeySignatureLayout.drawKeySignature(
+        canvas: canvas,
+        startX: headerCurX,
+        fifths: keyFifths,
+        onBass: true,
+        space: space,
+        trebleBottomY: trebleBottomY,
+        bassTopY: bassTopY,
+        color: ink,
+        drawGlyph: _drawGlyph,
+      );
+      headerCurX += KeySignatureLayout.width(keyFifths, space);
+    }
+
     if (system.systemIndex == 0 && beatsPerBar > 0) {
       final numGlyph = Smufl.digitGlyph(beatsPerBar.round());
       final denGlyph = Smufl.digitGlyph(4);
-      final tsX = clefX + space * 3.4;
       final tsSize = space * 3.2;
       if (numGlyph != null && denGlyph != null) {
         _drawGlyph(
           canvas,
           numGlyph,
           tsSize,
-          Offset(tsX, trebleBottomY - space * 3),
+          Offset(headerCurX, trebleBottomY - space * 3),
           ink,
         );
         _drawGlyph(
           canvas,
           denGlyph,
           tsSize,
-          Offset(tsX, trebleBottomY - space * 1),
+          Offset(headerCurX, trebleBottomY - space * 1),
           ink,
         );
-
         _drawGlyph(
           canvas,
           numGlyph,
           tsSize,
-          Offset(tsX, bassTopY + space * 1),
+          Offset(headerCurX, bassTopY + space * 1),
           ink,
         );
         _drawGlyph(
           canvas,
           denGlyph,
           tsSize,
-          Offset(tsX, bassTopY + space * 3),
+          Offset(headerCurX, bassTopY + space * 3),
           ink,
         );
       }
     }
 
     // 5. Measure numbering and barlines
-    final headerW = config.systemHeaderWidth;
     for (var i = 0; i < system.measures.length; i++) {
       final m = system.measures[i];
       final mLeft = headerW + system.measureXs[i];
@@ -831,175 +907,281 @@ class SystemStaffPainter extends CustomPainter {
         Offset(mLeft + space * 0.6, staffTop - space * 1.5),
       );
 
-      if (x <= size.width + 1.0) {
-        canvas.drawLine(
-          Offset(x, staffTop),
-          Offset(x, staffBottom),
-          barlinePaint,
-        );
-      }
-    }
-
-    // 6. Real-time Playhead Cursor (Sightread-style purple highlight band)
-    if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
-      for (var i = 0; i < system.measures.length; i++) {
-        final m = system.measures[i];
-        if (playheadBeat >= m.startBeat && playheadBeat <= m.endBeat) {
-          final mLeft = headerW + system.measureXs[i];
-          final mW = system.measureWidths[i];
-          final span = m.endBeat - m.startBeat;
-          final rel = span > 0 ? (playheadBeat - m.startBeat) / span : 0.0;
-          final curX = mLeft + space * 1.5 + rel * (mW - space * 3.0);
-
-          final cursorRect = Rect.fromLTRB(
-            curX - space * 0.7,
-            staffTop - space * 1.0,
-            curX + space * 0.7,
-            staffBottom + space * 1.0,
+      // Right barline (last barline of the piece drawn with standard double end barline)
+      if (x <= size.width + 2.0) {
+        if (i == system.measures.length - 1 && system.isLastSystem) {
+          canvas.drawLine(
+            Offset(x - space * 0.4, staffTop),
+            Offset(x - space * 0.4, staffBottom),
+            barlinePaint,
           );
-
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(cursorRect, const Radius.circular(3)),
+          canvas.drawLine(
+            Offset(x, staffTop),
+            Offset(x, staffBottom),
             Paint()
-              ..color = playheadColor.withValues(alpha: 0.3)
-              ..style = PaintingStyle.fill,
+              ..color = ink
+              ..strokeWidth = 2.8,
           );
-          break;
+        } else {
+          canvas.drawLine(
+            Offset(x, staffTop),
+            Offset(x, staffBottom),
+            barlinePaint,
+          );
         }
       }
     }
 
-    // 7. Render notes, stems, ledger lines with Leland SMuFL noteheads
+    // Flatten all notes in system for cross-measure beaming and accidentals
+    final allSysNotes = <StaffNote>[];
+    final noteXsMap = <int, double>{};
+    final beatPoints = <({double beat, double x})>[];
+
     for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
       final m = system.measures[mIdx];
       final mLeft = headerW + system.measureXs[mIdx];
       final mW = system.measureWidths[mIdx];
-      final mSpan = m.endBeat - m.startBeat;
+      final mSpan = math.max(0.001, m.endBeat - m.startBeat);
+      final padLeft = space * 1.8;
+      final padRight = space * 1.5;
+      final usableW = math.max(10.0, mW - padLeft - padRight);
+
+      // Map unique beats in this measure
+      final mBeats = <double>{};
+      for (final n in m.notes) {
+        if (!n.isSpacer) mBeats.add(n.beat);
+      }
+      if (mBeats.isEmpty) {
+        mBeats.add(m.startBeat);
+      }
+      final sortedBeats = mBeats.toList()..sort();
+      for (final b in sortedBeats) {
+        final rel = ((b - m.startBeat) / mSpan).clamp(0.0, 1.0);
+        final x = mLeft + padLeft + rel * usableW;
+        beatPoints.add((beat: b, x: x));
+      }
 
       for (final note in m.notes) {
         if (note.isSpacer) continue;
-        final relBeat = mSpan > 0 ? (note.beat - m.startBeat) / mSpan : 0.0;
-        final nx = mLeft + space * 2.0 + relBeat * (mW - space * 4.0);
+        final relBeat = ((note.beat - m.startBeat) / mSpan).clamp(0.0, 1.0);
+        final nx = mLeft + padLeft + relBeat * usableW;
+        final globalIdx = allSysNotes.length;
+        allSysNotes.add(note);
+        noteXsMap[globalIdx] = nx;
+      }
+    }
 
-        if (note.isRest) {
-          final restY = note.leftHand
-              ? bassTopY + 2 * space
-              : trebleBottomY - 2 * space;
-          final restGlyph = note.beats >= 4
-              ? Smufl.restWhole
-              : note.beats >= 2
-              ? Smufl.restHalf
-              : note.beats >= 1
-              ? Smufl.restQuarter
-              : Smufl.rest8th;
-          _drawGlyph(canvas, restGlyph, glyphSize, Offset(nx, restY), ink);
-          continue;
+    // Boundary beat points for smooth interpolation across lines and barlines
+    if (beatPoints.isNotEmpty) {
+      if (beatPoints.first.beat > system.startBeat) {
+        beatPoints.insert(0, (
+          beat: system.startBeat,
+          x: headerW + space * 1.5,
+        ));
+      }
+      if (beatPoints.last.beat < system.endBeat) {
+        beatPoints.add((
+          beat: system.endBeat,
+          x:
+              headerW +
+              (system.measureXs.last + system.measureWidths.last) -
+              space * 1.5,
+        ));
+      }
+    }
+
+    // 6. Real-time Playhead Cursor (Sightread-style smooth gliding highlight band)
+    if (playheadBeat >= system.startBeat &&
+        playheadBeat <= system.endBeat &&
+        beatPoints.length >= 2) {
+      double curX = beatPoints.first.x;
+      for (var k = 0; k < beatPoints.length - 1; k++) {
+        final p0 = beatPoints[k];
+        final p1 = beatPoints[k + 1];
+        if (playheadBeat >= p0.beat && playheadBeat <= p1.beat) {
+          final span = p1.beat - p0.beat;
+          final t = span > 0 ? (playheadBeat - p0.beat) / span : 0.0;
+          curX = p0.x + t * (p1.x - p0.x);
+          break;
         }
+      }
 
-        final ny = _noteY(
-          note.pitch,
-          note.leftHand,
-          space,
-          trebleBottomY,
-          bassTopY,
-        );
-        final step = diatonicStep(note.pitch);
+      final cursorRect = Rect.fromLTRB(
+        curX - space * 0.7,
+        staffTop - space * 1.0,
+        curX + space * 0.7,
+        staffBottom + space * 1.0,
+      );
 
-        // Accurate ledger lines calculation:
-        // On treble staff:
-        // - Treble lines: E4(23), G4(25), B4(27), D5(29), F5(31).
-        // - Above treble: A5 is space (32), C6 is line (33). Ledgers start at step 33.
-        // - Below treble: D4 is space (22), Middle C is line (21), A3 is line (19). Ledgers start at step 21.
-        // On bass staff:
-        // - Bass lines: G2(11), B2(13), D3(15), F3(17), A3(19).
-        // - Above bass: C4 (Middle C) is line (21).
-        // - Below bass: F2 is space (10), E2 is line (9), C2 is line (7).
-        if (!note.leftHand) {
-          if (step >= 33) {
-            // Lines above treble: 33 (C6), 35, 37...
-            final maxLine = (step.isOdd) ? step : step - 1;
-            for (var s = 33; s <= maxLine; s += 2) {
-              final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
-              canvas.drawLine(
-                Offset(nx - space * 0.8, ly),
-                Offset(nx + space * 1.8, ly),
-                staffPaint,
-              );
-            }
-          } else if (step <= 21) {
-            // Lines below treble: 21 (Middle C), 19 (A3), 17...
-            final minLine = (step.isOdd) ? step : step + 1;
-            for (var s = 21; s >= minLine; s -= 2) {
-              final ly = trebleBottomY - (s - _trebleBottomStep) * (space / 2);
-              canvas.drawLine(
-                Offset(nx - space * 0.8, ly),
-                Offset(nx + space * 1.8, ly),
-                staffPaint,
-              );
-            }
-          }
-        } else {
-          if (step >= 21) {
-            // Lines above bass: 21 (Middle C), 23...
-            final maxLine = (step.isOdd) ? step : step - 1;
-            for (var s = 21; s <= maxLine; s += 2) {
-              final ly = bassTopY + (_bassTopStep - s) * (space / 2);
-              canvas.drawLine(
-                Offset(nx - space * 0.8, ly),
-                Offset(nx + space * 1.8, ly),
-                staffPaint,
-              );
-            }
-          } else if (step <= 9) {
-            // Lines below bass: 9 (E2), 7 (C2)...
-            final minLine = (step.isOdd) ? step : step + 1;
-            for (var s = 9; s >= minLine; s -= 2) {
-              final ly = bassTopY + (_bassTopStep - s) * (space / 2);
-              canvas.drawLine(
-                Offset(nx - space * 0.8, ly),
-                Offset(nx + space * 1.8, ly),
-                staffPaint,
-              );
-            }
-          }
-        }
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(cursorRect, const Radius.circular(3)),
+        Paint()
+          ..color = playheadColor.withValues(alpha: 0.35)
+          ..style = PaintingStyle.fill,
+      );
+    }
 
-        // SMuFL Notehead
-        final headGlyph = note.beats >= 4
-            ? Smufl.noteheadWhole
+    // 7. Accidentals computation matching Mode 1 StaffPainter
+    final noteAccidentals = StaffPainter.computeAccidentals(
+      notes: allSysNotes,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+      onBass: (n) => n.leftHand,
+    );
+
+    // 8. Beaming layout matching Mode 1 StaffPainter
+    final beamGroups = BeamLayout.computeBeamGroups(
+      notes: allSysNotes,
+      first: 0,
+      lastBeat: allSysNotes.isEmpty ? 0.0 : allSysNotes.last.beat + 4.0,
+      onBass: (n) => n.leftHand,
+      noteY: (pitch, onB) => _noteY(pitch, onB, space, trebleBottomY, bassTopY),
+      noteXs: noteXsMap,
+      space: space,
+      beatsPerBar: beatsPerBar,
+      isGrandStaff: true,
+    );
+
+    final beamedIndices = <int>{};
+    for (final g in beamGroups) {
+      beamedIndices.addAll(g.allIndices);
+    }
+
+    // Render beams
+    for (final g in beamGroups) {
+      BeamLayout.drawBeamGroup(
+        canvas: canvas,
+        group: g,
+        notes: allSysNotes,
+        noteY: (pitch, onB) =>
+            _noteY(pitch, onB, space, trebleBottomY, bassTopY),
+        onBass: (n) => n.leftHand,
+        space: space,
+        defaultColor: ink,
+        colorOf: null,
+      );
+    }
+
+    // 9. Render notes, rests, ledger lines, noteheads, accidentals, and un-beamed stems
+    for (var i = 0; i < allSysNotes.length; i++) {
+      final note = allSysNotes[i];
+      final nx = noteXsMap[i] ?? 0.0;
+
+      if (note.isRest) {
+        final restY = note.leftHand
+            ? (note.beats >= 4
+                  ? bassTopY + 2 * space
+                  : (note.beats >= 2
+                        ? bassTopY + 3 * space
+                        : bassTopY + 2 * space))
+            : (note.beats >= 4
+                  ? trebleBottomY - 3 * space
+                  : (note.beats >= 2
+                        ? trebleBottomY - 2 * space
+                        : trebleBottomY - 2 * space));
+        final restGlyph = note.beats >= 4
+            ? Smufl.restWhole
             : note.beats >= 2
-            ? Smufl.noteheadHalf
-            : Smufl.noteheadBlack;
-        _drawGlyph(canvas, headGlyph, glyphSize, Offset(nx, ny), ink);
+            ? Smufl.restHalf
+            : note.beats >= 1
+            ? Smufl.restQuarter
+            : note.beats >= 0.5
+            ? Smufl.rest8th
+            : Smufl.rest16th;
+        _drawGlyph(canvas, restGlyph, glyphSize, Offset(nx, restY), ink);
+        continue;
+      }
 
-        // Stem
-        if (note.beats < 4.0) {
-          // Elaine Gould / MuseScore rule: RH stems point UP, LH stems point DOWN on grand staff
-          final stemDown = note.isStemDown(note.leftHand, isGrandStaff: true);
-          final stemX = StemLayout.stemX(
-            noteheadX: nx,
-            stemDown: stemDown,
-            space: space,
-          );
-          final tipY = StemLayout.calcStemTipY(
-            noteY: ny,
-            stemDown: stemDown,
-            space: space,
-            middleLineY: note.leftHand
-                ? bassTopY + 2 * space
-                : trebleBottomY - 2 * space,
-          );
-          canvas.drawLine(
-            Offset(stemX, ny),
-            Offset(stemX, tipY),
-            staffPaint..strokeWidth = 1.2,
-          );
+      final ny = _noteY(
+        note.pitch,
+        note.leftHand,
+        space,
+        trebleBottomY,
+        bassTopY,
+      );
+      final step = diatonicStep(note.pitch);
 
-          // Flag for 8th / 16th notes
-          if (note.beats <= 0.75) {
-            final flagGlyph = stemDown ? Smufl.flag8thDown : Smufl.flag8thUp;
-            _drawGlyph(canvas, flagGlyph, glyphSize, Offset(stemX, tipY), ink);
-          }
+      // Ledger lines (precise formula from StaffPainter)
+      _drawLedgerLines(
+        canvas: canvas,
+        nx: nx,
+        step: step,
+        onBass: note.leftHand,
+        space: space,
+        trebleBottomY: trebleBottomY,
+        bassTopY: bassTopY,
+        staffPaint: staffPaint,
+      );
+
+      // Accidental
+      final acc = noteAccidentals[i];
+      if (acc != null) {
+        final accGlyph = switch (acc) {
+          AccidentalType.sharp => Smufl.accidentalSharp,
+          AccidentalType.flat => Smufl.accidentalFlat,
+          AccidentalType.natural => Smufl.accidentalNatural,
+        };
+        _drawGlyph(
+          canvas,
+          accGlyph,
+          glyphSize,
+          Offset(nx - space * 1.3, ny),
+          ink,
+        );
+      }
+
+      // Notehead
+      final headGlyph = note.beats >= 4
+          ? Smufl.noteheadWhole
+          : note.beats >= 2
+          ? Smufl.noteheadHalf
+          : Smufl.noteheadBlack;
+      _drawGlyph(canvas, headGlyph, glyphSize, Offset(nx, ny), ink);
+
+      // Augmentation dot
+      if ((note.beats - 1.5).abs() < 1e-4 ||
+          (note.beats - 3.0).abs() < 1e-4 ||
+          (note.beats - 0.75).abs() < 1e-4 ||
+          (note.beats - 0.375).abs() < 1e-4) {
+        final half = space / 2;
+        final dy = step.isEven ? -half : 0.0;
+        canvas.drawCircle(
+          Offset(nx + (note.beats >= 4 ? 1.6 : 1.4) * space, ny + dy),
+          space * 0.18,
+          Paint()..color = ink,
+        );
+      }
+
+      // Stem and flag (for notes NOT part of a beam group)
+      if (!beamedIndices.contains(i) && note.beats < 4.0) {
+        final isRH = !note.leftHand;
+        final stemDown = isRH
+            ? step >= (_trebleBottomStep + 4)
+            : step >= (_bassTopStep - 4);
+        final stemX = StemLayout.stemX(
+          noteheadX: nx,
+          stemDown: stemDown,
+          space: space,
+        );
+        final tipY = StemLayout.calcStemTipY(
+          noteY: ny,
+          stemDown: stemDown,
+          space: space,
+          middleLineY: note.leftHand
+              ? bassTopY + 2 * space
+              : trebleBottomY - 2 * space,
+        );
+        canvas.drawLine(
+          Offset(stemX, ny),
+          Offset(stemX, tipY),
+          staffPaint..strokeWidth = 1.2,
+        );
+
+        if (note.beats <= 0.75) {
+          final flagGlyph = note.beats <= 0.25
+              ? (stemDown ? Smufl.flag16thDown : Smufl.flag16thUp)
+              : (stemDown ? Smufl.flag8thDown : Smufl.flag8thUp);
+          _drawGlyph(canvas, flagGlyph, glyphSize, Offset(stemX, tipY), ink);
         }
       }
     }

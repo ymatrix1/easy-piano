@@ -35,7 +35,8 @@ abstract final class ScorePdfPrinter {
       grandStaffHeight: 140.0,
       systemDistance: 72.0,
       minMeasureWidth: 140.0,
-      maxMeasuresPerSystem: 3,
+      maxMeasuresPerSystem: config.maxMeasuresPerSystem,
+      minMeasuresPerSystem: 2,
       systemHeaderWidth: 72.0,
     );
 

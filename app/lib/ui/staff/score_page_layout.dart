@@ -39,6 +39,7 @@ class ScoreSystem {
     required this.measureXs,
     required this.totalWidth,
     required this.hasClefAndKey,
+    this.isLastSystem = false,
   });
 
   /// System line ordinal in the overall score.
@@ -58,6 +59,9 @@ class ScoreSystem {
 
   /// Whether this system includes the leading clef, key signature, and brace.
   final bool hasClefAndKey;
+
+  /// Whether this is the final system in the score (for end barline rendering).
+  final bool isLastSystem;
 
   /// First musical beat included in this system.
   double get startBeat => measures.isEmpty ? 0.0 : measures.first.startBeat;
@@ -234,42 +238,17 @@ abstract final class ScorePageLayout {
     final targetWidth = config.systemMeasureWidth;
     final systems = <ScoreSystem>[];
 
+    // Determine balanced measure counts per system (MuseScore style)
+    final systemCounts = _calculateBalancedSystemCounts(
+      measures: measures,
+      targetWidth: targetWidth,
+      maxPerSystem: config.maxMeasuresPerSystem,
+      minPerSystem: config.minMeasuresPerSystem,
+    );
+
     var startIdx = 0;
-    var systemIndex = 0;
-
-    while (startIdx < measures.length) {
-      var currentWidth = 0.0;
-      var count = 0;
-
-      while (startIdx + count < measures.length) {
-        final nextMeasure = measures[startIdx + count];
-        final testWidth = currentWidth + nextMeasure.minWidth;
-
-        // Check if adding this measure exceeds target width or max limit
-        if (count >= config.minMeasuresPerSystem &&
-            (testWidth > targetWidth ||
-                (measures.length > config.maxMeasuresPerSystem &&
-                    count >= config.maxMeasuresPerSystem))) {
-          break;
-        }
-
-        currentWidth = testWidth;
-        count++;
-
-        if (measures.length > config.maxMeasuresPerSystem &&
-            count >= config.maxMeasuresPerSystem) {
-          break;
-        }
-      }
-
-      if (count == 0) count = 1;
-
-      // MuseScore rule: If a piece has 4 or fewer total measures, break into 2 systems
-      // so it renders as a balanced multi-system score rather than a single wide bar
-      if (measures.length == 4 && count == 4 && startIdx == 0) {
-        count = 2;
-      }
-
+    for (var sysIdx = 0; sysIdx < systemCounts.length; sysIdx++) {
+      final count = systemCounts[sysIdx];
       final sysMeasures = measures.sublist(startIdx, startIdx + count);
       final isLastSystem = (startIdx + count) >= measures.length;
 
@@ -285,15 +264,11 @@ abstract final class ScorePageLayout {
 
       for (var i = 0; i < sysMeasures.length; i++) {
         final m = sysMeasures[i];
-        final double justifiedW;
-        if (isLastSystem &&
-            extra > targetWidth * 0.4 &&
-            sysMeasures.length <= 2) {
-          justifiedW = m.minWidth * 1.15;
-        } else {
-          final ratio = sumMin > 0 ? (m.minWidth / sumMin) : (1.0 / count);
-          justifiedW = m.minWidth + extra * ratio;
-        }
+        // Standard MuseScore system justification:
+        // Every system spans the full width of the printable system area,
+        // distributing space proportionally across all measures in the system.
+        final ratio = sumMin > 0 ? (m.minWidth / sumMin) : (1.0 / count);
+        final justifiedW = m.minWidth + extra * ratio;
         measureWidths.add(justifiedW);
         measureXs.add(runningX);
         runningX += justifiedW;
@@ -301,12 +276,13 @@ abstract final class ScorePageLayout {
 
       systems.add(
         ScoreSystem(
-          systemIndex: systemIndex++,
+          systemIndex: sysIdx,
           measures: sysMeasures,
           measureWidths: measureWidths,
           measureXs: measureXs,
           totalWidth: config.printableWidth,
           hasClefAndKey: true,
+          isLastSystem: isLastSystem,
         ),
       );
 
@@ -314,6 +290,70 @@ abstract final class ScorePageLayout {
     }
 
     return systems;
+  }
+
+  static List<int> _calculateBalancedSystemCounts({
+    required List<ScoreMeasure> measures,
+    required double targetWidth,
+    required int maxPerSystem,
+    required int minPerSystem,
+  }) {
+    final n = measures.length;
+    if (n == 0) return const [];
+    if (n <= 3) {
+      final sum = measures.fold<double>(0.0, (acc, m) => acc + m.minWidth);
+      if (sum <= targetWidth) return [n];
+    }
+
+    // Try finding the smallest number of systems s where all systems fit
+    var s = math.max(2, (n / maxPerSystem).ceil());
+    while (s <= n) {
+      final q = n ~/ s;
+      final r = n % s;
+      final candidateCounts = List.generate(s, (i) => i < r ? q + 1 : q);
+
+      var fits = true;
+      var idx = 0;
+      for (final c in candidateCounts) {
+        if (c > maxPerSystem) {
+          fits = false;
+          break;
+        }
+        final sum = measures
+            .sublist(idx, idx + c)
+            .fold<double>(0.0, (acc, m) => acc + m.minWidth);
+        if (sum > targetWidth) {
+          fits = false;
+          break;
+        }
+        idx += c;
+      }
+
+      if (fits) return candidateCounts;
+      s++;
+    }
+
+    // Fallback: greedy packing
+    final fallbackCounts = <int>[];
+    var start = 0;
+    while (start < n) {
+      var currentW = 0.0;
+      var count = 0;
+      while (start + count < n) {
+        final m = measures[start + count];
+        if (count >= minPerSystem &&
+            (currentW + m.minWidth > targetWidth || count >= maxPerSystem)) {
+          break;
+        }
+        currentW += m.minWidth;
+        count++;
+        if (count >= maxPerSystem) break;
+      }
+      if (count == 0) count = 1;
+      fallbackCounts.add(count);
+      start += count;
+    }
+    return fallbackCounts;
   }
 
   /// Organizes systems into pages according to printable vertical height.
