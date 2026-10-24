@@ -41,11 +41,17 @@ abstract final class SongMarksParser {
       final den = parts.length > 1 ? (double.tryParse(parts[1]) ?? 4.0) : 4.0;
 
       final events = <_Event>[];
-      final seen = <String>{};
+      final index = <String, int>{};
       void add(_Event e) {
-        // RH and LH often repeat the same directive at the same beat.
-        if (seen.add('${e.beat}|${e.kind}|${e.mark}|${e.hairpin}')) {
+        // RH and LH often repeat the same directive at the same beat. Keep one
+        // event, on the treble staff when either hand carries it.
+        final key = '${e.beat}|${e.kind}|${e.mark}|${e.hairpin}';
+        final at = index[key];
+        if (at == null) {
+          index[key] = events.length;
           events.add(e);
+        } else if (events[at].leftHand && !e.leftHand) {
+          events[at] = e;
         }
       }
 
@@ -62,6 +68,7 @@ abstract final class SongMarksParser {
               handKey != 'LH2') {
             continue;
           }
+          final isLh = handKey.startsWith('LH');
           var t = 0.0;
           for (final rawTok in SongRestParser.tokenize(
             entry.value.toString(),
@@ -71,7 +78,7 @@ abstract final class SongMarksParser {
             final beat = barStart + t;
             if (tok.startsWith('{')) {
               final e = _directive(tok, beat);
-              if (e != null) add(e);
+              if (e != null) add(e.withHand(isLh));
               continue;
             }
             final colonIdx = tok.indexOf(':');
@@ -115,6 +122,7 @@ abstract final class SongMarksParser {
 
     HairpinKind? openKind;
     var openAt = 0.0;
+    var openLeftHand = false;
 
     void closeAt(double beat) {
       if (openKind == null) return;
@@ -122,7 +130,12 @@ abstract final class SongMarksParser {
       // A zero-length hairpin (closed on the beat it opened) draws nothing.
       if (end > openAt) {
         hairpins.add(
-          StaffHairpin(startBeat: openAt, endBeat: end, kind: openKind!),
+          StaffHairpin(
+            startBeat: openAt,
+            endBeat: end,
+            kind: openKind!,
+            leftHand: openLeftHand,
+          ),
         );
       }
       openKind = null;
@@ -132,11 +145,12 @@ abstract final class SongMarksParser {
       switch (e.kind) {
         case _Kind.dynamic:
           closeAt(e.beat);
-          dynamics.add(StaffDynamic(e.beat, e.mark!));
+          dynamics.add(StaffDynamic(e.beat, e.mark!, leftHand: e.leftHand));
         case _Kind.open:
           closeAt(e.beat);
           openKind = e.hairpin;
           openAt = e.beat;
+          openLeftHand = e.leftHand;
         case _Kind.end:
           closeAt(e.beat);
       }
@@ -149,10 +163,20 @@ abstract final class SongMarksParser {
 enum _Kind { dynamic, open, end }
 
 class _Event {
-  const _Event(this.beat, this.kind, {this.mark, this.hairpin});
+  const _Event(
+    this.beat,
+    this.kind, {
+    this.mark,
+    this.hairpin,
+    this.leftHand = false,
+  });
 
   final double beat;
   final _Kind kind;
   final String? mark;
   final HairpinKind? hairpin;
+  final bool leftHand;
+
+  _Event withHand(bool lh) =>
+      _Event(beat, kind, mark: mark, hairpin: hairpin, leftHand: lh);
 }

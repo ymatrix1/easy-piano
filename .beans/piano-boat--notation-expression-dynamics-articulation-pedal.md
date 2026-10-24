@@ -30,7 +30,7 @@ Teach learners how to play expressively, rendering standard professional score d
 - [x] Engraving rendering (`dynamics_layout.dart`, ref `dynamicslayout.cpp`, `tlayout.cpp` layoutHairpinSegment):
   - [x] SMuFL glyphs for `p pp ppp mp mf f ff fff fp sf sfz`, composed letter by letter as MuseScore `DYN_LIST` (U+E520 p, U+E521 m, U+E522 f, U+E524 s, U+E525 z).
   - [x] Crescendo/diminuendo hairpins drawn as two vector arms, `hairpinHeight` 1.15 sp, below the bottom staff at 1.75 sp.
-  - [ ] Clearance from note stems (MuseScore places hairpins from the staff; stems of low notes can still cross them).
+  - [x] Clearance from note stems and noteheads, and centring on the notehead, between staves on a grand staff (MuseScore systemlayout.cpp centerItemGroup, dynamicslayout.cpp). See sheet-engraving.md section 1. Verified with real Leland glyphs on a rendered sample; not verified against MuseScore pixels.
 - [x] Content lint rules and schema validation for dynamics directives (piano-rdr4).
 - [ ] Teaching lessons (animation scene + drill + song, strings in 5 locales) for each mark: dynamics $p/mp/mf/f/ff$, crescendo/diminuendo, staccato, legato/slur, accent, tenuto, fermata.
 

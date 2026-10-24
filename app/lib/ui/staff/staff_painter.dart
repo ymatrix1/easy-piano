@@ -53,6 +53,34 @@ class HitBurst {
 /// play bar marks the anchor; in wait mode it is a page offset that slides
 /// only when the current note runs off the page, and no bar is drawn.
 /// Only notes inside the visible beat window are laid out and painted.
+/// A dynamic or hairpin being placed by [StaffPainter] (see its dynamics block).
+class _Placement {
+  _Placement({
+    required this.x0,
+    required this.x1,
+    required this.height,
+    required this.minDist,
+    required this.between,
+    required this.hairpin,
+    required this.index,
+  });
+
+  final double x0;
+  final double x1;
+  final double height;
+  final double minDist;
+
+  /// Centred between two staves (treble dynamics on a grand staff).
+  final bool between;
+  final bool hairpin;
+
+  /// Index into `dynamics` or `hairpins`.
+  final int index;
+
+  /// Top of the box, set by the layout steps.
+  double top = 0;
+}
+
 class StaffPainter extends CustomPainter {
   StaffPainter({
     required this.notes,
@@ -1094,6 +1122,8 @@ class StaffPainter extends CustomPainter {
 
     final drawnUnisons = <(double, int, bool)>{};
     final drawnLedgerLines = <(double, bool, int)>{};
+    // Boxes of noteheads and stems, for dynamics and hairpins to clear.
+    final noteObstacles = <Rect>[];
     final drawnChordStems = <(double, bool)>{};
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
@@ -1169,6 +1199,42 @@ class StaffPainter extends CustomPainter {
       );
 
       if (!isDuplicate) {
+        final headW =
+            (n.beats >= 4
+                ? DynamicsLayout.noteheadWholeWidthSp
+                : DynamicsLayout.noteheadWidthSp) *
+            space;
+        noteObstacles.add(
+          Rect.fromLTRB(
+            noteXPos,
+            y - DynamicsLayout.noteheadHeightSp * space / 2,
+            noteXPos + headW,
+            y + DynamicsLayout.noteheadHeightSp * space / 2,
+          ),
+        );
+        if (n.beats < 4) {
+          final stemX = StemLayout.stemX(
+            noteheadX: noteXPos,
+            stemDown: noteStemDown,
+            space: space,
+          );
+          final tipY = StemLayout.calcStemTipY(
+            noteY: y,
+            stemDown: noteStemDown,
+            space: space,
+            middleLineY: onBass
+                ? bassTopY + space * 2
+                : trebleBottomY - space * 2,
+          );
+          noteObstacles.add(
+            Rect.fromLTRB(
+              stemX - DynamicsLayout.stemSp * space / 2,
+              math.min(y, tipY),
+              stemX + DynamicsLayout.stemSp * space / 2,
+              math.max(y, tipY),
+            ),
+          );
+        }
         double minHeadX = noteXPos;
         double maxHeadX = noteXPos + (n.beats >= 4 ? 1.5 : 1.3) * space;
         if (chordGroup != null) {
@@ -1527,18 +1593,32 @@ class StaffPainter extends CustomPainter {
       }
     }
 
-    // Dynamics and hairpins, below the bottom staff (MuseScore
-    // dynamicslayout.cpp and tlayout.cpp layoutHairpinSegment).
+    // Dynamics and hairpins (MuseScore dynamicslayout.cpp, tlayout.cpp
+    // layoutHairpinSegment, systemlayout.cpp centerItemGroup, autoplace).
     if (hairpins.isNotEmpty || dynamics.isNotEmpty) {
-      double xAt(double beat) {
+      final grand = staves == Staves.grand;
+      final gapMidY = (trebleBottomY + bassTopY) / 2;
+
+      // Index of the note at [beat], or -1 when none sits there.
+      int noteIndexAt(double beat) {
         final i = _lowerBound(beat - 1e-6);
         if (i < notes.length && (notes[i].beat - beat).abs() < 1e-6) {
+          return i;
+        }
+        return -1;
+      }
+
+      // Note x (left edge of the notehead) at [beat], or the nominal x.
+      double xAt(double beat) {
+        final i = noteIndexAt(beat);
+        if (i >= 0) {
           final cx = xCache[i];
           if (cx != null) return cx;
         }
         return anchorX + (beat - now) * pixelsPerBeat;
       }
 
+      // Barline x positions in view, for horizontal clearance.
       final barXs = <double>[
         if (bpb != null && bpb > 0)
           for (
@@ -1557,56 +1637,188 @@ class StaffPainter extends CustomPainter {
               ),
       ];
 
-      final hairpinY = DynamicsLayout.hairpinCentreY(
-        bottomStaffY: staffBottom,
-        space: space,
-      );
-      final hairpinSpans = <(double, double)>[];
-      for (final h in hairpins) {
-        final x1 = xAt(h.startBeat), x2 = xAt(h.endBeat);
+      // Staff lines as zero-height obstacles; the gap between two staves is
+      // bounded by them.
+      final staffLineBoxes = <Rect>[
+        if (_hasTreble)
+          Rect.fromLTRB(sys.systemX, trebleBottomY, size.width, trebleBottomY),
+        if (_hasBass)
+          Rect.fromLTRB(sys.systemX, bassTopY, size.width, bassTopY),
+      ];
+      final noteBoxes = [...staffLineBoxes, ...noteObstacles];
+      final dynMin = DynamicsLayout.dynamicsMinDistanceSp * space;
+      final hpMin = DynamicsLayout.hairpinMinDistanceSp * space;
+      final hpDynDist = DynamicsLayout.hairpinDynamicsDistanceSp * space;
+
+      // Every item with its horizontal extent, in left-to-right order.
+      final items = <_Placement>[];
+      for (var k = 0; k < hairpins.length; k++) {
+        final h = hairpins[k];
+        final x1 = xAt(h.startBeat);
+        final x2 = math.max(xAt(h.endBeat), x1 + space);
         if (x2 < 0 || x1 > size.width) continue;
-        hairpinSpans.add((x1, math.max(x2, x1 + space)));
-        DynamicsLayout.drawHairpin(
-          canvas,
-          x1: x1,
-          x2: x2,
-          centreY: hairpinY,
-          space: space,
-          kind: h.kind,
-          color: staff,
+        items.add(
+          _Placement(
+            x0: x1,
+            x1: x2,
+            height: DynamicsLayout.hairpinBoxSp * space,
+            minDist: hpMin,
+            between: grand && !h.leftHand,
+            hairpin: true,
+            index: k,
+          ),
         );
       }
-
-      for (final d in dynamics) {
+      for (var k = 0; k < dynamics.length; k++) {
+        final d = dynamics[k];
         final glyphs = DynamicsLayout.glyphsFor(d.mark);
         if (glyphs == null) continue;
-        final x = xAt(d.beat);
         final width = _glyph(glyphs, glyphSize, staff).width;
-        if (x > size.width || x + width < 0) continue;
-        final dx = DynamicsLayout.barlineShift(
-          left: x,
-          right: x + width,
+        // centerOnNotehead: the text is centred on the notehead's middle.
+        final i = noteIndexAt(d.beat);
+        final centre = i >= 0
+            ? (xCache[i] ?? anchorX) +
+                  (chordHeadOffsets[i] ?? 0.0) +
+                  DynamicsLayout.noteheadCentreSp(whole: notes[i].beats >= 4) *
+                      space
+            : anchorX +
+                  (d.beat - now) * pixelsPerBeat +
+                  DynamicsLayout.noteheadCentreSp(whole: false) * space;
+        var left = DynamicsLayout.dynamicLeft(centreX: centre, width: width);
+        if (left > size.width || left + width < 0) continue;
+        left += DynamicsLayout.barlineShift(
+          left: left,
+          right: left + width,
           barlineXs: barXs,
           space: space,
         );
-        final overlapsHairpin = hairpinSpans.any(
-          (s) => s.$1 <= x + width && s.$2 >= x,
-        );
-        _drawGlyph(
-          canvas,
-          glyphs,
-          glyphSize,
-          Offset(
-            x + dx,
-            DynamicsLayout.dynamicBaselineY(
-              bottomStaffY: staffBottom,
-              space: space,
-              mark: d.mark,
-              hairpinOverlaps: overlapsHairpin,
-            ),
+        items.add(
+          _Placement(
+            x0: left,
+            x1: left + width,
+            height: DynamicsLayout.boxHeightSp(d.mark) * space,
+            minDist: dynMin,
+            between: grand && !d.leftHand,
+            hairpin: false,
+            index: k,
           ),
-          staff,
         );
+      }
+      items.sort((a, b) => a.x0.compareTo(b.x0));
+
+      // 1. Preferred tops. Items between two staves are centred in the gap
+      //    against the staff lines and noteheads; the others go below their
+      //    staff and are pushed past what is in the way.
+      final belowPlaced = <Rect>[];
+      for (final it in items) {
+        if (it.between) {
+          final (upper, lower) = DynamicsLayout.gapEdges(
+            x0: it.x0,
+            x1: it.x1,
+            gapMidY: gapMidY,
+            obstacles: noteBoxes,
+            upperDefault: trebleBottomY,
+            lowerDefault: bassTopY,
+          );
+          it.top = DynamicsLayout.centredTop(
+            upperBottom: upper,
+            lowerTop: lower,
+            height: it.height,
+            minDist: it.minDist,
+          );
+        } else {
+          final nominal = it.hairpin
+              ? DynamicsLayout.hairpinNominalTop(
+                  bottomStaffY: staffBottom,
+                  space: space,
+                )
+              : DynamicsLayout.dynamicNominalTop(
+                  bottomStaffY: staffBottom,
+                  space: space,
+                );
+          var top = DynamicsLayout.clearBelow(
+            top: nominal,
+            height: it.height,
+            x0: it.x0,
+            x1: it.x1,
+            minDist: it.minDist,
+            obstacles: noteBoxes,
+          );
+          top = DynamicsLayout.clearBelow(
+            top: top,
+            height: it.height,
+            x0: it.x0,
+            x1: it.x1,
+            minDist: hpDynDist,
+            obstacles: belowPlaced,
+          );
+          it.top = top;
+          belowPlaced.add(Rect.fromLTWH(it.x0, top, it.x1 - it.x0, it.height));
+        }
+      }
+
+      // 2. Between-staves items that overlap horizontally form one group. The
+      //    group is stacked and centred as one unit (centerItemGroup).
+      final groups = <List<_Placement>>[];
+      for (final it in items.where((i) => i.between)) {
+        final hit = [
+          for (final g in groups)
+            if (g.any((m) => m.x0 < it.x1 && it.x0 < m.x1)) g,
+        ];
+        final merged = [it];
+        for (final g in hit) {
+          groups.remove(g);
+          merged.addAll(g);
+        }
+        groups.add(merged);
+      }
+      for (final g in groups) {
+        final (rel, height) = DynamicsLayout.stackGroup(
+          natural: [for (final m in g) m.top],
+          heights: [for (final m in g) m.height],
+          gaps: [for (final m in g) m.minDist],
+        );
+        final (upper, lower) = DynamicsLayout.gapEdges(
+          x0: g.map((m) => m.x0).reduce(math.min),
+          x1: g.map((m) => m.x1).reduce(math.max),
+          gapMidY: gapMidY,
+          obstacles: noteBoxes,
+          upperDefault: trebleBottomY,
+          lowerDefault: bassTopY,
+        );
+        final groupTop = DynamicsLayout.centredTop(
+          upperBottom: upper,
+          lowerTop: lower,
+          height: height,
+          minDist: g.map((m) => m.minDist).reduce(math.max),
+        );
+        for (var k = 0; k < g.length; k++) {
+          g[k].top = groupTop + rel[k];
+        }
+      }
+
+      // 3. Draw.
+      for (final it in items) {
+        if (it.hairpin) {
+          DynamicsLayout.drawHairpin(
+            canvas,
+            x1: it.x0,
+            x2: it.x1,
+            centreY: it.top + it.height / 2,
+            space: space,
+            kind: hairpins[it.index].kind,
+            color: staff,
+          );
+        } else {
+          final mark = dynamics[it.index].mark;
+          _drawGlyph(
+            canvas,
+            DynamicsLayout.glyphsFor(mark)!,
+            glyphSize,
+            Offset(it.x0, it.top + DynamicsLayout.ascentSp(mark) * space),
+            staff,
+          );
+        }
       }
     }
 

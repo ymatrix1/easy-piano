@@ -99,4 +99,26 @@ void main() {
     expect(SongMarksParser.parse('not json').dynamics, isEmpty);
     expect(SongMarksParser.parse('[]').hairpins, isEmpty);
   });
+
+  test('a directive in the left hand belongs to the bass staff', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{dyn:"p"} C3:1'},
+        {'RH': '{cresc} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        {'RH': '{end} C4:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.dynamics.single.leftHand, isTrue);
+    expect(m.hairpins.single.leftHand, isFalse);
+  });
+
+  test('same directive in both hands stays on the treble staff', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{dyn:"p"} C4:4 D4:4 E4:4 F4:4', 'LH': '{dyn:"p"} C3:1'},
+      ]),
+    );
+    expect(m.dynamics, hasLength(1));
+    expect(m.dynamics.single.leftHand, isFalse);
+  });
 }
