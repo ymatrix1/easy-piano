@@ -396,6 +396,7 @@ class TargetView {
   final List<bool> twoStems;
   final List<bool> leftHands;
   final Float64List noteBeats;
+  final List<bool> ties;
 
   /// 0 pending, 1 hit, 2 missed.
   final int state;
@@ -410,6 +411,7 @@ class TargetView {
     required this.twoStems,
     required this.leftHands,
     required this.noteBeats,
+    required this.ties,
     required this.state,
   });
 
@@ -424,6 +426,7 @@ class TargetView {
       twoStems.hashCode ^
       leftHands.hashCode ^
       noteBeats.hashCode ^
+      ties.hashCode ^
       state.hashCode;
 
   @override
@@ -440,5 +443,6 @@ class TargetView {
           twoStems == other.twoStems &&
           leftHands == other.leftHands &&
           noteBeats == other.noteBeats &&
+          ties == other.ties &&
           state == other.state;
 }

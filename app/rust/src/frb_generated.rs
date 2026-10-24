@@ -1415,6 +1415,7 @@ impl SseDecode for crate::api::practice::TargetView {
         let mut var_twoStems = <Vec<bool>>::sse_decode(deserializer);
         let mut var_leftHands = <Vec<bool>>::sse_decode(deserializer);
         let mut var_noteBeats = <Vec<f64>>::sse_decode(deserializer);
+        let mut var_ties = <Vec<bool>>::sse_decode(deserializer);
         let mut var_state = <u8>::sse_decode(deserializer);
         return crate::api::practice::TargetView {
             beat: var_beat,
@@ -1426,6 +1427,7 @@ impl SseDecode for crate::api::practice::TargetView {
             two_stems: var_twoStems,
             left_hands: var_leftHands,
             note_beats: var_noteBeats,
+            ties: var_ties,
             state: var_state,
         };
     }
@@ -1730,6 +1732,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::TargetView {
             self.two_stems.into_into_dart().into_dart(),
             self.left_hands.into_into_dart().into_dart(),
             self.note_beats.into_into_dart().into_dart(),
+            self.ties.into_into_dart().into_dart(),
             self.state.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -1990,6 +1993,7 @@ impl SseEncode for crate::api::practice::TargetView {
         <Vec<bool>>::sse_encode(self.two_stems, serializer);
         <Vec<bool>>::sse_encode(self.left_hands, serializer);
         <Vec<f64>>::sse_encode(self.note_beats, serializer);
+        <Vec<bool>>::sse_encode(self.ties, serializer);
         <u8>::sse_encode(self.state, serializer);
     }
 }

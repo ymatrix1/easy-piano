@@ -140,6 +140,8 @@ pub struct TimedNote {
     pub finger: Option<u8>,
     pub bar: usize,
     pub voice: u8,
+    /// Tied into the next note of the same pitch.
+    pub tie: bool,
 }
 
 impl Song {
@@ -367,14 +369,18 @@ impl Song {
                 let part = Part::from_key(hand);
                 let voice = if hand.ends_with('2') { 2 } else { 1 };
                 let mut t = Dur::ZERO;
-                for e in parse_bar(text).unwrap_or_default() {
+                let events = parse_bar(text).unwrap_or_default();
+                for (idx, e) in events.iter().enumerate() {
                     if let Event::Note {
                         pitches,
                         dur,
                         fingers,
                         ..
-                    } = &e
+                    } = e
                     {
+                        let tie = events.get(idx + 1).is_some_and(|next_e| {
+                            matches!(next_e, Event::Directive { name, .. } if name == "tie")
+                        });
                         for (k, &p) in pitches.iter().enumerate() {
                             out.push(TimedNote {
                                 pitch: p,
@@ -389,6 +395,7 @@ impl Song {
                                 finger: fingers.get(k).copied(),
                                 bar: i,
                                 voice,
+                                tie,
                             });
                         }
                     }
@@ -642,5 +649,21 @@ mod tests {
         .unwrap();
         assert!(s.validate().is_empty());
         assert_eq!(s.timeline()[1].start_beat, 3.0);
+    }
+
+    #[test]
+    fn tie_directive_sets_tie_flag_on_timed_notes() {
+        let s = Song::from_json(&song(
+            r#"[{"RH":"C4:2 D4:2 {tie}"}, {"RH":"D4:2 E4:2"}]"#,
+            "",
+        ))
+        .unwrap();
+        assert!(s.validate().is_empty());
+        let t = s.timeline();
+        assert_eq!(t.len(), 4);
+        assert!(!t[0].tie);
+        assert!(t[1].tie); // D4 in bar 0 has {tie}
+        assert!(!t[2].tie);
+        assert!(!t[3].tie);
     }
 }

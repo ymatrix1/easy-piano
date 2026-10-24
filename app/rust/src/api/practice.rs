@@ -20,6 +20,7 @@ pub struct TargetView {
     pub two_stems: Vec<bool>,
     pub left_hands: Vec<bool>,
     pub note_beats: Vec<f64>,
+    pub ties: Vec<bool>,
     /// 0 pending, 1 hit, 2 missed.
     pub state: u8,
 }
@@ -153,6 +154,7 @@ pub struct PracticeSession {
 impl PracticeSession {
     /// `mode`: "wait" | "play_along" | "one_note"; `input`: "midi" | "mic" | "touch";
     /// `hand`: "RH" | "LH" | "both".
+    #[allow(clippy::too_many_arguments)]
     #[frb(sync)]
     pub fn create(
         song_json: String,
@@ -214,6 +216,7 @@ impl PracticeSession {
                 two_stems: t.two_stems.clone(),
                 left_hands: t.left_hands.clone(),
                 note_beats: t.note_beats.clone(),
+                ties: t.ties.clone(),
                 state: match t.state {
                     ChordState::Pending => 0,
                     ChordState::Hit { .. } => 1,
