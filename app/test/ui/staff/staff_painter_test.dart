@@ -140,6 +140,51 @@ void main() {
     },
   );
 
+  testWidgets('end barline: thin line then thick line at the end beat', (
+    tester,
+  ) async {
+    // Treble, height 400 => space 20; anchor at x 200, 40 px per beat, so
+    // beat 4 sits at x 360 and the nominal bar line at 360 - 0.8 * space.
+    const size = Size(400, 400);
+    const y = 190.0; // between staff lines (staff spans y 160..240)
+    Future<Uint8List> render(double? endBeat) async {
+      final rec = ui.PictureRecorder();
+      StaffPainter(
+        notes: const [],
+        playheadBeat: ValueNotifier<double>(0),
+        pixelsPerBeat: 40,
+        lineRatio: 0.5,
+        staves: Staves.treble,
+        endBeat: endBeat,
+        showPlayLine: false,
+        playheadColor: const Color(0xFFFF0000),
+        inkColor: const Color(0xFF000000),
+      ).paint(Canvas(rec), size);
+      final img = await tester.runAsync(
+        () => rec.endRecording().toImage(400, 400),
+      );
+      return (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!.buffer.asUint8List();
+    }
+
+    int alphaAt(Uint8List px, int x) => px[(y.toInt() * 400 + x) * 4 + 3];
+
+    final withEnd = await render(4);
+    final without = await render(null);
+    const barX = 344; // 360 - 0.8 * 20
+    // MuseScore proportions at space 20: thin line 0.18 sp = 3.6 px centred
+    // on 344 (342.2..345.8); thick line 0.55 sp = 11 px centred on
+    // 344 + 1.8 + 7.4 + 5.5 = 358.7 (353.2..364.2); gap 0.37 sp = 7.4 px.
+    expect(alphaAt(withEnd, 343), 255);
+    expect(alphaAt(withEnd, 349), 0); // gap
+    expect(alphaAt(withEnd, 358), 255);
+    expect(alphaAt(withEnd, 366), 0);
+    // Without endBeat nothing is drawn there.
+    expect(alphaAt(without, barX - 1), 0);
+    expect(alphaAt(without, 358), 0);
+  });
+
   group('barLineX', () {
     const space = 14.0;
     const anchorX = 200.0;
@@ -188,7 +233,7 @@ void main() {
         notes: notes,
       );
       final barX = anchorX + 4.0 * ppb;
-      final prevRight = anchorX + 3.5 * ppb + space * 1.18;
+      final prevRight = anchorX + 3.5 * ppb + space * 1.3;
       final nominalBx = barX - space * 0.8;
 
       // Centered between prevRight and barX
@@ -202,7 +247,7 @@ void main() {
       const density = 95.0; // density for subdivisions
       final notes = [
         const StaffNote(62, 3.5, 0.5),
-        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.4 sp)
+        const StaffNote(66, 4.0, 1.0), // F#4 (accidental at barX - 1.3 sp)
       ];
       final bx = StaffPainter.barLineX(
         barBeat: 4.0,
@@ -213,11 +258,199 @@ void main() {
         notes: notes,
       );
       final barX = anchorX + 4.0 * density;
-      final accidentalLeft = barX - space * 1.4;
-      final prevRight = anchorX + 3.5 * density + space * 1.18;
+      final accidentalLeft = barX - space * 1.3;
+      final prevRight = anchorX + 3.5 * density + space * 1.3;
       // Bar line must be between the preceding note stem and the accidental
       expect(bx, lessThan(accidentalLeft));
       expect(bx, greaterThan(prevRight));
+    });
+  });
+
+  group('StaffPainter noteX accidental spacing', () {
+    const space = 8.0;
+    const anchorX = 100.0;
+    const nowBeat = 0.0;
+    const ppb = 50.0; // tight spacing
+
+    test('accidental shifts note right if tight to preceding note', () {
+      final notes = [
+        const StaffNote(60, 0.0, 0.25), // C4 ending around beat 0.25
+        const StaffNote(
+          66,
+          0.25,
+          0.25,
+        ), // F#4 on beat 0.25 (nominal 112.5 < minX 123.84)
+      ];
+      final x = StaffPainter.noteX(
+        index: 1,
+        notes: notes,
+        anchorX: anchorX,
+        nowBeat: nowBeat,
+        pixelsPerBeat: ppb,
+        space: space,
+      );
+      final nominalX = anchorX + 0.25 * ppb;
+      // Because nominalX puts F# too close to C4 for the sharp sign (at x - space * 1.4),
+      // noteX pushes it right
+      expect(x, greaterThan(nominalX));
+    });
+  });
+
+  group('StaffPainter chord rendering and time signature', () {
+    test('SMuFL flags for eighth and sixteenth notes are defined', () {
+      expect(Smufl.flag8thUp, equals('\uE240'));
+      expect(Smufl.flag8thDown, equals('\uE241'));
+      expect(Smufl.flag16thUp, equals('\uE242'));
+      expect(Smufl.flag16thDown, equals('\uE243'));
+    });
+
+    test(
+      'systemLayout accounts for time signature width when beatsPerBar is set',
+      () {
+        const space = 10.0;
+        final withTs = StaffPainter.systemLayout(
+          Staves.treble,
+          space,
+          beatsPerBar: 4.0,
+        );
+        final withoutTs = StaffPainter.systemLayout(
+          Staves.treble,
+          space,
+          beatsPerBar: null,
+        );
+        expect(withTs.clefRight, greaterThan(withoutTs.clefRight));
+        expect(
+          withTs.clefRight - withTs.clefX,
+          greaterThanOrEqualTo(space * 5.5),
+        );
+      },
+    );
+
+    test('chord of a second with stem DOWN renders cleanly with stem and accidental', () {
+      final rec = ui.PictureRecorder();
+      final notes = [
+        const StaffNote(59, 1.0, 0.5, leftHand: true), // B3
+        const StaffNote(
+          61,
+          1.0,
+          0.5,
+          leftHand: true,
+          accidental: 'sharp',
+        ), // C#4
+      ];
+      final painter = StaffPainter(
+        notes: notes,
+        playheadBeat: ValueNotifier<double>(1.0),
+        pixelsPerBeat: 50.0,
+        lineRatio: 0.5,
+        staves: Staves.grand,
+        beatsPerBar: 2.0,
+        inkColor: const Color(0xFF000000),
+        playheadColor: const Color(0xFFFF0000),
+      );
+      expect(
+        () => painter.paint(Canvas(rec), const Size(400, 300)),
+        returnsNormally,
+      );
+    });
+
+    test(
+      'whole rest hangs from line 4 and chords on ledger lines render cleanly',
+      () {
+        final rec = ui.PictureRecorder();
+        final notes = [
+          const StaffNote(-1, 0.0, 4.0), // whole rest
+          const StaffNote(81, 4.0, 1.0), // A5 (ledger line above)
+          const StaffNote(83, 4.0, 1.0), // B5 (second above A5 on ledger lines)
+        ];
+        final painter = StaffPainter(
+          notes: notes,
+          playheadBeat: ValueNotifier<double>(0.0),
+          pixelsPerBeat: 50.0,
+          lineRatio: 0.5,
+          staves: Staves.treble,
+          beatsPerBar: 4.0,
+          inkColor: const Color(0xFF000000),
+          playheadColor: const Color(0xFFFF0000),
+        );
+        expect(
+          () => painter.paint(Canvas(rec), const Size(400, 300)),
+          returnsNormally,
+        );
+      },
+    );
+
+    test('chord with staggered accidentals, dotted collision resolution and ties renders cleanly', () {
+      final rec = ui.PictureRecorder();
+      final notes = [
+        // Chord with two close sharps (C#4 and E#4) and dots, plus forward tie
+        const StaffNote(
+          61,
+          0.0,
+          1.5,
+          accidental: 'sharp',
+          tie: true,
+        ), // C#4 (line)
+        const StaffNote(
+          65,
+          0.0,
+          1.5,
+          accidental: 'sharp',
+          tie: true,
+        ), // F4/E#4 (space)
+        const StaffNote(61, 1.5, 1.0),
+        const StaffNote(65, 1.5, 1.0),
+      ];
+      final painter = StaffPainter(
+        notes: notes,
+        playheadBeat: ValueNotifier<double>(0.0),
+        pixelsPerBeat: 50.0,
+        lineRatio: 0.5,
+        staves: Staves.treble,
+        beatsPerBar: 4.0,
+        inkColor: const Color(0xFF000000),
+        playheadColor: const Color(0xFFFF0000),
+      );
+      expect(
+        () => painter.paint(Canvas(rec), const Size(400, 300)),
+        returnsNormally,
+      );
+    });
+
+    test('computeAccidentals remembers accidentals in measure and resets at barline', () {
+      final notes = [
+        // Measure 0 (beats 0.0 - 4.0):
+        const StaffNote(61, 0.0, 1.0, accidental: 'sharp'), // C#4 -> sharp
+        const StaffNote(61, 1.0, 1.0), // C#4 -> remembered, no accidental
+        const StaffNote(60, 2.0, 1.0), // C4 -> natural
+        const StaffNote(
+          60,
+          3.0,
+          1.0,
+        ), // C4 -> remembered natural, no accidental
+        // Measure 1 (beats 4.0 - 8.0):
+        const StaffNote(
+          61,
+          4.0,
+          1.0,
+          accidental: 'sharp',
+        ), // C#4 -> sharp again after barline
+        const StaffNote(60, 5.0, 1.0), // C4 natural -> natural
+      ];
+
+      final accs = StaffPainter.computeAccidentals(
+        notes: notes,
+        keyFifths: 0,
+        beatsPerBar: 4.0,
+        onBass: (n) => false,
+      );
+
+      expect(accs[0], equals(AccidentalType.sharp));
+      expect(accs.containsKey(1), isFalse);
+      expect(accs[2], equals(AccidentalType.natural));
+      expect(accs.containsKey(3), isFalse);
+      expect(accs[4], equals(AccidentalType.sharp));
+      expect(accs[5], equals(AccidentalType.natural));
     });
   });
 }
