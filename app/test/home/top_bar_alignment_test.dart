@@ -53,4 +53,30 @@ void main() {
 
     debugDefaultTargetPlatformOverride = null;
   });
+
+  // Below the threshold the star would sit under the caption buttons: hidden.
+  for (final (width, visible) in [(1100.0, false), (1280.0, true)]) {
+    testWidgets('star counter visible at  px: ', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      tester.view.physicalSize = Size(width, 720);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: HomePage(
+            repo: _repo(),
+            midi: createMidiInput(),
+            spikes: (_) => const SizedBox(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(StarCounter), visible ? findsOneWidget : findsNothing);
+
+      debugDefaultTargetPlatformOverride = null;
+      tester.view.reset();
+    });
+  }
 }

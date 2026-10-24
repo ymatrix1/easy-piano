@@ -223,6 +223,10 @@ class Progress {
   );
 }
 
+/// On Windows the caption buttons take the top-right corner; below this width
+/// the star counter would sit under them, so it is hidden.
+const _starHideWidth = 1200.0;
+
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.stars});
 
@@ -304,7 +308,7 @@ class _TopBar extends StatelessWidget {
                       // Narrow Windows window: the caption buttons take the
                       // top-right corner, so the star counter is hidden.
                       if (!(usesCustomTitleBar &&
-                          MediaQuery.sizeOf(context).width < 600))
+                          MediaQuery.sizeOf(context).width < _starHideWidth))
                         StarCounter(value: stars),
                     ],
                   ),

@@ -13,6 +13,9 @@ namespace {
 #ifndef DWMWA_BORDER_COLOR
 #define DWMWA_BORDER_COLOR 34
 #endif
+#ifndef DWMWA_CAPTION_COLOR
+#define DWMWA_CAPTION_COLOR 35
+#endif
 #ifndef DWMWA_COLOR_NONE
 #define DWMWA_COLOR_NONE 0xFFFFFFFE
 #endif
@@ -25,8 +28,13 @@ namespace {
 
 constexpr const char kWindowChannelName[] = "easy_piano/window";
 
-// Width of the invisible resize border, in device-independent pixels.
+// Width of the resize border, in device-independent pixels. It is the
+// non-client ring left around the client area (see WM_NCCALCSIZE below), so
+// the Flutter view never covers it and the mouse reaches WM_NCHITTEST.
 constexpr int kResizeBorderDip = 8;
+
+// App background (#080726) as a COLORREF (0x00BBGGRR).
+constexpr COLORREF kAppBackground = 0x00260708;
 
 }  // namespace
 
@@ -40,18 +48,21 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
 
-  // Frameless window. Extending the frame by 1px made DWM draw a dark outline
-  // around the window once it became resizable, so no extension is used.
-  MARGINS margins = {0, 0, 0, 0};
+  // Borderless window with a glass frame over the whole window: keeps the
+  // drop shadow and rounded corners and lets DWM draw the non-client ring.
+  // Based on the approach in driver1998's "Proper borderless window frame on
+  // Windows 10/11".
+  MARGINS margins = {-1, -1, -1, -1};
   DwmExtendFrameIntoClientArea(GetHandle(), &margins);
 
-  // Without a frame extension Windows 11 squares the corners; ask for round.
   DWORD corner_preference = DWMWCP_ROUND;
   DwmSetWindowAttribute(GetHandle(), DWMWA_WINDOW_CORNER_PREFERENCE,
                         &corner_preference, sizeof(corner_preference));
 
-  // Windows draws an accent-coloured 1px border around frameless windows.
-  // Ask for no border colour so the app's own edge is the only one.
+  // Paint the ring in the app background instead of the accent / dark frame.
+  COLORREF caption_color = kAppBackground;
+  DwmSetWindowAttribute(GetHandle(), DWMWA_CAPTION_COLOR, &caption_color,
+                        sizeof(caption_color));
   COLORREF no_border = DWMWA_COLOR_NONE;
   DwmSetWindowAttribute(GetHandle(), DWMWA_BORDER_COLOR, &no_border,
                         sizeof(no_border));
@@ -156,15 +167,11 @@ void FlutterWindow::LayoutFlutterView() {
   if (!flutter_controller_) {
     return;
   }
-  HWND hwnd = GetHandle();
-  // The Flutter view must not cover the resize border: child windows take the
-  // mouse, so the border would never reach the parent's WM_NCHITTEST. When not
-  // maximized, inset the view by the border and paint that strip ourselves.
-  const int border = IsZoomed(hwnd) ? 0 : Scale(kResizeBorderDip, GetDpiForWindow(hwnd));
+  // The client area already excludes the resize ring (WM_NCCALCSIZE), so the
+  // Flutter view simply fills it.
   RECT area = GetClientArea();
-  MoveWindow(flutter_controller_->view()->GetNativeWindow(), area.left + border,
-             area.top + border, area.right - area.left - 2 * border,
-             area.bottom - area.top - 2 * border, TRUE);
+  MoveWindow(flutter_controller_->view()->GetNativeWindow(), area.left,
+             area.top, area.right - area.left, area.bottom - area.top, TRUE);
 }
 
 int FlutterWindow::Scale(int dip, UINT dpi) {
@@ -175,20 +182,35 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // Let DWM handle its own non-client messages first (glass frame, shadow).
+  LRESULT dwm_result = 0;
+  if (DwmDefWindowProc(hwnd, message, wparam, lparam, &dwm_result)) {
+    return dwm_result;
+  }
+
   switch (message) {
     case WM_NCCALCSIZE: {
-      // Remove the system caption and frame: the client area is the whole
-      // window. When maximized, Windows overhangs the window by the frame
-      // thickness, so inset the client area to keep content on screen.
-      if (wparam == TRUE && IsZoomed(hwnd)) {
+      // The client area is the whole window minus a resize ring on the left,
+      // right and bottom. The top stays flush so the Flutter header sits at
+      // the top edge. When maximized, Windows overhangs the window by the frame
+      // thickness, so inset all sides to keep content on screen.
+      if (wparam == TRUE) {
         NCCALCSIZE_PARAMS* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lparam);
         const UINT dpi = GetDpiForWindow(hwnd);
-        const int inset = GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi) +
-                          GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi);
-        params->rgrc[0].left += inset;
-        params->rgrc[0].top += inset;
-        params->rgrc[0].right -= inset;
-        params->rgrc[0].bottom -= inset;
+        RECT& rect = params->rgrc[0];
+        if (IsZoomed(hwnd)) {
+          const int inset = GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi) +
+                            GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi);
+          rect.left += inset;
+          rect.top += inset;
+          rect.right -= inset;
+          rect.bottom -= inset;
+        } else {
+          const int ring = Scale(kResizeBorderDip, dpi);
+          rect.left += ring;
+          rect.right -= ring;
+          rect.bottom -= ring;
+        }
       }
       return 0;
     }
@@ -196,30 +218,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_SIZE:
       LayoutFlutterView();
       return 0;
-
-    case WM_ERASEBKGND: {
-      // Paints only the resize-border strips (the Flutter view covers the rest).
-      // Filling the whole client area on every resize is what made it flash.
-      if (IsZoomed(hwnd)) {
-        return 1;
-      }
-      const int border = Scale(kResizeBorderDip, GetDpiForWindow(hwnd));
-      RECT client;
-      GetClientRect(hwnd, &client);
-      HBRUSH brush = CreateSolidBrush(RGB(0x08, 0x07, 0x26));
-      HDC hdc = reinterpret_cast<HDC>(wparam);
-      const RECT strips[] = {
-          {client.left, client.top, client.right, client.top + border},
-          {client.left, client.bottom - border, client.right, client.bottom},
-          {client.left, client.top, client.left + border, client.bottom},
-          {client.right - border, client.top, client.right, client.bottom},
-      };
-      for (const RECT& strip : strips) {
-        FillRect(hdc, &strip, brush);
-      }
-      DeleteObject(brush);
-      return 1;
-    }
 
     case WM_NCHITTEST: {
       POINT point = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
