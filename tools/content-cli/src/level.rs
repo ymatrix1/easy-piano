@@ -231,3 +231,51 @@ pub fn run(args: &[String]) -> i32 {
     println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
     code
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn round3_keeps_three_decimals() {
+        assert_eq!(round3(1.23456), 1.235);
+        assert_eq!(round3(-0.0004), 0.0);
+    }
+
+    #[test]
+    fn fill_song_fields_adds_defaults_and_keeps_given_values() {
+        let mut v = json!({"id": "x", "title": null, "generator": {}, "spec_node": "a/b"});
+        fill_song_fields(&mut v);
+        assert_eq!(v["id"], "x");
+        assert_eq!(v["title"], "?");
+        assert_eq!(v["bpm"], 100);
+        assert_eq!(v["time"], "4/4");
+        assert!(v.get("generator").is_none());
+        assert!(v.get("spec_node").is_none());
+    }
+
+    #[test]
+    fn fill_song_fields_ignores_non_objects() {
+        let mut v = json!([1, 2]);
+        fill_song_fields(&mut v);
+        assert_eq!(v, json!([1, 2]));
+    }
+
+    #[test]
+    fn music_errors_skip_license_and_provenance() {
+        let song = Song::from_json(
+            r#"{"id":"x","title":"t","composer":"c","arranger":"a","source":"original",
+                "license":"?","composition_license":"?","bpm":100,"time":"4/4","key":"C",
+                "bars":[]}"#,
+        )
+        .unwrap();
+        assert_eq!(music_errors(&song), vec!["no bars".to_string()]);
+    }
+
+    #[test]
+    fn course_songs_of_an_empty_walk_are_empty() {
+        let (songs, envs) = course_songs(&[], &BTreeMap::new(), &Model::builtin());
+        assert!(songs.is_empty());
+        assert!(envs.is_empty());
+    }
+}

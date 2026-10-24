@@ -59,10 +59,11 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq libasound2-dev
           cargo clippy --all-targets --all-features -- -D warnings
 
-      # Includes the web parity test (renders Ode to Joy, D30).
+      # Includes the web parity test (renders Ode to Joy, D30). --all-features
+      # runs the decode and output tests too.
       - name: cargo test (audio)
         working-directory: audio
-        run: cargo test
+        run: cargo test --all-features
 
       - name: cargo fmt (content-cli)
         working-directory: tools/content-cli
@@ -72,9 +73,21 @@ jobs:
         working-directory: tools/content-cli
         run: cargo clippy --all-targets -- -D warnings
 
+      - name: cargo test (content-cli)
+        working-directory: tools/content-cli
+        run: cargo test
+
       - name: Lint content
         working-directory: tools/content-cli
         run: cargo run -- lint ../../content
+
+      # Enforces rule 9 for every language (tools/check_tests.py): new source files
+      # need tests, and tools/test-baseline.txt may only shrink.
+      - name: Every source file has a unit test
+        run: |
+          python3 tools/check_tests.py
+          python3 -m pip install --quiet pytest
+          python3 -m pytest tools/tests -q
 
   python:
     name: Python (melody-model)
