@@ -8,6 +8,7 @@ pub mod dynamics;
 pub mod notation;
 pub mod pitch;
 pub mod rubric;
+pub mod score_import;
 pub mod session;
 pub mod similarity;
 pub mod song;
