@@ -58,6 +58,12 @@ class ScoreSystem {
 
   /// Whether this system includes the leading clef, key signature, and brace.
   final bool hasClefAndKey;
+
+  /// First musical beat included in this system.
+  double get startBeat => measures.isEmpty ? 0.0 : measures.first.startBeat;
+
+  /// Last musical beat included in this system.
+  double get endBeat => measures.isEmpty ? 0.0 : measures.last.endBeat;
 }
 
 /// A rendered page consisting of vertically stacked systems (MuseScore `Page`).
@@ -80,22 +86,28 @@ class ScorePage {
 
   /// Overall page height.
   final double pageHeight;
+
+  /// First musical beat on this page.
+  double get startBeat => systems.isEmpty ? 0.0 : systems.first.startBeat;
+
+  /// Last musical beat on this page.
+  double get endBeat => systems.isEmpty ? 0.0 : systems.last.endBeat;
 }
 
 /// Configuration parameters for score engraving page layout.
 class ScorePageConfig {
   const ScorePageConfig({
-    this.pageWidth = 800.0,
-    this.pageHeight = 1130.0,
+    this.pageWidth = 840.0,
+    this.pageHeight = 1150.0,
     this.marginTop = 48.0,
     this.marginBottom = 48.0,
     this.marginLeft = 40.0,
     this.marginRight = 40.0,
     this.systemDistance = 64.0,
-    this.grandStaffHeight = 110.0,
-    this.systemHeaderWidth = 60.0,
-    this.minMeasureWidth = 90.0,
-    this.maxMeasuresPerSystem = 6,
+    this.grandStaffHeight = 135.0,
+    this.systemHeaderWidth = 64.0,
+    this.minMeasureWidth = 110.0,
+    this.maxMeasuresPerSystem = 4,
     this.minMeasuresPerSystem = 2,
     this.space = 10.0,
   });
@@ -180,7 +192,6 @@ abstract final class ScorePageLayout {
       // Estimate minimum width using segment layout density
       double minW = minMeasureWidth;
       if (mNotes.isNotEmpty) {
-        // Collect segments within this measure
         final segments = SegmentLayout.buildSegments(
           notes: mNotes,
           anchorX: 0.0,
@@ -234,7 +245,6 @@ abstract final class ScorePageLayout {
         final nextMeasure = measures[startIdx + count];
         final testWidth = currentWidth + nextMeasure.minWidth;
 
-        // Check if adding this measure exceeds target width or max limit
         if (count >= config.minMeasuresPerSystem &&
             (testWidth > targetWidth || count >= config.maxMeasuresPerSystem)) {
           break;
@@ -253,9 +263,6 @@ abstract final class ScorePageLayout {
       final sysMeasures = measures.sublist(startIdx, startIdx + count);
       final isLastSystem = (startIdx + count) >= measures.length;
 
-      // System justification:
-      // MuseScore HorizontalSpacing::justifyMeasures:
-      // Proportional expansion: w_i = w_min_i + remaining * (w_min_i / sum_w_min)
       final sumMin = sysMeasures.fold<double>(
         0.0,
         (acc, m) => acc + m.minWidth,
@@ -272,7 +279,6 @@ abstract final class ScorePageLayout {
         if (isLastSystem &&
             extra > targetWidth * 0.4 &&
             sysMeasures.length <= 2) {
-          // On last unfinished system, avoid exaggerated stretching (MuseScore style)
           justifiedW = m.minWidth * 1.15;
         } else {
           final ratio = sumMin > 0 ? (m.minWidth / sumMin) : (1.0 / count);
