@@ -1,13 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../audio/piano_synth.dart';
 import 'music_font.dart';
-import 'print_service.dart';
 import 'score_page_layout.dart';
+import 'score_pdf_printer.dart';
 import 'staff_note.dart';
 import 'staff_painter.dart';
 
@@ -149,19 +148,16 @@ class _ScorePageViewState extends State<ScorePageView>
     });
   }
 
-  void _printScore() {
-    if (kIsWeb) {
-      triggerPrint();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Print dialog available in Web/Desktop browser export.',
-          ),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  void _printScore(List<ScorePage> pages, ScorePageConfig config) {
+    ScorePdfPrinter.printScore(
+      pages: pages,
+      config: config,
+      staves: widget.staves,
+      keyFifths: widget.keyFifths,
+      beatsPerBar: widget.beatsPerBar,
+      title: widget.title,
+      composer: widget.composer,
+    );
   }
 
   @override
@@ -217,7 +213,7 @@ class _ScorePageViewState extends State<ScorePageView>
 
         return Scaffold(
           backgroundColor: const Color(0xFF141419),
-          appBar: _buildTopBar(pages.length),
+          appBar: _buildTopBar(pages.length, pages, config),
           body: Column(
             children: [
               Expanded(
@@ -265,7 +261,11 @@ class _ScorePageViewState extends State<ScorePageView>
     );
   }
 
-  PreferredSizeWidget _buildTopBar(int totalPages) {
+  PreferredSizeWidget _buildTopBar(
+    int totalPages,
+    List<ScorePage> pages,
+    ScorePageConfig config,
+  ) {
     return AppBar(
       backgroundColor: const Color(0xFF0F1014),
       elevation: 0,
@@ -291,7 +291,7 @@ class _ScorePageViewState extends State<ScorePageView>
         IconButton(
           icon: const Icon(Icons.print_rounded, color: Colors.white),
           tooltip: 'Print Score',
-          onPressed: _printScore,
+          onPressed: () => _printScore(pages, config),
         ),
         const SizedBox(width: 4),
         IconButton(
