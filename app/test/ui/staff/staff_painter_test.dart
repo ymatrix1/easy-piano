@@ -140,6 +140,51 @@ void main() {
     },
   );
 
+  testWidgets('end barline: thin line then thick line at the end beat', (
+    tester,
+  ) async {
+    // Treble, height 400 => space 20; anchor at x 200, 40 px per beat, so
+    // beat 4 sits at x 360 and the nominal bar line at 360 - 0.8 * space.
+    const size = Size(400, 400);
+    const y = 190.0; // between staff lines (staff spans y 160..240)
+    Future<Uint8List> render(double? endBeat) async {
+      final rec = ui.PictureRecorder();
+      StaffPainter(
+        notes: const [],
+        playheadBeat: ValueNotifier<double>(0),
+        pixelsPerBeat: 40,
+        lineRatio: 0.5,
+        staves: Staves.treble,
+        endBeat: endBeat,
+        showPlayLine: false,
+        playheadColor: const Color(0xFFFF0000),
+        inkColor: const Color(0xFF000000),
+      ).paint(Canvas(rec), size);
+      final img = await tester.runAsync(
+        () => rec.endRecording().toImage(400, 400),
+      );
+      return (await tester.runAsync(
+        () => img!.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!.buffer.asUint8List();
+    }
+
+    int alphaAt(Uint8List px, int x) => px[(y.toInt() * 400 + x) * 4 + 3];
+
+    final withEnd = await render(4);
+    final without = await render(null);
+    const barX = 344; // 360 - 0.8 * 20
+    // MuseScore proportions at space 20: thin line 0.18 sp = 3.6 px centred
+    // on 344 (342.2..345.8); thick line 0.55 sp = 11 px centred on
+    // 344 + 1.8 + 7.4 + 5.5 = 358.7 (353.2..364.2); gap 0.37 sp = 7.4 px.
+    expect(alphaAt(withEnd, 343), 255);
+    expect(alphaAt(withEnd, 349), 0); // gap
+    expect(alphaAt(withEnd, 358), 255);
+    expect(alphaAt(withEnd, 366), 0);
+    // Without endBeat nothing is drawn there.
+    expect(alphaAt(without, barX - 1), 0);
+    expect(alphaAt(without, 358), 0);
+  });
+
   group('barLineX', () {
     const space = 14.0;
     const anchorX = 200.0;
