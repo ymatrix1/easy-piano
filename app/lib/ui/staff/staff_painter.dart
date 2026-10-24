@@ -817,15 +817,13 @@ class StaffPainter extends CustomPainter {
         final barBeat = b * bpb.toDouble();
         // The final barline replaces the regular one at the end of the piece.
         if (endBeat != null && barBeat >= endBeat! - 1e-6) continue;
-        final bx = barLineX(
+        final bx = SegmentLayout.barLineX(
           barBeat: barBeat,
           nowBeat: now0,
           anchorX: anchorX,
           pixelsPerBeat: pixelsPerBeat,
           space: space,
-          notes: notes,
-          xCache: xCache,
-          noteAccidentals: noteAccidentals,
+          segments: segments,
         );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
@@ -834,15 +832,13 @@ class StaffPainter extends CustomPainter {
 
     final end = endBeat;
     if (end != null && end > 0) {
-      final ex = barLineX(
+      final ex = SegmentLayout.barLineX(
         barBeat: end,
         nowBeat: scrollBeat.value,
         anchorX: anchorX,
         pixelsPerBeat: pixelsPerBeat,
         space: space,
-        notes: notes,
-        xCache: xCache,
-        noteAccidentals: noteAccidentals,
+        segments: segments,
       );
       if (ex >= clefRight && ex <= size.width) {
         // MuseScore end barline (tdraw.cpp, BarLineType::END): thin line of
@@ -989,13 +985,15 @@ class StaffPainter extends CustomPainter {
       );
     }
 
+    double roundBeat(double b) => (b * 10000).round() / 10000;
+
     // Pre-compute chord groups and notehead offsets to prevent second collisions
     final chordIndicesByGroup = <(double, bool), List<int>>{};
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
       if (n.isSpacer || n.isRest) continue;
-      final key = (n.beat, _onBass(n));
+      final key = (roundBeat(n.beat), _onBass(n));
       chordIndicesByGroup.putIfAbsent(key, () => []).add(i);
     }
 
@@ -1086,6 +1084,7 @@ class StaffPainter extends CustomPainter {
 
     final drawnUnisons = <(double, int, bool)>{};
     final drawnLedgerLines = <(double, bool, int)>{};
+    final drawnChordStems = <(double, bool)>{};
     for (var i = first; i < notes.length; i++) {
       final n = notes[i];
       if (n.beat > lastBeat) break;
@@ -1143,14 +1142,14 @@ class StaffPainter extends CustomPainter {
 
       final step = diatonicStep(n.pitch);
       final y = _noteY(n.pitch, onBass, l);
-      final noteKey = (n.beat, n.pitch, onBass);
+      final noteKey = (roundBeat(n.beat), n.pitch, onBass);
       final isDuplicate = drawnUnisons.contains(noteKey);
       drawnUnisons.add(noteKey);
 
       final headOffset = chordHeadOffsets[i] ?? 0.0;
       final noteXPos = x + headOffset;
 
-      final chordKey = (n.beat, onBass);
+      final chordKey = (roundBeat(n.beat), onBass);
       final chordGroup = chordIndicesByGroup[chordKey];
       final chordPitches = chordGroup?.map((idx) => notes[idx].pitch).toList();
       final noteStemDown = n.isStemDown(
@@ -1327,45 +1326,41 @@ class StaffPainter extends CustomPainter {
           middleLineY: middleY,
         );
 
-        var isLowestOfChord = true;
-        var isHighestOfChord = true;
-        double? chordLowestY;
-        double? chordHighestY;
-        if (chordGroup != null) {
-          for (final idx in chordGroup) {
-            final other = notes[idx];
-            final otherY = _noteY(other.pitch, onBass, l);
-            if (chordLowestY == null || otherY > chordLowestY) {
-              chordLowestY = otherY;
-            }
-            if (chordHighestY == null || otherY < chordHighestY) {
-              chordHighestY = otherY;
-            }
-            if (idx == i) continue;
-            if (other.pitch < n.pitch) isLowestOfChord = false;
-            if (other.pitch > n.pitch) isHighestOfChord = false;
-          }
-        }
-
         if (hasOtherChordNote) {
-          // In a chord: draw a single continuous stem between all notes extending to tip.
-          // The stem attaches to the normal (undisplaced) side of the chord noteheads at `x`.
-          final chordStemXDown = StemLayout.stemX(
-            noteheadX: x,
-            stemDown: true,
-            space: space,
-          );
-          final chordStemXUp = StemLayout.stemX(
-            noteheadX: x,
-            stemDown: false,
-            space: space,
-          );
-          if (stemDown) {
-            if (isLowestOfChord) {
-              final startY = chordHighestY ?? y;
+          if (!drawnChordStems.contains(chordKey)) {
+            drawnChordStems.add(chordKey);
+            // In a chord: draw a single continuous stem between all notes extending to tip.
+            // The stem attaches to the normal (undisplaced) side of the chord noteheads at `x`.
+            final chordStemXDown = StemLayout.stemX(
+              noteheadX: x,
+              stemDown: true,
+              space: space,
+            );
+            final chordStemXUp = StemLayout.stemX(
+              noteheadX: x,
+              stemDown: false,
+              space: space,
+            );
+
+            // Compute vertical extremes of the chord
+            double minY = y; // highest pitch (lowest screen Y)
+            double maxY = y; // lowest pitch (highest screen Y)
+            for (final idx in chordGroup) {
+              final ny = _noteY(notes[idx].pitch, onBass, l);
+              if (ny < minY) minY = ny;
+              if (ny > maxY) maxY = ny;
+            }
+
+            if (stemDown) {
+              final chordTipY = StemLayout.calcStemTipY(
+                noteY: maxY,
+                stemDown: true,
+                space: space,
+                middleLineY: middleY,
+              );
               canvas.drawLine(
-                Offset(chordStemXDown, startY),
-                Offset(chordStemXDown, tipY),
+                Offset(chordStemXDown, minY),
+                Offset(chordStemXDown, chordTipY),
                 strokePaint,
               );
               if (n.beats <= 0.75) {
@@ -1376,17 +1371,20 @@ class StaffPainter extends CustomPainter {
                   canvas,
                   flag,
                   glyphSize,
-                  Offset(chordStemXDown, tipY),
+                  Offset(chordStemXDown, chordTipY),
                   color,
                 );
               }
-            }
-          } else {
-            if (isHighestOfChord) {
-              final startY = chordLowestY ?? y;
+            } else {
+              final chordTipY = StemLayout.calcStemTipY(
+                noteY: minY,
+                stemDown: false,
+                space: space,
+                middleLineY: middleY,
+              );
               canvas.drawLine(
-                Offset(chordStemXUp, startY),
-                Offset(chordStemXUp, tipY),
+                Offset(chordStemXUp, maxY),
+                Offset(chordStemXUp, chordTipY),
                 strokePaint,
               );
               if (n.beats <= 0.75) {
@@ -1397,7 +1395,7 @@ class StaffPainter extends CustomPainter {
                   canvas,
                   flag,
                   glyphSize,
-                  Offset(chordStemXUp, tipY),
+                  Offset(chordStemXUp, chordTipY),
                   color,
                 );
               }

@@ -19,6 +19,7 @@ class SegmentInfo {
   final bool hasDot;
   final double maxHeadWidth;
 
+  double scoreX = 0.0;
   double x = 0.0;
   double get leftOffset => hasAccidental ? 1.4 : 0.0;
   double get rightWidth => hasDot ? maxHeadWidth + 0.65 : maxHeadWidth;
@@ -31,6 +32,14 @@ abstract final class SegmentLayout {
       (beats - 3.0).abs() < 1e-4 ||
       (beats - 0.75).abs() < 1e-4 ||
       (beats - 0.375).abs() < 1e-4;
+
+  /// MuseScore non-linear duration stretch (HorizontalSpacing::durationStretchForTicks).
+  ///
+  /// durStretch = pow(slope, log2(durationRatio)) where reference duration = 1.0 (quarter note).
+  static double durationStretch(double beats, {double slope = 1.5}) {
+    if (beats <= 0) return 0.0;
+    return math.pow(slope, math.log(beats) / math.ln2).toDouble();
+  }
 
   /// Builds segments for all notes and computes their unified horizontal X coordinates.
   static List<SegmentInfo> buildSegments({
@@ -83,31 +92,73 @@ abstract final class SegmentLayout {
       );
     }
 
-    // Compute unified X positions for each segment
+    // 1. Compute cumulative scoreX for each segment based on MuseScore's duration
+    // stretch and padding clearances.
     for (var k = 0; k < segments.length; k++) {
       final seg = segments[k];
-      final nominalX = anchorX + (seg.beat - nowBeat) * pixelsPerBeat;
       if (k == 0) {
-        seg.x = nominalX;
+        seg.scoreX = 0.0;
       } else {
         final prev = segments[k - 1];
+        final deltaBeats = seg.beat - prev.beat;
         final bool crossedBar =
             beatsPerBar != null &&
             beatsPerBar > 0 &&
             ((seg.beat / beatsPerBar).floor() >
                 (prev.beat / beatsPerBar).floor());
 
+        // Non-linear duration stretch (quarter note = 1.0 stretch, eighth = 0.667 stretch, 16th = 0.444 stretch)
+        final nominalSpacing = durationStretch(deltaBeats) * pixelsPerBeat;
+
+        // MuseScore paddingtable.cpp clearances
         final double minGap;
         if (crossedBar) {
-          minGap = seg.hasAccidental ? space * 2.8 : space * 1.8;
+          minGap = seg.hasAccidental ? space * 3.2 : space * 2.2;
         } else {
-          minGap = seg.hasAccidental ? space * 1.6 : space * 0.4;
+          minGap = seg.hasAccidental ? space * 1.8 : space * 0.45;
         }
 
-        final minX =
-            prev.x + prev.rightWidth * space + minGap + seg.leftOffset * space;
-        seg.x = math.max(nominalX, minX);
+        final minSpacing =
+            prev.rightWidth * space + minGap + seg.leftOffset * space;
+        seg.scoreX = prev.scoreX + math.max(nominalSpacing, minSpacing);
       }
+    }
+
+    // 2. Map nowBeat to score coordinate and position segments relative to anchorX
+    double scoreXAtBeat(double beat) {
+      if (segments.isEmpty) return 0.0;
+      if (beat <= segments.first.beat) {
+        return segments.first.scoreX +
+            (beat - segments.first.beat) * pixelsPerBeat;
+      }
+      if (beat >= segments.last.beat) {
+        return segments.last.scoreX +
+            (beat - segments.last.beat) * pixelsPerBeat;
+      }
+      var low = 0;
+      var high = segments.length - 1;
+      while (low <= high) {
+        final mid = (low + high) ~/ 2;
+        if (segments[mid].beat <= beat) {
+          if (mid + 1 < segments.length && segments[mid + 1].beat > beat) {
+            final b0 = segments[mid].beat;
+            final b1 = segments[mid + 1].beat;
+            final x0 = segments[mid].scoreX;
+            final x1 = segments[mid + 1].scoreX;
+            final t = (beat - b0) / (b1 - b0);
+            return x0 + t * (x1 - x0);
+          }
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return segments.first.scoreX;
+    }
+
+    final nowScoreX = scoreXAtBeat(nowBeat);
+    for (final seg in segments) {
+      seg.x = anchorX + (seg.scoreX - nowScoreX);
     }
 
     return segments;
@@ -134,7 +185,43 @@ abstract final class SegmentLayout {
     required double space,
     required List<SegmentInfo> segments,
   }) {
-    final nominalX = anchorX + (barBeat - nowBeat) * pixelsPerBeat;
+    if (segments.isEmpty) {
+      return anchorX + (barBeat - nowBeat) * pixelsPerBeat - space * 0.8;
+    }
+    double scoreXAtBeat(double beat) {
+      if (beat <= segments.first.beat) {
+        return segments.first.scoreX +
+            (beat - segments.first.beat) * pixelsPerBeat;
+      }
+      if (beat >= segments.last.beat) {
+        return segments.last.scoreX +
+            (beat - segments.last.beat) * pixelsPerBeat;
+      }
+      var low = 0;
+      var high = segments.length - 1;
+      while (low <= high) {
+        final mid = (low + high) ~/ 2;
+        if (segments[mid].beat <= beat) {
+          if (mid + 1 < segments.length && segments[mid + 1].beat > beat) {
+            final b0 = segments[mid].beat;
+            final b1 = segments[mid + 1].beat;
+            final x0 = segments[mid].scoreX;
+            final x1 = segments[mid + 1].scoreX;
+            final t = (beat - b0) / (b1 - b0);
+            return x0 + t * (x1 - x0);
+          }
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return segments.first.scoreX;
+    }
+
+    final nowScoreX = scoreXAtBeat(nowBeat);
+    final barScoreX = scoreXAtBeat(barBeat);
+    final barX = anchorX + (barScoreX - nowScoreX);
+
     SegmentInfo? prevSeg;
     SegmentInfo? nextSeg;
     for (final seg in segments) {
@@ -145,24 +232,23 @@ abstract final class SegmentLayout {
       }
     }
 
-    var result = nominalX;
+    final rightBoundary = nextSeg != null
+        ? (nextSeg.x - nextSeg.leftOffset * space)
+        : barX;
+    final nominalBx = rightBoundary - space * 0.8;
+
     if (prevSeg != null) {
-      final minBarX = prevSeg.x + prevSeg.rightWidth * space + space * 0.8;
-      if (result < minBarX) {
-        result = minBarX;
+      final prevRight = prevSeg.x + prevSeg.rightWidth * space;
+      if (rightBoundary > prevRight) {
+        final centered = (prevRight + rightBoundary) / 2;
+        if (nominalBx < centered) {
+          return centered;
+        }
+      } else {
+        return (prevRight + rightBoundary) / 2;
       }
     }
-    if (nextSeg != null) {
-      final maxBarX = nextSeg.x - nextSeg.leftOffset * space - space * 0.8;
-      if (result > maxBarX && prevSeg != null) {
-        result =
-            (prevSeg.x +
-                prevSeg.rightWidth * space +
-                nextSeg.x -
-                nextSeg.leftOffset * space) /
-            2;
-      }
-    }
-    return result;
+
+    return nominalBx;
   }
 }

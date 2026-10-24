@@ -257,9 +257,6 @@ abstract final class BeamLayout {
         }
         final contiguous =
             (primary.beat - (prev.beat + prev.beats)).abs() < 1e-4;
-        // In keyboard accompaniment figures (e.g. Alberti bass, bass note + offbeat chords),
-        // single bass notes and accompaniment chords of different voices/sizes must not be
-        // beamed together (Gould p. 306 / MuseScore score layout).
         final isBassAccompanimentMix =
             isBass && (currentChords.last.length != c.length);
 

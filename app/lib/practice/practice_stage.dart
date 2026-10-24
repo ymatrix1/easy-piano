@@ -290,10 +290,24 @@ class _PracticeStageState extends State<PracticeStage>
     widget.feed?.addListener(_onFeed);
     _scroll.value = _playAlong ? -_countInBeats : 0;
     _pageAnim =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 350),
+          )
           ..addListener(() {
             final tw = _pageTween;
             if (tw != null) _scroll.value = tw.value;
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              final cur = _currentNoteIndex();
+              if (!_playAlong && cur != null) {
+                final targetIdx = cur < _noteTarget.length
+                    ? _noteTarget[cur]
+                    : -1;
+                if (targetIdx >= 0) _maybeTurnPage(targetIdx);
+              }
+            }
           });
     if (_playAlong) {
       _backing = _companionNotes();
@@ -681,15 +695,12 @@ class _PracticeStageState extends State<PracticeStage>
     final x = (nextBeat - _scroll.value) * _ppb;
     if (_pageAnim.isAnimating) return;
     if (x > (_pageTurnAt - _waitAnchor) * _staffWidth) {
-      // Reference: slide so the next note returns to the left margin, but
-      // never past the point where the end of the piece is already in view.
-      final lastVisible = _streaming
-          ? nextBeat
-          : _totalBeats - (0.92 - _waitAnchor) * _staffWidth / _ppb;
-      final end = math.min(nextBeat, math.max(_scroll.value, lastVisible));
+      // Slide so the next note returns to the wait anchor, keeping notes clearly
+      // visible and preventing the active target from running off the right edge.
+      final end = math.min(nextBeat, _totalBeats);
       if (end <= _scroll.value + 0.01) return;
       _pageTween = Tween(begin: _scroll.value, end: end).animate(
-        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutSine),
+        CurvedAnimation(parent: _pageAnim, curve: Curves.easeInOutCubic),
       );
       _pageAnim.forward(from: 0);
     }
