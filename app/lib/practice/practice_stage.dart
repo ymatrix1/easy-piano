@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/song_marks_parser.dart';
 import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
@@ -208,6 +209,8 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int>
   _targetFirstNote; // target index → first staff note index
   int _parsedRestBars = 0;
+  // Dynamics and hairpins from the song's directives, redrawn with the staff.
+  SongMarks _songMarks = SongMarks.empty;
   late final double _beatsPerBar;
   late double _usPerBeat; // changes when training slows a section down
   late final double _bpm;
@@ -340,6 +343,7 @@ class _PracticeStageState extends State<PracticeStage>
   /// Adds staff notes for targets past the ones already drawn, interleaved with rests.
   void _addTargets(List<TargetView> all) {
     final songJson = widget.feed?.json ?? widget.songJson;
+    _songMarks = SongMarksParser.parse(songJson);
     final totalBars = _barCount(songJson);
     final rawRests = SongRestParser.parseRests(
       songJson,
@@ -1414,6 +1418,8 @@ class _PracticeStageState extends State<PracticeStage>
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
                           keyFifths: _keyFifths,
+                          dynamics: _songMarks.dynamics,
+                          hairpins: _songMarks.hairpins,
                           // Streamed feeds do not know their end yet.
                           endBeat:
                               widget.feed == null && _initialTargets.isNotEmpty

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'beam_layout.dart';
 import 'chord_layout.dart';
+import 'dynamics_layout.dart';
 import 'engraving_decorations.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
@@ -15,6 +16,7 @@ import 'tuplet_layout.dart';
 
 export 'beam_layout.dart';
 export 'chord_layout.dart';
+export 'dynamics_layout.dart';
 export 'engraving_decorations.dart';
 export 'key_signature.dart';
 export 'segment_layout.dart';
@@ -80,6 +82,8 @@ class StaffPainter extends CustomPainter {
     this.waitBeamOpacity,
     this.introStartSec,
     this.beatPulse,
+    this.dynamics = const [],
+    this.hairpins = const [],
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -168,6 +172,12 @@ class StaffPainter extends CustomPainter {
 
   /// Play-along: 0–1 pulse that peaks on each beat; widens the play bar glow.
   final double Function()? beatPulse;
+
+  /// Dynamic marks (`p`..`ff`), drawn below the bottom staff at their note.
+  final List<StaffDynamic> dynamics;
+
+  /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
+  final List<StaffHairpin> hairpins;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -1517,6 +1527,89 @@ class StaffPainter extends CustomPainter {
       }
     }
 
+    // Dynamics and hairpins, below the bottom staff (MuseScore
+    // dynamicslayout.cpp and tlayout.cpp layoutHairpinSegment).
+    if (hairpins.isNotEmpty || dynamics.isNotEmpty) {
+      double xAt(double beat) {
+        final i = _lowerBound(beat - 1e-6);
+        if (i < notes.length && (notes[i].beat - beat).abs() < 1e-6) {
+          final cx = xCache[i];
+          if (cx != null) return cx;
+        }
+        return anchorX + (beat - now) * pixelsPerBeat;
+      }
+
+      final barXs = <double>[
+        if (bpb != null && bpb > 0)
+          for (
+            var b = ((now - anchorX / pixelsPerBeat) / bpb).floor();
+            b <= ((now + (size.width - anchorX) / pixelsPerBeat) / bpb).ceil();
+            b++
+          )
+            if (b > 0)
+              SegmentLayout.barLineX(
+                barBeat: b * bpb,
+                nowBeat: now,
+                anchorX: anchorX,
+                pixelsPerBeat: pixelsPerBeat,
+                space: space,
+                segments: segments,
+              ),
+      ];
+
+      final hairpinY = DynamicsLayout.hairpinCentreY(
+        bottomStaffY: staffBottom,
+        space: space,
+      );
+      final hairpinSpans = <(double, double)>[];
+      for (final h in hairpins) {
+        final x1 = xAt(h.startBeat), x2 = xAt(h.endBeat);
+        if (x2 < 0 || x1 > size.width) continue;
+        hairpinSpans.add((x1, math.max(x2, x1 + space)));
+        DynamicsLayout.drawHairpin(
+          canvas,
+          x1: x1,
+          x2: x2,
+          centreY: hairpinY,
+          space: space,
+          kind: h.kind,
+          color: staff,
+        );
+      }
+
+      for (final d in dynamics) {
+        final glyphs = DynamicsLayout.glyphsFor(d.mark);
+        if (glyphs == null) continue;
+        final x = xAt(d.beat);
+        final width = _glyph(glyphs, glyphSize, staff).width;
+        if (x > size.width || x + width < 0) continue;
+        final dx = DynamicsLayout.barlineShift(
+          left: x,
+          right: x + width,
+          barlineXs: barXs,
+          space: space,
+        );
+        final overlapsHairpin = hairpinSpans.any(
+          (s) => s.$1 <= x + width && s.$2 >= x,
+        );
+        _drawGlyph(
+          canvas,
+          glyphs,
+          glyphSize,
+          Offset(
+            x + dx,
+            DynamicsLayout.dynamicBaselineY(
+              bottomStaffY: staffBottom,
+              space: space,
+              mark: d.mark,
+              hairpinOverlaps: overlapsHairpin,
+            ),
+          ),
+          staff,
+        );
+      }
+    }
+
     // Mask the layer: alpha 0 up to the clefs' right edge, ramping to 1.
     final maskRect = Offset.zero & size;
     canvas.drawRect(
@@ -1730,5 +1823,7 @@ class StaffPainter extends CustomPainter {
       old.staves != staves ||
       old.lineRatio != lineRatio ||
       old.introStartSec != introStartSec ||
+      old.dynamics != dynamics ||
+      old.hairpins != hairpins ||
       old.pixelsPerBeat != pixelsPerBeat;
 }

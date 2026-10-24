@@ -35,7 +35,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Tapered Bézier Ties & Slurs | `rendering/score/slurtielayout.cpp` | Delivered | `engraving_decorations.dart` |
 | End barline (thin + thick) at the end of the piece | `rendering/score/barline.cpp` | Delivered | `staff_painter.dart` (`endBeat`) |
 | Articulations (staccato, tenuto) | `dom/articulation.cpp` | Delivered | `engraving_decorations.dart` |
-| Dynamics (p, mp, mf, f) & Hairpins| `rendering/score/dynamicslayout.cpp` | Planned (PR 1) | `dynamics_layout.dart` |
+| Dynamics (p..ff, sf, sfz) & Hairpins | `rendering/score/dynamicslayout.cpp`, `tlayout.cpp` (layoutHairpinSegment) | Delivered (PR 1, rendering; grading pending) | `dynamics_layout.dart` |
 | Piano Damper Pedal (Ped., *) | `rendering/score/tlayout.cpp` (pedal) | Planned (PR 2) | `pedal_layout.dart` |
 | Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
@@ -50,9 +50,13 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 ## Module Specifications
 
 ### 1. Dynamics and Hairpins (`dynamics_layout.dart`)
-- **Reference:** MuseScore `dynamicslayout.cpp`.
-- **Glyphs:** SMuFL range U+E520–U+E540 (`dynamicPiano`, `dynamicMezzo`, `dynamicForte`, `dynamicSforzando`, etc.).
-- **Hairpins:** Quadratic or linear diverging stroke pairs (`<` and `>`), baseline positioned `space * 2.5` below bottom staff line (treble) or bottom bass line. Avoids collision with low stems.
+- **Reference:** MuseScore `dynamicslayout.cpp` (placement, barline avoidance) and `tlayout.cpp:layoutHairpinSegment` (hairpin arms).
+- **Glyphs:** composed letter by letter as MuseScore `Dynamic::DYN_LIST`: `p` U+E520, `m` U+E521, `f` U+E522, `s` U+E524, `z` U+E525. Supported marks: `p pp ppp mp mf f ff fff fp sf sfz`.
+- **Placement:** dynamic left-aligned at its note, baseline `dynamicsPosBelow` 2 sp below the bottom staff line. Hairpin centre `hairpinPosBelow` 1.75 sp below it. A dynamic under an overlapping hairpin moves below the hairpin plus 0.5 sp (`autoplaceHairpinDynamicsDistance`).
+- **Hairpins:** two straight arms from a tip, `hairpinHeight` 1.15 sp at the wide end, line width 0.12 sp. Crescendo tip on the left; diminuendo tip on the right. Shorter than 1 sp is stretched to 1 sp. Not yet: multi-system segments, circled tips, text labels.
+- **Barlines:** a dynamic is shifted to keep 0.25 sp from the nearest barline on each side.
+- **Not yet:** stem clearance for hairpins.
+- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-dynamics-and-hairpins).
 
 ### 2. Piano Damper Pedal (`pedal_layout.dart`)
 - **Reference:** MuseScore `pedal.cpp` and `tlayout.cpp:layoutPedal`.
