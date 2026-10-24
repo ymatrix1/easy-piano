@@ -490,7 +490,9 @@ class StaffPainter extends CustomPainter {
           ..color = staff
           ..style = PaintingStyle.stroke
           ..strokeWidth = ink.strokeWidth * 2;
-        final inset = frame.strokeWidth / 2;
+        // The frame's right edge is pushed past the screen so the staff reads
+        // as endless to the right; only top, bottom and left edges are drawn.
+        final frameRight = size.width + frame.strokeWidth * 2;
 
         if (_hasTreble) {
           final rect = Rect.fromLTRB(
@@ -501,12 +503,7 @@ class StaffPainter extends CustomPainter {
           );
           canvas.drawRect(rect, band);
           canvas.drawRect(
-            Rect.fromLTRB(
-              sys.systemX,
-              rect.top,
-              size.width - inset,
-              rect.bottom,
-            ),
+            Rect.fromLTRB(sys.systemX, rect.top, frameRight, rect.bottom),
             frame,
           );
         }
@@ -519,12 +516,7 @@ class StaffPainter extends CustomPainter {
           );
           canvas.drawRect(rect, band);
           canvas.drawRect(
-            Rect.fromLTRB(
-              sys.systemX,
-              rect.top,
-              size.width - inset,
-              rect.bottom,
-            ),
+            Rect.fromLTRB(sys.systemX, rect.top, frameRight, rect.bottom),
             frame,
           );
         }
