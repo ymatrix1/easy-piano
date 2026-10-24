@@ -1277,6 +1277,11 @@ class _PracticeStageState extends State<PracticeStage>
                               : widget.staves,
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
+                          // Streamed feeds do not know their end yet.
+                          endBeat:
+                              widget.feed == null && _initialTargets.isNotEmpty
+                              ? _totalBeats
+                              : null,
                           dimmed: _paused || _demo,
                           waitBeamOpacity: _playAlong || waitDone
                               ? null
