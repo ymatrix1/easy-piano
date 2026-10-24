@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:easy_piano/ui/staff/staff_note.dart';
 import 'package:easy_piano/ui/staff/stem_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -147,6 +149,36 @@ void main() {
           middleLineY: middleY,
         );
         expect(tip, middleY);
+      },
+    );
+  });
+
+  group('StemLayout horizontal attachment stemX', () {
+    const space = 10.0;
+    const noteheadX = 50.0;
+    final strokeWidth = math.max(1.2, space * 0.1); // 1.2
+
+    test('Downward stem attaches flush with left edge of notehead', () {
+      final sx = StemLayout.stemX(
+        noteheadX: noteheadX,
+        stemDown: true,
+        space: space,
+      );
+      // Line is centered at noteheadX + strokeWidth / 2 so left edge is at noteheadX
+      expect(sx, noteheadX + strokeWidth / 2);
+    });
+
+    test(
+      'Upward stem attaches flush with right edge of notehead (1.3 * space)',
+      () {
+        final sx = StemLayout.stemX(
+          noteheadX: noteheadX,
+          stemDown: false,
+          space: space,
+        );
+        // Leland notehead width is 1.3 * space.
+        // Line is centered at noteheadX + 1.3 * space - strokeWidth / 2
+        expect(sx, noteheadX + space * 1.3 - strokeWidth / 2);
       },
     );
   });

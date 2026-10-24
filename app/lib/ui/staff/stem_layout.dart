@@ -86,15 +86,19 @@ abstract final class StemLayout {
 
   /// X coordinate of stem attachment.
   ///
-  /// Stems pointing UP attach to the right side of the notehead.
-  /// Stems pointing DOWN attach to the left side of the notehead.
+  /// Stems pointing UP attach tangentially to the right side of the notehead.
+  /// Stems pointing DOWN attach tangentially to the left side of the notehead.
+  /// Based on SMuFL / Leland font metrics:
+  /// noteheadBlack and noteheadHalf width = 1.30 * space.
   static double stemX({
     required double noteheadX,
     required bool stemDown,
     required double space,
   }) {
     final strokeWidth = math.max(1.2, space * 0.1);
-    final headWidth = space * 1.18;
-    return stemDown ? noteheadX : (noteheadX + headWidth - strokeWidth);
+    final headWidth = space * 1.3;
+    return stemDown
+        ? noteheadX + strokeWidth / 2
+        : noteheadX + headWidth - strokeWidth / 2;
   }
 }

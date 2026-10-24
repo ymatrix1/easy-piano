@@ -1048,16 +1048,15 @@ class StaffPainter extends CustomPainter {
             : trebleBottomY - space * 2;
 
         final sxUp = StemLayout.stemX(
-          noteheadX: x,
+          noteheadX: noteXPos,
           stemDown: false,
           space: space,
         );
         final sxDown = StemLayout.stemX(
-          noteheadX: x,
+          noteheadX: noteXPos,
           stemDown: true,
           space: space,
         );
-        final sx = stemDown ? sxDown : sxUp;
         final tipY = StemLayout.calcStemTipY(
           noteY: y,
           stemDown: stemDown,
@@ -1067,22 +1066,31 @@ class StaffPainter extends CustomPainter {
 
         var isLowestOfChord = true;
         var isHighestOfChord = true;
+        double? chordLowestY;
+        double? chordHighestY;
         if (chordGroup != null) {
           for (final idx in chordGroup) {
-            if (idx == i) continue;
             final other = notes[idx];
+            final otherY = _noteY(other.pitch, onBass, l);
+            if (chordLowestY == null || otherY > chordLowestY) {
+              chordLowestY = otherY;
+            }
+            if (chordHighestY == null || otherY < chordHighestY) {
+              chordHighestY = otherY;
+            }
+            if (idx == i) continue;
             if (other.pitch < n.pitch) isLowestOfChord = false;
             if (other.pitch > n.pitch) isHighestOfChord = false;
           }
         }
 
         if (hasOtherChordNote) {
-          // In a chord: draw connecting stem between notes, and extend the main stem
+          // In a chord: draw a single continuous stem between all notes extending to tip
           if (stemDown) {
-            // Downward stem extends from the lowest note downward
             if (isLowestOfChord) {
+              final startY = chordHighestY ?? y;
               canvas.drawLine(
-                Offset(sxDown, y),
+                Offset(sxDown, startY),
                 Offset(sxDown, tipY),
                 strokePaint,
               );
@@ -1100,26 +1108,19 @@ class StaffPainter extends CustomPainter {
               }
             }
           } else {
-            // Upward stem extends from the highest note upward
             if (isHighestOfChord) {
-              canvas.drawLine(Offset(sxUp, y), Offset(sxUp, tipY), strokePaint);
+              final startY = chordLowestY ?? y;
+              canvas.drawLine(
+                Offset(sxUp, startY),
+                Offset(sxUp, tipY),
+                strokePaint,
+              );
               if (n.beats <= 0.75) {
                 final flag = n.beats <= 0.375
                     ? Smufl.flag16thUp
                     : Smufl.flag8thUp;
                 _drawGlyph(canvas, flag, glyphSize, Offset(sxUp, tipY), color);
               }
-            }
-          }
-          // Also connect this note to adjacent chord notes if needed
-          for (var k = i + 1; k < notes.length; k++) {
-            final other = notes[k];
-            if ((other.beat - n.beat).abs() < 1e-6 &&
-                other.leftHand == n.leftHand &&
-                !other.isSpacer &&
-                !other.isRest) {
-              final otherY = _noteY(other.pitch, onBass, l);
-              canvas.drawLine(Offset(sx, y), Offset(sx, otherY), strokePaint);
             }
           }
         } else if (n.twoStems || isDuplicate) {

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'staff_note.dart';
+import 'stem_layout.dart';
 
 /// A group of notes connected by beam bars (MuseScore beamlayout.cpp style).
 class BeamGroup {
@@ -76,12 +77,13 @@ abstract final class BeamLayout {
         final stemDown = downVotes >= 0;
 
         final stemXs = <int, double>{};
-        final strokeWidth = math.max(1.2, space * 0.1);
         for (final idx in indices) {
           final x = noteXs[idx] ?? 0;
-          stemXs[idx] = stemDown
-              ? x + strokeWidth / 2
-              : x + space * 1.3 - strokeWidth / 2;
+          stemXs[idx] = StemLayout.stemX(
+            noteheadX: x,
+            stemDown: stemDown,
+            space: space,
+          );
         }
 
         final firstSx = stemXs[indices.first]!;
