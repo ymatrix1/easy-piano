@@ -64,7 +64,12 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
   - Circled tip and hairpin text (`hairpinCircledTip` and `hairpinText` are off by default in MuseScore).
   - Shape-based skylines: obstacles are boxes around noteheads and stems, not the glyph outlines, and beams are not included.
   - Rests are not obstacles.
-- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-dynamics-and-hairpins).
+- **Known limitations (verified, not fixed):**
+  - *Dense gaps:* when many marks fall in one 2-beat window of a grand staff, the stacked group can be taller than the gap and reach over a staff line. MuseScore has the same constraint, but I have not compared the exact result.
+  - *Box width:* a dynamic's box is its TextPainter width, which depends on the loaded font. A wide advance can push a nearby hairpin down a little more than the real glyph would.
+  - *Test fonts:* widget tests without the music font paint placeholder boxes with different metrics. Paint tests therefore check that ink exists in a region, not that a region is empty. The layout rules themselves are unit-tested without fonts.
+  - *No pixel comparison* with MuseScore output has been done.
+  - *Result screen:* the dynamics grade is in ResultView but not shown in the UI (piano-rdr4).- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-dynamics-and-hairpins).
 
 ### 2. Piano Damper Pedal (`pedal_layout.dart`)
 - **Reference:** MuseScore `pedal.cpp` and `tlayout.cpp:layoutPedal`.

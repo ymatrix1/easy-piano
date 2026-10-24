@@ -38,6 +38,9 @@ Teach learners how to play expressively, rendering standard professional score d
 - Ties and repeats (covered by `piano-h90n`).
 - Full damper pedal graphical bracket lines (covered by dedicated pedal bean).
 
+## Known limitations
+- Dense gaps can push a stacked group over a staff line; box width depends on the loaded font; no pixel comparison with MuseScore. Details in sheet-engraving.md section 1.
+
 ## Summary of Changes
 PR 1 (dynamics and hairpins, rendering only). Grading, lint and lessons are open in `piano-rdr4`.
 - `app/lib/ui/staff/dynamics_layout.dart`: glyph composition, dynamic and hairpin placement, hairpin arms, barline clearance. Code points checked against the Bravura bbox metadata.
