@@ -109,5 +109,77 @@ void main() {
       expect(groups[0].indices, equals([0, 1, 2, 3]));
       expect(groups[1].indices, equals([4, 5, 6, 7]));
     });
+
+    test(
+      'groups consecutive chords and includes all chord indices in allIndices',
+      () {
+        // Dyads on beat 0.0 and 0.5 (like Rondo alla Turca E5G5:8 E5G5:8)
+        final notes = [
+          const StaffNote(76, 0.0, 0.5), // E5 (idx 0)
+          const StaffNote(79, 0.0, 0.5), // G5 (idx 1)
+          const StaffNote(76, 0.5, 0.5), // E5 (idx 2)
+          const StaffNote(79, 0.5, 0.5), // G5 (idx 3)
+        ];
+
+        final groups = BeamLayout.computeBeamGroups(
+          notes: notes,
+          first: 0,
+          lastBeat: 1.0,
+          onBass: (_) => false,
+          noteY: (pitch, _) => 100.0 - (pitch - 60) * 5.0,
+          noteXs: {0: 10.0, 1: 10.0, 2: 40.0, 3: 40.0},
+          space: 10.0,
+          beatsPerBar: 4.0,
+        );
+
+        expect(groups.length, equals(1));
+        // Primary indices (one per beat)
+        expect(groups[0].indices, equals([0, 2]));
+        // All note indices across all chords in the group are tracked
+        expect(groups[0].allIndices, equals([0, 1, 2, 3]));
+      },
+    );
+
+    test(
+      'computes independent beam groups for treble and bass simultaneously',
+      () {
+        // 4 eighth notes in treble and 4 eighth notes in bass playing at the same beats
+        final notes = [
+          // Beat 0.0
+          const StaffNote(60, 0.0, 0.5, leftHand: false), // idx 0 RH C4
+          const StaffNote(48, 0.0, 0.5, leftHand: true), // idx 1 LH C3
+          // Beat 0.5
+          const StaffNote(62, 0.5, 0.5, leftHand: false), // idx 2 RH D4
+          const StaffNote(50, 0.5, 0.5, leftHand: true), // idx 3 LH D3
+          // Beat 1.0
+          const StaffNote(64, 1.0, 0.5, leftHand: false), // idx 4 RH E4
+          const StaffNote(52, 1.0, 0.5, leftHand: true), // idx 5 LH E3
+          // Beat 1.5
+          const StaffNote(65, 1.5, 0.5, leftHand: false), // idx 6 RH F4
+          const StaffNote(53, 1.5, 0.5, leftHand: true), // idx 7 LH F3
+        ];
+
+        final groups = BeamLayout.computeBeamGroups(
+          notes: notes,
+          first: 0,
+          lastBeat: 2.0,
+          onBass: (n) => n.leftHand,
+          noteY: (pitch, onBass) => onBass ? 200.0 : 100.0,
+          noteXs: {
+            for (var i = 0; i < notes.length; i++) i: (notes[i].beat * 40.0),
+          },
+          space: 10.0,
+          beatsPerBar: 4.0,
+        );
+
+        // Both treble and bass must have their own independent beam group!
+        expect(groups.length, equals(2));
+        final trebleGroup = groups.firstWhere((g) => !g.stemDown);
+        final bassGroup = groups.firstWhere((g) => g.stemDown);
+
+        expect(trebleGroup.allIndices, equals([0, 2, 4, 6]));
+        expect(bassGroup.allIndices, equals([1, 3, 5, 7]));
+      },
+    );
   });
 }

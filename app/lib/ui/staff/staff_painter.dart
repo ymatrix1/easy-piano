@@ -800,7 +800,7 @@ class StaffPainter extends CustomPainter {
     );
     final beamedIndices = <int>{};
     for (final g in beamGroups) {
-      beamedIndices.addAll(g.indices);
+      beamedIndices.addAll(g.allIndices);
     }
 
     for (final g in beamGroups) {
@@ -1300,6 +1300,13 @@ class StaffPainter extends CustomPainter {
     }
 
     if (prev == null) return true; // First note of this hand
+    // For rapid successive sixteenth notes (beats <= 0.25), only show finger on the first note
+    // of the run or on large hand shifts to avoid text collisions.
+    if (n.beats <= 0.25 && prev.beats <= 0.25) {
+      if ((n.pitch - prev.pitch).abs() >= 5) return true;
+      if (n.beat - prev.beat >= 2.0) return true;
+      return false;
+    }
     if (prev.finger != n.finger) return true; // Finger changed
     if ((n.pitch - prev.pitch).abs() >= 5) return true; // Hand position shifted
     if (n.beat - prev.beat >= 4.0) return true; // New phrase after gap

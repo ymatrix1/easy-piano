@@ -321,13 +321,14 @@ class _PracticeStageState extends State<PracticeStage>
             : null;
         final down = k < t.stemDowns.length && t.stemDowns[k];
         final two = k < t.twoStems.length && t.twoStems[k];
+        final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
         _notes.add(
           StaffNote(
             p,
             t.beat,
             t.beats,
-            leftHand: p < 60,
-            stemDown: down,
+            leftHand: isLh,
+            stemDown: down ? true : null,
             twoStems: two,
             finger: f,
           ),

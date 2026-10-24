@@ -18,6 +18,7 @@ pub struct TargetView {
     pub fingers: Vec<u8>,
     pub stem_downs: Vec<bool>,
     pub two_stems: Vec<bool>,
+    pub left_hands: Vec<bool>,
     /// 0 pending, 1 hit, 2 missed.
     pub state: u8,
 }
@@ -210,6 +211,7 @@ impl PracticeSession {
                 fingers: t.fingers.iter().map(|f| f.unwrap_or(0)).collect(),
                 stem_downs: t.stem_downs.clone(),
                 two_stems: t.two_stems.clone(),
+                left_hands: t.left_hands.clone(),
                 state: match t.state {
                     ChordState::Pending => 0,
                     ChordState::Hit { .. } => 1,
