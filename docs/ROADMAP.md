@@ -36,7 +36,7 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 ## Phase 3: Mic and library
 
 - [x] Mic detection (single notes + chords) + calibration, web ([input](specs/input.md), [research](research/mic-input.md)); native capture pending
-- [ ] MusicXML/MIDI importers; song library with 30 PD pieces
+- [ ] MusicXML/MIDI importers; song library with 30 PD pieces (parsers done in `core/score_import`, `piano-gy3o`; FFI and song conversion `piano-t6rt`; import UI `piano-uy13`; real-file validation pending, [spec §5](specs/score-import-and-page-view.md))
 - [ ] Daily workout, streaks, daily goal
 
 ## Phase 4: Content scale
