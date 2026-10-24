@@ -1124,6 +1124,13 @@ class StaffPainter extends CustomPainter {
             ? Smufl.rest8th
             : Smufl.rest16th;
         _drawGlyph(canvas, restGlyph, glyphSize, Offset(x, restY), color);
+        if (_isDotted(n.beats)) {
+          canvas.drawCircle(
+            Offset(x + space * 1.5, restY + space * 0.5),
+            space * 0.2,
+            Paint()..color = color,
+          );
+        }
         if (intro != null) canvas.restore();
         continue;
       }

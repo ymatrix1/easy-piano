@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
 import '../ui/staff/staff_painter.dart';
 import 'generated/song_feed.dart';
@@ -59,8 +60,10 @@ Staves stavesForUi(String ui) => switch (ui) {
 /// other (e.g. a right-hand stage of a two-hand piece hides the bass staff).
 Staves fitStaves(Staves staves, Iterable<StaffNote> notes) {
   if (staves != Staves.grand || notes.isEmpty) return staves;
-  if (!notes.any((n) => n.leftHand)) return Staves.treble;
-  if (!notes.any((n) => !n.leftHand)) return Staves.bass;
+  final playableNotes = notes.where((n) => !n.isRest && !n.isSpacer);
+  final refNotes = playableNotes.isNotEmpty ? playableNotes : notes;
+  if (!refNotes.any((n) => n.leftHand)) return Staves.treble;
+  if (!refNotes.any((n) => !n.leftHand)) return Staves.bass;
   return staves;
 }
 
@@ -204,6 +207,7 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int> _noteTarget; // staff note index → target index
   late final List<int>
   _targetFirstNote; // target index → first staff note index
+  int _parsedRestBars = 0;
   late final double _beatsPerBar;
   late double _usPerBeat; // changes when training slows a section down
   late final double _bpm;
@@ -309,11 +313,30 @@ class _PracticeStageState extends State<PracticeStage>
     _introStartSec = _nowSec;
   }
 
-  /// Adds staff notes for targets past the ones already drawn.
+  /// Adds staff notes for targets past the ones already drawn, interleaved with rests.
   void _addTargets(List<TargetView> all) {
+    final songJson = widget.feed?.json ?? widget.songJson;
+    final totalBars = _barCount(songJson);
+    final rawRests = SongRestParser.parseRests(
+      songJson,
+      startBar: _parsedRestBars,
+      endBar: totalBars,
+    );
+    _parsedRestBars = totalBars;
+
+    final Iterable<SongRest> rests;
+    if (widget.staves == Staves.treble || widget.stage.hand == 'RH') {
+      rests = rawRests.where((r) => !r.leftHand);
+    } else if (widget.staves == Staves.bass || widget.stage.hand == 'LH') {
+      rests = rawRests.where((r) => r.leftHand);
+    } else {
+      rests = rawRests;
+    }
+
+    final pending = <({double beat, StaffNote note, int targetIdx})>[];
+
     for (var i = _initialTargets.length; i < all.length; i++) {
       final t = all[i];
-      _targetFirstNote.add(_notes.length);
       for (var k = 0; k < t.pitches.length; k++) {
         final p = t.pitches[k];
         final f = k < t.fingers.length && t.fingers[k] > 0
@@ -322,8 +345,9 @@ class _PracticeStageState extends State<PracticeStage>
         final down = k < t.stemDowns.length && t.stemDowns[k];
         final two = k < t.twoStems.length && t.twoStems[k];
         final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
-        _notes.add(
-          StaffNote(
+        pending.add((
+          beat: t.beat,
+          note: StaffNote(
             p,
             t.beat,
             t.beats,
@@ -332,10 +356,48 @@ class _PracticeStageState extends State<PracticeStage>
             twoStems: two,
             finger: f,
           ),
-        );
-        _noteTarget.add(i);
+          targetIdx: i,
+        ));
       }
     }
+
+    for (final r in rests) {
+      pending.add((
+        beat: r.beat,
+        note: StaffNote(
+          r.leftHand ? 48 : 72,
+          r.beat,
+          r.beats,
+          leftHand: r.leftHand,
+          voice: r.voice,
+          isRest: true,
+        ),
+        targetIdx: -1,
+      ));
+    }
+
+    pending.sort((a, b) => a.beat.compareTo(b.beat));
+
+    var lastTarget = -1;
+    for (final item in pending) {
+      final tIdx = item.targetIdx;
+      if (tIdx >= 0) {
+        if (tIdx != lastTarget) {
+          while (_targetFirstNote.length <= tIdx) {
+            _targetFirstNote.add(_notes.length);
+          }
+          lastTarget = tIdx;
+        }
+        _noteTarget.add(tIdx);
+      } else {
+        _noteTarget.add(-1);
+      }
+      _notes.add(item.note);
+    }
+    while (_targetFirstNote.length < all.length) {
+      _targetFirstNote.add(_notes.length);
+    }
+
     final old = _initialTargets.length;
     _targetStates = [..._targetStates, for (final t in all.skip(old)) t.state];
     _initialTargets = all;
@@ -370,8 +432,16 @@ class _PracticeStageState extends State<PracticeStage>
   /// Streaming: bars of the song whose backing is already scheduled.
   late int _scheduledBars = _barCount(widget.songJson);
 
-  static int _barCount(String json) =>
-      ((jsonDecode(json) as Map<String, dynamic>)['bars'] as List).length;
+  static int _barCount(String json) {
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map<String, dynamic>) {
+        final bars = decoded['bars'];
+        if (bars is List) return bars.length;
+      }
+    } catch (_) {}
+    return 0;
+  }
 
   bool get _streaming => widget.feed != null && !widget.feed!.ended;
 
@@ -383,9 +453,13 @@ class _PracticeStageState extends State<PracticeStage>
       BackingNote(n.pitch, n.beat, n.beats, n.partName),
   ];
 
-  double get _totalBeats => _initialTargets.isEmpty
-      ? 1
-      : _initialTargets.last.beat + _initialTargets.last.beats;
+  double get _totalBeats {
+    final songEnd = _scheduledBars * _beatsPerBar;
+    final targetEnd = _initialTargets.isEmpty
+        ? 1.0
+        : _initialTargets.last.beat + _initialTargets.last.beats;
+    return math.max(songEnd, targetEnd);
+  }
 
   bool get _hasSubdivisions =>
       _notes.any((n) => !n.isSpacer && !n.isRest && n.beats < 1.0);
@@ -857,6 +931,9 @@ class _PracticeStageState extends State<PracticeStage>
 
   Color _targetNoteColor(int i) {
     final ti = _noteTarget[i];
+    if (ti < 0 || ti >= _targetStates.length) {
+      return StagePalette.ink;
+    }
     switch (_targetStates[ti]) {
       case 1:
         return StagePalette.done;
@@ -872,7 +949,9 @@ class _PracticeStageState extends State<PracticeStage>
   /// Only the note to play next gets a badge; the others show a plain number.
   Color? _badgeColor(int i) {
     if (_playAlong) return null;
-    return _noteTarget[i] == _activeIndex ? StagePalette.badgeCurrent : null;
+    final ti = _noteTarget[i];
+    if (ti < 0) return null;
+    return ti == _activeIndex ? StagePalette.badgeCurrent : null;
   }
 
   /// Target highlighted now: the demo position during pre-listen, else the cursor.

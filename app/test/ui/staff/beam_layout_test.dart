@@ -181,5 +181,28 @@ void main() {
         expect(bassGroup.allIndices, equals([1, 3, 5, 7]));
       },
     );
+
+    test('does not beam single bass note to offbeat accompaniment chord (Gould p. 306)', () {
+      // Mozart Rondo alla Turca bar 4: A3:8 (single bass note) then C4E4:8 (chord)
+      final notes = [
+        const StaffNote(57, 0.0, 0.5, leftHand: true), // idx 0: A3 single note
+        const StaffNote(60, 0.5, 0.5, leftHand: true), // idx 1: C4 in chord
+        const StaffNote(64, 0.5, 0.5, leftHand: true), // idx 2: E4 in chord
+      ];
+
+      final groups = BeamLayout.computeBeamGroups(
+        notes: notes,
+        first: 0,
+        lastBeat: 1.0,
+        onBass: (_) => true,
+        noteY: (pitch, _) => 200.0 - (pitch - 50) * 5.0,
+        noteXs: {0: 10.0, 1: 30.0, 2: 30.0},
+        space: 10.0,
+        beatsPerBar: 4.0,
+      );
+
+      // Accompaniment single bass note must not be beamed to the offbeat chord!
+      expect(groups, isEmpty);
+    });
   });
 }

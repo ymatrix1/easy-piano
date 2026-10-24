@@ -103,7 +103,7 @@ abstract final class BeamLayout {
   }) {
     final groups = <BeamGroup>[];
     int beatGroupOf(double b) => (bpb == 6 ? (b / 1.5) : b).floor();
-    int barOf(double b) => bpb > 0 ? (b / bpb).floor() : 0;
+    int barOf(double b) => bpb > 0 ? ((b + 1e-6) / bpb).floor() : 0;
 
     // Group staff indices into chords by onset beat
     final chords = <List<int>>[];
@@ -121,19 +121,22 @@ abstract final class BeamLayout {
 
     void finishGroup() {
       if (currentChords.length >= 2) {
-        // Stem direction across chords in group.
-        // In grand staff, upper staff stems point UP and lower staff stems point DOWN
-        // to prevent collisions in the inter-staff space (Gould p. 305 / MuseScore).
-        final bool stemDown;
-        if (isBass) {
-          stemDown = true;
-        } else {
-          // Upper staff: point UP by default unless passage is high above staff (all notes >= A5)
-          final allVeryHigh = currentChords.every(
-            (c) => c.every((idx) => notes[idx].pitch >= 81),
-          );
-          stemDown = allVeryHigh;
-        }
+        // Stem direction across chords in group using MuseScore ChordLayout::computeAutoStemDirection / Gould rules.
+        final allPitches = [
+          for (final c in currentChords)
+            for (final idx in c) notes[idx].pitch,
+        ];
+        final explicitDown = currentChords
+            .expand((c) => c)
+            .map((idx) => notes[idx].stemDown)
+            .firstWhere((d) => d != null, orElse: () => null);
+
+        final bool stemDown = StemLayout.computeStemDown(
+          pitch: allPitches.first,
+          onBass: isBass,
+          explicitStemDown: explicitDown,
+          chordPitches: allPitches,
+        );
 
         final stemXs = <int, double>{};
         for (final c in currentChords) {
@@ -249,8 +252,16 @@ abstract final class BeamLayout {
         }
         final contiguous =
             (primary.beat - (prev.beat + prev.beats)).abs() < 1e-4;
+        // In keyboard accompaniment figures (e.g. Alberti bass, bass note + offbeat chords),
+        // single bass notes and accompaniment chords of different voices/sizes must not be
+        // beamed together (Gould p. 306 / MuseScore score layout).
+        final isBassAccompanimentMix =
+            isBass && (currentChords.last.length != c.length);
 
-        if (sameBar && sameMetricUnit && contiguous) {
+        if (sameBar &&
+            sameMetricUnit &&
+            contiguous &&
+            !isBassAccompanimentMix) {
           currentChords.add(c);
         } else {
           finishGroup();
