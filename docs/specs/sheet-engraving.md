@@ -82,7 +82,14 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 - **Horizontal** (`Pedal::linePos`): `Ped.` starts 0.5 sp left of its note; the line starts 0.2 sp after the glyph. A release point sits 0.75 sp before the next note; a change sits 1.25 sp before the note that re-presses.
 - **Vertical:** `pedalPosBelow` y 2.5 sp below the bottom staff line. The line moves down past noteheads and stems that overlap its release hook (box 1.2 sp high, the `pedalHookHeight`), keeping `pedalMinDistance` (0.5 sp here, the dynamics clearance).
 - **Modern bracket:** line `pedalLineWidth` 0.11 sp (style value). Each change is a `/\` notch 0.35 sp half-wide and 0.6 sp high, approximating MuseScore's two 45-degree hooks. A release ends in a vertical hook 1.2 sp high, with the `*` glyph after it.
-- **Not implemented:** half-pedal and una corda / sostenuto marks (`keyboardPedalHalf`, `keyboardPedalSost`), parentheses, and the `pedalText` style overrides (fixed in the layout code, not read from the style file).
+- **Not implemented:** half-pedal and una corda / sostenuto marks (`keyboardPedalHalf`, `keyboardPedalSost`), parentheses, and the `pedalText` style overrides (fixed in the layout code, not read from the style file). Pedal is not graded (no CC64 input).
+- **Where it shows:** only the practice stage (`practice_stage.dart`) passes `pedals` to `StaffPainter`. The static score page view (`score_page_view.dart`) does not draw dynamics, hairpins or pedals yet. Imported scores (MusicXML, MIDI, ABC, LilyPond) carry no pedal data ([score-import-and-page-view.md](score-import-and-page-view.md)).
+- **Demo song:** `content/songs/pedal-demo.json` (original, CC-BY-SA-4.0) has three spans: a change in bar 3, a release in bar 4 and bar 6, and a span left down to the end. No course uses it; it exists to inspect the marks in the app.
+- **Known limitations (verified, not fixed):**
+  - *Font metrics:* widget tests without the music font paint placeholder boxes, so the pedal paint test checks that ink is present or absent in a region, not exact glyph shapes.
+  - *Release star:* the `*` sits after the release hook and may run over the next bass notes. Not checked with the real font on screen.
+  - *Notches:* a `/\` polyline, not MuseScore's two 45-degree hooks; no pixel comparison with MuseScore has been done.
+  - *Lint:* `{ped}` and `{ped-up}` are not checked by `tools/content-cli` (see [content-format.md](content-format.md#directives-damper-pedal)).
 
 ### 3. Arpeggios and Glissandi (`arpeggio_layout.dart`)
 - **Reference:** MuseScore `arpeggiolayout.cpp`.

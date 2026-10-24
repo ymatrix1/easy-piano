@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
 import 'package:easy_piano/ui/staff/song_marks_parser.dart';
@@ -159,6 +160,28 @@ void main() {
     );
     expect(m.pedals, isEmpty);
   });
+
+  test(
+    'content/songs/pedal-demo.json has the pedal spans it is written for',
+    () {
+      final json = File('../content/songs/pedal-demo.json').readAsStringSync();
+      final pedals = SongMarksParser.parse(json).pedals;
+      expect(pedals, hasLength(3));
+      // bar 1 down, change in bar 3 (beat 8), release in bar 4 (beat 14)
+      expect(pedals[0].startBeat, 0);
+      expect(pedals[0].changeBeats, [8]);
+      expect(pedals[0].endBeat, 14);
+      expect(pedals[0].released, isTrue);
+      // bar 5 down, release in bar 6 (beat 22)
+      expect(pedals[1].startBeat, 16);
+      expect(pedals[1].endBeat, 22);
+      expect(pedals[1].released, isTrue);
+      // bar 7 down, never released: runs to the end at beat 28
+      expect(pedals[2].startBeat, 24);
+      expect(pedals[2].endBeat, 28);
+      expect(pedals[2].released, isFalse);
+    },
+  );
 
   test('ped directive in both hands is kept once', () {
     final m = SongMarksParser.parse(
