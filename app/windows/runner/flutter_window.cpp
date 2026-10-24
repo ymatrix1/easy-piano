@@ -63,9 +63,16 @@ bool FlutterWindow::OnCreate() {
   COLORREF caption_color = kAppBackground;
   DwmSetWindowAttribute(GetHandle(), DWMWA_CAPTION_COLOR, &caption_color,
                         sizeof(caption_color));
-  COLORREF no_border = DWMWA_COLOR_NONE;
-  DwmSetWindowAttribute(GetHandle(), DWMWA_BORDER_COLOR, &no_border,
-                        sizeof(no_border));
+  // The thin window outline also takes the app colour (DWMWA_COLOR_NONE left
+  // the default grey outline visible).
+  COLORREF border_color = kAppBackground;
+  DwmSetWindowAttribute(GetHandle(), DWMWA_BORDER_COLOR, &border_color,
+                        sizeof(border_color));
+
+  // WM_NCCALCSIZE already ran during CreateWindow, before the frame above was
+  // set, so the resize ring was never applied. Re-run it now.
+  SetWindowPos(GetHandle(), nullptr, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
   RECT frame = GetClientArea();
 
@@ -183,9 +190,12 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
   // Let DWM handle its own non-client messages first (glass frame, shadow).
-  LRESULT dwm_result = 0;
-  if (DwmDefWindowProc(hwnd, message, wparam, lparam, &dwm_result)) {
-    return dwm_result;
+  // WM_NCCALCSIZE is excluded: DWM would answer it and skip the resize ring.
+  if (message != WM_NCCALCSIZE) {
+    LRESULT dwm_result = 0;
+    if (DwmDefWindowProc(hwnd, message, wparam, lparam, &dwm_result)) {
+      return dwm_result;
+    }
   }
 
   switch (message) {
