@@ -34,9 +34,9 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
 
-  // Frameless window: keep the 1px bottom extension so Windows still draws the
-  // drop shadow and rounded corners (Windows 11).
-  MARGINS margins = {0, 0, 1, 0};
+  // Frameless window. Extending the frame by 1px made DWM draw a dark outline
+  // around the window once it became resizable, so no extension is used.
+  MARGINS margins = {0, 0, 0, 0};
   DwmExtendFrameIntoClientArea(GetHandle(), &margins);
 
   // Windows draws an accent-coloured 1px border around frameless windows.
