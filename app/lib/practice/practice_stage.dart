@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/score_page_view.dart';
 import '../ui/staff/song_marks_parser.dart';
 import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
@@ -1277,6 +1278,28 @@ class _PracticeStageState extends State<PracticeStage>
               ),
               const SizedBox(width: 4),
             ],
+            IconButton(
+              tooltip: 'Study / Static Score View',
+              onPressed: () {
+                _pause();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ScorePageView(
+                      notes: _notes,
+                      totalBeats: _totalBeats,
+                      beatsPerBar: _beatsPerBar,
+                      keyFifths: _keyFifths,
+                      staves: widget.staves,
+                      title: widget.stage.type,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(
+                Icons.menu_book_rounded,
+                color: StagePalette.text,
+              ),
+            ),
             IconButton(
               tooltip: pianoSynth.enabled
                   ? AppLocalizations.of(context).mutePianoSound
