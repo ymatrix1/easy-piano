@@ -274,11 +274,7 @@ class _TopBar extends StatelessWidget {
                   maxWidth: homeMaxWidth(context) + 32,
                 ),
                 child: Padding(
-                  // On Windows the caption buttons float over the right end.
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: usesCustomTitleBar ? 16 + kCaptionWidth : 16,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
                       Image.asset(
@@ -289,7 +285,18 @@ class _TopBar extends StatelessWidget {
                         semanticLabel: AppLocalizations.of(context).logoLabel,
                       ),
                       const SizedBox(width: 10),
-                      GameText(AppLocalizations.of(context).appTitle, size: 18),
+                      // Shrinks the title on narrow windows instead of
+                      // overflowing the row (which shows the debug stripe).
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: GameText(
+                            AppLocalizations.of(context).appTitle,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                       const Spacer(),
                       StarCounter(value: stars),
                     ],

@@ -9,6 +9,14 @@
 
 namespace {
 
+// Redefined in case the Windows SDK is older than Windows 11.
+#ifndef DWMWA_BORDER_COLOR
+#define DWMWA_BORDER_COLOR 34
+#endif
+#ifndef DWMWA_COLOR_NONE
+#define DWMWA_COLOR_NONE 0xFFFFFFFE
+#endif
+
 constexpr const char kWindowChannelName[] = "easy_piano/window";
 
 // Width of the invisible resize border, in device-independent pixels.
@@ -30,6 +38,12 @@ bool FlutterWindow::OnCreate() {
   // drop shadow and rounded corners (Windows 11).
   MARGINS margins = {0, 0, 1, 0};
   DwmExtendFrameIntoClientArea(GetHandle(), &margins);
+
+  // Windows draws an accent-coloured 1px border around frameless windows.
+  // Ask for no border colour so the app's own edge is the only one.
+  COLORREF no_border = DWMWA_COLOR_NONE;
+  DwmSetWindowAttribute(GetHandle(), DWMWA_BORDER_COLOR, &no_border,
+                        sizeof(no_border));
 
   RECT frame = GetClientArea();
 
@@ -173,11 +187,25 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       return 0;
 
     case WM_ERASEBKGND: {
-      // Paints the resize-border strip in the app background colour.
-      HBRUSH brush = CreateSolidBrush(RGB(0x08, 0x07, 0x26));
+      // Paints only the resize-border strips (the Flutter view covers the rest).
+      // Filling the whole client area on every resize is what made it flash.
+      if (IsZoomed(hwnd)) {
+        return 1;
+      }
+      const int border = Scale(kResizeBorderDip, GetDpiForWindow(hwnd));
       RECT client;
       GetClientRect(hwnd, &client);
-      FillRect(reinterpret_cast<HDC>(wparam), &client, brush);
+      HBRUSH brush = CreateSolidBrush(RGB(0x08, 0x07, 0x26));
+      HDC hdc = reinterpret_cast<HDC>(wparam);
+      const RECT strips[] = {
+          {client.left, client.top, client.right, client.top + border},
+          {client.left, client.bottom - border, client.right, client.bottom},
+          {client.left, client.top, client.left + border, client.bottom},
+          {client.right - border, client.top, client.right, client.bottom},
+      };
+      for (const RECT& strip : strips) {
+        FillRect(hdc, &strip, brush);
+      }
       DeleteObject(brush);
       return 1;
     }
