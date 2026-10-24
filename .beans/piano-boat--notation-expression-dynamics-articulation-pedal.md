@@ -26,12 +26,12 @@ Teach learners how to play expressively, rendering standard professional score d
 
 ## Acceptance Criteria
 - [x] Spec & syntax for dynamics and hairpins: `{dyn:"p"}`, `{cresc}`, `{dim}`, `{end}` in song JSON (`docs/specs/content-format.md`). Token annotations for staccato/accent/fermata and `{ped}`/`{ped_up}` are not in this PR.
-- [ ] Core parser + song model: Rust unit tests; grading rule per mark (velocity bands for MIDI, duration for staccato; mic: ignored or lenient). Not in PR 1: marks are rendered only.
+- [x] Core parser + song model and grading rule for dynamics and hairpins (velocity bands for MIDI; mic ignored). Done in piano-rdr4. Staccato duration grading is not started.
 - [x] Engraving rendering (`dynamics_layout.dart`, ref `dynamicslayout.cpp`, `tlayout.cpp` layoutHairpinSegment):
   - [x] SMuFL glyphs for `p pp ppp mp mf f ff fff fp sf sfz`, composed letter by letter as MuseScore `DYN_LIST` (U+E520 p, U+E521 m, U+E522 f, U+E524 s, U+E525 z).
   - [x] Crescendo/diminuendo hairpins drawn as two vector arms, `hairpinHeight` 1.15 sp, below the bottom staff at 1.75 sp.
   - [ ] Clearance from note stems (MuseScore places hairpins from the staff; stems of low notes can still cross them).
-- [ ] Content lint rules and schema validation (reject unknown `{dyn}` text).
+- [x] Content lint rules and schema validation for dynamics directives (piano-rdr4).
 - [ ] Teaching lessons (animation scene + drill + song, strings in 5 locales) for each mark: dynamics $p/mp/mf/f/ff$, crescendo/diminuendo, staccato, legato/slur, accent, tenuto, fermata.
 
 ## Out of Scope

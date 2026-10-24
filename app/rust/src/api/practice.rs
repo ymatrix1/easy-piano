@@ -83,6 +83,11 @@ pub struct ResultView {
     pub score: f64,
     /// Continuous 0–3 stars (fractional fill on screen).
     pub stars_exact: f64,
+    /// Dynamics graded from MIDI velocity (not part of the stars yet).
+    pub dynamics_passed: u32,
+    pub dynamics_total: u32,
+    pub hairpins_passed: u32,
+    pub hairpins_total: u32,
 }
 
 pub struct SongInfo {
@@ -227,8 +232,13 @@ impl PracticeSession {
     }
 
     #[frb(sync)]
-    pub fn on_note(&mut self, pitch: u8, on: bool, t_us: i64) {
-        self.inner.on_note(NoteEvent { pitch, on, t_us });
+    pub fn on_note(&mut self, pitch: u8, on: bool, velocity: u8, t_us: i64) {
+        self.inner.on_note(NoteEvent {
+            pitch,
+            on,
+            velocity,
+            t_us,
+        });
     }
 
     #[frb(sync)]
@@ -353,6 +363,10 @@ impl PracticeSession {
             assists: r.assists,
             score: r.score,
             stars_exact: r.stars_exact,
+            dynamics_passed: r.dynamics.dynamics_passed,
+            dynamics_total: r.dynamics.dynamics_total,
+            hairpins_passed: r.dynamics.hairpins_passed,
+            hairpins_total: r.dynamics.hairpins_total,
         }
     }
 }

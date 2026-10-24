@@ -78,6 +78,7 @@ abstract class PracticeSession implements RustOpaqueInterface {
   void onNote({
     required int pitch,
     required bool on_,
+    required int velocity,
     required PlatformInt64 tUs,
   });
 
@@ -242,6 +243,12 @@ class ResultView {
   /// Continuous 0–3 stars (fractional fill on screen).
   final double starsExact;
 
+  /// Dynamics graded from MIDI velocity (not part of the stars yet).
+  final int dynamicsPassed;
+  final int dynamicsTotal;
+  final int hairpinsPassed;
+  final int hairpinsTotal;
+
   const ResultView({
     required this.passed,
     required this.stars,
@@ -257,6 +264,10 @@ class ResultView {
     required this.assists,
     required this.score,
     required this.starsExact,
+    required this.dynamicsPassed,
+    required this.dynamicsTotal,
+    required this.hairpinsPassed,
+    required this.hairpinsTotal,
   });
 
   @override
@@ -274,7 +285,11 @@ class ResultView {
       timing.hashCode ^
       assists.hashCode ^
       score.hashCode ^
-      starsExact.hashCode;
+      starsExact.hashCode ^
+      dynamicsPassed.hashCode ^
+      dynamicsTotal.hashCode ^
+      hairpinsPassed.hashCode ^
+      hairpinsTotal.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -294,7 +309,11 @@ class ResultView {
           timing == other.timing &&
           assists == other.assists &&
           score == other.score &&
-          starsExact == other.starsExact;
+          starsExact == other.starsExact &&
+          dynamicsPassed == other.dynamicsPassed &&
+          dynamicsTotal == other.dynamicsTotal &&
+          hairpinsPassed == other.hairpinsPassed &&
+          hairpinsTotal == other.hairpinsTotal;
 }
 
 /// Training: outcome of one critical-section run.

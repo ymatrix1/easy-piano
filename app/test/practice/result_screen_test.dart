@@ -21,6 +21,10 @@ ResultView _result({required bool passed}) => ResultView(
   assists: 1,
   score: 1,
   starsExact: passed ? 3 : 1.5,
+  dynamicsPassed: 0,
+  dynamicsTotal: 0,
+  hairpinsPassed: 0,
+  hairpinsTotal: 0,
 );
 
 Future<void> _pump(

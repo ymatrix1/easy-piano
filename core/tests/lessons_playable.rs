@@ -46,6 +46,7 @@ fn play(
             s.on_note(NoteEvent {
                 pitch: p,
                 on: true,
+                velocity: 80,
                 t_us,
             });
         }

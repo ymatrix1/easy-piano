@@ -334,7 +334,7 @@ class _PracticeStageState extends State<PracticeStage>
       _begin();
     }
     _sub = widget.midi.events.listen(
-      (e) => _onNote(e.pitch, e.on, e.timestampMs),
+      (e) => _onNote(e.pitch, e.on, e.timestampMs, e.velocity),
     );
     _ticker = createTicker((_) => _tick())..start();
     _introStartSec = _nowSec;
@@ -645,7 +645,9 @@ class _PracticeStageState extends State<PracticeStage>
 
   double get _nowSec => widget.midi.now() / 1000;
 
-  void _onNote(int pitch, bool on, double timestampMs) {
+  /// [velocity] is the MIDI note-on velocity, or 0 when the input has none
+  /// (touch, microphone). Only MIDI velocity is graded.
+  void _onNote(int pitch, bool on, double timestampMs, int velocity) {
     if (!widget.micMode) {
       on ? pianoSynth.noteOn(pitch) : pianoSynth.noteOff(pitch);
     }
@@ -672,6 +674,7 @@ class _PracticeStageState extends State<PracticeStage>
     _session.onNote(
       pitch: pitch,
       on_: on,
+      velocity: velocity,
       tUs: PlatformInt64Util.from(_usAt(timestampMs)),
     );
   }
@@ -1042,12 +1045,12 @@ class _PracticeStageState extends State<PracticeStage>
     ).pitchAt(p);
     if (pitch == null) return;
     _pointerPitch[pointer] = pitch;
-    _onNote(pitch, true, widget.midi.now());
+    _onNote(pitch, true, widget.midi.now(), 0);
   }
 
   void _touchUp(int pointer) {
     final pitch = _pointerPitch.remove(pointer);
-    if (pitch != null) _onNote(pitch, false, widget.midi.now());
+    if (pitch != null) _onNote(pitch, false, widget.midi.now(), 0);
   }
 
   @override
