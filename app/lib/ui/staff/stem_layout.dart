@@ -46,7 +46,7 @@ abstract final class StemLayout {
       } else if (distBelow > distAbove) {
         return false; // Extreme note is below -> stem UP
       } else {
-        return true; // Equidistant -> default DOWN
+        return onBass; // Equidistant: default DOWN on bass, UP on treble (Gould)
       }
     }
 

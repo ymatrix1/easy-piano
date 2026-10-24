@@ -121,19 +121,19 @@ abstract final class BeamLayout {
 
     void finishGroup() {
       if (currentChords.length >= 2) {
-        // Vote stem direction across chords in group.
-        // In grand staff, bass stems point DOWN to keep the inter-staff space clean (Gould / MuseScore).
-        var downVotes = isBass ? 2 : 0;
-        for (final c in currentChords) {
-          for (final idx in c) {
-            if (notes[idx].isStemDown(isBass)) {
-              downVotes++;
-            } else {
-              downVotes--;
-            }
-          }
+        // Stem direction across chords in group.
+        // In grand staff, upper staff stems point UP and lower staff stems point DOWN
+        // to prevent collisions in the inter-staff space (Gould p. 305 / MuseScore).
+        final bool stemDown;
+        if (isBass) {
+          stemDown = true;
+        } else {
+          // Upper staff: point UP by default unless passage is high above staff (all notes >= A5)
+          final allVeryHigh = currentChords.every(
+            (c) => c.every((idx) => notes[idx].pitch >= 81),
+          );
+          stemDown = allVeryHigh;
         }
-        final stemDown = isBass || downVotes >= 0;
 
         final stemXs = <int, double>{};
         for (final c in currentChords) {

@@ -272,6 +272,7 @@ class StaffPainter extends CustomPainter {
     required double pixelsPerBeat,
     required double space,
     List<StaffNote>? notes,
+    Map<int, double>? xCache,
   }) {
     final barX = anchorX + (barBeat - nowBeat) * pixelsPerBeat;
     if (notes == null || notes.isEmpty) return barX - space * 0.8;
@@ -284,7 +285,7 @@ class StaffPainter extends CustomPainter {
       final n = notes[i];
       if (barBeat - n.beat > 2.0) break;
       if (n.isSpacer) continue;
-      final nx = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
+      final nx = xCache?[i] ?? (anchorX + (n.beat - nowBeat) * pixelsPerBeat);
       final width = n.isRest
           ? space * 1.0
           : (_isDotted(n.beats)
@@ -302,7 +303,7 @@ class StaffPainter extends CustomPainter {
       final n = notes[i];
       if (n.beat - barBeat > 0.05) break;
       if (n.isSpacer) continue;
-      final nx = anchorX + (n.beat - nowBeat) * pixelsPerBeat;
+      final nx = xCache?[i] ?? (anchorX + (n.beat - nowBeat) * pixelsPerBeat);
       final left = _isSharp[n.pitch % 12] ? nx - space * 1.3 : nx;
       if (nextLeft == null || left < nextLeft) {
         nextLeft = left;
@@ -336,6 +337,7 @@ class StaffPainter extends CustomPainter {
     required double pixelsPerBeat,
     required double space,
     Map<int, double>? xCache,
+    double? beatsPerBar,
   }) {
     if (xCache != null && xCache.containsKey(index)) return xCache[index]!;
     final n = notes[index];
@@ -345,6 +347,7 @@ class StaffPainter extends CustomPainter {
     // Notes with the exact same beat (chords) are not preceding horizontal notes.
     final onBass = n.leftHand;
     double? prevRight;
+    StaffNote? prevNote;
     for (var i = index - 1; i >= 0; i--) {
       final prev = notes[i];
       if ((prev.beat - n.beat).abs() < 1e-6) continue;
@@ -360,6 +363,7 @@ class StaffPainter extends CustomPainter {
               pixelsPerBeat: pixelsPerBeat,
               space: space,
               xCache: xCache,
+              beatsPerBar: beatsPerBar,
             );
       final pWidth = prev.isRest
           ? space * 1.0
@@ -369,24 +373,34 @@ class StaffPainter extends CustomPainter {
       final pr = px + pWidth;
       if (prevRight == null || pr > prevRight) {
         prevRight = pr;
+        prevNote = prev;
       }
       break;
     }
 
     var result = nominalX;
     if (prevRight != null) {
-      if (_isSharp[n.pitch % 12]) {
-        // Accidental is drawn at x - space * 1.3. Keep at least space * 0.4 clearance.
-        final minX = prevRight + space * 1.7;
-        if (result < minX) {
-          result = minX;
-        }
+      final hasBarline =
+          beatsPerBar != null &&
+          beatsPerBar > 0 &&
+          prevNote != null &&
+          ((n.beat / beatsPerBar).floor() >
+              (prevNote.beat / beatsPerBar).floor());
+      final hasAccidental = _isSharp[n.pitch % 12];
+
+      final double minX;
+      if (hasBarline) {
+        // Extra margin when crossing a barline: leaves clean space for the barline
+        // plus pre-barline margin and post-barline accidental margin.
+        minX = prevRight + (hasAccidental ? space * 3.0 : space * 2.0);
+      } else if (hasAccidental) {
+        minX = prevRight + space * 1.7;
       } else {
-        // Minimum clearance between noteheads even without accidentals
-        final minX = prevRight + space * 0.4;
-        if (result < minX) {
-          result = minX;
-        }
+        minX = prevRight + space * 0.4;
+      }
+
+      if (result < minX) {
+        result = minX;
       }
     }
 
@@ -672,6 +686,28 @@ class StaffPainter extends CustomPainter {
 
     paintBackground();
     final clefRight = sys.clefRight;
+
+    // Visible window in beats.
+    final now = scrollBeat.value;
+    final firstBeat = now - anchorX / pixelsPerBeat - 4;
+    final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
+    final first = _lowerBound(firstBeat);
+
+    final xCache = <int, double>{};
+    for (var i = math.max(0, first - 10); i < notes.length; i++) {
+      if (notes[i].beat > lastBeat + 2.0) break;
+      noteX(
+        index: i,
+        notes: notes,
+        anchorX: anchorX,
+        nowBeat: now,
+        pixelsPerBeat: pixelsPerBeat,
+        space: space,
+        xCache: xCache,
+        beatsPerBar: bpb,
+      );
+    }
+
     if (bpb != null && bpb > 0) {
       final now0 = scrollBeat.value;
       final firstBar = ((now0 - anchorX / pixelsPerBeat) / bpb).floor();
@@ -686,6 +722,7 @@ class StaffPainter extends CustomPainter {
           pixelsPerBeat: pixelsPerBeat,
           space: space,
           notes: notes,
+          xCache: xCache,
         );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
@@ -753,17 +790,12 @@ class StaffPainter extends CustomPainter {
       );
     }
 
-    // Visible window in beats.
-    final now = scrollBeat.value;
-    final firstBeat = now - anchorX / pixelsPerBeat - 4;
-    final lastBeat = now + (size.width - anchorX) / pixelsPerBeat;
     final current = currentIndex?.call();
     double? lastX;
     final introT = introStartSec == null || clockSec == null
         ? null
         : clockSec!() - introStartSec!;
     final introOn = introT != null && introT < 1.0;
-    final first = _lowerBound(firstBeat);
     // All scrolling elements go through one layer that is masked at the end.
     final fade = edgeFade(clefRight, anchorX, space);
     canvas.saveLayer(Offset.zero & size, Paint());
@@ -772,20 +804,6 @@ class StaffPainter extends CustomPainter {
       for (var i = first; i < notes.length && notes[i].beat <= lastBeat; i++) {
         introN++;
       }
-    }
-
-    final xCache = <int, double>{};
-    for (var i = math.max(0, first - 10); i < notes.length; i++) {
-      if (notes[i].beat > lastBeat + 2.0) break;
-      noteX(
-        index: i,
-        notes: notes,
-        anchorX: anchorX,
-        nowBeat: now,
-        pixelsPerBeat: pixelsPerBeat,
-        space: space,
-        xCache: xCache,
-      );
     }
 
     final beamGroups = BeamLayout.computeBeamGroups(
