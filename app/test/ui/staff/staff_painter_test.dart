@@ -280,5 +280,33 @@ void main() {
         );
       },
     );
+
+    test('chord of a second with stem DOWN renders cleanly with stem and accidental', () {
+      final rec = ui.PictureRecorder();
+      final notes = [
+        const StaffNote(59, 1.0, 0.5, leftHand: true), // B3
+        const StaffNote(
+          61,
+          1.0,
+          0.5,
+          leftHand: true,
+          accidental: 'sharp',
+        ), // C#4
+      ];
+      final painter = StaffPainter(
+        notes: notes,
+        playheadBeat: ValueNotifier<double>(1.0),
+        pixelsPerBeat: 50.0,
+        lineRatio: 0.5,
+        staves: Staves.grand,
+        beatsPerBar: 2.0,
+        inkColor: const Color(0xFF000000),
+        playheadColor: const Color(0xFFFF0000),
+      );
+      expect(
+        () => painter.paint(Canvas(rec), const Size(400, 300)),
+        returnsNormally,
+      );
+    });
   });
 }

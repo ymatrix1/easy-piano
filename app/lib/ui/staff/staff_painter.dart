@@ -386,15 +386,35 @@ class StaffPainter extends CustomPainter {
           prevNote != null &&
           ((n.beat / beatsPerBar).floor() >
               (prevNote.beat / beatsPerBar).floor());
-      final hasAccidental = _isSharp[n.pitch % 12];
+      var hasAccidental = _isSharp[n.pitch % 12];
+      if (!hasAccidental) {
+        for (var i = index + 1; i < notes.length; i++) {
+          final other = notes[i];
+          if ((other.beat - n.beat).abs() > 1e-6) break;
+          if (other.leftHand == onBass && _isSharp[other.pitch % 12]) {
+            hasAccidental = true;
+            break;
+          }
+        }
+      }
+      if (!hasAccidental) {
+        for (var i = index - 1; i >= 0; i--) {
+          final other = notes[i];
+          if ((other.beat - n.beat).abs() > 1e-6) break;
+          if (other.leftHand == onBass && _isSharp[other.pitch % 12]) {
+            hasAccidental = true;
+            break;
+          }
+        }
+      }
 
       final double minX;
       if (hasBarline) {
         // Extra margin when crossing a barline: leaves clean space for the barline
         // plus pre-barline margin and post-barline accidental margin.
-        minX = prevRight + (hasAccidental ? space * 3.0 : space * 2.0);
+        minX = prevRight + (hasAccidental ? space * 3.2 : space * 2.0);
       } else if (hasAccidental) {
-        minX = prevRight + space * 1.7;
+        minX = prevRight + space * 1.8;
       } else {
         minX = prevRight + space * 0.4;
       }
@@ -991,11 +1011,20 @@ class StaffPainter extends CustomPainter {
             AccidentalType.flat => Smufl.accidentalFlat,
             AccidentalType.natural => Smufl.accidentalNatural,
           };
+          // In a chord, if any note is displaced left (e.g. interval of a second),
+          // the accidental must sit to the left of the leftmost notehead.
+          var leftmostHeadX = noteXPos;
+          if (chordGroup != null) {
+            for (final idx in chordGroup) {
+              final hx = x + (chordHeadOffsets[idx] ?? 0.0);
+              if (hx < leftmostHeadX) leftmostHeadX = hx;
+            }
+          }
           _drawGlyph(
             canvas,
             glyph,
             glyphSize,
-            Offset(noteXPos - space * 1.3, y),
+            Offset(leftmostHeadX - space * 1.3, y),
             color,
           );
         }
@@ -1103,13 +1132,24 @@ class StaffPainter extends CustomPainter {
         }
 
         if (hasOtherChordNote) {
-          // In a chord: draw a single continuous stem between all notes extending to tip
+          // In a chord: draw a single continuous stem between all notes extending to tip.
+          // The stem attaches to the normal (undisplaced) side of the chord noteheads at `x`.
+          final chordStemXDown = StemLayout.stemX(
+            noteheadX: x,
+            stemDown: true,
+            space: space,
+          );
+          final chordStemXUp = StemLayout.stemX(
+            noteheadX: x,
+            stemDown: false,
+            space: space,
+          );
           if (stemDown) {
             if (isLowestOfChord) {
               final startY = chordHighestY ?? y;
               canvas.drawLine(
-                Offset(sxDown, startY),
-                Offset(sxDown, tipY),
+                Offset(chordStemXDown, startY),
+                Offset(chordStemXDown, tipY),
                 strokePaint,
               );
               if (n.beats <= 0.75) {
@@ -1120,7 +1160,7 @@ class StaffPainter extends CustomPainter {
                   canvas,
                   flag,
                   glyphSize,
-                  Offset(sxDown, tipY),
+                  Offset(chordStemXDown, tipY),
                   color,
                 );
               }
@@ -1129,15 +1169,21 @@ class StaffPainter extends CustomPainter {
             if (isHighestOfChord) {
               final startY = chordLowestY ?? y;
               canvas.drawLine(
-                Offset(sxUp, startY),
-                Offset(sxUp, tipY),
+                Offset(chordStemXUp, startY),
+                Offset(chordStemXUp, tipY),
                 strokePaint,
               );
               if (n.beats <= 0.75) {
                 final flag = n.beats <= 0.375
                     ? Smufl.flag16thUp
                     : Smufl.flag8thUp;
-                _drawGlyph(canvas, flag, glyphSize, Offset(sxUp, tipY), color);
+                _drawGlyph(
+                  canvas,
+                  flag,
+                  glyphSize,
+                  Offset(chordStemXUp, tipY),
+                  color,
+                );
               }
             }
           }
