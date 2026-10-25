@@ -114,7 +114,7 @@ The same directive in both hands at the same beat is drawn once.
 
 Status: rendering only (piano-rlp3, PR 4). Parsed by `app/lib/ui/staff/song_marks_parser.dart`, drawn from `ornament_layout.dart`. Core (`core/src/dynamics.rs`) ignores these names (`Ok(None)`), and lint does not check them yet, so a typo is silently not drawn. Zero length, placed in a hand string like a note.
 
-- `{trill}`, `{mordent}`, `{turn}`: ornament above the chord that starts at that beat, in the hand the directive sits in. A trill also gets a wavy line to the next onset of that hand. With no note at that beat, nothing is drawn.
+- `{trill}`, `{mordent}`, `{turn}`: ornament above the chord that starts at that beat, in the hand the directive sits in. A mordent or turn is centred on the chord. A trill starts at the chord's left edge and runs as a wavy line to one spatium before the next onset of that hand. With no note at that beat, nothing is drawn.
 - `{acc:"D5"}`: acciaccatura (grace note, pitch D5) before the chord that starts at that beat. Write it directly before the main note, at the same beat. The name is a note name as in the grammar above (`[A-G]`, optional `#` / `b` / `n`, octave): `{acc:"F#4"}`, `{acc:"Bb3"}`, `{acc:"Cn4"}`. A `#`, `b` or `n` is drawn as an accidental; without one, none is drawn. Grace notes take no time, so they are not in the bar sum.
 
 Example: `{trill} C5:2 {acc:"D5"} E5:4 {mordent} G5:4` (the trill and the mordent sit on the chords at beats 0 and 3; the grace D5 leans on the E5 at beat 2).

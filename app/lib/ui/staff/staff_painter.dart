@@ -2040,9 +2040,12 @@ class StaffPainter extends CustomPainter {
     }
   }
 
-  /// Ornaments centred above their chord (with the wavy line of a trill to the
-  /// next onset of its hand) and acciaccaturas before their chord. [headX]
-  /// gives the left ink edge of a note index, chord displacement included.
+  /// Ornaments above their chord and acciaccaturas before their chord.
+  /// Mordents and turns are centred on the head and placed as MuseScore's
+  /// `layoutArticulations` does. A trill starts at the chord origin and is
+  /// drawn as glyphs (`ornamentTrill` then `wiggleTrill` fills) up to the next
+  /// onset of its hand. [headX] gives the left ink edge of a note index, chord
+  /// displacement included.
   void _drawOrnamentsAndAcciaccaturas(
     Canvas canvas, {
     required ({double space, double trebleBottomY, double bassTopY}) l,
@@ -2075,6 +2078,48 @@ class StaffPainter extends CustomPainter {
       return null;
     }
 
+    // Staff top line of the hand's staff (screen y).
+    double staffTopOf(bool onBass) =>
+        onBass ? l.bassTopY : l.trebleBottomY - space * 4;
+
+    // Chord geometry for ornament placement, as MuseScore lays it out.
+    // Stem direction and tip come from the chord, not from each note.
+    ({
+      double topY,
+      double topX,
+      double lowestY,
+      bool stemUp,
+      List<double> heads,
+    })
+    chordGeometry(List<int> idx, bool onBass) {
+      final chordPitches = [for (final i in idx) notes[i].pitch];
+      final heads = <double>[];
+      var topIdx = idx.first;
+      var topY = double.infinity;
+      var lowestY = double.negativeInfinity;
+      for (final i in idx) {
+        final y = _noteY(notes[i].pitch, onBass, l);
+        heads.add(y);
+        if (y < topY) {
+          topY = y;
+          topIdx = i;
+        }
+        lowestY = math.max(lowestY, y);
+      }
+      final stemUp = !notes[topIdx].isStemDown(
+        onBass,
+        chordPitches: chordPitches,
+        isGrandStaff: staves == Staves.grand,
+      );
+      return (
+        topY: topY,
+        topX: headX(topIdx),
+        lowestY: lowestY,
+        stemUp: stemUp,
+        heads: heads,
+      );
+    }
+
     for (final o in ornaments) {
       final idx = chordAt(o.beat, o.leftHand);
       if (idx.isEmpty) continue;
@@ -2082,36 +2127,107 @@ class StaffPainter extends CustomPainter {
       final middleLineY = onBass
           ? l.bassTopY + space * 2
           : l.trebleBottomY - space * 2;
-      final chordPitches = [for (final i in idx) notes[i].pitch];
-      final heads = <double>[];
-      final stemTips = <double>[];
-      var topIdx = idx.first;
-      for (final i in idx) {
-        final y = _noteY(notes[i].pitch, onBass, l);
-        heads.add(y);
-        if (y < _noteY(notes[topIdx].pitch, onBass, l)) topIdx = i;
-        final down = notes[i].isStemDown(
-          onBass,
-          chordPitches: chordPitches,
-          isGrandStaff: staves == Staves.grand,
-        );
-        if (!down) {
-          stemTips.add(
-            StemLayout.calcStemTipY(
-              noteY: y,
+      final c = chordGeometry(idx, onBass);
+      // Tip of a stem-up chord: its stem starts at the lowest note. Only used
+      // when the stem is up (a stem-down chord has no tip above it).
+      final stemTipY = c.stemUp
+          ? StemLayout.calcStemTipY(
+              noteY: c.lowestY,
               stemDown: false,
               space: space,
               middleLineY: middleLineY,
-            ),
+            )
+          : c.topY;
+
+      if (o.kind == OrnamentKind.trill) {
+        // Trill: the start glyph sits at the chord origin, the wavy line runs
+        // to the next onset of its hand. Autoplace places it above the chord.
+        final topInk = OrnamentLayout.topInkY(
+          headYs: c.heads,
+          stemTipYs: c.stemUp ? [stemTipY] : const [],
+          space: space,
+        );
+        final baseline = OrnamentLayout.trillBaselineY(
+          staffTopY: staffTopOf(onBass),
+          topInkY: topInk,
+          space: space,
+        );
+        var startX = double.infinity;
+        for (final i in idx) {
+          startX = math.min(startX, headX(i));
+        }
+        final next = nextOnset(o.beat, o.leftHand);
+        var endX = startX;
+        if (next != null) {
+          var nextOrigin = double.infinity;
+          for (final i in chordAt(next, o.leftHand)) {
+            nextOrigin = math.min(nextOrigin, headX(i));
+          }
+          // An acciaccatura before the next onset stops the line before its
+          // grace head (`dom/trill.cpp:282`-`:295`).
+          for (final a in acciaccaturas) {
+            if (a.leftHand != o.leftHand || (a.beat - next).abs() > 1e-6) {
+              continue;
+            }
+            final nextIdx = chordAt(next, o.leftHand);
+            final leftmost = OrnamentLayout.leftmostInk(
+              notes: [
+                for (final i in nextIdx)
+                  (headX: headX(i), accidental: notes[i].accidental),
+              ],
+              space: space,
+            );
+            nextOrigin = math.min(
+              nextOrigin,
+              OrnamentLayout.graceHeadLeftX(
+                leftmostInkX: leftmost,
+                space: space,
+              ),
+            );
+          }
+          endX = OrnamentLayout.trillEndX(
+            nextOriginX: nextOrigin,
+            space: space,
           );
         }
+        final sym = OrnamentLayout.trillSymbols(
+          startX: startX,
+          endX: endX,
+          space: space,
+        );
+        _drawGlyph(
+          canvas,
+          OrnamentLayout.trill.glyph,
+          glyphSize,
+          Offset(sym.startX, baseline),
+          color,
+        );
+        for (final x in sym.fillXs) {
+          _drawGlyph(
+            canvas,
+            OrnamentLayout.wiggle.glyph,
+            glyphSize,
+            Offset(x, baseline),
+            color,
+          );
+        }
+        continue;
       }
+
+      // Mordent and turn: above the chord (stem tip for stem-up chords, the
+      // top notehead otherwise), or above the staff when the chord is low.
+      final chordTopY = OrnamentLayout.ornamentChordTopY(
+        stemUp: c.stemUp,
+        stemTipY: stemTipY,
+        topHeadY: c.topY,
+        space: space,
+      );
       final origin = OrnamentLayout.ornamentOrigin(
         kind: o.kind,
-        centreX: OrnamentLayout.headCentreX(headX(topIdx), space),
-        topInkY: OrnamentLayout.topInkY(
-          headYs: heads,
-          stemTipYs: stemTips,
+        centreX: OrnamentLayout.headCentreX(c.topX, space),
+        baselineY: OrnamentLayout.ornamentBaselineY(
+          staffTopY: staffTopOf(onBass),
+          chordTopY: chordTopY,
           space: space,
         ),
         space: space,
@@ -2123,38 +2239,6 @@ class StaffPainter extends CustomPainter {
         origin,
         color,
       );
-
-      if (o.kind != OrnamentKind.trill) continue;
-      final next = nextOnset(o.beat, o.leftHand);
-      if (next == null) continue;
-      var nextLeft = double.infinity;
-      for (final i in chordAt(next, o.leftHand)) {
-        nextLeft = math.min(nextLeft, headX(i));
-      }
-      final ends = OrnamentLayout.trillLineEnds(
-        trillOrigin: origin,
-        nextHeadLeftX: nextLeft,
-        space: space,
-      );
-      if (ends == null) continue;
-      final pts = OrnamentLayout.wavePoints(
-        from: ends.from,
-        to: ends.to,
-        space: space,
-      );
-      final path = Path()..moveTo(pts.first.dx, pts.first.dy);
-      for (final p in pts.skip(1)) {
-        path.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1.0, OrnamentLayout.waveStrokeSp * space)
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
     }
 
     for (final a in acciaccaturas) {
@@ -2164,7 +2248,7 @@ class StaffPainter extends CustomPainter {
       final leftmost = OrnamentLayout.leftmostInk(
         notes: [
           for (final i in idx)
-            (headX: headX(i), hasAccidental: notes[i].accidental != null),
+            (headX: headX(i), accidental: notes[i].accidental),
         ],
         space: space,
       );
@@ -2173,7 +2257,7 @@ class StaffPainter extends CustomPainter {
         space: space,
       );
       final y = _noteY(a.pitch, onBass, l);
-      final graceSize = glyphSize * OrnamentLayout.graceScale;
+      final graceSize = glyphSize * OrnamentLayout.graceNoteMag;
 
       final accGlyph = switch (a.accidental) {
         'sharp' => Smufl.accidentalSharp,
@@ -2189,6 +2273,7 @@ class StaffPainter extends CustomPainter {
           Offset(
             OrnamentLayout.graceAccidentalX(
               graceLeftX: graceLeft,
+              accidental: a.accidental!,
               space: space,
             ),
             y,
@@ -2198,7 +2283,7 @@ class StaffPainter extends CustomPainter {
       }
 
       final graceHeadWidth =
-          OrnamentLayout.headWidthSp * OrnamentLayout.graceScale * space;
+          OrnamentLayout.headWidthSp * OrnamentLayout.graceNoteMag * space;
       _drawLedgers(
         canvas,
         graceLeft,
@@ -2237,17 +2322,22 @@ class StaffPainter extends CustomPainter {
           ..color = color
           ..strokeWidth = OrnamentLayout.graceStemWidth(space),
       );
-      _drawGlyph(
-        canvas,
-        OrnamentLayout.slash.glyph,
-        graceSize,
-        OrnamentLayout.slashOrigin(
-          stemX: stemX,
-          stemFromY: y,
-          stemToY: tipY,
+      // The slash is a line through the stem (MuseScore layoutStemSlash).
+      final slash = OrnamentLayout.stemSlash(
+        stemRightX: OrnamentLayout.graceStemRightX(
+          graceLeftX: graceLeft,
           space: space,
         ),
-        color,
+        stemTipY: tipY,
+        space: space,
+      );
+      canvas.drawLine(
+        slash.from,
+        slash.to,
+        Paint()
+          ..color = color
+          ..strokeWidth = slash.width
+          ..strokeCap = StrokeCap.butt,
       );
     }
   }

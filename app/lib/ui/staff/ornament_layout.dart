@@ -58,17 +58,21 @@ class OrnamentGlyph {
   final double neY;
 }
 
-/// Ornament and acciaccatura geometry. Pure functions, no painting state.
+/// Ornament, trill and acciaccatura geometry. Pure functions, no painting state.
 ///
-/// Follows MuseScore `rendering/score/tlayout.cpp` (`layoutOrnament`: the
-/// ornament sits centred above the chord with a vertical margin of 0.35 sp)
-/// and `rendering/score/chordlayout.cpp` (grace notes are scaled by
-/// `graceNoteMag`, 0.6, and sit before the main chord, stem up).
+/// Source of every number. Paths are relative to
+/// `references/MuseScore/src/engraving`; `v450` is
+/// `data/styles/legacy-style-defaults-v450.mss` (line numbers given). Font
+/// values are read from `app/assets/fonts/Leland.otf` (1 sp = 250 font units).
+/// A constant without a source is a local choice and is marked as such.
 ///
-/// Glyph codepoints are SMuFL names from `fonts/smufl/glyphnames.json`
-/// (checked against the cmap of `assets/fonts/Leland.otf`). Bounding boxes
-/// come from `fonts/leland/leland_metadata.json`.
+/// Glyph codepoints are SMuFL names (`fonts/smufl/glyphnames.json`, checked
+/// against the cmap of Leland.otf). Bounding boxes are from the font.
 abstract final class OrnamentLayout {
+  // ---------------------------------------------------------------------------
+  // Glyphs (Leland.otf bounding boxes, staff spaces)
+  // ---------------------------------------------------------------------------
+
   /// `ornamentTrill` (U+E566): bbox x -0.048..1.532, y 0..1.532 sp.
   static const trill = OrnamentGlyph(
     '\uE566',
@@ -76,6 +80,16 @@ abstract final class OrnamentLayout {
     swY: 0.0,
     neX: 1.532,
     neY: 1.532,
+  );
+
+  /// `wiggleTrill` (U+EAA4): one fill symbol of a trill's wavy line,
+  /// bbox x -0.108..0.948, y 0.468..1.124 sp.
+  static const wiggle = OrnamentGlyph(
+    '\uEAA4',
+    swX: -0.108,
+    swY: 0.468,
+    neX: 0.948,
+    neY: 1.124,
   );
 
   /// `ornamentMordent` (U+E56D): bbox x 0..1.892, y -0.308..1.264 sp.
@@ -96,56 +110,116 @@ abstract final class OrnamentLayout {
     neY: 0.928,
   );
 
-  /// `graceNoteSlashStemUp` (U+E564): bbox x 0..1.956, y 0..1.196 sp. The
-  /// oblique slash through the stem of a stem-up grace note. (U+E560 is
-  /// `graceNoteAcciaccaturaStemUp`, a whole acciaccatura, not the slash.)
-  static const slash = OrnamentGlyph(
-    '\uE564',
-    swX: 0.0,
-    swY: 0.0,
-    neX: 1.956,
-    neY: 1.196,
-  );
+  // ---------------------------------------------------------------------------
+  // Constants
+  // ---------------------------------------------------------------------------
 
-  /// Ink width of a black notehead (`noteheadBlack`, bbox x 0..1.3 sp).
+  /// Ink width of `noteheadBlack` (U+E0A4, bbox x 0..1.300 sp). MuseScore's
+  /// `Score::noteHeadWidth` is the font width of this glyph
+  /// (`palettescoreprovider.cpp:64`).
   static const headWidthSp = 1.3;
 
-  /// Half the ink height of a black notehead (bbox y -0.532..0.528 sp).
-  static const headHalfHeightSp = 0.5;
+  /// Half the ink height of `noteheadBlack` (bbox y -0.532..0.528 sp), so
+  /// `2 * headHalfHeightSp` is MuseScore's `Note::headHeight` (used at
+  /// `chordlayout.cpp:1048`).
+  static const headHalfHeightSp = 0.53;
 
-  /// Width of an accidental glyph at full size, in staff spaces.
-  static const accidentalWidthSp = 1.0;
+  /// `accidentalNoteDistance` (`v450:174`, 0.25 sp): gap between an accidental
+  /// and its notehead. Scaled by the chord mag (`tdraw.cpp:2618`).
+  static const accidentalNoteDistanceSp = 0.25;
 
-  /// Scale of grace notes against main notes (MuseScore `graceNoteMag`).
-  static const graceScale = 0.6;
+  /// `graceNoteMag` (`v450:376`, 0.7; default `style/styledef.cpp:524`). Scale
+  /// of a grace chord against the main chord: `chord.cpp:2071`, and
+  /// `chordlayout.cpp:621`.
+  static const graceNoteMag = 0.7;
 
-  /// Standard stem length, in staff spaces (MuseScore `stemLength`).
+  /// `stemLength` (`v450:151`, 3.5 sp). MuseScore counts it in quarter spaces,
+  /// `stemlayout.cpp:60`. The stem is laid out in the chord's mag
+  /// (`tlayout.cpp:5319`, `5323`), so a grace stem is `stemLengthSp * graceNoteMag`.
   static const stemLengthSp = 3.5;
 
-  /// Gap between the right edge of the grace head and the chord it leans on.
-  static const graceGapSp = 0.5;
+  /// `stemWidth` (`v450:149`, 0.1 sp). A grace stem is `stemWidth * mag`
+  /// (`tdraw.cpp:2608`).
+  static const stemWidthSp = 0.1;
 
-  /// Gap between a grace accidental and its grace head.
-  static const graceAccidentalGapSp = 0.2;
+  /// `minNoteDistance` (`v450:156`, 0.5 sp). Clearance between a grace chord
+  /// and the main chord it leans on (`chordlayout.cpp:626`, `:631`). The
+  /// built-in default is 0.35 (`style/styledef.cpp:271`). This project uses
+  /// the v450 value, 0.5, as a local choice.
+  static const minNoteDistanceSp = 0.5;
 
-  /// Vertical margin between an ornament and the top of the chord
-  /// (MuseScore `layoutOrnament`: `vertMargin` 0.35 sp).
-  static const ornamentGapSp = 0.35;
+  /// `graceToMainNoteDist` (`v450:377`, 0.45 sp). Minimum padding between a
+  /// grace note and a main note in horizontal spacing
+  /// (`horizontalspacing.cpp:1517`, `:1520`). Taken with the larger of the two
+  /// in [graceHeadLeftX].
+  static const graceToMainNoteDistSp = 0.45;
 
-  /// Gap between the trill glyph and the start of its wavy line.
-  static const trillLineStartGapSp = 0.2;
+  /// `propertyDistanceHead` (`v450:193`, 0.4 sp). Gap between a note and an
+  /// articulation or ornament above it (`chordlayout.cpp:1045`, `:1077`).
+  static const propertyDistanceHeadSp = 0.4;
 
-  /// Gap between the wavy line and the next notehead.
-  static const trillLineEndGapSp = 0.3;
+  /// `propertyDistanceStem` (`v450:194`, 0.4 sp). Gap between a stem tip and an
+  /// articulation or ornament above it (`chordlayout.cpp:1044`, `:1077`).
+  static const propertyDistanceStemSp = 0.4;
 
-  /// Shortest wavy line worth drawing, in staff spaces.
-  static const minTrillLineSp = 1.0;
+  /// `propertyDistance` (`v450:195`, 0.4 sp). Gap between the staff top line and
+  /// an articulation above the staff (`chordlayout.cpp:1043`, `:1051`).
+  static const propertyDistanceSp = 0.4;
 
-  /// Wave amplitude (peak to centre), wavelength and stroke width of the
-  /// generated trill line, in staff spaces.
-  static const waveAmplitudeSp = 0.12;
-  static const waveLengthSp = 0.7;
-  static const waveStrokeSp = 0.12;
+  /// `trillPosAbove` y (`v450:266`, -0.5 sp). Default trill position relative
+  /// to the staff top line (`dom/trill.cpp:426`).
+  static const trillPosAboveSp = -0.5;
+
+  /// `trillMinDistance` (`v450:1552`, 0.5 sp). Clearance the trill keeps from
+  /// the chord (`dom/trill.cpp:324`, `rendering/score/autoplace.cpp:141`).
+  static const trillMinDistanceSp = 0.5;
+
+  /// Right end of a trill line: one spatium before the next onset
+  /// (`dom/trill.cpp:300`, `x = segment.x - spatium`).
+  static const trillEndGapSp = 1.0;
+
+  /// Advance of `ornamentTrill` (U+E566, 433 units = 1.732 sp). The fills start
+  /// after it (`dom/trill.cpp:83`).
+  static const trillStartAdvanceSp = 1.732;
+
+  /// Advance of `wiggleTrill` (U+EAA4, 220 units = 0.88 sp). Each fill adds
+  /// this much (`dom/trill.cpp:84`).
+  static const trillFillAdvanceSp = 0.88;
+
+  /// `stemSlashPosition` (`v450:170`, 2 sp). Distance of the slash below the
+  /// stem tip, before the reduction (`tlayout.cpp:5409`).
+  static const stemSlashPositionSp = 2.0;
+
+  /// `stemSlashAngle` (`v450:171`, 40 degrees). Angle of the slash
+  /// (`tlayout.cpp:5404`).
+  static const stemSlashAngleDeg = 40.0;
+
+  /// `stemSlashThickness` (`v450:172`, 0.125 sp). Slash stroke, scaled by the
+  /// grace mag (`tlayout.cpp:5443`).
+  static const stemSlashThicknessSp = 0.125;
+
+  /// Height reduction of the slash position when the note has no hook
+  /// (`tlayout.cpp:5394`, `5410`).
+  static const slashNoHookReduction = 0.66;
+
+  /// Local choice: the thinnest stroke drawn for a grace stem or slash, so it
+  /// stays visible at small sizes. MuseScore has no such floor.
+  static const minStrokePx = 1.0;
+
+  /// Widths of the written accidentals, from the Leland.otf bboxes: sharp
+  /// U+E262 0.976 sp, flat U+E260 0.812 sp, natural U+E261 0.684 sp. MuseScore
+  /// uses the symbol width of each accidental (`tdraw.cpp:2618`), so the width
+  /// is the font's, not a MuseScore constant.
+  static double accidentalWidth(String? accidental) => switch (accidental) {
+    'sharp' => 0.976,
+    'flat' => 0.812,
+    'natural' => 0.684,
+    _ => 0.0,
+  };
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
 
   /// Glyph for an ornament kind.
   static OrnamentGlyph glyphFor(OrnamentKind kind) => switch (kind) {
@@ -176,120 +250,202 @@ abstract final class OrnamentLayout {
     return top;
   }
 
-  /// Baseline-left origin of an ornament centred on [centreX], with its ink
-  /// bottom [ornamentGapSp] above [topInkY].
+  // ---------------------------------------------------------------------------
+  // Mordent and turn
+  // ---------------------------------------------------------------------------
+
+  /// Top of the chord that a mordent or turn sits above, as MuseScore's
+  /// `ChordLayout::layoutArticulations` computes it (`chordlayout.cpp:1048`
+  /// to `:1077`). A stem-up chord uses its stem tip minus
+  /// [propertyDistanceStemSp]. Otherwise it uses the top notehead minus
+  /// [propertyDistanceHeadSp].
+  static double ornamentChordTopY({
+    required bool stemUp,
+    required double stemTipY,
+    required double topHeadY,
+    required double space,
+  }) => stemUp
+      ? stemTipY - propertyDistanceStemSp * space
+      : topHeadY - headHalfHeightSp * space - propertyDistanceHeadSp * space;
+
+  /// Baseline of a mordent or turn: the higher of the staff clearance and the
+  /// chord clearance (`chordlayout.cpp:1051`, `:1111`, `:1138`). A low chord
+  /// keeps the ornament above the staff, at [propertyDistanceSp] above
+  /// [staffTopY]. [staffTopY] is the top line of the staff, screen y.
+  static double ornamentBaselineY({
+    required double staffTopY,
+    required double chordTopY,
+    required double space,
+  }) => math.min(staffTopY - propertyDistanceSp * space, chordTopY);
+
+  /// Baseline-left origin of a mordent or turn centred on [centreX]. The glyph
+  /// is centred on its bounding box. MuseScore centres on the optical centre
+  /// (`chordlayout.cpp:1148`), which is not modelled here.
   static Offset ornamentOrigin({
     required OrnamentKind kind,
     required double centreX,
-    required double topInkY,
+    required double baselineY,
     required double space,
   }) {
     final g = glyphFor(kind);
     final left = centreX - space * (g.swX + g.neX) / 2;
-    // The ink bottom is baseline - swY * space on screen.
-    final baseline = topInkY - ornamentGapSp * space + g.swY * space;
-    return Offset(left, baseline);
+    return Offset(left, baselineY);
   }
 
-  /// Y of the wavy trill line: the vertical middle of the trill glyph.
-  static double trillLineY(Offset trillOrigin, double space) =>
-      trillOrigin.dy - space * (trill.swY + trill.neY) / 2;
+  // ---------------------------------------------------------------------------
+  // Trill
+  // ---------------------------------------------------------------------------
 
-  /// Start and end of the wavy trill line, from the trill glyph to the
-  /// notehead of the next onset in the same hand. Null when there is too little
-  /// room for a visible wave.
-  static ({Offset from, Offset to})? trillLineEnds({
-    required Offset trillOrigin,
-    required double nextHeadLeftX,
+  /// Baseline of a trill. It starts at the default position, [trillPosAboveSp]
+  /// from [staffTopY], and autoplace lifts it so it clears the chord by
+  /// [trillMinDistanceSp] (`autoplace.cpp:109-116`). [topInkY] is the top of
+  /// the chord's ink.
+  static double trillBaselineY({
+    required double staffTopY,
+    required double topInkY,
+    required double space,
+  }) => math.min(
+    staffTopY + trillPosAboveSp * space,
+    topInkY - trillMinDistanceSp * space,
+  );
+
+  /// Right end of a trill line for an onset at [nextOriginX]
+  /// (`dom/trill.cpp:300`).
+  static double trillEndX({
+    required double nextOriginX,
+    required double space,
+  }) => nextOriginX - trillEndGapSp * space;
+
+  /// The symbols of a trill line from [startX] to [endX], as MuseScore's
+  /// `TrillSegment::symbolLine` builds them (`dom/trill.cpp:73-91`). The start
+  /// glyph `ornamentTrill` sits at [startX]. The number of `wiggleTrill` fills
+  /// is `lrint((w - w1) / w2)` with `w = endX - startX`, `w1` the start advance
+  /// and `w2` the fill advance, clamped at zero. Fill i is at `startX + w1 +
+  /// i * w2`.
+  ///
+  /// Note: Dart's `round()` rounds halves away from zero. `lrint` rounds halves
+  /// to even. The two differ only when `(w - w1) / w2` ends in exactly .5.
+  static ({double startX, List<double> fillXs}) trillSymbols({
+    required double startX,
+    required double endX,
     required double space,
   }) {
-    final y = trillLineY(trillOrigin, space);
-    final from = Offset(
-      trillOrigin.dx + space * trill.neX + space * trillLineStartGapSp,
-      y,
+    final w = endX - startX;
+    final w1 = trillStartAdvanceSp * space;
+    final w2 = trillFillAdvanceSp * space;
+    final n = math.max(0, ((w - w1) / w2).round());
+    return (
+      startX: startX,
+      fillXs: [for (var i = 0; i < n; i++) startX + w1 + i * w2],
     );
-    final to = Offset(nextHeadLeftX - space * trillLineEndGapSp, y);
-    if (to.dx - from.dx < minTrillLineSp * space) return null;
-    return (from: from, to: to);
   }
 
-  /// Points of a generated sine wave from [from] to [to]. The wave starts and
-  /// ends on the line through both points and has a whole number of periods
-  /// (at least one), so the stretch is continuous at both ends.
-  static List<Offset> wavePoints({
-    required Offset from,
-    required Offset to,
-    required double space,
-    int samplesPerWave = 8,
-  }) {
-    final length = to.dx - from.dx;
-    final waves = math.max(1, (length / (waveLengthSp * space)).round());
-    final steps = waves * samplesPerWave;
-    final amp = waveAmplitudeSp * space;
-    return [
-      for (var k = 0; k <= steps; k++)
-        Offset(
-          from.dx + length * k / steps,
-          from.dy + amp * math.sin(2 * math.pi * k / samplesPerWave),
-        ),
-    ];
-  }
+  // ---------------------------------------------------------------------------
+  // Acciaccatura (grace note with stem slash)
+  // ---------------------------------------------------------------------------
 
-  /// Leftmost ink of a chord: an accidental moves it left of its notehead.
+  /// Left ink edge of the main chord: the leftmost notehead, or the
+  /// accidental in front of it. An accidental sits [accidentalNoteDistanceSp]
+  /// plus its width to the left of its notehead (`tdraw.cpp:2618`).
   static double leftmostInk({
-    required Iterable<({double headX, bool hasAccidental})> notes,
+    required Iterable<({double headX, String? accidental})> notes,
     required double space,
   }) {
     var left = double.infinity;
     for (final n in notes) {
-      final x = n.hasAccidental ? n.headX - space * accidentalWidthSp : n.headX;
+      final w = accidentalWidth(n.accidental);
+      final x = n.accidental == null
+          ? n.headX
+          : n.headX - space * (accidentalNoteDistanceSp + w);
       left = math.min(left, x);
     }
     return left;
   }
 
   /// Left ink edge of a grace notehead that sits before a chord whose leftmost
-  /// ink is [leftmostInkX].
+  /// ink is [leftmostInkX]. The gap is the larger of [minNoteDistanceSp] and
+  /// [graceToMainNoteDistSp]. The grace head is [graceNoteMag] times the main
+  /// head width.
   static double graceHeadLeftX({
     required double leftmostInkX,
     required double space,
-  }) => leftmostInkX - space * (graceGapSp + headWidthSp * graceScale);
+  }) =>
+      leftmostInkX -
+      space *
+          (math.max(minNoteDistanceSp, graceToMainNoteDistSp) +
+              headWidthSp * graceNoteMag);
 
-  /// Left origin of a grace accidental, left of the grace head at [graceLeftX].
+  /// Left origin of a grace accidental, left of the grace head at
+  /// [graceLeftX]. The gap and the accidental are scaled by [graceNoteMag]
+  /// (`tdraw.cpp:2618`).
   static double graceAccidentalX({
     required double graceLeftX,
+    required String accidental,
     required double space,
   }) =>
       graceLeftX -
-      space * (accidentalWidthSp * graceScale + graceAccidentalGapSp);
+      space *
+          graceNoteMag *
+          (accidentalWidth(accidental) + accidentalNoteDistanceSp);
 
-  /// Stem length of a grace note (standard stem scaled by [graceScale]).
+  /// X where a grace note's stem attaches, the right edge of its head. A
+  /// local choice: MuseScore attaches the stem at the font's `stemUpSE` anchor,
+  /// which is not in the repository.
+  static double graceStemRightX({
+    required double graceLeftX,
+    required double space,
+  }) => graceLeftX + headWidthSp * graceNoteMag * space;
+
+  /// Stem length of a grace note (`stemLengthSp` scaled by [graceNoteMag]).
   static double graceStemLength(double space) =>
-      stemLengthSp * graceScale * space;
+      stemLengthSp * graceNoteMag * space;
 
-  /// X of a stem-up grace stem: on the right edge of its head.
+  /// Stroke width of a grace stem: `stemWidth * mag` (`tdraw.cpp:2608`), and at
+  /// least [minStrokePx].
+  static double graceStemWidth(double space) =>
+      math.max(minStrokePx, stemWidthSp * graceNoteMag * space);
+
+  /// X of the centre of a stem-up grace stem. The stroke is centred inside its
+  /// head width so that the stem's right edge is [graceStemRightX].
   static double graceStemX({
     required double graceLeftX,
     required double space,
   }) =>
-      graceLeftX + headWidthSp * graceScale * space - graceStemWidth(space) / 2;
+      graceStemRightX(graceLeftX: graceLeftX, space: space) -
+      graceStemWidth(space) / 2;
 
-  /// Stroke width of a grace stem, at least one pixel.
-  static double graceStemWidth(double space) =>
-      math.max(1.0, 0.1 * graceScale * space);
-
-  /// Baseline-left origin of the grace slash, centred on the stem between
-  /// [stemFromY] (head) and [stemToY] (tip), at [graceScale] size.
-  static Offset slashOrigin({
-    required double stemX,
-    required double stemFromY,
-    required double stemToY,
+  /// The slash through the stem of a stem-up grace note, as MuseScore's
+  /// `TLayout::layoutStemSlash` lays it out (`tlayout.cpp:5378`). The slash is
+  /// a line, not a glyph. It applies to a note with no hook or beam, so the
+  /// reduction is [slashNoHookReduction].
+  ///
+  /// [stemRightX] is the right edge of the stem. [stemTipY] is the stem tip,
+  /// screen y. The result is the line from [from] to [to], with a stroke of
+  /// [width]. `up` is -1 for a stem-up note (`tlayout.cpp:5399`), so the start
+  /// lies below the tip and the line rises to the right.
+  static ({Offset from, Offset to, double width}) stemSlash({
+    required double stemRightX,
+    required double stemTipY,
     required double space,
   }) {
-    final s = graceScale * space;
-    final cy = (stemFromY + stemToY) / 2;
-    final left = stemX - s * (slash.swX + slash.neX) / 2;
-    final baseline = cy + s * (slash.swY + slash.neY) / 2;
-    return Offset(left, baseline);
+    const mag = graceNoteMag;
+    final headHalfWidth = headWidthSp * mag * space / 2;
+    // leftHang = noteHeadWidth * mag / 2 (`tlayout.cpp:5403`).
+    final startX = stemRightX - headHalfWidth;
+    // startY = stemTipY - up * mag * stemSlashPosition * reduction (`:5409`).
+    final startY =
+        stemTipY + mag * stemSlashPositionSp * space * slashNoHookReduction;
+    // The stem width is subtracted so the slash is centred on the stem
+    // (`tlayout.cpp:5437`).
+    final rightHang = headHalfWidth - stemWidthSp * mag * space;
+    final endX = stemRightX + rightHang;
+    final tan = math.tan(stemSlashAngleDeg * math.pi / 180);
+    // endY = startY + up * (endX - startX) * tan(angle) (`:5439`).
+    final endY = startY - (endX - startX) * tan;
+    return (
+      from: Offset(startX, startY),
+      to: Offset(endX, endY),
+      width: math.max(minStrokePx, stemSlashThicknessSp * mag * space),
+    );
   }
 }
