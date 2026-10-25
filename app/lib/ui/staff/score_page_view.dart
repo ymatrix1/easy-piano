@@ -68,6 +68,7 @@ class _ScorePageViewState extends State<ScorePageView>
 
   ScorePageConfig? _lastConfig;
   List<ScorePage> _lastPages = const [];
+  List<ScoreSystem> _lastSystems = const [];
 
   @override
   void initState() {
@@ -93,31 +94,63 @@ class _ScorePageViewState extends State<ScorePageView>
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _lastConfig == null) return;
-    final pageH = (_lastConfig!.pageHeight + 24.0) * _scale;
-    if (pageH <= 0) return;
-    final page = (_scrollController.offset / pageH)
-        .floor()
-        .clamp(0, math.max(0, _lastPages.length - 1))
-        .toInt();
-    if (page != _currentPage) {
-      setState(() => _currentPage = page);
+    if (!_scrollController.hasClients ||
+        _lastConfig == null ||
+        _lastPages.isEmpty) {
+      return;
+    }
+    final config = _lastConfig!;
+    final headerH = (widget.title.isNotEmpty || widget.composer.isNotEmpty)
+        ? 80.0
+        : 20.0;
+    final offset = _scrollController.offset / _scale;
+
+    var runningY = headerH;
+    var curPage = 0;
+    for (var p = 0; p < _lastPages.length; p++) {
+      final pageH =
+          _lastPages[p].systems.length *
+          (config.grandStaffHeight + config.systemDistance);
+      if (offset < runningY + pageH * 0.7) {
+        curPage = p;
+        break;
+      }
+      runningY += pageH;
+      curPage = p;
+    }
+    if (curPage != _currentPage) {
+      setState(() => _currentPage = curPage);
     }
   }
 
   void _scrollToPage(int targetPage) {
-    if (!_scrollController.hasClients || _lastConfig == null) return;
-    final pageH = (_lastConfig!.pageHeight + 24.0) * _scale;
-    final targetOffset = (targetPage * pageH).clamp(
-      0.0,
-      _scrollController.position.maxScrollExtent,
-    );
+    if (!_scrollController.hasClients ||
+        _lastPages.isEmpty ||
+        _lastConfig == null) {
+      return;
+    }
+    final config = _lastConfig!;
+    final clampedPage = targetPage.clamp(0, _lastPages.length - 1);
+    final headerH = (widget.title.isNotEmpty || widget.composer.isNotEmpty)
+        ? 80.0
+        : 20.0;
+
+    var prevSystemsCount = 0;
+    for (var p = 0; p < clampedPage; p++) {
+      prevSystemsCount += _lastPages[p].systems.length;
+    }
+
+    final targetOffset =
+        (headerH +
+            prevSystemsCount *
+                (config.grandStaffHeight + config.systemDistance)) *
+        _scale;
     _scrollController.animateTo(
-      targetOffset,
+      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOutCubic,
     );
-    setState(() => _currentPage = targetPage);
+    setState(() => _currentPage = clampedPage);
   }
 
   void _onTick(Duration elapsed) {
@@ -162,38 +195,33 @@ class _ScorePageViewState extends State<ScorePageView>
       return;
     }
 
-    // Auto-scroll vertically following playhead downwards across systems and pages (MuseScore style)
-    if (_lastPages.isNotEmpty &&
+    // Auto-scroll vertically following playhead downwards across systems (continuous view)
+    if (_lastSystems.isNotEmpty &&
         _lastConfig != null &&
         _scrollController.hasClients) {
       final config = _lastConfig!;
-      for (var p = 0; p < _lastPages.length; p++) {
-        final page = _lastPages[p];
-        if (nextBeat >= page.startBeat && nextBeat <= page.endBeat) {
-          for (var s = 0; s < page.systems.length; s++) {
-            final sys = page.systems[s];
-            if (nextBeat >= sys.startBeat && nextBeat <= sys.endBeat) {
-              final sysKey = p * 1000 + s;
-              if (sysKey != _lastActiveSysKey) {
-                _lastActiveSysKey = sysKey;
-                final pageH = (config.pageHeight + 24.0) * _scale;
-                final sysY =
-                    (p == 0 && widget.title.isNotEmpty
-                        ? config.marginTop * 1.2
-                        : config.marginTop) +
-                    s * (config.grandStaffHeight + config.systemDistance);
-                final targetScroll = (p * pageH + sysY * _scale - 100.0).clamp(
-                  0.0,
-                  _scrollController.position.maxScrollExtent,
-                );
-                _scrollController.animateTo(
-                  targetScroll,
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeOutCubic,
-                );
-              }
-              break;
-            }
+      for (var s = 0; s < _lastSystems.length; s++) {
+        final sys = _lastSystems[s];
+        if (nextBeat >= sys.startBeat && nextBeat <= sys.endBeat) {
+          if (s != _lastActiveSysKey) {
+            _lastActiveSysKey = s;
+            final headerH =
+                (widget.title.isNotEmpty || widget.composer.isNotEmpty)
+                ? 80.0
+                : 20.0;
+            final sysY =
+                (headerH +
+                    s * (config.grandStaffHeight + config.systemDistance)) *
+                _scale;
+            final targetScroll = (sysY - 100.0).clamp(
+              0.0,
+              _scrollController.position.maxScrollExtent,
+            );
+            _scrollController.animateTo(
+              targetScroll,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+            );
           }
           break;
         }
@@ -233,7 +261,7 @@ class _ScorePageViewState extends State<ScorePageView>
       _lastActiveSysKey = -1;
     });
 
-    if (_lastPages.isNotEmpty &&
+    if (_lastSystems.isNotEmpty &&
         _lastConfig != null &&
         _scrollController.hasClients) {
       if (_currentBeat <= 0.05) {
@@ -245,30 +273,26 @@ class _ScorePageViewState extends State<ScorePageView>
         return;
       }
       final config = _lastConfig!;
-      for (var p = 0; p < _lastPages.length; p++) {
-        final page = _lastPages[p];
-        if (_currentBeat >= page.startBeat && _currentBeat <= page.endBeat) {
-          for (var s = 0; s < page.systems.length; s++) {
-            final sys = page.systems[s];
-            if (_currentBeat >= sys.startBeat && _currentBeat <= sys.endBeat) {
-              final pageH = (config.pageHeight + 24.0) * _scale;
-              final sysY =
-                  (p == 0 && widget.title.isNotEmpty
-                      ? config.marginTop * 1.2
-                      : config.marginTop) +
-                  s * (config.grandStaffHeight + config.systemDistance);
-              final targetScroll = (p * pageH + sysY * _scale - 100.0).clamp(
-                0.0,
-                _scrollController.position.maxScrollExtent,
-              );
-              _scrollController.animateTo(
-                targetScroll,
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-              );
-              break;
-            }
-          }
+      for (var s = 0; s < _lastSystems.length; s++) {
+        final sys = _lastSystems[s];
+        if (_currentBeat >= sys.startBeat && _currentBeat <= sys.endBeat) {
+          final headerH =
+              (widget.title.isNotEmpty || widget.composer.isNotEmpty)
+              ? 80.0
+              : 20.0;
+          final sysY =
+              (headerH +
+                  s * (config.grandStaffHeight + config.systemDistance)) *
+              _scale;
+          final targetScroll = (sysY - 100.0).clamp(
+            0.0,
+            _scrollController.position.maxScrollExtent,
+          );
+          _scrollController.animateTo(
+            targetScroll,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
           break;
         }
       }
@@ -291,31 +315,43 @@ class _ScorePageViewState extends State<ScorePageView>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Standard A4 portrait score dimensions matching MuseScore and ScorePdfPrinter
-        const standardPageWidth = 800.0;
-        const standardPageHeight = 1130.0;
+        // Continuous edge-to-edge score layout matching MuseScore Continuous View
+        final availableW = constraints.maxWidth;
+        final scoreWidth = math.min(1200.0, math.max(680.0, availableW - 64.0));
 
         final config = ScorePageConfig(
-          pageWidth: standardPageWidth,
-          pageHeight: standardPageHeight,
-          marginTop: 48.0,
-          marginBottom: 48.0,
-          marginLeft: 40.0,
-          marginRight: 40.0,
+          pageWidth: scoreWidth,
+          pageHeight: 1130.0, // used for PDF pagination
+          marginTop: 36.0,
+          marginBottom: 36.0,
+          marginLeft: 36.0,
+          marginRight: 36.0,
           grandStaffHeight: 135.0,
           systemDistance: 50.0,
           minMeasureWidth: 100.0,
           systemHeaderWidth: 70.0,
         );
 
-        final pages = ScorePageLayout.layoutScore(
+        final measures = ScorePageLayout.buildMeasures(
           notes: widget.notes,
           beatsPerBar: widget.beatsPerBar,
           totalBeats: widget.totalBeats,
+          space: config.space,
+          minMeasureWidth: config.minMeasureWidth,
+        );
+
+        final systems = ScorePageLayout.breakSystems(
+          measures: measures,
+          config: config,
+        );
+
+        final pages = ScorePageLayout.paginate(
+          systems: systems,
           config: config,
         );
 
         _lastConfig = config;
+        _lastSystems = systems;
         _lastPages = pages;
 
         final currentMeasureNum = widget.beatsPerBar > 0
@@ -323,49 +359,93 @@ class _ScorePageViewState extends State<ScorePageView>
             : 1;
 
         return Scaffold(
-          // Warm ivory canvas background matching sightread.dev
-          backgroundColor: const Color(0xFFF7F5F0),
+          // Clean unified ivory paper background across entire screen
+          backgroundColor: const Color(0xFFFCFCF9),
           appBar: _buildTopBar(pages.length, pages, config),
           body: Column(
             children: [
               Expanded(
-                child: pages.isEmpty
+                child: systems.isEmpty
                     ? const Center(
                         child: Text(
                           'No score data available',
                           style: TextStyle(color: GameColors.ink, fontSize: 16),
                         ),
                       )
-                    : ListView.builder(
+                    : ListView(
                         controller: _scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        itemCount: pages.length,
-                        itemBuilder: (context, index) {
-                          final page = pages[index];
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 24.0),
-                              child: SizedBox(
-                                width: config.pageWidth * _scale,
-                                height: config.pageHeight * _scale,
-                                child: FittedBox(
-                                  fit: BoxFit.contain,
-                                  child: ScorePageSheet(
-                                    page: page,
-                                    config: config,
-                                    staves: widget.staves,
-                                    keyFifths: widget.keyFifths,
-                                    beatsPerBar: widget.beatsPerBar,
-                                    playheadBeat: _currentBeat,
-                                    title: index == 0 ? widget.title : '',
-                                    composer: index == 0 ? widget.composer : '',
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        children: [
+                          // 1. Header: Title & Composer
+                          if (widget.title.isNotEmpty ||
+                              widget.composer.isNotEmpty)
+                            Center(
+                              child: Container(
+                                width: config.printableWidth * _scale,
+                                padding: const EdgeInsets.only(bottom: 28.0),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        widget.title,
+                                        style: const TextStyle(
+                                          fontFamily: 'serif',
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    if (widget.composer.isNotEmpty)
+                                      Text(
+                                        widget.composer,
+                                        style: const TextStyle(
+                                          fontFamily: 'serif',
+                                          fontSize: 14,
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                          // 2. Continuous Systems (Infinite downward scroll)
+                          for (var s = 0; s < systems.length; s++)
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: config.systemDistance * _scale,
+                                ),
+                                child: SizedBox(
+                                  width: config.printableWidth * _scale,
+                                  height: config.grandStaffHeight * _scale,
+                                  child: FittedBox(
+                                    fit: BoxFit.contain,
+                                    child: CustomPaint(
+                                      size: Size(
+                                        config.printableWidth,
+                                        config.grandStaffHeight,
+                                      ),
+                                      painter: SystemStaffPainter(
+                                        system: systems[s],
+                                        config: config,
+                                        staves: widget.staves,
+                                        keyFifths: widget.keyFifths,
+                                        beatsPerBar: widget.beatsPerBar,
+                                        playheadBeat: _currentBeat,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          );
-                        },
+                        ],
                       ),
               ),
               _buildTransportBar(currentMeasureNum),

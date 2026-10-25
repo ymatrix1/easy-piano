@@ -59,7 +59,7 @@ void main() {
           ),
         );
 
-        expect(find.byType(ScorePageSheet), findsOneWidget);
+        expect(find.text('Rondo alla Turca'), findsWidgets);
         expect(find.byType(CustomPaint), findsWidgets);
       },
     );
