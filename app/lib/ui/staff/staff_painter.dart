@@ -1936,8 +1936,9 @@ class StaffPainter extends CustomPainter {
       return any;
     }
 
-    // Chords: left aligned on the note, above the top staff line or above the
-    // highest notehead at their onset, whichever is higher.
+    // Chords: left aligned on the note (chordSymbolAAlign left, v450 mss:296),
+    // 2.5 sp above the top staff line or lifted above the highest notehead at
+    // their onset.
     final chordTop = _hasTreble ? l.trebleBottomY - space * 4 : l.bassTopY;
     final rootPx = space * HarmonyLayout.chordSizeSp;
     for (final c in chords) {
@@ -1961,7 +1962,8 @@ class StaffPainter extends CustomPainter {
         for (final r in HarmonyLayout.chordRuns(c.symbol))
           (
             tp: _plainText(r.text, rootPx * r.scale, color),
-            rise: r.riseEm * rootPx,
+            rise: r.riseSp * space,
+            dx: r.dxSp * space,
           ),
       ];
       final total = runs.fold(0.0, (w, r) => w + r.tp.width);
@@ -1972,7 +1974,7 @@ class StaffPainter extends CustomPainter {
         r.tp.paint(
           canvas,
           Offset(
-            cx,
+            cx + r.dx,
             base -
                 r.tp.computeDistanceToActualBaseline(TextBaseline.alphabetic),
           ),
@@ -2056,7 +2058,8 @@ class StaffPainter extends CustomPainter {
           s,
           centre: centre,
           width: width,
-          beats: i == null ? 1.0 : notes[i].beats,
+          headRight:
+              centre + HarmonyLayout.headWidthSp(whole: whole) * space / 2,
         );
         slots.add(slot);
         final low = lowestInkAt(s.beat);
@@ -2093,41 +2096,32 @@ class StaffPainter extends CustomPainter {
         if (s.hyphen && !s.isExtension && k + 1 < slots.length) {
           final next = slots[k + 1];
           if (!next.lyric.isExtension) {
-            final seg = HarmonyLayout.hyphenSegment(
+            for (final seg in HarmonyLayout.hyphenSegments(
               prevRight: slot.right,
               nextLeft: next.left,
+              space: space,
+            )) {
+              canvas.drawLine(Offset(seg.x0, y), Offset(seg.x1, y), linePaint);
+            }
+          }
+        }
+        if (s.isExtension &&
+            (k + 1 >= slots.length || !slots[k + 1].lyric.isExtension)) {
+          // A melisma ends at the last extension of its run, and starts after
+          // the syllable before the run (lyricslayout.cpp:782-841).
+          var j = k - 1;
+          while (j >= 0 && slots[j].lyric.isExtension) {
+            j--;
+          }
+          if (j >= 0) {
+            final seg = HarmonyLayout.melismaSegment(
+              textRight: slots[j].right,
+              headRight: slot.headRight,
               space: space,
             );
             if (seg != null) {
               canvas.drawLine(Offset(seg.x0, y), Offset(seg.x1, y), linePaint);
             }
-          }
-        }
-        if (s.isExtension) {
-          // From the previous lyric to the next one, or to the end of the
-          // note (duration in beats, but not past the next note of the hand).
-          final from = k > 0 ? slots[k - 1].anchorRight : slot.centre;
-          double to;
-          if (k + 1 < slots.length) {
-            to = slots[k + 1].anchorLeft;
-          } else {
-            to = slot.centre + slot.beats * ppb;
-            // Not past the next notehead of this hand.
-            final later = lowerBound(notes, s.beat + 1e-6);
-            for (var j = later; j < notes.length; j++) {
-              final m = notes[j];
-              if (m.isSpacer || m.leftHand != hand) continue;
-              to = math.min(to, headLeft(j));
-              break;
-            }
-          }
-          final seg = HarmonyLayout.dashSegment(
-            fromX: from,
-            toX: to,
-            space: space,
-          );
-          if (seg != null) {
-            canvas.drawLine(Offset(seg.x0, y), Offset(seg.x1, y), linePaint);
           }
         }
       }
@@ -2342,7 +2336,7 @@ class _LyricSlot {
     this.lyric, {
     required this.centre,
     required this.width,
-    required this.beats,
+    required this.headRight,
   });
 
   final StaffLyric lyric;
@@ -2353,8 +2347,8 @@ class _LyricSlot {
   /// Text width; zero for an extension.
   final double width;
 
-  /// Duration of that note, in beats.
-  final double beats;
+  /// Right edge of the notehead it sits under (melisma end).
+  final double headRight;
 
   /// Top of the row, and its baseline. Set once the row is laid out.
   double boxTop = 0;
@@ -2362,9 +2356,4 @@ class _LyricSlot {
 
   double get left => HarmonyLayout.lyricLeft(centreX: centre, width: width);
   double get right => left + width;
-
-  /// Where a melisma line meets this item: the text edge, or the note centre
-  /// for an extension.
-  double get anchorLeft => lyric.isExtension ? centre : left;
-  double get anchorRight => lyric.isExtension ? centre : right;
 }

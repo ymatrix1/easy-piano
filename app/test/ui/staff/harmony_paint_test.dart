@@ -86,9 +86,10 @@ void main() {
       );
       final extra = _extraPixels(plain, melisma);
       expect(extra, isNotEmpty);
-      // A ends at about x 386 and B starts at about x 478; the line runs
-      // between them, padded, and is thin.
-      expect(extra.every((p) => p.$1 > 380 && p.$1 < 484), isTrue);
+      // A ends at about x 386. The melisma starts 0.2 sp later and ends at the
+      // right edge of the notehead of the extension (beat 5, x 420 + 23.6),
+      // so it stops before B (left edge about x 480). Thin line.
+      expect(extra.every((p) => p.$1 > 380 && p.$1 < 450), isTrue);
       expect(extra.map((p) => p.$2).toSet().length, lessThanOrEqualTo(3));
     });
   });

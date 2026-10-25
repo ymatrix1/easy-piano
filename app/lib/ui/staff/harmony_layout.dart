@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'dynamics_layout.dart';
+
 /// A parsed chord symbol: `root` (letter plus optional `#` or `b`), `suffix`
 /// (quality and extensions, possibly empty) and `bass` (the note after a
 /// slash, or null). Examples: `C`, `Am7`, `G7/B`, `F#m7b5`, `Bb`.
@@ -34,19 +36,27 @@ class ChordSymbol {
 
 /// One text run of a chord symbol, drawn left to right.
 class ChordRun {
-  const ChordRun(this.text, {required this.scale, required this.riseEm});
+  const ChordRun(
+    this.text, {
+    required this.scale,
+    this.riseSp = 0,
+    this.dxSp = 0,
+  });
 
   final String text;
 
   /// Font size relative to the root.
   final double scale;
 
-  /// Baseline shift in root-font ems. Positive is up (superscript), negative
-  /// is down (subscript).
-  final double riseEm;
+  /// Baseline shift in staff spaces. Positive is up, negative is down.
+  final double riseSp;
+
+  /// Horizontal shift of this run's ink in staff spaces. The pen does not
+  /// move, so the next run starts where it would have without the shift.
+  final double dxSp;
 
   @override
-  String toString() => 'ChordRun($text, $scale, $riseEm)';
+  String toString() => 'ChordRun($text, $scale, $riseSp, $dxSp)';
 }
 
 /// A chord symbol at [beat] (`{chord:"Am7"}`), attached to the note that
@@ -65,8 +75,8 @@ class StaffChord {
 ///
 /// A syllable is drawn centred under the notehead at [beat]. A trailing `-`
 /// in the directive sets [hyphen]: a hyphen joins it to the next syllable of
-/// the same hand. The text `_` is an extension ([isExtension]): a line from
-/// the previous lyric to the next one, or to the end of the note.
+/// the same hand. The text `_` is an extension ([isExtension]): a melisma
+/// line from the syllable before it to the notehead of the last extension.
 class StaffLyric {
   const StaffLyric(
     this.beat,
@@ -115,85 +125,158 @@ class StaffLyric {
 
 /// Chord symbol and lyric geometry. Pure functions, no painting state.
 ///
-/// Follows MuseScore `rendering/score/harmonylayout.cpp` (chord symbol as
-/// text above the staff, extension as a superscript and the bass as a
-/// subscript after a slash) and `rendering/score/lyricslayout.cpp` (syllables
-/// centred on the note, hyphens between syllables, melisma lines).
+/// Follows MuseScore `rendering/score/harmonylayout.cpp` and
+/// `rendering/score/lyricslayout.cpp`. Every constant below cites the style
+/// value (`style/styledef.cpp`, or `data/styles/legacy-style-defaults-v450.mss`
+/// where the two differ, noted) or the chord token file
+/// (`data/chords/chords_legacy.xml`). Constants marked "local choice" are not
+/// from MuseScore.
 ///
-/// Text is drawn with the default sans font (not SMuFL), so the chord and
-/// lyric sizes below are fractions of the staff space, not font metrics.
-/// Melisma and hyphen values follow `data/styles/legacy-style-defaults-v450.mss`
-/// (`lyricsMelismaPad` 0.2 sp, `lyricsDashMinLength` 0.4 sp,
-/// `lyricsLineThickness` 0.1 sp, `lyricsMinDistance` 0.25 sp).
+/// Text uses the app's default sans font, not Edwin (MuseScore's default
+/// chord and lyric font). Sizes are set so the em matches MuseScore's 10 pt.
+/// Glyph shapes and widths therefore differ.
 abstract final class HarmonyLayout {
-  /// Root font size of a chord symbol, in staff spaces.
-  static const chordSizeSp = 1.5;
+  // ---- Chord symbols ----
 
-  /// Scale of the extension run (superscript) and the bass run (subscript).
-  static const suffixScale = 0.7;
-  static const bassScale = 0.7;
+  /// Root font size, in staff spaces. 10 pt Edwin, spatium dependent
+  /// (`chordSymbolAFontSize` 10, styledef.cpp:433; v450 mss:291). 1 pt is
+  /// 1/72 inch and the default spatium is 1.75 mm (styledef.cpp:804), so
+  /// 10 pt = 10 * 25.4 / 72 / 1.75 = 2.016 sp.
+  static const chordSizeSp = 10 * 25.4 / 72 / 1.75;
 
-  /// Extension raised so its top lines up with the root's cap height (about
-  /// 0.22 root ems for a 0.7 scale run).
-  static const suffixRiseEm = 0.22;
+  /// Extension run: same size as the root (`chordExtensionMag` 1.0,
+  /// styledef.cpp:551; chordlist.cpp:2058-2059 multiplies it into the font).
+  /// The chord style JAZZ alone raises modifiers as superscripts
+  /// (chordlist.cpp:1625, 1707-1713). That is not implemented.
+  static const suffixScale = 1.0;
 
-  /// Bass note dropped below the baseline (subscript).
-  static const bassDropEm = 0.2;
+  /// Extension baseline offset: none (`chordExtensionAdjust` 0.0,
+  /// styledef.cpp:552; chordlist.cpp:1580-1581 returns it as the y offset).
+  static const suffixRiseSp = 0.0;
 
-  /// Gap between a chord symbol's baseline and the top staff line, or the top
-  /// of the notes at its onset when those are higher.
-  static const chordGapSp = 0.8;
+  /// The slash is lowered 1/5 sp and moved 1/5 sp left of the pen before it
+  /// is drawn (`m:-0.2:1 / m:0.2:1` in renderBase, chords_legacy.xml:411).
+  /// Legacy units of 1/5 sp are converted by compatutils.cpp:594-606 (file
+  /// version 1.24, chordlist.cpp:2105, 357-362).
+  static const slashDropSp = 0.2;
+  static const slashShiftSp = 0.04;
 
-  /// Lyric font size, in staff spaces.
-  static const lyricSizeSp = 1.4;
+  /// The bass note is at root size (`chordBassNoteScale` 1.0, styledef.cpp:558;
+  /// chordlist.cpp:1620-1621 and harmonylayout.cpp:572-584 use it as the
+  /// scale).
+  static const bassScale = 1.0;
 
-  /// Top of the lyric row below its staff's bottom line, in staff spaces
-  /// (MuseScore `lyricsMinTopDistance` 1 sp). Kept well above the default
-  /// `lyricsPosBelow` (3 sp) so a treble row fits in a grand staff's gap.
+  /// The bass note is lowered 2/5 sp: the slash's 1/5 sp plus another 1/5 sp
+  /// (renderBase: `m:0.2:1 :n` after the slash, chords_legacy.xml:411).
+  static const bassDropSp = 0.4;
+
+  /// Baseline above the top staff line (`chordSymbolAPosAbove` y -2.5,
+  /// styledef.cpp:420; v450 mss:282). The harmony sits on the ON_STAFF
+  /// position and defaultPos adds this offset (harmonylayout.cpp:202-206).
+  static const chordAboveStaffSp = 2.5;
+
+  /// Clearance from the notes at the onset. The autoplace pass lifts the
+  /// symbol so that its shape clears the skyline by `minHarmonyDistance`
+  /// (styledef.cpp:407; v450 mss:272; systemlayout.cpp:1101-1108;
+  /// autoplace.cpp:109-116). Only noteheads are used here; stems and other
+  /// elements are not (local simplification).
+  static const chordNoteClearanceSp = 0.5;
+
+  // ---- Lyrics ----
+
+  /// Lyric font size, in staff spaces. 10 pt Edwin, spatium dependent
+  /// (`lyricsOddFontSize` 10, styledef.cpp:141; v450 mss:57-60). Same
+  /// conversion as [chordSizeSp]: 2.016 sp.
+  static const lyricSizeSp = 10 * 25.4 / 72 / 1.75;
+
+  /// Top of the lyric row below its staff's bottom line, in staff spaces.
+  /// LOCAL CHOICE. MuseScore's default baseline is `lyricsPosBelow` 3 sp below
+  /// the staff (styledef.cpp:109; v450 mss:35; lyricslayout.cpp:612-614). This
+  /// app uses 1 sp (the minimum below) so a treble row fits in a grand staff's
+  /// gap. Deliberate deviation, see sheet-engraving.md.
   static const lyricTopSp = 1.0;
 
-  /// Clearance between the lyric row and the lowest note ink above it
-  /// (`lyricsMinDistance` 0.25 sp, plus a little margin for stems).
-  static const lyricMinDistSp = 0.25;
+  /// Clearance between the lyric row and the lowest note ink of the row above
+  /// it. MuseScore keeps `lyricsMinTopDistance` 1 sp between the lyric and the
+  /// staff skyline (styledef.cpp:110; v450 mss:36; lyricslayout.cpp:630-660),
+  /// and the skyline includes stems and noteheads below the staff.
+  static const lyricClearanceSp = 1.0;
 
-  /// Hyphen and melisma line height above the lyric baseline.
-  static const dashHeightSp = 0.35;
+  /// Hyphen and melisma clearance from a syllable: `lyricsDashPad` 0.05 sp
+  /// (styledef.cpp:124; v450 mss:49). Used at both ends of a hyphen
+  /// (lyricslayout.cpp:831, 811).
+  static const dashPadSp = 0.05;
 
-  /// Hyphen length limits and clearance from each syllable.
-  static const hyphenMinSp = 0.2;
-  static const hyphenMaxSp = 0.5;
-  static const hyphenPadSp = 0.1;
-
-  /// Melisma line clearance from each end, and its shortest length
-  /// (`lyricsMelismaPad` 0.2 sp, `lyricsDashMinLength` 0.4 sp).
-  static const dashPadSp = 0.2;
+  /// Shortest hyphen. A shorter gap is widened to this, symmetrically
+  /// (`lyricsDashMinLength` 0.4 sp, styledef.cpp:114; v450 mss:40;
+  /// lyricslayout.cpp:329-340).
   static const dashMinSp = 0.4;
 
-  /// Thickness of hyphens and melisma lines (`lyricsLineThickness` 0.1 sp).
+  /// Longest hyphen (`lyricsDashMaxLength` 0.6 sp, styledef.cpp:115; v450
+  /// mss:41; lyricslayout.cpp:342).
+  static const dashMaxSp = 0.6;
+
+  /// One extra hyphen per 16 sp of gap (`lyricsDashMaxDistance` 16 sp,
+  /// styledef.cpp:116; v450 mss:42; lyricslayout.cpp:317-323). Not used for
+  /// gaps under 16 sp, where a hyphen is always drawn (`lyricsDashForce`
+  /// true, styledef.cpp:117; v450 mss:43).
+  static const dashMaxDistanceSp = 16.0;
+
+  /// Height of hyphen and melisma lines above the lyric baseline:
+  /// `lyricsDashYposRatio` 0.5 of the lyric x-height (styledef.cpp:126; v450
+  /// mss:51). LOCAL CHOICE for x-height: 0.5 em (Edwin metrics are not in this
+  /// repo; a typical sans x-height is about 0.5 em).
+  static const dashYposRatio = 0.5;
+  static const xHeightEm = 0.5;
+  static const dashHeightSp = dashYposRatio * xHeightEm * lyricSizeSp;
+
+  /// Melisma line: padding after the syllable before it (`lyricsMelismaPad`
+  /// 0.2 sp, styledef.cpp:123; v450 mss:48; lyricslayout.cpp:777).
+  static const melismaPadSp = 0.2;
+
+  /// Shortest melisma line. A shorter one is not drawn, since
+  /// `lyricsMelismaForce` is false (`lyricsMelismaMinLength` 1 sp,
+  /// styledef.cpp:130 and 129; v450 mss:54 and 53; lyricslayout.cpp:247-254).
+  static const melismaMinSp = 1.0;
+
+  /// Tolerance on [melismaMinSp] (lyricslayout.cpp:246).
+  static const melismaToleranceSp = 0.05;
+
+  /// Thickness of hyphens and melisma lines: `lyricsDashLineThickness` 0.1 sp
+  /// (styledef.cpp:125) and `lyricsLineThickness` 0.1 sp (styledef.cpp:120).
   static const lineThicknessSp = 0.1;
 
-  /// Text runs of [c], left to right: root at full size, extension raised,
-  /// slash on the baseline, bass lowered and smaller.
+  /// Width of a notehead, in staff spaces, used as the melisma end anchor
+  /// (`noteheadBlack` 1.18, `noteheadWhole` 1.688; see [DynamicsLayout]).
+  static double headWidthSp({required bool whole}) => whole
+      ? DynamicsLayout.noteheadWholeWidthSp
+      : DynamicsLayout.noteheadWidthSp;
+
+  /// Text runs of [c], left to right: root at full size, extension at the
+  /// same size and baseline, slash lowered 1/5 sp and shifted left 1/25 sp,
+  /// bass at full size and lowered 2/5 sp.
   static List<ChordRun> chordRuns(ChordSymbol c) => [
-    ChordRun(c.root, scale: 1, riseEm: 0),
+    ChordRun(c.root, scale: 1, riseSp: 0),
     if (c.suffix.isNotEmpty)
-      ChordRun(c.suffix, scale: suffixScale, riseEm: suffixRiseEm),
+      ChordRun(c.suffix, scale: suffixScale, riseSp: suffixRiseSp),
     if (c.bass != null) ...[
-      const ChordRun('/', scale: 1, riseEm: 0),
-      ChordRun(c.bass!, scale: bassScale, riseEm: -bassDropEm),
+      const ChordRun('/', scale: 1, riseSp: -slashDropSp, dxSp: -slashShiftSp),
+      ChordRun(c.bass!, scale: bassScale, riseSp: -bassDropSp),
     ],
   ];
 
-  /// Baseline of a chord symbol. It sits above the top staff line, and above
-  /// the notes at its onset when those reach higher ([noteTopY] is their top
-  /// ink, or null when there are none).
+  /// Baseline of a chord symbol. The default is [chordAboveStaffSp] above the
+  /// top staff line. It is lifted, if needed, so the notes at its onset keep
+  /// [chordNoteClearanceSp] clear ([noteTopY] is their highest notehead top,
+  /// or null when there are none).
   static double chordBaselineY({
     required double staffTopY,
     double? noteTopY,
     required double space,
   }) {
-    final top = noteTopY == null ? staffTopY : math.min(staffTopY, noteTopY);
-    return top - chordGapSp * space;
+    final nominal = staffTopY - chordAboveStaffSp * space;
+    if (noteTopY == null) return nominal;
+    return math.min(nominal, noteTopY - chordNoteClearanceSp * space);
   }
 
   /// Left edge of a lyric of [width] centred on the notehead centre [centreX].
@@ -201,8 +284,8 @@ abstract final class HarmonyLayout {
       centreX - width / 2;
 
   /// Top of a lyric row below a staff. It sits [lyricTopSp] below the staff's
-  /// bottom line, or lower when the lowest note ink of the row ([lowestInkY],
-  /// null when none) would otherwise touch it.
+  /// bottom line. It is lowered when the lowest note ink of the row
+  /// ([lowestInkY], null when none) comes within [lyricClearanceSp].
   static double lyricTop({
     required double staffBottomY,
     double? lowestInkY,
@@ -210,37 +293,55 @@ abstract final class HarmonyLayout {
   }) {
     final nominal = staffBottomY + lyricTopSp * space;
     if (lowestInkY == null) return nominal;
-    return math.max(nominal, lowestInkY + lyricMinDistSp * space);
+    return math.max(nominal, lowestInkY + lyricClearanceSp * space);
   }
 
-  /// Baseline-relative height of hyphens and melisma lines.
+  /// Height of hyphens and melisma lines above the lyric baseline.
   static double dashY({required double baselineY, required double space}) =>
       baselineY - dashHeightSp * space;
 
-  /// Hyphen between a syllable ending at [prevRight] and the next one starting
-  /// at [nextLeft]. Centred in the gap; null when the gap is too small.
-  static ({double x0, double x1})? hyphenSegment({
+  /// Hyphen segments between a syllable ending at [prevRight] and the next
+  /// one starting at [nextLeft]. This follows MuseScore's dash layout. The
+  /// line is padded by [dashPadSp] at each end. A gap under [dashMinSp] is
+  /// widened symmetrically. One hyphen per [dashMaxDistanceSp] of length,
+  /// each centred on its part, at most [dashMaxSp] long. A hyphen is always
+  /// drawn, since `lyricsDashForce` is on.
+  static List<({double x0, double x1})> hyphenSegments({
     required double prevRight,
     required double nextLeft,
     required double space,
   }) {
-    final avail = nextLeft - prevRight - 2 * hyphenPadSp * space;
-    if (avail < hyphenMinSp * space) return null;
-    final len = math.min(hyphenMaxSp * space, avail);
-    final mid = (prevRight + nextLeft) / 2;
-    return (x0: mid - len / 2, x1: mid + len / 2);
+    final from = prevRight + dashPadSp * space;
+    final to = nextLeft - dashPadSp * space;
+    final gap = to - from;
+    final minLen = dashMinSp * space;
+    final len = math.max(gap, minLen);
+    final start = gap < minLen ? from - (minLen - gap) / 2 : from;
+    final maxDist = dashMaxDistanceSp * space;
+    final count = len > maxDist ? (len / maxDist).ceil() : 1;
+    final step = len / count;
+    final width = math.min(len, dashMaxSp * space);
+    return [
+      for (var i = 0; i < count; i++)
+        (
+          x0: start + (i + 0.5) * step - width / 2,
+          x1: start + (i + 0.5) * step + width / 2,
+        ),
+    ];
   }
 
-  /// Melisma line from [fromX] to [toX] (the anchors of the lyrics before and
-  /// after the extension), padded at both ends. Null when too short to draw.
-  static ({double x0, double x1})? dashSegment({
-    required double fromX,
-    required double toX,
+  /// Melisma line from [textRight], the right edge of the syllable before it,
+  /// to [headRight], the right edge of the notehead of the last extension.
+  /// It starts [melismaPadSp] after the syllable. Null when shorter than
+  /// [melismaMinSp] (not forced).
+  static ({double x0, double x1})? melismaSegment({
+    required double textRight,
+    required double headRight,
     required double space,
   }) {
-    final x0 = fromX + dashPadSp * space;
-    final x1 = toX - dashPadSp * space;
-    if (x1 - x0 < dashMinSp * space) return null;
+    final x0 = textRight + melismaPadSp * space;
+    final x1 = headRight;
+    if (x1 - x0 < (melismaMinSp - melismaToleranceSp) * space) return null;
     return (x0: x0, x1: x1);
   }
 }

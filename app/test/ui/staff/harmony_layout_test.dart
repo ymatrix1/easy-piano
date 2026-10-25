@@ -1,6 +1,10 @@
 import 'package:easy_piano/ui/staff/harmony_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// Hand-computed values. Sources are in harmony_layout.dart (styledef.cpp line
+// numbers) and in docs/specs/sheet-engraving.md. Space = 10 in the geometry
+// tests, so 1 sp = 10 px.
+
 void main() {
   group('ChordSymbol.parse', () {
     test('root, suffix and bass are split', () {
@@ -62,16 +66,30 @@ void main() {
   });
 
   group('HarmonyLayout chord geometry', () {
-    test('runs: extension raised, bass lowered and smaller', () {
+    test('root size is 10 pt at a 1.75 mm spatium: 2.016 sp', () {
+      // styledef.cpp:433 (10 pt), styledef.cpp:804 (1.75 mm).
+      expect(HarmonyLayout.chordSizeSp, closeTo(10 * 25.4 / 72 / 1.75, 1e-12));
+      expect(HarmonyLayout.chordSizeSp, closeTo(2.016, 0.001));
+    });
+
+    test('extension is inline at full size (no superscript)', () {
+      // chordExtensionMag 1.0 and chordExtensionAdjust 0.0 (styledef.cpp:551-552).
+      final runs = HarmonyLayout.chordRuns(ChordSymbol.parse('Am7')!);
+      expect(runs.map((r) => r.text), ['A', 'm7']);
+      expect(runs[1].scale, 1.0);
+      expect(runs[1].riseSp, 0.0);
+    });
+
+    test('slash lowered 1/5 sp and bass lowered 2/5 sp at full size', () {
+      // chords_legacy.xml:411 renderBase: m:-0.2:1 / m:0.2:1 :n, converted
+      // from 1/5 sp units (compatutils.cpp:594-606). chordBassNoteScale 1.0.
       final runs = HarmonyLayout.chordRuns(ChordSymbol.parse('G7/B')!);
       expect(runs.map((r) => r.text), ['G', '7', '/', 'B']);
-      expect(runs[0].scale, 1);
-      expect(runs[0].riseEm, 0);
-      expect(runs[1].scale, HarmonyLayout.suffixScale);
-      expect(runs[1].riseEm, greaterThan(0));
-      expect(runs[2].riseEm, 0);
-      expect(runs[3].scale, HarmonyLayout.bassScale);
-      expect(runs[3].riseEm, lessThan(0));
+      expect(runs[2].riseSp, closeTo(-0.2, 1e-12));
+      expect(runs[2].dxSp, closeTo(-0.04, 1e-12));
+      expect(runs[3].scale, 1.0);
+      expect(runs[3].riseSp, closeTo(-0.4, 1e-12));
+      expect(runs[3].dxSp, 0.0);
     });
 
     test('a plain chord is one run', () {
@@ -79,22 +97,22 @@ void main() {
       expect(runs.map((r) => r.text), ['C']);
     });
 
-    test('baseline sits above the top staff line', () {
-      expect(
-        HarmonyLayout.chordBaselineY(staffTopY: 100, space: 10),
-        100 - HarmonyLayout.chordGapSp * 10,
-      );
+    test('default baseline is 2.5 sp above the top staff line', () {
+      // chordSymbolAPosAbove y -2.5 (styledef.cpp:420). Space 10: 100 - 25.
+      expect(HarmonyLayout.chordBaselineY(staffTopY: 100, space: 10), 75);
     });
 
-    test('a notehead higher than the staff line lifts the baseline', () {
+    test('notes higher than the default baseline lift it, keeping 0.5 sp', () {
+      // minHarmonyDistance 0.5 sp (styledef.cpp:407). Notehead top 70:
+      // 70 - 5 = 65, which is above 75.
       expect(
         HarmonyLayout.chordBaselineY(staffTopY: 100, noteTopY: 70, space: 10),
-        70 - HarmonyLayout.chordGapSp * 10,
+        65,
       );
-      // A notehead lower than the staff line does not move it.
+      // A notehead lower than the default baseline does not move it.
       expect(
         HarmonyLayout.chordBaselineY(staffTopY: 100, noteTopY: 120, space: 10),
-        100 - HarmonyLayout.chordGapSp * 10,
+        75,
       );
     });
   });
@@ -129,73 +147,103 @@ void main() {
   });
 
   group('HarmonyLayout lyric geometry', () {
+    test('lyric font is 10 pt: 2.016 sp', () {
+      // lyricsOddFontSize 10 (styledef.cpp:141), spatium 1.75 mm.
+      expect(HarmonyLayout.lyricSizeSp, closeTo(2.016, 0.001));
+    });
+
     test('a lyric is centred on its notehead centre', () {
       expect(HarmonyLayout.lyricLeft(centreX: 100, width: 40), 80);
     });
 
-    test('the row sits below the staff, lower when notes reach it', () {
+    test('the row sits 1 sp below the staff, lower when notes reach it', () {
       const space = 10.0;
-      expect(
-        HarmonyLayout.lyricTop(staffBottomY: 200, space: space),
-        200 + HarmonyLayout.lyricTopSp * space,
-      );
-      // Ink above the nominal row: no change.
+      expect(HarmonyLayout.lyricTop(staffBottomY: 200, space: space), 210);
+      // Ink at 195 plus 1 sp (lyricsMinTopDistance) is 205, under 210: no change.
       expect(
         HarmonyLayout.lyricTop(
           staffBottomY: 200,
-          lowestInkY: 205,
+          lowestInkY: 195,
           space: space,
         ),
-        200 + HarmonyLayout.lyricTopSp * space,
+        210,
       );
-      // A stem reaching 215 pushes the row below it.
+      // A stem reaching 215 pushes the row to 215 + 10 = 225.
       expect(
         HarmonyLayout.lyricTop(
           staffBottomY: 200,
           lowestInkY: 215,
           space: space,
         ),
-        215 + HarmonyLayout.lyricMinDistSp * space,
+        225,
       );
     });
 
-    test('a hyphen is centred between the two syllables', () {
-      final seg = HarmonyLayout.hyphenSegment(
+    test('a hyphen is centred between the two syllables, 0.6 sp long', () {
+      // Gap 30 minus 2 pads of 0.5 leaves 29. Hyphen is min(29, 6) = 6 long,
+      // centred at (100.5 + 129.5) / 2 = 115 (lyricslayout.cpp:321-342).
+      final segs = HarmonyLayout.hyphenSegments(
         prevRight: 100,
         nextLeft: 130,
         space: 10,
       );
-      // Gap 30 minus 2 pads of 1 leaves 28; the hyphen is capped at 5.
-      expect(seg, isNotNull);
-      expect(seg!.x1 - seg.x0, closeTo(5, 1e-9));
-      expect((seg.x0 + seg.x1) / 2, closeTo(115, 1e-9));
+      expect(segs, hasLength(1));
+      expect(segs[0].x1 - segs[0].x0, closeTo(6, 1e-9));
+      expect((segs[0].x0 + segs[0].x1) / 2, closeTo(115, 1e-9));
     });
 
-    test('no hyphen when the gap is too small', () {
-      expect(
-        HarmonyLayout.hyphenSegment(prevRight: 100, nextLeft: 103, space: 10),
-        isNull,
+    test('a short gap is still joined: widened to 0.4 sp, drawn', () {
+      // Gap 2 (from 100.5 to 102.5). Forced to 4, centred at 101.5, so from
+      // 99.5 to 103.5 (lyricsDashForce, lyricslayout.cpp:329-340).
+      final segs = HarmonyLayout.hyphenSegments(
+        prevRight: 100,
+        nextLeft: 103,
+        space: 10,
       );
+      expect(segs, hasLength(1));
+      expect(segs[0].x0, closeTo(101.5 - 2, 1e-9));
+      expect(segs[0].x1, closeTo(101.5 + 2, 1e-9));
     });
 
-    test('a melisma line is padded at both ends', () {
-      final seg = HarmonyLayout.dashSegment(fromX: 100, toX: 140, space: 10);
+    test('a gap over 16 sp gets one hyphen per 16 sp', () {
+      // 399 long: ceil(399 / 160) = 3 hyphens, step 133, centres at 67, 200, 333
+      // (lyricslayout.cpp:317-323, 346-360).
+      final segs = HarmonyLayout.hyphenSegments(
+        prevRight: 0,
+        nextLeft: 400,
+        space: 10,
+      );
+      expect(segs, hasLength(3));
+      expect((segs[0].x0 + segs[0].x1) / 2, closeTo(67, 1e-9));
+      expect((segs[1].x0 + segs[1].x1) / 2, closeTo(200, 1e-9));
+      expect((segs[2].x0 + segs[2].x1) / 2, closeTo(333, 1e-9));
+    });
+
+    test('a melisma runs from 0.2 sp after the syllable to the note head', () {
+      // lyricsMelismaPad 0.2 sp (styledef.cpp:123) and head right edge.
+      final seg = HarmonyLayout.melismaSegment(
+        textRight: 100,
+        headRight: 140,
+        space: 10,
+      );
       expect(seg, isNotNull);
       expect(seg!.x0, closeTo(102, 1e-9));
-      expect(seg.x1, closeTo(138, 1e-9));
+      expect(seg.x1, closeTo(140, 1e-9));
     });
 
-    test('a melisma line shorter than its minimum is not drawn', () {
+    test('a melisma shorter than 1 sp is not drawn', () {
+      // lyricsMelismaMinLength 1 sp, not forced (styledef.cpp:129-130).
       expect(
-        HarmonyLayout.dashSegment(fromX: 100, toX: 105, space: 10),
+        HarmonyLayout.melismaSegment(textRight: 100, headRight: 105, space: 10),
         isNull,
       );
     });
 
-    test('hyphens and melisma lines sit above the lyric baseline', () {
+    test('hyphens and melisma lines sit 0.5 x-height above the baseline', () {
+      // lyricsDashYposRatio 0.5 (styledef.cpp:126); x-height 0.5 em (local).
       expect(
         HarmonyLayout.dashY(baselineY: 50, space: 10),
-        50 - HarmonyLayout.dashHeightSp * 10,
+        closeTo(50 - 0.5 * 0.5 * 2.016 * 10, 0.01),
       );
     });
   });
