@@ -41,7 +41,8 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (`layoutOrnament` 4259, `layoutTrillSegment` 6477, `layoutStemSlash` 5378), `rendering/score/chordlayout.cpp` (grace notes 621, articulations 1048), `dom/trill.cpp` (`symbolLine` 73) | Delivered (PR 4, `piano-rlp3`: trill, mordent, turn, acciaccatura; constants aligned with MuseScore source, rendering not compared to MuseScore output; no appoggiatura, no playback) | `ornament_layout.dart` |
 | Repeat signs, Voltas (1st/2nd) & navigation (segno, coda, D.C./D.S.) | `rendering/score/tdraw.cpp` (BarLine), `rendering/score/tlayout.cpp` (barLineWidth, volta segment), `rendering/score/measurelayout.cpp`, `dom/volta.cpp`, `dom/marker.cpp`, `dom/jump.cpp` | Delivered (rendering only: play order is not expanded, mid-piece key/meter not done; see section 5) | `repeat_layout.dart`, `staff_painter.dart` |
 | Chord Symbols & Lyrics (single verse) | `harmonylayout.cpp`, `lyricslayout.cpp`, `data/chords/chords_legacy.xml` | Delivered (PR 6, `piano-r16m`: rendering only, sizes and offsets from MuseScore style; sans font instead of Edwin; multi-verse, playback and lint not included) | `harmony_layout.dart` |
-| Ottava (8va/8vb) & Clef Changes | `systemheaderlayout.cpp`, `tlayout.cpp` | Planned (PR 7) | `ottava_layout.dart` |
+| Ottava lines (8va/8vb) | `dom/ottava.cpp`, `rendering/score/tlayout.cpp` (`layoutTextLineBaseSegment`), `rendering/score/tdraw.cpp` (`drawTextLineBaseSegment`) | Delivered (dashed line, end hook, displayed pitch; no `8va` text label, no collision avoidance) | `ottava_layout.dart` |
+| Mid-system small clef | `rendering/score/segmentlayout.cpp:44-48`, `dom/clef.cpp:109-115` | Not delivered (see module 7) | - |
 | Shared Staff Multi-Voice | `rendering/score/stavesharinglayout.cpp`| Planned (PR 8) | `voice_sharing_layout.dart` |
 | Static Multi-System Page View | `rendering/score/pagelayout.cpp` | Planned (`piano-ev1n`) | `score_page_layout.dart` |
 
@@ -180,3 +181,29 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
   - Text widths come from the font loaded at run time. Paint tests use flutter_test's placeholder font, so they check for ink in regions, not exact glyph boxes.
   - No pixel comparison with MuseScore output has been done. The lyric centring above is an open item.
   - Parser (`song_marks_parser.dart`) and geometry (`harmony_layout.dart`) are unit-tested. Paint tests (`harmony_paint_test.dart`) show that each mark adds ink where expected.
+
+### 7. Ottava Lines (`ottava_layout.dart`, `staff_painter.dart`)
+- **Reference:** `dom/ottava.cpp` and `dom/ottava.h:67-74` (`ottavaDefault`: 8va shift +12 at `ottava.h:68`, 8vb shift -12 at `ottava.h:69`); `dom/staff.cpp:1278-1299` (spanner covers its tick range); `dom/note.cpp:2653-2674` (`ppitch`, sounding = written + shift); `rendering/score/tlayout.cpp:5929-6200` (`layoutTextLineBaseSegment`, hook sign at `:6102-6103`); `rendering/score/tdraw.cpp:1576-1599` and `:1805-1935` (dash setup and drawing).
+- **Style values** (`data/styles/legacy-style-defaults-v450.mss`, same values in `style/styledef.cpp`):
+
+| Value | Style key | Source | Used as |
+|---|---|---|---|
+| Line width 0.11 sp | `ottavaLineWidth` | mss:544, styledef.cpp:727 | stroke width |
+| Dash 6, gap 6 | `ottavaDashLineLen`, `ottavaDashGapLen` | mss:546-547, styledef.cpp:729-730 | pattern in line widths (tdraw.cpp:1593-1598) |
+| Hook 1 sp | `ottavaHookAbove` / `ottavaHookBelow` | mss:542-543, styledef.cpp:725-726 | hook end; the .mss `-1` for 8vb is normalised to `+1` on load for files before 460 (style.cpp:391-392) |
+| Line at -2 sp / +2 sp | `ottavaPosAbove` / `ottavaPosBelow` | mss:540-541, styledef.cpp:723-724 | line y from the top / bottom staff line (ottava.cpp:450-452) |
+| HOOK_90 end, no begin hook | `END_HOOK_TYPE` default | ottava.cpp:237, 239, 361 | hook at the end only |
+| 8va above (0), 8vb below (1) | `ottava8VAPlacement` / `ottava8VBPlacement` | mss:510-511 | staff side |
+
+- **Pitch display:** a note under a spanner (same hand, `start <= beat < end`) is drawn at `pitch - shift`: an octave lower under 8va, higher under 8vb. The sounding MIDI pitch is unchanged, so audio and grading read the same pitches. The shift is applied in the `StaffPainter` constructor (`OttavaLayout.displayNotes`), so accidentals, stems, ledgers and burst rings all use the displayed pitch. Indices into `notes` do not change.
+- **Geometry:** the line runs from the note at the start beat to the note at the end beat (left edges, as hairpins). 8va sits 2 sp above its staff's top line, 8vb 2 sp below its staff's bottom line. Hooks point towards the staff (down for 8va, up for 8vb).
+- **Local choices (no source):**
+  - The hook is drawn solid. MuseScore draws it dashed with `distributedDashPattern(6, 6, hookLength / lineWidth)`. For a 1 sp hook at 0.11 sp width that gives a gap of about -2.9 line widths, so the hook is solid. A line too short for the pattern is also drawn solid (`OttavaLayout.dashSpans`).
+  - The spanner ends at the `{ottava_end}` beat (or the song end). MuseScore finds the end element instead (`ottava.cpp:445-448`).
+- **Not implemented:**
+  - The `8va` / `8vb` text label. MuseScore uses the `ottava` symbol when `ottavaNumbersOnly` is set (`ottava.cpp:201`, mss:528-531). The line has no label.
+  - Collision avoidance with dynamics and hairpins (`ottavaMinDistance` 0.7 sp: mss:1546, styledef.cpp:2053). Marks are not moved.
+  - 15ma and 22ma.
+  - Left-hand `8va` (or right-hand `8vb`) uses the same offsets on that hand's staff. In a grand staff a left-hand `8va` sits 2 sp above the bass top line, which is 1 sp below the treble bottom line, so it can collide with treble notes.
+- **Mid-system small clef (not delivered):** MuseScore's mid-measure clef is small with `smallClefMag` = 0.8 (mss:380, styledef.cpp:528), applied in `dom/clef.cpp:109-115`; `rendering/score/segmentlayout.cpp:44-48` marks such clefs small. The bean's "about 70%" does not match the source. A clef change also re-reads the following notes, so every note path (`_noteY`, ledgers, stems, accidentals) would need the clef in effect. That is deferred to a follow-up.
+- **Verification:** unit tests cover the constants, the pitch shift, the notes list, the line and hook positions, and the dash coverage (`ottava_layout_test.dart`). Parser tests cover the directives (`song_marks_parser_test.dart`). A paint test checks that ink appears at the computed line and hook positions, by difference from a render without the ottava (`staff_ottava_paint_test.dart`). No pixel comparison with MuseScore has been done, and the 8vb hook direction has not been checked visually.

@@ -183,6 +183,17 @@ Status: rendering only (piano-r16m, PR 6). Parsed by `app/lib/ui/staff/song_mark
 
 No song or level uses these yet. Multi-verse lyrics, playback and lint checks are not part of this format yet.
 
+## Directives: ottava (8va / 8vb)
+
+Status: rendering only (piano-gkt0). Zero length, placed in a hand string like a note. Parser: `app/lib/ui/staff/song_marks_parser.dart`; geometry: `app/lib/ui/staff/ottava_layout.dart`. The audio uses the written pitch in the JSON (the sounding pitch); the staff draws the note an octave lower under `8va` and an octave higher under `8vb`.
+
+- `{ottava:"8va"}`: start an ottava alta on that hand at that beat (line above the staff). Drawn as a dashed line with a hook at the end.
+- `{ottava:"8vb"}`: start an ottava bassa on that hand (line below the staff, hook up).
+- `{ottava_end}`: stop the hand's open ottava. An open ottava also ends at the next ottava start on the same hand, or at the end of the song. The two hands are independent.
+- Unknown text (`{ottava:"15ma"}`) is ignored by the app. Lint does not check ottava text: `core/src/dynamics.rs` accepts unknown directive names (`Ok(None)`), so a typo is not reported.
+
+Example: `"RH": "C4:4 {ottava:\"8va\"} C6:4 E6:4 {ottava_end} G4:4"`.
+
 ## Two voices per hand (`RH2`, `LH2`)
 
 Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.

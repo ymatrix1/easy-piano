@@ -11,6 +11,7 @@ import 'harmony_layout.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
 import 'ornament_layout.dart';
+import 'ottava_layout.dart';
 import 'pedal_layout.dart';
 import 'repeat_layout.dart';
 import 'segment_layout.dart';
@@ -27,6 +28,7 @@ export 'engraving_decorations.dart';
 export 'harmony_layout.dart';
 export 'key_signature.dart';
 export 'ornament_layout.dart';
+export 'ottava_layout.dart';
 export 'segment_layout.dart';
 export 'smufl.dart';
 export 'stem_layout.dart';
@@ -91,7 +93,7 @@ class _Placement {
 
 class StaffPainter extends CustomPainter {
   StaffPainter({
-    required this.notes,
+    required List<StaffNote> notes,
     required ValueNotifier<double> playheadBeat,
     required this.inkColor,
     required this.playheadColor,
@@ -120,6 +122,7 @@ class StaffPainter extends CustomPainter {
     this.beatPulse,
     this.dynamics = const [],
     this.hairpins = const [],
+    this.ottavas = const [],
     this.repeatBarlines = const [],
     this.voltas = const [],
     this.navigation = const [],
@@ -131,7 +134,8 @@ class StaffPainter extends CustomPainter {
     this.chords = const [],
     this.lyrics = const [],
     Listenable? repaintAlso,
-  }) : scrollBeat = playheadBeat,
+  }) : notes = OttavaLayout.displayNotes(notes, ottavas),
+       scrollBeat = playheadBeat,
        super(
          repaint: Listenable.merge([
            playheadBeat,
@@ -224,6 +228,11 @@ class StaffPainter extends CustomPainter {
 
   /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
   final List<StaffHairpin> hairpins;
+
+  /// Ottava spanners (`8va` / `8vb`). [notes] are stored at their displayed
+  /// pitch under them (see [OttavaLayout.displayNotes]), so note indices and
+  /// the audio pitches the caller holds are unchanged.
+  final List<StaffOttava> ottavas;
 
   /// Repeat signs on bar lines (`|:`, `:|`). Each replaces the plain bar line
   /// at its beat. See [RepeatLayout].
@@ -1745,7 +1754,16 @@ class StaffPainter extends CustomPainter {
           anchorX +
               (b.beat - now) * pixelsPerBeat +
               space * (b.whole ? 0.845 : 0.59),
-          _noteY(b.pitch, onBass, l),
+          _noteY(
+            OttavaLayout.displayPitch(
+              b.pitch,
+              ottavas: ottavas,
+              beat: b.beat,
+              leftHand: b.leftHand,
+            ),
+            onBass,
+            l,
+          ),
         );
         for (var k = 0; k < 3; k++) {
           final a = (age - k * 0.12).clamp(0.0, 1.0);
@@ -1889,7 +1907,10 @@ class StaffPainter extends CustomPainter {
 
     // Dynamics and hairpins (MuseScore dynamicslayout.cpp, tlayout.cpp
     // layoutHairpinSegment, systemlayout.cpp centerItemGroup, autoplace).
-    if (hairpins.isNotEmpty || dynamics.isNotEmpty || pedals.isNotEmpty) {
+    if (hairpins.isNotEmpty ||
+        dynamics.isNotEmpty ||
+        ottavas.isNotEmpty ||
+        pedals.isNotEmpty) {
       final grand = staves == Staves.grand;
       final gapMidY = (trebleBottomY + bassTopY) / 2;
 
@@ -2114,6 +2135,9 @@ class StaffPainter extends CustomPainter {
           );
         }
       }
+
+      // Ottava lines, same x mapping as the hairpins above.
+      _drawOttavas(canvas, l, xAt, staff);
 
       // Damper pedal (MuseScore dom/pedal.cpp linePos, tlayout.cpp
       // layoutPedalSegment). Below the bottom staff, clear of noteheads.
@@ -3052,6 +3076,51 @@ class StaffPainter extends CustomPainter {
   }
 
   /// Draws a SMuFL glyph with its baseline origin at [origin].
+  /// True when a note of [leftHand] sits on the bass staff (same rule as
+  /// [_onBass], for a hand instead of a note).
+  bool _ottavaOnBass(bool leftHand) => switch (staves) {
+    Staves.treble => false,
+    Staves.bass => true,
+    Staves.grand => leftHand,
+  };
+
+  /// Ottava lines (`OttavaLayout`): a dashed line above the staff for `8va`
+  /// and below it for `8vb`, with a hook at its right end. Spans run from
+  /// the note at the start beat to the note at the end beat ([xAt]).
+  /// The hook is drawn solid: see [OttavaLayout.dashSpans].
+  void _drawOttavas(
+    Canvas canvas,
+    ({double space, double trebleBottomY, double bassTopY}) l,
+    double Function(double beat) xAt,
+    Color color,
+  ) {
+    final space = l.space;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = OttavaLayout.lineWidthSp * space
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.butt;
+    for (final o in ottavas) {
+      final x1 = xAt(o.startBeat);
+      final x2 = xAt(o.endBeat);
+      if (x2 <= x1) continue;
+      final onBass = _ottavaOnBass(o.leftHand);
+      final staffTop = onBass ? l.bassTopY : l.trebleBottomY - 4 * space;
+      final staffBottom = onBass ? l.bassTopY + 4 * space : l.trebleBottomY;
+      final y = OttavaLayout.lineY(
+        kind: o.kind,
+        staffTop: staffTop,
+        staffBottom: staffBottom,
+        space: space,
+      );
+      for (final s in OttavaLayout.dashSpans(length: x2 - x1, space: space)) {
+        canvas.drawLine(Offset(x1 + s.from, y), Offset(x1 + s.to, y), paint);
+      }
+      final hookY = OttavaLayout.hookEndY(kind: o.kind, lineY: y, space: space);
+      canvas.drawLine(Offset(x2, y), Offset(x2, hookY), paint);
+    }
+  }
+
   void _drawGlyph(
     Canvas canvas,
     String g,
@@ -3081,6 +3150,7 @@ class StaffPainter extends CustomPainter {
       old.introStartSec != introStartSec ||
       old.dynamics != dynamics ||
       old.hairpins != hairpins ||
+      old.ottavas != ottavas ||
       old.repeatBarlines != repeatBarlines ||
       old.voltas != voltas ||
       old.navigation != navigation ||

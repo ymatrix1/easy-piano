@@ -1424,6 +1424,7 @@ class _PracticeStageState extends State<PracticeStage>
                           keyFifths: _keyFifths,
                           dynamics: _songMarks.dynamics,
                           hairpins: _songMarks.hairpins,
+                          ottavas: _songMarks.ottavas,
                           chords: _songMarks.chords,
                           lyrics: _songMarks.lyrics,
                           repeatBarlines: _songMarks.repeatBarlines,
