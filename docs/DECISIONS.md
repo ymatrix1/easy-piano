@@ -422,3 +422,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** About 250 lines, fully tested with inline byte fixtures, no extra dependency, and the hand-split rules are ours, not a library's default.
 - **Alternatives:** A Rust MIDI crate (`midly`): well maintained, but it would add a dependency for a format we read in a few hundred lines, and it would not give us the hand split; port `@tonejs/midi` (JavaScript, not a clean port).
 - **Impact:** None outside `core`. Known gaps are listed in spec §5.2 (SMPTE, hand heuristic, controllers ignored).
+
+### D40. Imported scores become content songs with `source: custom`
+
+- **Status:** proposed
+- **Context:** `piano-t6rt` connects the parsers (D37) to the app. The app plays songs in the content format (content-format.md). A user's own MusicXML, MIDI, ABC or LilyPond file has no content license, and the content lint (`source_url` unless `original` or `generated`, licence in `CC0-1.0`, `CC-BY-4.0`, `CC-BY-SA-4.0`, `public-domain`) would reject it. The content `Song` has one time signature and one key for the whole song.
+- **Decision:** `core/src/score_import/song.rs` converts an `ImportedScore` into content song JSON with `source: "custom"`, `source_url: null`, `license` and `composition_license` `"user-provided"`, id `custom-<file stem slug>`. Chords of a hand are one token; a hand has at most two voices (`RH`/`RH2`, `LH`/`LH2`); notes crossing a bar line are split with `{tie}`; a piece with a meter change is rejected. The key is the first measure's key. The FFI `import_score(file_name, data)` returns this JSON. The content lint is not changed: its licence and source rules apply to shipped content only.
+- **Why:** The app reuses the same session, engraving and grading code for imported and bundled songs. Lint rules for shipped content (licence, source) do not fit a file the user owns, but the bar rules (sums, pitches, voices) still hold and are tested.
+- **Alternatives:** Use `source: "original"` (false claim about authorship); add a `custom` source to the content lint now (widens the content rules, needs its own decision on licence of user files); keep licence blank (fails `Song::validate` on the app side and in tools).
+- **Impact:** New `core/src/score_import/song.rs`, `app/rust/src/api/score_import.rs`, generated bridge files. Open: the licence value `user-provided` and whether custom songs appear in the content lint or only in the app library (`piano-uy13`). Limits (more than two voices, meter change, key change ignored) are in spec section 5.5.
