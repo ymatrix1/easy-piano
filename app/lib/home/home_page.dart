@@ -1,5 +1,7 @@
+import 'dart:typed_data' show Uint8List;
 import 'dart:ui' show ImageFilter;
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -9,7 +11,13 @@ import '../practice/free_play_page.dart';
 import '../practice/generated/practice_service.dart';
 import '../practice/generated/stream_practice_page.dart';
 import '../practice/generated/tune_generator.dart';
+import '../custom/custom_score.dart';
+import '../custom/custom_score_controller.dart';
+import '../custom/score_drop_zone.dart';
+import '../custom/score_preview.dart';
+import '../custom/song_library_page.dart';
 import '../practice/level_page.dart';
+import '../src/rust/api/score_import.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
 import '../ui/game/sfx.dart';
@@ -42,6 +50,80 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _stars = <String, int>{}; // level id → best stars
   int _tab = 0;
+
+  /// Scores the player imported (piano-uy13), kept on this device.
+  late final CustomScoreController _scores = CustomScoreController(
+    storage: PrefsScoreStorage(),
+    importer: (name, data) => importScore(fileName: name, data: data),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _scores.load();
+  }
+
+  @override
+  void dispose() {
+    _scores.dispose();
+    super.dispose();
+  }
+
+  void _playCustom(CustomScore score) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LevelPage(
+          repo: repoWithScore(widget.repo, score),
+          level: customLevelFor(score),
+          midi: widget.midi,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _importFile() async {
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'scores', extensions: scoreFileExtensions),
+      ],
+    );
+    if (file == null) return;
+    await _importMany([file]);
+  }
+
+  /// Imports each supported file; the first imported score opens its preview.
+  Future<void> _importMany(List<XFile> files) async {
+    final l = AppLocalizations.of(context);
+    final supported = supportedScoreFiles(files);
+    if (supported.isEmpty) {
+      _snack(l.importScoreUnsupported);
+      return;
+    }
+    CustomScore? first;
+    for (final file in supported) {
+      try {
+        final Uint8List bytes = await file.readAsBytes();
+        final score = await _scores.importFile(file.name, bytes);
+        first ??= score;
+      } on ScoreImportException catch (e) {
+        _snack(
+          e.reason == 'unsupported'
+              ? l.importScoreUnsupported
+              : l.importScoreFailed,
+        );
+      }
+    }
+    if (!mounted || first == null) return;
+    final score = first;
+    await showScorePreview(context, score, onPlay: () => _playCustom(score));
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
+  }
 
   Future<void> _playLevel(String levelId, [int initialStageIndex = 0]) async {
     final level = widget.repo.levels[levelId];
@@ -89,6 +171,9 @@ class _HomePageState extends State<HomePage> {
         bottom: false,
         child: PracticeTab(
           onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
+          onSongLibrary: () => _push(
+            (_) => SongLibraryPage(controller: _scores, onPlay: _playCustom),
+          ),
           onEndless: _generator == null || widget.repo.practice.isEmpty
               ? null
               : () => _push(
@@ -110,61 +195,67 @@ class _HomePageState extends State<HomePage> {
         onStaffSpike: () => _push((_) => const StaffSpikePage()),
       ),
     ];
-    return Scaffold(
-      backgroundColor: GameColors.bgDeep,
-      body: MenuBackground(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    // Tabs scroll under the floating glass bar: their top inset
-                    // comes in as MediaQuery padding.
-                    Positioned.fill(
-                      child: MediaQuery(
-                        data: MediaQuery.of(context).copyWith(
-                          padding: MediaQuery.paddingOf(context)
-                              .copyWith(top: _TopBar.inset),
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
-                          switchInCurve: Curves.easeOutCubic,
-                          transitionBuilder: (child, a) => FadeTransition(
-                            opacity: a,
-                            child: SlideTransition(
-                              position: Tween(
-                                begin: const Offset(0, 0.02),
-                                end: Offset.zero,
-                              ).animate(a),
-                              child: child,
+    return ScoreDropZone(
+      onFiles: _importMany,
+      child: Scaffold(
+        backgroundColor: GameColors.bgDeep,
+        body: MenuBackground(
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // Tabs scroll under the floating glass bar: their top inset
+                      // comes in as MediaQuery padding.
+                      Positioned.fill(
+                        child: MediaQuery(
+                          data: MediaQuery.of(context).copyWith(
+                            padding: MediaQuery.paddingOf(context)
+                                .copyWith(top: _TopBar.inset),
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.easeOutCubic,
+                            transitionBuilder: (child, a) => FadeTransition(
+                              opacity: a,
+                              child: SlideTransition(
+                                position: Tween(
+                                  begin: const Offset(0, 0.02),
+                                  end: Offset.zero,
+                                ).animate(a),
+                                child: child,
+                              ),
+                            ),
+                            child: KeyedSubtree(
+                              key: ValueKey(_tab),
+                              child: tabs[_tab],
                             ),
                           ),
-                          child: KeyedSubtree(
-                            key: ValueKey(_tab),
-                            child: tabs[_tab],
-                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      top: 0,
-                      child: _TopBar(stars: progress.totalStars),
-                    ),
-                    if (usesCustomTitleBar)
-                      const Positioned(
-                        top: 0,
+                      Positioned(
+                        left: 0,
                         right: 0,
-                        child: WindowControls(),
+                        top: 0,
+                        child: _TopBar(
+                          stars: progress.totalStars,
+                          onImport: _importFile,
+                        ),
                       ),
-                  ],
+                      if (usesCustomTitleBar)
+                        const Positioned(
+                          top: 0,
+                          right: 0,
+                          child: WindowControls(),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
-            ],
+                _NavBar(index: _tab, onSelect: (i) => setState(() => _tab = i)),
+              ],
+            ),
           ),
         ),
       ),
@@ -228,9 +319,10 @@ class Progress {
 const _starHideWidth = 1200.0;
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.stars});
+  const _TopBar({required this.stars, required this.onImport});
 
   final int stars;
+  final VoidCallback onImport;
 
   static const _height = 60.0;
 
@@ -307,6 +399,14 @@ class _TopBar extends StatelessWidget {
                       ),
                       // Narrow Windows window: the caption buttons take the
                       // top-right corner, so the star counter is hidden.
+                      IconButton(
+                        tooltip: AppLocalizations.of(context).importScore,
+                        icon: const Icon(
+                          Icons.file_upload_outlined,
+                          color: GameColors.text,
+                        ),
+                        onPressed: onImport,
+                      ),
                       if (!(usesCustomTitleBar &&
                           MediaQuery.sizeOf(context).width < _starHideWidth))
                         StarCounter(value: stars),

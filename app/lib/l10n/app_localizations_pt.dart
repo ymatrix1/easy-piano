@@ -483,6 +483,54 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get micDeniedApp =>
       'O acesso ao microfone foi bloqueado. Permita nas configurações do sistema do app e tente de novo.';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Nenhuma partitura corresponde a \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importar partitura';
+
+  @override
+  String get importScoreDesc =>
+      'Abra um arquivo MusicXML, MIDI, ABC ou LilyPond.';
+
+  @override
+  String get importScoreFailed => 'Não foi possível importar este arquivo.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Arquivo não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Nenhuma partitura importada ainda. Importe um ficheiro ou arraste-o para a janela.';
+
+  @override
+  String get songLibrarySearch => 'Pesquisar partituras';
+
+  @override
+  String get scoreDropHint => 'Largue o ficheiro da partitura para importar';
+
+  @override
+  String get scoreDelete => 'Eliminar';
+
+  @override
+  String get scoreDeleteConfirm => 'Remover esta partitura da biblioteca?';
+
+  @override
+  String get scorePractice => 'Praticar';
+
+  @override
+  String scoreBars(int count) {
+    return '$count compassos';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Compasso $time';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -607,4 +655,52 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get styleGame => 'Videogame';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Nenhuma partitura corresponde a \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importar partitura';
+
+  @override
+  String get importScoreDesc =>
+      'Abra um arquivo MusicXML, MIDI, ABC ou LilyPond.';
+
+  @override
+  String get importScoreFailed => 'Não foi possível importar este arquivo.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Arquivo não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Nenhuma partitura importada ainda. Importe um arquivo ou solte-o na janela.';
+
+  @override
+  String get songLibrarySearch => 'Buscar partituras';
+
+  @override
+  String get scoreDropHint => 'Solte o arquivo da partitura para importar';
+
+  @override
+  String get scoreDelete => 'Excluir';
+
+  @override
+  String get scoreDeleteConfirm => 'Remover esta partitura da biblioteca?';
+
+  @override
+  String get scorePractice => 'Praticar';
+
+  @override
+  String scoreBars(int count) {
+    return '$count compassos';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Compasso $time';
+  }
 }

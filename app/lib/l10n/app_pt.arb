@@ -138,5 +138,39 @@
   "styleGame": "Videojogo",
   "midiUnavailableApp": "A entrada MIDI não está disponível neste dispositivo.",
   "micUnavailableApp": "A entrada por microfone não está disponível neste dispositivo.",
-  "micDeniedApp": "O acesso ao microfone foi bloqueado. Permita nas configurações do sistema do app e tente de novo."
+  "micDeniedApp": "O acesso ao microfone foi bloqueado. Permita nas configurações do sistema do app e tente de novo.",
+  "importScore": "Importar partitura",
+  "importScoreDesc": "Abra um arquivo MusicXML, MIDI, ABC ou LilyPond.",
+  "importScoreFailed": "Não foi possível importar este arquivo.",
+  "importScoreUnsupported": "Arquivo não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.",
+  "songLibraryEmpty": "Nenhuma partitura importada ainda. Importe um ficheiro ou arraste-o para a janela.",
+  "songLibrarySearch": "Pesquisar partituras",
+  "songLibraryNoMatch": "Nenhuma partitura corresponde a \"{query}\".",
+  "@songLibraryNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDropHint": "Largue o ficheiro da partitura para importar",
+  "scoreDelete": "Eliminar",
+  "scoreDeleteConfirm": "Remover esta partitura da biblioteca?",
+  "scorePractice": "Praticar",
+  "scoreBars": "{count} compassos",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Compasso {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -154,7 +154,7 @@ When a song/level is opened, the user can toggle between:
 | **PR 1: Docs & Spec** | *Current* | Architecture spec, MuseScore & sightread analysis, bean plan. | Docs committed, reviewed. |
 | **PR 2: Page Layout** | `piano-ev1n` | `score_page_layout.dart`, Knuth-Plass measure breaks, system justification, static page view UI. | `app/test/ui/staff/score_page_layout_test.dart` passes. |
 | **PR 3: Core Importer** | `piano-gy3o` | Parsers for MusicXML, MIDI, ABC, LilyPond into AST in `core` + FFI. **Status:** parsers, AST, FFI `import_score` and conversion to the content `Song` done (`core/src/score_import/`, `piano-t6rt`). | `cargo test --manifest-path core/Cargo.toml` (score_import tests). |
-| **PR 4: Import UI & Library**| `piano-uy13` | Custom scores library, file drop target, PracticeTab card, TopBar action. | `flutter test` widget tests for library and drop target. |
+| **PR 4: Import UI & Library**| `piano-uy13` | Custom scores library, file drop target, PracticeTab card, TopBar action. **Status:** done (D41, proposed). | `flutter test test/custom` (library, import controller, drop overlay, preview). |
 
 ---
 
@@ -214,7 +214,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 
 ### 5.4 Follow-up beans
 - `piano-t6rt`: FFI and conversion to the content `Song` format. Done, see 5.5.
-- `piano-uy13`: import UI, library and drop target.
+- `piano-uy13`: import UI, library and drop target. Done, see 5.6 and D41.
 - `piano-niz2`: validate parsers on real exported files (fixtures, expected notes, measures and hands).
 - `piano-tgsm`: close parser gaps. Done: measure length, LilyPond text and settings as music, ABC mid-piece meter. Recorded as out of scope in 5.2: grace notes (time and pitch), timewise MusicXML.
 
@@ -233,4 +233,11 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
   - Measure grid comes from the parser (`ImportedMeasure`); pickup bars are padded by the grid, not shown as shorter.
   - No fingering, dynamics or lyrics (not in `ImportedScore`).
 - Tests: `core/src/score_import/song.rs` (layout, ties, voices, errors, key and tempo, id slug, ABC round trip) and `app/rust/src/api/score_import.rs`.
-- Not verified: the Web (wasm) build of the bridge, and an import from a real file; both belong to `piano-niz2` and the Web check of `piano-t6rt`. The import UI (`piano-uy13`) is not built yet, so no screen shows an imported song.
+- Not verified: the Web (wasm) build of the bridge, and an import from a real file; both belong to `piano-niz2` and the Web check of `piano-t6rt`. The import UI (`piano-uy13`) is built, see 5.6.
+
+### 5.6 Import UI and library (`piano-uy13`)
+- Entry points: the Practice tab card "Song library" (opens the library), the TopBar import button (file picker), and a drop target over the whole window on desktop and web (overlay "Drop score file to import"). Several files can be dropped; the first imported score opens its preview.
+- Preview: title, composer, bar count and time signature, with Practice. Practice plays the score as one play-along stage on both hands (`LevelPage`).
+- Library: newest first, search by title or composer, delete with confirmation. Stored on the device (D41).
+- Not in this PR: study / sheet view of an imported score (the page view is separate), a 30-piece PD library (ROADMAP Phase 3), the Portuguese (BR) and other translations are first drafts to review.
+- Not verified on device: drop on a real desktop window and on web; both need a manual check. Widget tests cover the overlay, the library and the preview; the drop itself is a platform event.

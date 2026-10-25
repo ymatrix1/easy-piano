@@ -138,5 +138,39 @@
   "styleGame": "Spiel",
   "midiUnavailableApp": "MIDI-Eingabe ist auf diesem Gerät nicht verfügbar.",
   "micUnavailableApp": "Mikrofoneingabe ist auf diesem Gerät nicht verfügbar.",
-  "micDeniedApp": "Der Mikrofonzugriff wurde blockiert. Erlaube ihn in den Systemeinstellungen der App und versuche es erneut."
+  "micDeniedApp": "Der Mikrofonzugriff wurde blockiert. Erlaube ihn in den Systemeinstellungen der App und versuche es erneut.",
+  "importScore": "Partitur importieren",
+  "importScoreDesc": "MusicXML-, MIDI-, ABC- oder LilyPond-Datei öffnen.",
+  "importScoreFailed": "Diese Datei konnte nicht importiert werden.",
+  "importScoreUnsupported": "Nicht unterstützte Datei. Verwende .xml, .musicxml, .mxl, .mid, .midi, .abc oder .ly.",
+  "songLibraryEmpty": "Noch keine importierten Partituren. Importiere eine Datei oder ziehe sie in das Fenster.",
+  "songLibrarySearch": "Partituren suchen",
+  "songLibraryNoMatch": "Keine Partitur passt zu \"{query}\".",
+  "@songLibraryNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDropHint": "Partiturdatei zum Importieren hier ablegen",
+  "scoreDelete": "Löschen",
+  "scoreDeleteConfirm": "Diese Partitur aus der Bibliothek entfernen?",
+  "scorePractice": "Üben",
+  "scoreBars": "{count} Takte",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Takt {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

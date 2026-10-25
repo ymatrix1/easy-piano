@@ -256,5 +256,33 @@
   },
   "midiUnavailableApp": "MIDI input is not available on this device.",
   "micUnavailableApp": "Microphone input is not available on this device.",
-  "micDeniedApp": "Microphone access was blocked. Allow it in the app's system settings and try again."
+  "micDeniedApp": "Microphone access was blocked. Allow it in the app's system settings and try again.",
+  "songLibraryNoMatch": "No score matches \"{query}\".",
+  "@songLibraryNoMatch": { "placeholders": { "query": { "type": "String" } } },
+  "importScore": "Import score",
+  "importScoreDesc": "Open a MusicXML, MIDI, ABC or LilyPond file.",
+  "importScoreFailed": "This file could not be imported.",
+  "importScoreUnsupported": "Unsupported file. Use .xml, .musicxml, .mxl, .mid, .midi, .abc or .ly.",
+  "songLibraryEmpty": "No imported scores yet. Import a file or drop it on the window.",
+  "songLibrarySearch": "Search scores",
+  "scoreDropHint": "Drop score file to import",
+  "scoreDelete": "Delete",
+  "scoreDeleteConfirm": "Remove this score from your library?",
+  "scorePractice": "Practice",
+  "scoreBars": "{count} bars",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Time {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

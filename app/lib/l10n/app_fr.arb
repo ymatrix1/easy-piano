@@ -138,5 +138,39 @@
   "styleGame": "Jeu vidéo",
   "midiUnavailableApp": "L'entrée MIDI n'est pas disponible sur cet appareil.",
   "micUnavailableApp": "L'entrée microphone n'est pas disponible sur cet appareil.",
-  "micDeniedApp": "L'accès au microphone est bloqué. Autorisez-le dans les réglages système de l'application, puis réessayez."
+  "micDeniedApp": "L'accès au microphone est bloqué. Autorisez-le dans les réglages système de l'application, puis réessayez.",
+  "importScore": "Importer une partition",
+  "importScoreDesc": "Ouvrir un fichier MusicXML, MIDI, ABC ou LilyPond.",
+  "importScoreFailed": "Ce fichier n'a pas pu être importé.",
+  "importScoreUnsupported": "Fichier non pris en charge. Utilisez .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.",
+  "songLibraryEmpty": "Aucune partition importée pour l'instant. Importez un fichier ou déposez-le dans la fenêtre.",
+  "songLibrarySearch": "Rechercher des partitions",
+  "songLibraryNoMatch": "Aucune partition ne correspond à \"{query}\".",
+  "@songLibraryNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDropHint": "Déposez le fichier de partition pour l'importer",
+  "scoreDelete": "Supprimer",
+  "scoreDeleteConfirm": "Retirer cette partition de votre bibliothèque ?",
+  "scorePractice": "Pratiquer",
+  "scoreBars": "{count} mesures",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Mesure {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

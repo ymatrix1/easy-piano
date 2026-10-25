@@ -33,5 +33,33 @@
   "styleChildren": "Infantil",
   "stylePop": "Pop",
   "styleJazz": "Jazz",
-  "styleGame": "Videogame"
+  "styleGame": "Videogame",
+  "songLibraryNoMatch": "Nenhuma partitura corresponde a \"{query}\".",
+  "@songLibraryNoMatch": { "placeholders": { "query": { "type": "String" } } },
+  "importScore": "Importar partitura",
+  "importScoreDesc": "Abra um arquivo MusicXML, MIDI, ABC ou LilyPond.",
+  "importScoreFailed": "Não foi possível importar este arquivo.",
+  "importScoreUnsupported": "Arquivo não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.",
+  "songLibraryEmpty": "Nenhuma partitura importada ainda. Importe um arquivo ou solte-o na janela.",
+  "songLibrarySearch": "Buscar partituras",
+  "scoreDropHint": "Solte o arquivo da partitura para importar",
+  "scoreDelete": "Excluir",
+  "scoreDeleteConfirm": "Remover esta partitura da biblioteca?",
+  "scorePractice": "Praticar",
+  "scoreBars": "{count} compassos",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Compasso {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

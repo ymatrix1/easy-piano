@@ -431,3 +431,12 @@ Each decision records **Context, Decision, Why, Alternatives, Impact**, plus **S
 - **Why:** The app reuses the same session, engraving and grading code for imported and bundled songs. Lint rules for shipped content (licence, source) do not fit a file the user owns, but the bar rules (sums, pitches, voices) still hold and are tested.
 - **Alternatives:** Use `source: "original"` (false claim about authorship); add a `custom` source to the content lint now (widens the content rules, needs its own decision on licence of user files); keep licence blank (fails `Song::validate` on the app side and in tools).
 - **Impact:** New `core/src/score_import/song.rs`, `app/rust/src/api/score_import.rs`, generated bridge files. Open: the licence value `user-provided` and whether custom songs appear in the content lint or only in the app library (`piano-uy13`). Limits (more than two voices, meter change, key change ignored) are in spec section 5.5.
+
+### D41. Import UI: `file_selector`, `desktop_drop`, library in `shared_preferences`
+
+- **Status:** proposed
+- **Context:** piano-uy13 needs a file picker (all platforms), a drop target for the window (desktop and web, [score-import spec](specs/score-import-and-page-view.md) 3.1) and a device library for imported scores. `app/pubspec.yaml` had neither a picker nor a drop package.
+- **Decision:** add `file_selector` ^1.1.0 (picker on Windows, macOS, Linux, web, Android, iOS) and `desktop_drop` ^0.8.4 (drop target; platforms Windows, macOS, Linux, web, Android, not iOS). The drop target is enabled only on desktop and web; phones use the picker. The library is one JSON list in `shared_preferences` (already a dependency). Imported songs keep the content song JSON from `import_score` (D40).
+- **Why:** Both packages are maintained by the Flutter community and support the platforms we ship. `shared_preferences` works on every platform without a file-system dependency; a score is a few KB of JSON, so a list is enough for now.
+- **Alternatives:** `path_provider` plus one file per score (better for large libraries, one more dependency); `desktop_drop` only on desktop with no web drop (smaller, but web users could not drop files); a hand-written drop channel per platform (more code to keep in step).
+- **Impact:** `app/pubspec.yaml`, `app/pubspec.lock`, Windows plugin registration; `app/lib/custom/`; localized strings `importScore*`, `songLibrary*`, `score*`. Limit: the whole library is rewritten on each change, so it should move to files if a user imports hundreds of scores.

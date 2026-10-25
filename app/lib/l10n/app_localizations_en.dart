@@ -480,4 +480,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get micDeniedApp =>
       'Microphone access was blocked. Allow it in the app\'s system settings and try again.';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'No score matches \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Import score';
+
+  @override
+  String get importScoreDesc => 'Open a MusicXML, MIDI, ABC or LilyPond file.';
+
+  @override
+  String get importScoreFailed => 'This file could not be imported.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Unsupported file. Use .xml, .musicxml, .mxl, .mid, .midi, .abc or .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'No imported scores yet. Import a file or drop it on the window.';
+
+  @override
+  String get songLibrarySearch => 'Search scores';
+
+  @override
+  String get scoreDropHint => 'Drop score file to import';
+
+  @override
+  String get scoreDelete => 'Delete';
+
+  @override
+  String get scoreDeleteConfirm => 'Remove this score from your library?';
+
+  @override
+  String get scorePractice => 'Practice';
+
+  @override
+  String scoreBars(int count) {
+    return '$count bars';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Time $time';
+  }
 }

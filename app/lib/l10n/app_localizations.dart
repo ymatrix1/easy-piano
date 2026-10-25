@@ -938,6 +938,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Microphone access was blocked. Allow it in the app\'s system settings and try again.'**
   String get micDeniedApp;
+
+  /// No description provided for @songLibraryNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No score matches \"{query}\".'**
+  String songLibraryNoMatch(String query);
+
+  /// No description provided for @importScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Import score'**
+  String get importScore;
+
+  /// No description provided for @importScoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a MusicXML, MIDI, ABC or LilyPond file.'**
+  String get importScoreDesc;
+
+  /// No description provided for @importScoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This file could not be imported.'**
+  String get importScoreFailed;
+
+  /// No description provided for @importScoreUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported file. Use .xml, .musicxml, .mxl, .mid, .midi, .abc or .ly.'**
+  String get importScoreUnsupported;
+
+  /// No description provided for @songLibraryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No imported scores yet. Import a file or drop it on the window.'**
+  String get songLibraryEmpty;
+
+  /// No description provided for @songLibrarySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search scores'**
+  String get songLibrarySearch;
+
+  /// No description provided for @scoreDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop score file to import'**
+  String get scoreDropHint;
+
+  /// No description provided for @scoreDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get scoreDelete;
+
+  /// No description provided for @scoreDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this score from your library?'**
+  String get scoreDeleteConfirm;
+
+  /// No description provided for @scorePractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice'**
+  String get scorePractice;
+
+  /// No description provided for @scoreBars.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bars'**
+  String scoreBars(int count);
+
+  /// No description provided for @scoreTimeSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Time {time}'**
+  String scoreTimeSignature(String time);
 }
 
 class _AppLocalizationsDelegate

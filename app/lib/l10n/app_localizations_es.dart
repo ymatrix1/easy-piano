@@ -484,4 +484,52 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get micDeniedApp =>
       'Se bloqueó el acceso al micrófono. Permítelo en los ajustes del sistema de la app e inténtalo de nuevo.';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Ninguna partitura coincide con \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importar partitura';
+
+  @override
+  String get importScoreDesc =>
+      'Abre un archivo MusicXML, MIDI, ABC o LilyPond.';
+
+  @override
+  String get importScoreFailed => 'No se pudo importar este archivo.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Archivo no compatible. Usa .xml, .musicxml, .mxl, .mid, .midi, .abc o .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Aún no hay partituras importadas. Importa un archivo o suéltalo en la ventana.';
+
+  @override
+  String get songLibrarySearch => 'Buscar partituras';
+
+  @override
+  String get scoreDropHint => 'Suelta el archivo de partitura para importarlo';
+
+  @override
+  String get scoreDelete => 'Eliminar';
+
+  @override
+  String get scoreDeleteConfirm => '¿Quitar esta partitura de tu biblioteca?';
+
+  @override
+  String get scorePractice => 'Practicar';
+
+  @override
+  String scoreBars(int count) {
+    return '$count compases';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Compás $time';
+  }
 }
