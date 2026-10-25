@@ -30,7 +30,7 @@ updated_at: 2026-10-25T22:56:37Z
 
 # piano-h90n: Notation: ties, repeats, endings, key and meter changes
 
-**Status:** completed (core structure, practice/study engraving, bar-start signatures, and Spanish Romance major strain restored)  
+**Status:** completed (core structure, practice/study engraving, bar-start signatures, and Spanish Romance major strain restored)
 **Type:** feature  
 **Parent:** piano-bjig  
 
@@ -76,4 +76,3 @@ Delivered in this PR:
 - Difficulty analysis evaluates notes against the effective key of each bar; the learned skill set includes keys introduced mid-song.
 - The Spanish Romance E major strain (Mutopia guitar edition, [CC BY-SA 2.5](https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=795)) is restored as an original piano arrangement, with both 16-bar strains repeated.
 - Tests cover repeat/navigation order, ties, signature timing, effective-key difficulty, parser data, variable measures, and signature engraving.
-
