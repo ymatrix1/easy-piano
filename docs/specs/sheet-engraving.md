@@ -36,7 +36,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | End barline (thin + thick) at the end of the piece | `rendering/score/barline.cpp` | Delivered | `staff_painter.dart` (`endBeat`) |
 | Articulations (staccato, tenuto) | `dom/articulation.cpp` | Delivered | `engraving_decorations.dart` |
 | Dynamics (p..ff, sf, sfz) & Hairpins | `rendering/score/dynamicslayout.cpp`, `tlayout.cpp` (layoutHairpinSegment) | Delivered (rendering: notehead centring, grand-staff gap, collisions; grading in core) | `dynamics_layout.dart` |
-| Piano Damper Pedal (Ped., *) | `rendering/score/tlayout.cpp` (pedal) | Planned (PR 2) | `pedal_layout.dart` |
+| Piano Damper Pedal (Ped., *) | `dom/pedal.cpp`, `rendering/score/tlayout.cpp` (layoutPedal, layoutPedalSegment) | Delivered (down/release marks, bracket line, change notches; hooks approximated) | `pedal_layout.dart` |
 | Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Delivered (PR 3; straight glissando only) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
 | Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
@@ -75,10 +75,21 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
   - *No pixel comparison* with MuseScore output has been done.
   - *Result screen:* the dynamics grade is in ResultView but not shown in the UI (piano-rdr4).- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-dynamics-and-hairpins).
 
-### 2. Piano Damper Pedal (`pedal_layout.dart`)
-- **Reference:** MuseScore `pedal.cpp` and `tlayout.cpp:layoutPedal`.
-- **Traditional:** $\mathfrak{Ped.}$ (U+E650) on down-stroke, $\ast$ (U+E655) on release.
-- **Modern Bracket:** Continuous line with inverted notch on pedal changes (`___/\___|`), stroke width `space * 0.12`.
+### 2. Piano Damper Pedal (`pedal_layout.dart`, `staff_painter.dart`)
+- **Reference:** MuseScore `dom/pedal.cpp` (`linePos`, `defaultPosSid`, `createLineSegment`) and `rendering/score/tlayout.cpp` (`layoutPedal`, `layoutPedalSegment`).
+- **Data:** song JSON `{ped}` presses the pedal (a `{ped}` while it is down is a change) and `{ped-up}` releases it. A span left down runs to the end of the song with no release. See [content-format.md](content-format.md#directives-dynamics-and-hairpins).
+- **Glyphs** (`fonts/smufl/glyphnames.json`): `keyboardPedalPed` U+E650 (`Ped.`) at the down; `keyboardPedalUp` U+E655 (`*`) after the release.
+- **Horizontal** (`Pedal::linePos`): `Ped.` starts 0.5 sp left of its note; the line starts 0.2 sp after the glyph. A release point sits 0.75 sp before the next note; a change sits 1.25 sp before the note that re-presses.
+- **Vertical:** `pedalPosBelow` y 2.5 sp below the bottom staff line. The line moves down past noteheads and stems that overlap its release hook (box 1.2 sp high, the `pedalHookHeight`), keeping `pedalMinDistance` (0.5 sp here, the dynamics clearance).
+- **Modern bracket:** line `pedalLineWidth` 0.11 sp (style value). Each change is a `/\` notch 0.35 sp half-wide and 0.6 sp high, approximating MuseScore's two 45-degree hooks. A release ends in a vertical hook 1.2 sp high, with the `*` glyph after it.
+- **Not implemented:** half-pedal and una corda / sostenuto marks (`keyboardPedalHalf`, `keyboardPedalSost`), parentheses, and the `pedalText` style overrides (fixed in the layout code, not read from the style file). Pedal is not graded (no CC64 input).
+- **Where it shows:** only the practice stage (`practice_stage.dart`) passes `pedals` to `StaffPainter`. The static score page view (`score_page_view.dart`) does not draw dynamics, hairpins or pedals yet. Imported scores (MusicXML, MIDI, ABC, LilyPond) carry no pedal data ([score-import-and-page-view.md](score-import-and-page-view.md)).
+- **Demo song:** `content/songs/pedal-demo.json` (original, CC-BY-SA-4.0) has three spans: a change in bar 3, a release in bar 4 and bar 6, and a span left down to the end. No course uses it; it exists to inspect the marks in the app.
+- **Known limitations (verified, not fixed):**
+  - *Font metrics:* widget tests without the music font paint placeholder boxes, so the pedal paint test checks that ink is present or absent in a region, not exact glyph shapes.
+  - *Release star:* the `*` sits after the release hook and may run over the next bass notes. Not checked with the real font on screen.
+  - *Notches:* a `/\` polyline, not MuseScore's two 45-degree hooks; no pixel comparison with MuseScore has been done.
+  - *Lint:* `{ped}` and `{ped-up}` are not checked by `tools/content-cli` (see [content-format.md](content-format.md#directives-damper-pedal)).
 
 ### 3. Arpeggios and Glissandi (`arpeggio_layout.dart`)
 - **Reference:** MuseScore `rendering/score/arpeggiolayout.cpp` (`computeHeight`, `calcTop`, `insetDistance`, `clearAccidentals`), `rendering/score/tlayout.cpp` (`layoutArpeggio`, `symbolLine`, `layoutGlissandoSegment`), `rendering/score/tdraw.cpp` (`draw(Arpeggio)`), `rendering/paddingtable.cpp:166-168`, `data/styles/legacy-style-defaults-v450.mss:441-442, 1169-1170`.
