@@ -61,6 +61,7 @@ class _ScorePageViewState extends State<ScorePageView>
   double _currentBeat = 0.0;
   double _speedModifier = 1.0;
   bool _metronomeOn = false;
+  bool _isPrinting = false;
 
   double _lastTickMs = 0.0;
   double _lastMetronomeBeat = -1.0;
@@ -354,16 +355,28 @@ class _ScorePageViewState extends State<ScorePageView>
     });
   }
 
-  void _printScore() {
-    ScorePdfPrinter.printScore(
-      notes: widget.notes,
-      totalBeats: widget.totalBeats,
-      beatsPerBar: widget.beatsPerBar,
-      staves: widget.staves,
-      keyFifths: widget.keyFifths,
-      title: widget.title,
-      composer: widget.composer,
-    );
+  Future<void> _printScore() async {
+    if (_isPrinting) return;
+    setState(() {
+      _isPrinting = true;
+    });
+    try {
+      await ScorePdfPrinter.printScore(
+        notes: widget.notes,
+        totalBeats: widget.totalBeats,
+        beatsPerBar: widget.beatsPerBar,
+        staves: widget.staves,
+        keyFifths: widget.keyFifths,
+        title: widget.title,
+        composer: widget.composer,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPrinting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -587,9 +600,18 @@ class _ScorePageViewState extends State<ScorePageView>
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.print_rounded, color: GameColors.ink),
-          tooltip: 'Print Score / PDF',
-          onPressed: _printScore,
+          icon: _isPrinting
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(GameColors.gold),
+                  ),
+                )
+              : const Icon(Icons.print_rounded, color: GameColors.ink),
+          tooltip: _isPrinting ? 'Preparing score...' : 'Print Score / PDF',
+          onPressed: _isPrinting ? null : _printScore,
         ),
         const SizedBox(width: 4),
         IconButton(
