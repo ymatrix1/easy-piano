@@ -108,6 +108,31 @@ Status: rendering (piano-boat PR 1), lint and MIDI velocity grading (piano-rdr4)
 
 The same directive in both hands at the same beat is drawn once.
 
+## Directives: repeats, voltas and navigation
+
+Status: rendering only (piano-h90n, PR 5). Parser: `app/lib/ui/staff/song_marks_parser.dart`; geometry and codepoints: `app/lib/ui/staff/repeat_layout.dart`. Zero length, placed in a hand string like `{dyn}`. Song-wide: a directive in `RH` or `LH` applies to the whole song, and the same directive in both hands at one beat counts once.
+
+| Directive | Where | Meaning |
+|---|---|---|
+| `{repeat_start}` | on a bar line | repeat sign `\|:` on that bar line |
+| `{repeat_end}` | on a bar line | repeat sign `:\|`; with `{repeat_start}` on the same bar line, `:\|:` |
+| `{volta: [1]}` / `{volta: [2]}` | on a bar line | first or second ending starts there |
+| `{volta_end}` | on a bar line | ends the open ending without a repeat sign (no hook) |
+| `{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_coda}` | any beat | mark above the staff at that beat |
+
+Rules:
+
+- "On a bar line" means the beat is a multiple of the bar length (a directive at the end of a bar, after its last note, is on the next bar line). Repeat and volta directives off a bar line are ignored by the app; lint does not reject them yet.
+- A volta ends at the next `{repeat_end}` (its right end gets a hook), at the next volta, at `{volta_end}`, or at the end of the song (open end). A second ending followed by more music needs `{volta_end}`.
+- `{volta: [n]}` takes a JSON array with one element, `1` or `2`. Other numbers are ignored. `{ds_al_coda}` and `{volta_end}` are extra names beyond the bean's list.
+- Playback does not change: the app still plays the score once. Play-order expansion (repeats, endings, D.C. / D.S.) is not implemented.
+
+```
+{"RH": "{repeat_start} C4:4 D4:4 E4:4 F4:4", "LH": "C3:1"},
+{"RH": "{volta: [1]} G4:4 F4:4 E4:4 D4:4 {repeat_end}", "LH": "G2:1 {repeat_end}"},
+{"RH": "{volta: [2]} C4:4 D4:4 E4:4 F4:4 {segno}", "LH": "C3:1"}
+```
+
 **Grading (informational).** For MIDI input, each matched note-on carries its velocity. A dynamic passes when at least half of the onsets from its beat to the next dynamic classify as it (MuseScore velocities: ppp 16, pp 33, p 49, mp 64, mf 80, f 96, ff 112, fff 126; nearest centre wins). `fp`, `sf` and `sfz` are not graded. A crescendo passes when the mean velocity of its second half exceeds the first by 8 or more (a diminuendo, the reverse). Mic and touch input have no velocity and are not graded.
   Parsed by `app/lib/ui/staff/song_marks_parser.dart`.
 
