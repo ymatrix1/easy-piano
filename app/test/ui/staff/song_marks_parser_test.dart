@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/ornament_layout.dart';
+import 'package:easy_piano/ui/staff/repeat_layout.dart';
 import 'package:easy_piano/ui/staff/song_marks_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 String _song(List<Map<String, String>> bars, {String time = '4/4'}) =>
     jsonEncode({'time': time, 'bars': bars});
-
 void main() {
   test('dynamic directive sets a mark at the beat it sits on', () {
     final m = SongMarksParser.parse(
@@ -112,6 +115,86 @@ void main() {
     expect(m.hairpins.single.leftHand, isFalse);
   });
 
+  test('ped ... ped-up makes one released pedal span', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    final p = m.pedals.single;
+    expect(p.startBeat, 0);
+    expect(p.endBeat, 2);
+    expect(p.released, isTrue);
+    expect(p.changeBeats, isEmpty);
+  });
+
+  test('ped while already down is a change at that beat', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH': 'C4:4 D4:4 E4:4 F4:4',
+          'LH': '{ped} C3:4 {ped} C3:4 {ped-up} C3:4',
+        },
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, [1]);
+    expect(m.pedals.single.endBeat, 2);
+  });
+
+  test('pedal left down runs to the end of the song, unreleased', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:1'},
+        {'RH': 'C4:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.pedals.single.endBeat, 8);
+    expect(m.pedals.single.released, isFalse);
+  });
+
+  test('a pedal pressed and lifted on the same beat draws nothing', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:4 {ped} {ped-up} C3:4 C3:2'},
+      ]),
+    );
+    expect(m.pedals, isEmpty);
+  });
+
+  test(
+    'content/songs/pedal-demo.json has the pedal spans it is written for',
+    () {
+      final json = File('../content/songs/pedal-demo.json').readAsStringSync();
+      final pedals = SongMarksParser.parse(json).pedals;
+      expect(pedals, hasLength(3));
+      // bar 1 down, change in bar 3 (beat 8), release in bar 4 (beat 14)
+      expect(pedals[0].startBeat, 0);
+      expect(pedals[0].changeBeats, [8]);
+      expect(pedals[0].endBeat, 14);
+      expect(pedals[0].released, isTrue);
+      // bar 5 down, release in bar 6 (beat 22)
+      expect(pedals[1].startBeat, 16);
+      expect(pedals[1].endBeat, 22);
+      expect(pedals[1].released, isTrue);
+      // bar 7 down, never released: runs to the end at beat 28
+      expect(pedals[2].startBeat, 24);
+      expect(pedals[2].endBeat, 28);
+      expect(pedals[2].released, isFalse);
+    },
+  );
+
+  test('ped directive in both hands is kept once', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{ped} C4:2 {ped-up} D4:2', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, isEmpty);
+  });
+
   test('same directive in both hands stays on the treble staff', () {
     final m = SongMarksParser.parse(
       _song([
@@ -120,6 +203,302 @@ void main() {
     );
     expect(m.dynamics, hasLength(1));
     expect(m.dynamics.single.leftHand, isFalse);
+  });
+
+  group('repeats, voltas and navigation', () {
+    test('repeat start and end sit on the bar lines they are written on', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{repeat_start} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': 'C4:4 D4:4 E4:4 F4:4 {repeat_end}', 'LH': 'C3:1 {repeat_end}'},
+        ]),
+      );
+      expect(m.repeatBarlines, hasLength(2));
+      expect(m.repeatBarlines[0].beat, 0);
+      expect(m.repeatBarlines[0].start, isTrue);
+      expect(m.repeatBarlines[0].end, isFalse);
+      expect(m.repeatBarlines[1].beat, 8);
+      expect(m.repeatBarlines[1].end, isTrue);
+      expect(m.repeatBarlines[1].start, isFalse);
+    });
+
+    test('repeat start and end on one bar line make a double repeat', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:4 D4:4 E4:4 F4:4 {repeat_end}', 'LH': 'C3:1'},
+          {'RH': '{repeat_start} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.repeatBarlines, hasLength(1));
+      expect(m.repeatBarlines.single.beat, 4);
+      expect(m.repeatBarlines.single.start, isTrue);
+      expect(m.repeatBarlines.single.end, isTrue);
+    });
+
+    test('a directive off the bar line is ignored', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:4 {repeat_start} D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': 'C4:4 {volta: [1]} D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.repeatBarlines, isEmpty);
+      expect(m.voltas, isEmpty);
+    });
+
+    test('first ending closed by a repeat end has a hook; second runs on', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{repeat_start} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': '{volta: [1]} C4:4 D4:4 E4:4 F4:4 {repeat_end}', 'LH': 'C3:1'},
+          {'RH': '{volta: [2]} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.voltas, hasLength(2));
+      final first = m.voltas[0];
+      expect(first.number, 1);
+      expect(first.startBeat, 4);
+      expect(first.endBeat, 8);
+      expect(first.closedEnd, isTrue);
+      final second = m.voltas[1];
+      expect(second.number, 2);
+      expect(second.startBeat, 8);
+      // Left open: runs to the end of the song, no hook.
+      expect(second.endBeat, 12);
+      expect(second.closedEnd, isFalse);
+    });
+
+    test('a volta closed by volta_end has no hook', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{volta: [2]} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': '{volta_end} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.voltas.single.startBeat, 0);
+      expect(m.voltas.single.endBeat, 4);
+      expect(m.voltas.single.closedEnd, isFalse);
+    });
+
+    test('a volta number other than 1 or 2 is ignored', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{volta: [3]} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': '{volta: [1, 2]} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': '{volta:1} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.voltas, isEmpty);
+    });
+
+    test('segno, coda and jump marks sit at their beat, on any beat', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:4 {segno} D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': 'C4:4 {coda} D4:4 {dc_al_fine} E4:4 F4:4', 'LH': 'C3:1'},
+          {'RH': 'C4:4 {ds_al_coda} D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.navigation.map((n) => (n.beat, n.kind)), [
+        (1.0, NavigationKind.segno),
+        (5.0, NavigationKind.coda),
+        (6.0, NavigationKind.dcAlFine),
+        (9.0, NavigationKind.dsAlCoda),
+      ]);
+    });
+
+    test('a navigation mark in both hands is drawn once', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{segno} C4:4 D4:4 E4:4 F4:4', 'LH': '{segno} C3:1'},
+        ]),
+      );
+      expect(m.navigation, hasLength(1));
+    });
+
+    test('unknown structural names are ignored', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{repeat} {segn├│} {volta} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.repeatBarlines, isEmpty);
+      expect(m.voltas, isEmpty);
+      expect(m.navigation, isEmpty);
+    });
+
+    test('a repeat and volta in the left hand apply to the whole song', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{repeat_start} C3:1'},
+          {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1 {repeat_end}'},
+        ]),
+      );
+      expect(m.repeatBarlines.map((r) => r.beat), [0, 8]);
+    });
+
+    test('an ending with no music after its start is dropped', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:4 D4:4 E4:4 F4:4 {volta: [1]}', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.voltas, isEmpty);
+    });
+
+    test('malformed input gives no structural marks', () {
+      expect(SongMarksParser.parse('').repeatBarlines, isEmpty);
+      expect(SongMarksParser.parse('not json').voltas, isEmpty);
+      expect(SongMarksParser.parse('[]').navigation, isEmpty);
+    });
+  });
+
+  test('ornament directives mark the chord at their beat, per hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{trill} C4:2 {turn} D4:2', 'LH': '{mordent} C3:1'},
+      ]),
+    );
+    expect(m.ornaments, hasLength(3));
+    final rh = m.ornaments.where((o) => !o.leftHand).toList();
+    expect(rh.map((o) => o.beat), [0, 2]);
+    expect(rh.map((o) => o.kind), [OrnamentKind.trill, OrnamentKind.turn]);
+    final lh = m.ornaments.where((o) => o.leftHand).single;
+    expect(lh.beat, 0);
+    expect(lh.kind, OrnamentKind.mordent);
+  });
+
+  test('ornament in RH and RH2 at one beat is kept once', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{trill} C4:4 D4:4 E4:4 F4:4', 'RH2': '{trill} G3:2 G3:2'},
+      ]),
+    );
+    expect(m.ornaments, hasLength(1));
+  });
+
+  test('unknown or malformed ornament directives are ignored', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH':
+              '{tremolo} C4:1 {trill:"x"} D4:1 {trill } E4:1 {Trill} F4:1 '
+              '{acc:H5} {acc:"H5"} {acc:"D"} {acc:"D5x"} {acc:"G10"}',
+          'LH': 'C3:1',
+        },
+      ]),
+    );
+    expect(m.ornaments, isEmpty);
+    expect(m.acciaccaturas, isEmpty);
+    expect(m.dynamics, isEmpty);
+  });
+
+  test('an acciaccatura takes its pitch from the name, no time', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH': '{acc:"D5"} C5:4 {acc:"F#4"} G4:4 {acc:"Bb3"} C4:2',
+          'LH': 'C3:1',
+        },
+      ]),
+    );
+    expect(m.acciaccaturas.map((a) => a.beat), [0, 1, 2]);
+    expect(m.acciaccaturas.map((a) => a.pitch), [74, 66, 58]);
+    expect(m.acciaccaturas.map((a) => a.accidental), [null, 'sharp', 'flat']);
+    expect(m.acciaccaturas.every((a) => !a.leftHand), isTrue);
+  });
+
+  test('acciaccatura names: natural sign and out-of-range pitch', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{acc:"Cn4"} C4:2 {acc:"C10"} D4:2', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.acciaccaturas, hasLength(1));
+    expect(m.acciaccaturas.single.pitch, 60);
+    expect(m.acciaccaturas.single.accidental, 'natural');
+  });
+
+  test(
+    'ornaments on a rest are parsed; the painter draws no note for them',
+    () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{trill} r:4 C4:4 D4:2', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.ornaments.single.beat, 0);
+    },
+  );
+
+  test('arpeggio directives set plain, up and down arpeggios per hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{arp} C4:2 {arp:up} D4:2', 'LH': '{arp:down} C3:1'},
+      ]),
+    );
+    expect(m.arpeggios, hasLength(3));
+    final rh = m.arpeggios.where((a) => !a.leftHand).toList();
+    expect(rh.map((a) => a.beat), [0, 2]);
+    expect(rh.map((a) => a.direction), [
+      ArpeggioDirection.plain,
+      ArpeggioDirection.up,
+    ]);
+    final lh = m.arpeggios.where((a) => a.leftHand).single;
+    expect(lh.leftHand, isTrue);
+    expect(lh.direction, ArpeggioDirection.down);
+  });
+
+  test('a malformed arpeggio directive is ignored', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{arp:sideways} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.arpeggios, isEmpty);
+  });
+
+  test('gliss runs from its note to the next note of the same hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 E5:2', 'LH': 'C3:1'},
+        {'RH': 'G5:1 A5:1 B5:1 C6:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, hasLength(1));
+    final g = m.glissandi.single;
+    expect(g.startBeat, 0);
+    expect(g.endBeat, 2);
+    expect(g.leftHand, isFalse);
+  });
+
+  test('a rest does not end a glissando', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 r:2 E5:4', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, hasLength(1));
+    // C4:2 then a 2-beat rest: the gliss ends at E5, on beat 4.
+    expect(m.glissandi.single.endBeat, 4);
+  });
+
+  test('a gliss with no following note in its hand draws nothing', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:2 {gliss}', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, isEmpty);
+  });
+
+  test('the gliss start is not closed by the note sitting on its beat', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 E5:2', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi.single.startBeat, 0);
   });
 
   test('chord directive sets a chord symbol at its beat', () {
