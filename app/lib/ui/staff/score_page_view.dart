@@ -337,17 +337,8 @@ class _ScorePageViewState extends State<ScorePageView>
 
     targetBeat = targetBeat.clamp(0.0, widget.totalBeats);
 
-    // Audio preview of notes near clicked position (sightread.dev parity)
-    for (final n in widget.notes) {
-      if (n.isRest || n.isSpacer) continue;
-      if ((n.beat - targetBeat).abs() < 0.25) {
-        final durSec = (n.beats * 60.0 / (widget.bpm * _speedModifier)).clamp(
-          0.1,
-          1.0,
-        );
-        pianoSynth.schedule(n.pitch, 0, durSec, velocity: 85);
-      }
-    }
+    // Stop currently ringing notes so the jump to the new position is clean and silent
+    pianoSynth.stopAll();
 
     setState(() {
       _currentBeat = targetBeat;
