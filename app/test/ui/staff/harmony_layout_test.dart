@@ -156,26 +156,44 @@ void main() {
       expect(HarmonyLayout.lyricLeft(centreX: 100, width: 40), 80);
     });
 
-    test('the row sits 1 sp below the staff, lower when notes reach it', () {
-      const space = 10.0;
-      expect(HarmonyLayout.lyricTop(staffBottomY: 200, space: space), 210);
-      // Ink at 195 plus 1 sp (lyricsMinTopDistance) is 205, under 210: no change.
+    test('the baseline sits 3 sp below the staff (lyricsPosBelow)', () {
+      // Space 10, staff bottom 200, ascent 12. Nominal 200 + 3 * 10 = 230.
+      // Floor 200 + 1 * 10 + 12 = 222. Max 230.
       expect(
-        HarmonyLayout.lyricTop(
-          staffBottomY: 200,
-          lowestInkY: 195,
-          space: space,
-        ),
-        210,
+        HarmonyLayout.lyricBaselineY(staffBottomY: 200, ascent: 12, space: 10),
+        230,
       );
-      // A stem reaching 215 pushes the row to 215 + 10 = 225.
+    });
+
+    test('notes reaching the row push the baseline down', () {
+      // Ink at 205: floor 205 + 10 + 12 = 227, under 230: no change.
       expect(
-        HarmonyLayout.lyricTop(
+        HarmonyLayout.lyricBaselineY(
+          staffBottomY: 200,
+          lowestInkY: 205,
+          ascent: 12,
+          space: 10,
+        ),
+        230,
+      );
+      // A stem reaching 215: floor 215 + 10 + 12 = 237.
+      expect(
+        HarmonyLayout.lyricBaselineY(
           staffBottomY: 200,
           lowestInkY: 215,
-          space: space,
+          ascent: 12,
+          space: 10,
         ),
-        225,
+        237,
+      );
+    });
+
+    test('a tall ascent keeps the text 1 sp below the staff', () {
+      // Ascent 25: floor 200 + 10 + 25 = 235, so the baseline moves from 230
+      // to 235 and the text top sits at 210 (1 sp below the staff).
+      expect(
+        HarmonyLayout.lyricBaselineY(staffBottomY: 200, ascent: 25, space: 10),
+        235,
       );
     });
 

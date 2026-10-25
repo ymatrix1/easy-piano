@@ -58,7 +58,7 @@ void main() {
       final extra = _extraPixels(plain, hyphen);
       expect(extra, isNotEmpty);
       // Only the hyphen differs: between the centres of A (x ~372) and B
-      // (x ~492), in the band of the lyric line below the staff.
+      // (x ~492), in the band of the lyric row, 3 sp below the staff.
       expect(extra.every((p) => p.$1 > 380 && p.$1 < 480), isTrue);
       expect(extra.every((p) => p.$2 > _lyricTopY), isTrue);
     });
@@ -99,7 +99,11 @@ void main() {
 // at x = 120 + 60 b. Beat 4 is clear of the clef fade that masks the left part.
 const _chordX = 360.0;
 const _topLineY = 160.0;
-const _lyricTopY = 265.0;
+// Space is 20 px (400 / 11 clamped to 20). The treble bottom line is at
+// 200 + 2 * 20 = 240, so the lyric baseline is 240 + 3 * 20 = 300 (lyricsPosBelow
+// 3 sp). A hyphen is 0.25 * lyricSizeSp (2.016) * 20 = 10.08 px above that: y ~290.
+// The lower bound 280 is above any hyphen or melisma and below the baseline.
+const _lyricTopY = 280.0;
 const _width = 600;
 const _height = 400;
 

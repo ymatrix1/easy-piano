@@ -2070,15 +2070,16 @@ class StaffPainter extends CustomPainter {
 
       // One baseline for the whole row of this hand, so syllables line up
       // even where stems differ in length.
-      final top = HarmonyLayout.lyricTop(
+      final baseline = HarmonyLayout.lyricBaselineY(
         staffBottomY: staffBottomY,
         lowestInkY: rowLowest,
+        ascent: baseOffset,
         space: space,
       );
       for (final slot in slots) {
         slot
-          ..boxTop = top
-          ..baseline = top + baseOffset;
+          ..boxTop = baseline - baseOffset
+          ..baseline = baseline;
       }
 
       for (var k = 0; k < slots.length; k++) {

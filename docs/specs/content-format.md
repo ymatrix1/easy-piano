@@ -117,6 +117,7 @@ Status: rendering only (piano-r16m, PR 6). Parsed by `app/lib/ui/staff/song_mark
 - `{chord:"<symbol>"}`: a chord symbol at that beat, drawn above the top staff over the note that starts there in that hand. Symbol: root `A`-`G` with an optional `#` or `b`, a suffix (letters, digits and `+ - ( ) # ° ø`), then an optional `/` and a bass note: `C`, `Am7`, `G7/B`, `F#m7b5`, `Bb`, `Bbm7/Db`, `Cmaj7(#11)`. Other text is ignored by the app and must be rejected by lint once lint checks it.
 - `{lyric:"<syllable>"}`: a syllable drawn under the note at that beat, centred on its notehead, below the staff of its hand. A trailing `-` (`{lyric:"Hel-"}`) draws a hyphen to the next syllable of that hand. A syllable has no spaces and no `_`, `"`, `{`, `}` or inner `-`.
 - `{lyric:"_"}`: an extension (melisma). A line from the syllable before the run of `_` to the right edge of the notehead of the last `_` (MuseScore melisma end). Not drawn when shorter than 1 sp.
+- Lyric position: the syllable row sits 3 sp below the staff of its hand (MuseScore `lyricsPosBelow`), lowered only to keep 1 sp clear of the staff and of the notes above it.
 - Hyphen (`{lyric:"Hel-"}`): always drawn, at least 0.4 sp long, at most 0.6 sp, between the syllables (see sheet-engraving section 6 for the MuseScore sources).
 - Same directive, same beat, in both hands: drawn once, on the treble staff.
 - Malformed text (`{chord:"c7"}`, `{chord:"C/"}`, `{lyric:""}`, `{lyric:"a b"}`) is ignored.

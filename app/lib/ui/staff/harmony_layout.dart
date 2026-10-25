@@ -189,17 +189,15 @@ abstract final class HarmonyLayout {
   /// conversion as [chordSizeSp]: 2.016 sp.
   static const lyricSizeSp = 10 * 25.4 / 72 / 1.75;
 
-  /// Top of the lyric row below its staff's bottom line, in staff spaces.
-  /// LOCAL CHOICE. MuseScore's default baseline is `lyricsPosBelow` 3 sp below
-  /// the staff (styledef.cpp:109; v450 mss:35; lyricslayout.cpp:612-614). This
-  /// app uses 1 sp (the minimum below) so a treble row fits in a grand staff's
-  /// gap. Deliberate deviation, see sheet-engraving.md.
-  static const lyricTopSp = 1.0;
+  /// Baseline of a lyric row below its staff's bottom line, in staff spaces
+  /// (`lyricsPosBelow` y 3, styledef.cpp:109; v450 mss:35). MuseScore adds it
+  /// to the staff height for the lyric's y (lyricslayout.cpp:612-614).
+  static const lyricPosBelowSp = 3.0;
 
-  /// Clearance between the lyric row and the lowest note ink of the row above
-  /// it. MuseScore keeps `lyricsMinTopDistance` 1 sp between the lyric and the
-  /// staff skyline (styledef.cpp:110; v450 mss:36; lyricslayout.cpp:630-660),
-  /// and the skyline includes stems and noteheads below the staff.
+  /// Minimum gap between a lyric's top and the staff skyline or the lowest
+  /// note ink of the row above it (`lyricsMinTopDistance` 1 sp, styledef.cpp:110;
+  /// v450 mss:36; collisions in lyricslayout.cpp:630-660). The skyline includes
+  /// stems and noteheads below the staff.
   static const lyricClearanceSp = 1.0;
 
   /// Hyphen and melisma clearance from a syllable: `lyricsDashPad` 0.05 sp
@@ -283,17 +281,22 @@ abstract final class HarmonyLayout {
   static double lyricLeft({required double centreX, required double width}) =>
       centreX - width / 2;
 
-  /// Top of a lyric row below a staff. It sits [lyricTopSp] below the staff's
-  /// bottom line. It is lowered when the lowest note ink of the row
-  /// ([lowestInkY], null when none) comes within [lyricClearanceSp].
-  static double lyricTop({
+  /// Baseline of a lyric row below a staff. It sits [lyricPosBelowSp] below the
+  /// staff's bottom line. It is lowered so that the text top ([ascent] above
+  /// the baseline, same units as [space]) keeps [lyricClearanceSp] below the
+  /// staff and below the lowest note ink of the row ([lowestInkY], null when
+  /// none).
+  static double lyricBaselineY({
     required double staffBottomY,
     double? lowestInkY,
+    required double ascent,
     required double space,
   }) {
-    final nominal = staffBottomY + lyricTopSp * space;
-    if (lowestInkY == null) return nominal;
-    return math.max(nominal, lowestInkY + lyricClearanceSp * space);
+    final nominal = staffBottomY + lyricPosBelowSp * space;
+    var floorInk = staffBottomY;
+    if (lowestInkY != null) floorInk = math.max(floorInk, lowestInkY);
+    final minBaseline = floorInk + lyricClearanceSp * space + ascent;
+    return math.max(nominal, minBaseline);
   }
 
   /// Height of hyphens and melisma lines above the lyric baseline.
