@@ -249,6 +249,130 @@ void main() {
         expect(res.anchors.last.$1, equals(20.0));
         expect(res.anchors.last.$2, equals(300.0));
       });
+
+      test('ScoreSystem beatToX and xToBeat invert accurately with notehead snapping', () {
+        final notes = [
+          const StaffNote(60, 0.0, 1.0), // C4 at beat 0
+          const StaffNote(62, 1.0, 1.0), // D4 at beat 1
+          const StaffNote(64, 2.0, 1.0), // E4 at beat 2
+          const StaffNote(65, 3.0, 1.0), // F4 at beat 3
+        ];
+        const config = ScorePageConfig(
+          pageWidth: 800.0,
+          systemHeaderWidth: 70.0,
+          space: 10.0,
+        );
+        final measures = ScorePageLayout.buildMeasures(
+          notes: notes,
+          beatsPerBar: 4.0,
+          totalBeats: 4.0,
+          space: config.space,
+          minMeasureWidth: 100.0,
+        );
+        final systems = ScorePageLayout.breakSystems(
+          measures: measures,
+          config: config,
+        );
+        final sys = systems.first;
+
+        final layout = sys.getLayout(
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        // Cached layout check
+        expect(
+          identical(
+            sys.getLayout(config: config, keyFifths: 0, beatsPerBar: 4.0),
+            layout,
+          ),
+          isTrue,
+        );
+
+        // Note 0 is at beat 0.0
+        final note0X = layout.noteXs[0]!;
+        expect(note0X, greaterThan(config.systemHeaderWidth));
+
+        // Click exactly on Note 0
+        final beatOnNote0 = sys.xToBeat(
+          note0X,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(beatOnNote0, closeTo(0.0, 1e-4));
+
+        // Click slightly to the right of Note 0 within snap radius (space * 0.75 = 7.5px)
+        final beatSnappedRight = sys.xToBeat(
+          note0X + 4.0,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(beatSnappedRight, closeTo(0.0, 1e-4));
+
+        // Click slightly to the left of Note 0 within snap radius
+        final beatSnappedLeft = sys.xToBeat(
+          note0X - 4.0,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(beatSnappedLeft, closeTo(0.0, 1e-4));
+
+        // beatToX at beat 0.0 lands exactly on Note 0
+        final curX0 = sys.beatToX(
+          0.0,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(curX0, closeTo(note0X, 1e-4));
+
+        // Note 1 is at beat 1.0
+        final note1X = layout.noteXs[1]!;
+        final beatOnNote1 = sys.xToBeat(
+          note1X,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(beatOnNote1, closeTo(1.0, 1e-4));
+        final curX1 = sys.beatToX(
+          1.0,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(curX1, closeTo(note1X, 1e-4));
+
+        // Click midway between Note 0 and Note 1: mathematical inverse holds
+        final midX = (note0X + note1X) / 2.0;
+        final midBeat = sys.xToBeat(
+          midX,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(midBeat, greaterThan(0.0));
+        expect(midBeat, lessThan(1.0));
+        final roundTripX = sys.beatToX(
+          midBeat,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(roundTripX, closeTo(midX, 1e-4));
+
+        // Click in system header area seeks to system start beat (0.0)
+        final headerClickBeat = sys.xToBeat(
+          20.0,
+          config: config,
+          keyFifths: 0,
+          beatsPerBar: 4.0,
+        );
+        expect(headerClickBeat, equals(0.0));
+      });
     },
   );
 }

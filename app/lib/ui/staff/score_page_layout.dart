@@ -62,11 +62,229 @@ class ScoreSystem {
   /// Whether this is the final system in the score (for end barline rendering).
   final bool isLastSystem;
 
+  /// Cached layout geometry for note rendering and cursor mapping.
+  SystemLayoutResult? cachedLayout;
+
   /// First musical beat included in this system.
   double get startBeat => measures.isEmpty ? 0.0 : measures.first.startBeat;
 
   /// Last musical beat included in this system.
   double get endBeat => measures.isEmpty ? 0.0 : measures.last.endBeat;
+
+  /// Obtains the computed system layout result, using the cached result if available.
+  SystemLayoutResult getLayout({
+    required ScorePageConfig config,
+    required int keyFifths,
+    required double beatsPerBar,
+  }) {
+    if (cachedLayout != null) return cachedLayout!;
+    final layout = ScorePageLayout.layoutSystem(
+      system: this,
+      config: config,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+    );
+    cachedLayout = layout;
+    return layout;
+  }
+
+  /// Maps a musical beat to horizontal X coordinate on this system.
+  double beatToX(
+    double beat, {
+    required ScorePageConfig config,
+    required int keyFifths,
+    required double beatsPerBar,
+  }) {
+    return getLayout(
+      config: config,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+    ).beatToX(beat, this, config);
+  }
+
+  /// Maps horizontal X coordinate on this system to musical beat.
+  double xToBeat(
+    double x, {
+    required ScorePageConfig config,
+    required int keyFifths,
+    required double beatsPerBar,
+  }) {
+    return getLayout(
+      config: config,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+    ).xToBeat(x, this, config);
+  }
+}
+
+/// Cached layout geometry for an engraved score system line.
+///
+/// Precomputes non-linear notehead positions, accidental staggering, dot
+/// offsets, stem directions, and piecewise interpolation anchors between beats
+/// and canvas X coordinates (MuseScore `measurelayout.cpp`).
+class SystemLayoutResult {
+  const SystemLayoutResult({
+    required this.allNotes,
+    required this.noteXs,
+    required this.measureAnchors,
+    required this.chordGroups,
+    required this.chordHeadOffsets,
+    required this.chordStemDown,
+    required this.chordAccidentalOffsets,
+    required this.chordDotOffsets,
+    required this.noteAccidentals,
+  });
+
+  /// All notes/rests across measures in this system.
+  final List<StaffNote> allNotes;
+
+  /// Map from system note index to nominal horizontal X position.
+  final Map<int, double> noteXs;
+
+  /// Measure index to list of (beat, x) interpolation anchors.
+  final Map<int, List<(double beat, double x)>> measureAnchors;
+
+  /// Chord groups key: (beatInt, onBass), value: list of system note indices.
+  final Map<(int, bool), List<int>> chordGroups;
+
+  /// Notehead horizontal displacement offsets.
+  final Map<int, double> chordHeadOffsets;
+
+  /// Stem direction for chord groups.
+  final Map<(int, bool), bool> chordStemDown;
+
+  /// Accidental horizontal staggering offsets.
+  final Map<int, double> chordAccidentalOffsets;
+
+  /// Augmentation dot offsets.
+  final Map<int, (double, double)> chordDotOffsets;
+
+  /// Computed accidentals per note.
+  final Map<int, AccidentalType> noteAccidentals;
+
+  /// Maps a musical beat to its exact horizontal pixel coordinate on the system.
+  double beatToX(double b, ScoreSystem system, ScorePageConfig config) {
+    final headerW = config.systemHeaderWidth;
+    if (system.measures.isEmpty) return headerW;
+
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      final isLast = mIdx == system.measures.length - 1;
+      if (b >= m.startBeat &&
+          (b < m.endBeat || (isLast && b <= m.endBeat + 0.001))) {
+        final anchors = measureAnchors[mIdx];
+        if (anchors == null || anchors.isEmpty) {
+          final mLeft = headerW + system.measureXs[mIdx];
+          final mW = system.measureWidths[mIdx];
+          final rel =
+              (b - m.startBeat) / math.max(0.001, m.endBeat - m.startBeat);
+          return mLeft + rel * mW;
+        }
+
+        // If at or before first anchor, return the notehead position if there's a note on that beat
+        if (b <= anchors.first.$1) {
+          if (anchors.length > 1 &&
+              (anchors[1].$1 - anchors.first.$1).abs() <= 1e-4) {
+            return anchors[1].$2;
+          }
+          return anchors.first.$2;
+        }
+
+        if (b >= anchors.last.$1) return anchors.last.$2;
+
+        for (var a = 0; a < anchors.length - 1; a++) {
+          final a0 = anchors[a];
+          final a1 = anchors[a + 1];
+          if (b >= a0.$1 && b <= a1.$1) {
+            final span = a1.$1 - a0.$1;
+            if (span <= 1e-4) {
+              // Duplicate beat anchor (e.g. barline anchor followed by first notehead anchor)
+              continue;
+            }
+            final t = (b - a0.$1) / span;
+            return a0.$2 + t * (a1.$2 - a0.$2);
+          }
+        }
+        return anchors.last.$2;
+      }
+    }
+    if (b < system.startBeat) {
+      return headerW;
+    }
+    return headerW + (system.measureXs.last + system.measureWidths.last);
+  }
+
+  /// Maps a horizontal pixel coordinate on the system to musical beat.
+  /// This is the mathematical inverse of [beatToX], with notehead snapping.
+  double xToBeat(double x, ScoreSystem system, ScorePageConfig config) {
+    final headerW = config.systemHeaderWidth;
+    if (system.measures.isEmpty || x <= headerW) {
+      return system.startBeat;
+    }
+
+    final systemEnd =
+        headerW +
+        (system.measureXs.isNotEmpty
+            ? (system.measureXs.last + system.measureWidths.last)
+            : 0.0);
+    if (x >= systemEnd) {
+      return system.endBeat;
+    }
+
+    // Snap to notehead if click is within snap threshold (space * 0.75)
+    final snapRadius = config.space * 0.75;
+    var closestDist = double.infinity;
+    double? snappedBeat;
+
+    for (var i = 0; i < allNotes.length; i++) {
+      final n = allNotes[i];
+      if (n.isRest || n.isSpacer) continue;
+      final rawX = noteXs[i] ?? 0.0;
+      final headX = rawX + (chordHeadOffsets[i] ?? 0.0);
+      final dist = (x - headX).abs();
+      if (dist <= snapRadius && dist < closestDist) {
+        closestDist = dist;
+        snappedBeat = n.beat;
+      }
+    }
+    if (snappedBeat != null) {
+      return snappedBeat;
+    }
+
+    // Piecewise inverse interpolation using measureAnchors
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      final mLeft = headerW + system.measureXs[mIdx];
+      final mW = system.measureWidths[mIdx];
+      final mRight = mLeft + mW;
+      final isLast = mIdx == system.measures.length - 1;
+
+      if (x >= mLeft && (x <= mRight || isLast)) {
+        final anchors = measureAnchors[mIdx];
+        if (anchors == null || anchors.isEmpty) {
+          final frac = mW > 0 ? ((x - mLeft) / mW).clamp(0.0, 1.0) : 0.0;
+          return m.startBeat + frac * (m.endBeat - m.startBeat);
+        }
+        if (x <= anchors.first.$2) return anchors.first.$1;
+        if (x >= anchors.last.$2) return anchors.last.$1;
+
+        for (var a = 0; a < anchors.length - 1; a++) {
+          final a0 = anchors[a];
+          final a1 = anchors[a + 1];
+          final minX = math.min(a0.$2, a1.$2);
+          final maxX = math.max(a0.$2, a1.$2);
+          if (x >= minX && x <= maxX) {
+            final xSpan = a1.$2 - a0.$2;
+            final t = xSpan.abs() > 1e-4 ? (x - a0.$2) / xSpan : 0.0;
+            return a0.$1 + t * (a1.$1 - a0.$1);
+          }
+        }
+        return anchors.last.$1;
+      }
+    }
+
+    return system.endBeat;
+  }
 }
 
 /// A rendered page consisting of vertically stacked systems (MuseScore `Page`).
@@ -507,5 +725,162 @@ abstract final class ScorePageLayout {
 
     final systems = breakSystems(measures: measures, config: config);
     return paginate(systems: systems, config: config);
+  }
+
+  static final _trebleBottomStep = diatonicStep(64); // E4 = 30
+  static final _bassTopStep = diatonicStep(57); // A3 = 26
+
+  /// Calculates vertical baseline Y coordinate for a given pitch on grand staff.
+  static double noteY(
+    int pitch,
+    bool onBass,
+    double space,
+    double trebleBottomY,
+    double bassTopY,
+  ) {
+    final step = diatonicStep(pitch);
+    final half = space / 2;
+    return onBass
+        ? bassTopY + (_bassTopStep - step) * half
+        : trebleBottomY - (step - _trebleBottomStep) * half;
+  }
+
+  /// Performs full system-level layout: gathers all notes across measures,
+  /// computes accidentals, chord grouping, notehead displacements, accidental
+  /// and dot offsets, and non-linear measure spacing anchors.
+  static SystemLayoutResult layoutSystem({
+    required ScoreSystem system,
+    required ScorePageConfig config,
+    required int keyFifths,
+    required double beatsPerBar,
+  }) {
+    final space = config.space;
+    final headerW = config.systemHeaderWidth;
+    final trebleBottomY = space * 5.0;
+    final bassTopY = trebleBottomY + 3.0 * space;
+
+    // Flatten all notes in system and track measure note indices
+    final allSysNotes = <StaffNote>[];
+    final measureNoteIndices = <int, List<int>>{};
+
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      measureNoteIndices[mIdx] = [];
+      for (final note in m.notes) {
+        if (note.isSpacer) continue;
+        final globalIdx = allSysNotes.length;
+        allSysNotes.add(note);
+        measureNoteIndices[mIdx]!.add(globalIdx);
+      }
+    }
+
+    // Accidentals computation matching Mode 1 StaffPainter
+    final noteAccidentals = StaffPainter.computeAccidentals(
+      notes: allSysNotes,
+      keyFifths: keyFifths,
+      beatsPerBar: beatsPerBar,
+      onBass: (n) => n.leftHand,
+    );
+
+    // Chord grouping & displacements (MuseScore chordlayout.cpp & Gould rules)
+    final chordGroups = <(int, bool), List<int>>{};
+    for (var i = 0; i < allSysNotes.length; i++) {
+      final n = allSysNotes[i];
+      if (n.isRest || n.isSpacer) continue;
+      final beatInt = (n.beat * 1000).round();
+      chordGroups.putIfAbsent((beatInt, n.leftHand), () => []).add(i);
+    }
+
+    final chordHeadOffsets = <int, double>{};
+    final chordStemDown = <(int, bool), bool>{};
+
+    for (final entry in chordGroups.entries) {
+      final group = entry.value;
+      final onBass = entry.key.$2;
+      final chordPitches = group.map((idx) => allSysNotes[idx].pitch).toList();
+      final isDown = StemLayout.computeStemDown(
+        pitch: chordPitches.first,
+        onBass: onBass,
+        explicitStemDown: allSysNotes[group.first].stemDown,
+        chordPitches: chordPitches,
+      );
+      chordStemDown[entry.key] = isDown;
+
+      final offsets = ChordLayout.computeNoteheadOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        stemDown: isDown,
+        space: space,
+      );
+      chordHeadOffsets.addAll(offsets);
+    }
+
+    // MuseScore parity: accidental staggering and dot conflict resolution for chords
+    final chordAccidentalOffsets = <int, double>{};
+    final chordDotOffsets = <int, (double, double)>{};
+    for (final entry in chordGroups.entries) {
+      final group = entry.value;
+      final onB = entry.key.$2;
+
+      final accOffsets = ChordLayout.computeAccidentalOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        noteAccidentals: noteAccidentals,
+        noteY: (pitch, onBass) =>
+            noteY(pitch, onBass, space, trebleBottomY, bassTopY),
+        onBass: onB,
+        space: space,
+      );
+      chordAccidentalOffsets.addAll(accOffsets);
+
+      final dotOffsets = ChordLayout.computeDotOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        chordHeadOffsets: chordHeadOffsets,
+        space: space,
+      );
+      chordDotOffsets.addAll(dotOffsets);
+    }
+
+    // Horizontal spacing per measure & playhead anchors
+    final noteXsMap = <int, double>{};
+    final measureAnchors = <int, List<(double, double)>>{};
+
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      final mLeft = headerW + system.measureXs[mIdx];
+      final mW = system.measureWidths[mIdx];
+      final indices = measureNoteIndices[mIdx] ?? const [];
+
+      final layoutRes = layoutMeasureNotes(
+        allNotes: allSysNotes,
+        measureNoteIndices: indices,
+        measureStartBeat: m.startBeat,
+        measureEndBeat: m.endBeat,
+        measureLeft: mLeft,
+        measureWidth: mW,
+        chordHeadOffsets: chordHeadOffsets,
+        chordAccidentalOffsets: chordAccidentalOffsets,
+        chordDotOffsets: chordDotOffsets,
+        noteAccidentals: noteAccidentals,
+        chordGroups: chordGroups,
+        space: space,
+      );
+
+      noteXsMap.addAll(layoutRes.noteXs);
+      measureAnchors[mIdx] = layoutRes.anchors;
+    }
+
+    return SystemLayoutResult(
+      allNotes: allSysNotes,
+      noteXs: noteXsMap,
+      measureAnchors: measureAnchors,
+      chordGroups: chordGroups,
+      chordHeadOffsets: chordHeadOffsets,
+      chordStemDown: chordStemDown,
+      chordAccidentalOffsets: chordAccidentalOffsets,
+      chordDotOffsets: chordDotOffsets,
+      noteAccidentals: noteAccidentals,
+    );
   }
 }

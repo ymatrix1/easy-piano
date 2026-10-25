@@ -313,29 +313,14 @@ class _ScorePageViewState extends State<ScorePageView>
   }
 
   void _onSeekSystem(ScoreSystem sys, double localX, ScorePageConfig config) {
-    final headerW = config.systemHeaderWidth;
-    double targetBeat = sys.startBeat;
-
-    if (localX <= headerW) {
-      targetBeat = sys.startBeat;
-    } else if (sys.measures.isNotEmpty) {
-      for (var i = 0; i < sys.measures.length; i++) {
-        final m = sys.measures[i];
-        final mLeft = headerW + sys.measureXs[i];
-        final mW = sys.measureWidths[i];
-        final mRight = mLeft + mW;
-
-        if (localX >= mLeft && localX <= mRight) {
-          final frac = mW > 0 ? ((localX - mLeft) / mW).clamp(0.0, 1.0) : 0.0;
-          targetBeat = m.startBeat + frac * (m.endBeat - m.startBeat);
-          break;
-        } else if (i == sys.measures.length - 1 && localX > mRight) {
-          targetBeat = m.endBeat;
-        }
-      }
-    }
-
-    targetBeat = targetBeat.clamp(0.0, widget.totalBeats);
+    final targetBeat = sys
+        .xToBeat(
+          localX,
+          config: config,
+          keyFifths: widget.keyFifths,
+          beatsPerBar: widget.beatsPerBar,
+        )
+        .clamp(0.0, widget.totalBeats);
 
     // Stop currently ringing notes so the jump to the new position is clean and silent
     pianoSynth.stopAll();
@@ -1008,13 +993,7 @@ class SystemStaffPainter extends CustomPainter {
     double space,
     double trebleBottomY,
     double bassTopY,
-  ) {
-    final step = diatonicStep(pitch);
-    final half = space / 2;
-    return onBass
-        ? bassTopY + (_bassTopStep - step) * half
-        : trebleBottomY - (step - _trebleBottomStep) * half;
-  }
+  ) => ScorePageLayout.noteY(pitch, onBass, space, trebleBottomY, bassTopY);
 
   void _drawGlyph(
     Canvas canvas,
@@ -1258,152 +1237,22 @@ class SystemStaffPainter extends CustomPainter {
       }
     }
 
-    // Flatten all notes in system and track measure note indices
-    final allSysNotes = <StaffNote>[];
-    final measureNoteIndices = <int, List<int>>{};
-
-    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
-      final m = system.measures[mIdx];
-      measureNoteIndices[mIdx] = [];
-      for (final note in m.notes) {
-        if (note.isSpacer) continue;
-        final globalIdx = allSysNotes.length;
-        allSysNotes.add(note);
-        measureNoteIndices[mIdx]!.add(globalIdx);
-      }
-    }
-
-    // 6. Accidentals computation matching Mode 1 StaffPainter
-    final noteAccidentals = StaffPainter.computeAccidentals(
-      notes: allSysNotes,
+    // 6-8. System layout: accidentals, chord grouping, staggering, dots, and measure note X positions
+    final layout = system.getLayout(
+      config: config,
       keyFifths: keyFifths,
       beatsPerBar: beatsPerBar,
-      onBass: (n) => n.leftHand,
     );
+    final allSysNotes = layout.allNotes;
+    final noteAccidentals = layout.noteAccidentals;
+    final chordGroups = layout.chordGroups;
+    final chordHeadOffsets = layout.chordHeadOffsets;
+    final chordStemDown = layout.chordStemDown;
+    final chordAccidentalOffsets = layout.chordAccidentalOffsets;
+    final chordDotOffsets = layout.chordDotOffsets;
+    final noteXsMap = layout.noteXs;
 
-    // 7. Chord grouping & displacements (MuseScore chordlayout.cpp & Gould rules)
-    final chordGroups = <(int, bool), List<int>>{};
-    for (var i = 0; i < allSysNotes.length; i++) {
-      final n = allSysNotes[i];
-      if (n.isRest || n.isSpacer) continue;
-      final beatInt = (n.beat * 1000).round();
-      chordGroups.putIfAbsent((beatInt, n.leftHand), () => []).add(i);
-    }
-
-    final chordHeadOffsets = <int, double>{};
-    final chordStemDown = <(int, bool), bool>{};
-
-    for (final entry in chordGroups.entries) {
-      final group = entry.value;
-      final onBass = entry.key.$2;
-      final chordPitches = group.map((idx) => allSysNotes[idx].pitch).toList();
-      final isDown = StemLayout.computeStemDown(
-        pitch: chordPitches.first,
-        onBass: onBass,
-        explicitStemDown: allSysNotes[group.first].stemDown,
-        chordPitches: chordPitches,
-      );
-      chordStemDown[entry.key] = isDown;
-
-      final offsets = ChordLayout.computeNoteheadOffsets(
-        notes: allSysNotes,
-        chordIndices: group,
-        stemDown: isDown,
-        space: space,
-      );
-      chordHeadOffsets.addAll(offsets);
-    }
-
-    // MuseScore parity: accidental staggering and dot conflict resolution for chords
-    final chordAccidentalOffsets = <int, double>{};
-    final chordDotOffsets = <int, (double, double)>{};
-    for (final entry in chordGroups.entries) {
-      final group = entry.value;
-      final onB = entry.key.$2;
-
-      final accOffsets = ChordLayout.computeAccidentalOffsets(
-        notes: allSysNotes,
-        chordIndices: group,
-        noteAccidentals: noteAccidentals,
-        noteY: (pitch, onBass) =>
-            _noteY(pitch, onBass, space, trebleBottomY, bassTopY),
-        onBass: onB,
-        space: space,
-      );
-      chordAccidentalOffsets.addAll(accOffsets);
-
-      final dotOffsets = ChordLayout.computeDotOffsets(
-        notes: allSysNotes,
-        chordIndices: group,
-        chordHeadOffsets: chordHeadOffsets,
-        space: space,
-      );
-      chordDotOffsets.addAll(dotOffsets);
-    }
-
-    // 8. Horizontal spacing per measure & tranquil playhead anchors (MuseScore measurelayout.cpp & horizontalspacing.cpp)
-    final noteXsMap = <int, double>{};
-    final measureAnchors = <int, List<(double, double)>>{};
-
-    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
-      final m = system.measures[mIdx];
-      final mLeft = headerW + system.measureXs[mIdx];
-      final mW = system.measureWidths[mIdx];
-      final indices = measureNoteIndices[mIdx] ?? const [];
-
-      final layoutRes = ScorePageLayout.layoutMeasureNotes(
-        allNotes: allSysNotes,
-        measureNoteIndices: indices,
-        measureStartBeat: m.startBeat,
-        measureEndBeat: m.endBeat,
-        measureLeft: mLeft,
-        measureWidth: mW,
-        chordHeadOffsets: chordHeadOffsets,
-        chordAccidentalOffsets: chordAccidentalOffsets,
-        chordDotOffsets: chordDotOffsets,
-        noteAccidentals: noteAccidentals,
-        chordGroups: chordGroups,
-        space: space,
-      );
-
-      noteXsMap.addAll(layoutRes.noteXs);
-      measureAnchors[mIdx] = layoutRes.anchors;
-    }
-
-    double beatToX(double b) {
-      if (system.measures.isEmpty) return headerW;
-      for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
-        final m = system.measures[mIdx];
-        final isLast = mIdx == system.measures.length - 1;
-        if (b >= m.startBeat &&
-            (b < m.endBeat || (isLast && b <= m.endBeat + 0.001))) {
-          final anchors = measureAnchors[mIdx];
-          if (anchors == null || anchors.isEmpty) {
-            final mLeft = headerW + system.measureXs[mIdx];
-            final mW = system.measureWidths[mIdx];
-            final rel =
-                (b - m.startBeat) / math.max(0.001, m.endBeat - m.startBeat);
-            return mLeft + rel * mW;
-          }
-          if (b <= anchors.first.$1) return anchors.first.$2;
-          if (b >= anchors.last.$1) return anchors.last.$2;
-          for (var a = 0; a < anchors.length - 1; a++) {
-            final a0 = anchors[a];
-            final a1 = anchors[a + 1];
-            if (b >= a0.$1 && b <= a1.$1) {
-              final span = a1.$1 - a0.$1;
-              final t = span > 1e-4 ? (b - a0.$1) / span : 0.0;
-              return a0.$2 + t * (a1.$2 - a0.$2);
-            }
-          }
-          return anchors.last.$2;
-        }
-      }
-      if (b < system.startBeat) {
-        return headerW;
-      }
-      return headerW + (system.measureXs.last + system.measureWidths.last);
-    }
+    double beatToX(double b) => layout.beatToX(b, system, config);
 
     // 9. Real-time Playhead Cursor
     if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
