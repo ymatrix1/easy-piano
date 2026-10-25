@@ -3,49 +3,115 @@ import 'dart:math' as math;
 
 import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/harmony_layout.dart';
+import 'package:easy_piano/ui/staff/ornament_layout.dart';
+import 'package:easy_piano/ui/staff/ottava_layout.dart';
 import 'package:easy_piano/ui/staff/pedal_layout.dart';
+import 'package:easy_piano/ui/staff/repeat_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics, hairpins, damper pedal spans, arpeggios and glissandi of one song,
-/// in beats.
+/// Dynamics, hairpins, ottava spanners, repeat barlines, voltas, navigation
+/// marks, damper pedal spans, ornaments, acciaccaturas, arpeggios, glissandi,
+/// chord symbols and lyrics of one song, in beats.
 class SongMarks {
   const SongMarks({
     required this.dynamics,
     required this.hairpins,
+    this.ottavas = const [],
+    this.repeatBarlines = const [],
+    this.voltas = const [],
+    this.navigation = const [],
     this.pedals = const [],
+    this.ornaments = const [],
+    this.acciaccaturas = const [],
     this.arpeggios = const [],
     this.glissandi = const [],
+    this.chords = const [],
+    this.lyrics = const [],
   });
 
-  static const empty = SongMarks(dynamics: [], hairpins: []);
+  static const empty = SongMarks(dynamics: [], hairpins: [], ottavas: []);
 
   final List<StaffDynamic> dynamics;
   final List<StaffHairpin> hairpins;
+
+  /// Ottava spanners (`8va` / `8vb`), one hand each.
+  final List<StaffOttava> ottavas;
+
+  /// Repeat signs (`|:`, `:|`, `:|:`) at bar lines.
+  final List<StaffRepeatBarline> repeatBarlines;
+
+  /// First and second endings.
+  final List<StaffVolta> voltas;
+
+  /// Segno, coda and jump marks above the staff.
+  final List<StaffNavigation> navigation;
+
   final List<StaffPedal> pedals;
+  final List<StaffOrnament> ornaments;
+  final List<StaffAcciaccatura> acciaccaturas;
   final List<StaffArpeggio> arpeggios;
   final List<StaffGlissando> glissandi;
+  final List<StaffChord> chords;
+  final List<StaffLyric> lyrics;
 }
 
-/// Reads dynamic and hairpin directives from a song JSON string.
+/// Reads dynamic, hairpin, ottava, repeat, navigation, chord and lyric
+/// directives from a song JSON string.
+
 ///
 /// Directives sit in a hand string like notes do (zero length):
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{ottava:"8va"}` / `{ottava:"8vb"}` start an ottava on that hand
+///   (see [OttavaKind]); `{ottava_end}` stops the hand's open ottava.
+/// - `{chord:"Am7"}` sets a chord symbol (see [ChordSymbol.parse]).
+/// - `{lyric:"Hel-"}` sets a syllable, `{lyric:"_"}` an extension (see
+///   [StaffLyric.fromDirective]).
+/// - `{trill}`, `{mordent}`, `{turn}` put an ornament on the chord at that beat.
+/// - `{acc:"D5"}` puts an acciaccatura (grace note, pitch D5) before the chord
+///   at that beat. `#` / `b` / `n` after the letter write an accidental.
 /// - `{ped}` presses the damper pedal. Pressed while already down, it is a
 ///   pedal change.
 /// - `{ped-up}` releases the damper pedal.
 /// - `{arp}`, `{arp:up}`, `{arp:down}` put an arpeggio on the chord at that beat.
 /// - `{gliss}` starts a glissando that ends at the next note of the same hand
 ///   (rests do not end it).
+/// - `{repeat_start}` / `{repeat_end}` put a repeat sign on the bar line at
+///   that beat (`|:` / `:|`; both on one bar line draw `:|:`).
+/// - `{volta: [1]}` / `{volta: [2]}` open a first or second ending on that bar
+///   line. `{volta_end}` closes it on a bar line without a repeat sign.
+/// - `{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_coda}` put a navigation mark
+///   above the staff at that beat.
 ///
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
-/// end of the song. A pedal span left down runs to the end of the song without
-/// a release. Unknown dynamic text is ignored here; lint is responsible for
-/// rejecting it in content.
+/// end of the song. A volta closes at the next `{repeat_end}` (its right end
+/// then has a hook), at the next volta, at `{volta_end}`, or at the end of the
+/// song (open end). Repeat and volta directives off a bar line are ignored.
+/// A pedal span left down runs to the end of the song without a release.
+/// Unknown dynamic text is ignored here; lint is responsible for rejecting it
+/// in content. Malformed ornament, chord and lyric text is ignored. An open
+/// ottava closes at the next ottava start or end on the same hand, or at the
+/// end of the song.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
+  static final _ottavaDirective = RegExp(r'^\{ottava:"(8va|8vb)"\}$');
+  static final _voltaDirective = RegExp(r'^\{volta:\s*\[\s*([12])\s*\]\s*\}$');
+  static final _ornamentDirective = RegExp(r'^\{(trill|mordent|turn)\}$');
+  static final _accDirective = RegExp(r'^\{acc:"([A-G])(#|b|n)?(\d+)"\}$');
   static final _arpDirective = RegExp(r'^\{arp(?::(up|down))?\}$');
+  static final _chordDirective = RegExp(r'^\{chord:"([^"]*)"\}$');
+  static final _lyricDirective = RegExp(r'^\{lyric:"([^"]*)"\}$');
+  static const _letterSemitone = {
+    'C': 0,
+    'D': 2,
+    'E': 4,
+    'F': 5,
+    'G': 7,
+    'A': 9,
+    'B': 11,
+  };
 
   static SongMarks parse(String songJson) {
     if (songJson.isEmpty) return SongMarks.empty;
@@ -62,11 +128,20 @@ abstract final class SongMarksParser {
 
       final events = <_Event>[];
       final index = <String, int>{};
+      final ornaments = <StaffOrnament>[];
+      final acciaccaturas = <StaffAcciaccatura>[];
+      // RH and RH2 (or LH and LH2) can repeat a mark at one beat: keep one.
+      final seenMarks = <String>{};
       final arpeggios = <StaffArpeggio>[];
       final glissandi = <StaffGlissando>[];
       // Open `{gliss}` per hand (key: left hand?). Closed by the next note.
       final pendingGliss = <bool, double>{};
       void add(_Event e) {
+        // Ottava events are per hand: never merged across hands.
+        if (e.kind == _Kind.ottavaStart || e.kind == _Kind.ottavaEnd) {
+          events.add(e);
+          return;
+        }
         // RH and LH often repeat the same directive at the same beat. Keep one
         // event, on the treble staff when either hand carries it.
         final key = '${e.beat}|${e.kind}|${e.mark}|${e.hairpin}';
@@ -101,6 +176,34 @@ abstract final class SongMarksParser {
             if (tok.isEmpty) continue;
             final beat = barStart + t;
             if (tok.startsWith('{')) {
+              final orn = _ornamentDirective.firstMatch(tok);
+              if (orn != null) {
+                final kind = OrnamentKind.values.byName(orn.group(1)!);
+                if (seenMarks.add('orn|$beat|$kind|$isLh')) {
+                  ornaments.add(StaffOrnament(beat, kind, leftHand: isLh));
+                }
+                continue;
+              }
+              final acc = _accDirective.firstMatch(tok);
+              if (acc != null) {
+                final pitch = _gracePitch(acc);
+                if (pitch != null && seenMarks.add('acc|$beat|$pitch|$isLh')) {
+                  acciaccaturas.add(
+                    StaffAcciaccatura(
+                      beat: beat,
+                      pitch: pitch,
+                      accidental: switch (acc.group(2)) {
+                        '#' => 'sharp',
+                        'b' => 'flat',
+                        'n' => 'natural',
+                        _ => null,
+                      },
+                      leftHand: isLh,
+                    ),
+                  );
+                }
+                continue;
+              }
               final arp = _arpDirective.firstMatch(tok);
               if (arp != null) {
                 arpeggios.add(
@@ -117,7 +220,7 @@ abstract final class SongMarksParser {
               } else if (tok == '{gliss}') {
                 pendingGliss[isLh] = beat;
               } else {
-                final e = _directive(tok, beat);
+                final e = _directive(tok, beat, num);
                 if (e != null) add(e.withHand(isLh));
               }
               continue;
@@ -146,11 +249,21 @@ abstract final class SongMarksParser {
         }
       }
 
-      final built = _build(events, totalBeats: rawBars.length * num);
+      final totalBeats = rawBars.length * num;
+      final structure = _buildStructure(events, totalBeats: totalBeats);
+      final built = _build(events, totalBeats: totalBeats);
       return SongMarks(
         dynamics: built.dynamics,
         hairpins: built.hairpins,
+        ottavas: built.ottavas,
         pedals: built.pedals,
+        chords: built.chords,
+        lyrics: built.lyrics,
+        repeatBarlines: structure.repeatBarlines,
+        voltas: structure.voltas,
+        navigation: structure.navigation,
+        ornaments: ornaments,
+        acciaccaturas: acciaccaturas,
         arpeggios: arpeggios,
         glissandi: glissandi,
       );
@@ -160,28 +273,194 @@ abstract final class SongMarksParser {
     }
   }
 
-  static _Event? _directive(String tok, double beat) {
+  /// MIDI pitch of an `{acc:"..."}` name (C4 = 60), or null when out of range.
+  static int? _gracePitch(RegExpMatch m) {
+    final letter = _letterSemitone[m.group(1)!]!;
+    final alter = switch (m.group(2)) {
+      '#' => 1,
+      'b' => -1,
+      _ => 0,
+    };
+    final octave = int.tryParse(m.group(3)!);
+    if (octave == null) return null;
+    final midi = (octave + 1) * 12 + letter + alter;
+    return midi >= 0 && midi <= 127 ? midi : null;
+  }
+
+  static _Event? _directive(String tok, double beat, double num) {
     final dyn = _dynDirective.firstMatch(tok);
     if (dyn != null) {
       final mark = dyn.group(1)!;
       if (DynamicsLayout.glyphsFor(mark) == null) return null;
       return _Event(beat, _Kind.dynamic, mark: mark);
     }
+    final ot = _ottavaDirective.firstMatch(tok);
+    if (ot != null) {
+      return _Event(beat, _Kind.ottavaStart, mark: ot.group(1));
+    }
+    final chord = _chordDirective.firstMatch(tok);
+    if (chord != null) {
+      final text = chord.group(1)!;
+      if (ChordSymbol.parse(text) == null) return null;
+      return _Event(beat, _Kind.chord, mark: text);
+    }
+    final lyric = _lyricDirective.firstMatch(tok);
+    if (lyric != null) {
+      final text = lyric.group(1)!;
+      if (StaffLyric.fromDirective(beat, text) == null) return null;
+      return _Event(beat, _Kind.lyric, mark: text);
+    }
+    final volta = _voltaDirective.firstMatch(tok);
+    if (volta != null) {
+      if (!_onBarLine(beat, num)) return null;
+      return _Event(beat, _Kind.voltaStart, mark: volta.group(1)!);
+    }
+    final nav = _navigationKinds[tok];
+    if (nav != null) {
+      return _Event(beat, _Kind.navigation, mark: nav.name);
+    }
+    final structural = switch (tok) {
+      '{repeat_start}' => _Kind.repeatStart,
+      '{repeat_end}' => _Kind.repeatEnd,
+      '{volta_end}' => _Kind.voltaEnd,
+      _ => null,
+    };
+    if (structural != null) {
+      if (!_onBarLine(beat, num)) return null;
+      return _Event(beat, structural);
+    }
     return switch (tok) {
       '{cresc}' => _Event(beat, _Kind.open, hairpin: HairpinKind.crescendo),
       '{dim}' => _Event(beat, _Kind.open, hairpin: HairpinKind.diminuendo),
       '{end}' => _Event(beat, _Kind.end),
+      '{ottava_end}' => _Event(beat, _Kind.ottavaEnd),
       '{ped}' => _Event(beat, _Kind.pedal),
       '{ped-up}' => _Event(beat, _Kind.pedalUp),
       _ => null,
     };
   }
 
+  static const _navigationKinds = {
+    '{segno}': NavigationKind.segno,
+    '{coda}': NavigationKind.coda,
+    '{dc_al_fine}': NavigationKind.dcAlFine,
+    '{ds_al_coda}': NavigationKind.dsAlCoda,
+  };
+
+  /// True when [beat] falls on the start of a bar (or the end of the last
+  /// bar). [num] is the bar length in beats.
+  static bool _onBarLine(double beat, double num) {
+    if (num <= 0) return false;
+    final k = beat / num;
+    return (k - k.roundToDouble()).abs() < 1e-6;
+  }
+
+  /// Repeat signs, voltas and navigation marks, from the structural events.
+  static ({
+    List<StaffRepeatBarline> repeatBarlines,
+    List<StaffVolta> voltas,
+    List<StaffNavigation> navigation,
+  })
+  _buildStructure(List<_Event> events, {required double totalBeats}) {
+    // Same-beat order: a repeat end and a volta end close the ending before a
+    // new volta or a repeat start opens at that bar line.
+    const priority = {
+      _Kind.repeatEnd: 0,
+      _Kind.voltaEnd: 1,
+      _Kind.voltaStart: 2,
+      _Kind.repeatStart: 3,
+      _Kind.navigation: 4,
+    };
+    final ordered =
+        [
+          for (final e in events)
+            if (priority.containsKey(e.kind)) e,
+        ]..sort((a, b) {
+          final c = a.beat.compareTo(b.beat);
+          return c != 0 ? c : priority[a.kind]!.compareTo(priority[b.kind]!);
+        });
+
+    // Repeat signs by bar line: the start and end flags of each beat.
+    final repeats = <int, ({double beat, bool start, bool end})>{};
+    void mark(double beat, {bool start = false, bool end = false}) {
+      final key = (beat * 1000).round();
+      final prev = repeats[key];
+      repeats[key] = (
+        beat: prev?.beat ?? beat,
+        start: (prev?.start ?? false) || start,
+        end: (prev?.end ?? false) || end,
+      );
+    }
+
+    final voltas = <StaffVolta>[];
+    final navigation = <StaffNavigation>[];
+    int? openNumber;
+    var openAt = 0.0;
+    void closeVolta(double at, {required bool closedEnd}) {
+      if (openNumber == null) return;
+      if (at - openAt > 1e-6) {
+        voltas.add(
+          StaffVolta(
+            startBeat: openAt,
+            endBeat: at,
+            number: openNumber!,
+            closedEnd: closedEnd,
+          ),
+        );
+      }
+      openNumber = null;
+    }
+
+    for (final e in ordered) {
+      switch (e.kind) {
+        case _Kind.repeatStart:
+          mark(e.beat, start: true);
+        case _Kind.repeatEnd:
+          mark(e.beat, end: true);
+          closeVolta(e.beat, closedEnd: true);
+        case _Kind.voltaEnd:
+          closeVolta(e.beat, closedEnd: false);
+        case _Kind.voltaStart:
+          closeVolta(e.beat, closedEnd: false);
+          openNumber = int.parse(e.mark!);
+          openAt = e.beat;
+        case _Kind.navigation:
+          navigation.add(
+            StaffNavigation(e.beat, NavigationKind.values.byName(e.mark!)),
+          );
+        case _Kind.dynamic ||
+            _Kind.open ||
+            _Kind.end ||
+            _Kind.pedal ||
+            _Kind.pedalUp ||
+            _Kind.chord ||
+            _Kind.lyric ||
+            _Kind.ottavaStart ||
+            _Kind.ottavaEnd:
+          break;
+      }
+    }
+    closeVolta(totalBeats, closedEnd: false);
+
+    final repeatBarlines = [
+      for (final r in repeats.values)
+        StaffRepeatBarline(r.beat, start: r.start, end: r.end),
+    ]..sort((a, b) => a.beat.compareTo(b.beat));
+    return (
+      repeatBarlines: repeatBarlines,
+      voltas: voltas,
+      navigation: navigation,
+    );
+  }
+
   static SongMarks _build(List<_Event> events, {required double totalBeats}) {
+    final ottavas = _buildOttavas(events, totalBeats: totalBeats);
     events.sort((a, b) => a.beat.compareTo(b.beat));
     final dynamics = <StaffDynamic>[];
     final hairpins = <StaffHairpin>[];
     final pedals = <StaffPedal>[];
+    final chords = <StaffChord>[];
+    final lyrics = <StaffLyric>[];
 
     HairpinKind? openKind;
     var openAt = 0.0;
@@ -245,15 +524,111 @@ abstract final class SongMarksParser {
           }
         case _Kind.pedalUp:
           closePedal(e.beat, released: true);
+        case _Kind.chord:
+          final symbol = ChordSymbol.parse(e.mark ?? '');
+          if (symbol != null) {
+            chords.add(StaffChord(e.beat, symbol, leftHand: e.leftHand));
+          }
+        case _Kind.lyric:
+          final lyric = StaffLyric.fromDirective(
+            e.beat,
+            e.mark ?? '',
+            leftHand: e.leftHand,
+          );
+          if (lyric != null) lyrics.add(lyric);
+        case _Kind.repeatStart ||
+            _Kind.repeatEnd ||
+            _Kind.voltaStart ||
+            _Kind.voltaEnd ||
+            _Kind.navigation ||
+            _Kind.ottavaStart ||
+            _Kind.ottavaEnd:
+          // Repeats, voltas and ottavas are built in their own passes.
+          break;
       }
     }
     closeAt(totalBeats);
     closePedal(totalBeats, released: false);
-    return SongMarks(dynamics: dynamics, hairpins: hairpins, pedals: pedals);
+    return SongMarks(
+      dynamics: dynamics,
+      hairpins: hairpins,
+      ottavas: ottavas,
+      pedals: pedals,
+      chords: chords,
+      lyrics: lyrics,
+    );
+  }
+
+  /// Ottava spans per hand. Events are taken in insertion order (source order)
+  /// for equal beats, so `{ottava_end}` then `{ottava:"8va"}` on one beat
+  /// restarts the spanner, while a start with nothing to end just opens one.
+  static List<StaffOttava> _buildOttavas(
+    List<_Event> events, {
+    required double totalBeats,
+  }) {
+    final ordered =
+        events.indexed
+            .where(
+              (p) =>
+                  p.$2.kind == _Kind.ottavaStart ||
+                  p.$2.kind == _Kind.ottavaEnd,
+            )
+            .toList()
+          ..sort((a, b) {
+            final c = a.$2.beat.compareTo(b.$2.beat);
+            return c != 0 ? c : a.$1.compareTo(b.$1);
+          });
+
+    final out = <StaffOttava>[];
+    // Open spanner per hand: (kind, start beat).
+    final open = <bool, (OttavaKind, double)>{};
+
+    void closeHand(bool leftHand, double beat) {
+      final cur = open.remove(leftHand);
+      if (cur == null) return;
+      final end = math.min(beat, totalBeats);
+      // A zero-length spanner draws nothing.
+      if (end > cur.$2) {
+        out.add(
+          StaffOttava(
+            kind: cur.$1,
+            startBeat: cur.$2,
+            endBeat: end,
+            leftHand: leftHand,
+          ),
+        );
+      }
+    }
+
+    for (final (_, e) in ordered) {
+      closeHand(e.leftHand, e.beat);
+      if (e.kind == _Kind.ottavaStart) {
+        final kind = e.mark == '8vb' ? OttavaKind.bassa : OttavaKind.alta;
+        open[e.leftHand] = (kind, e.beat);
+      }
+    }
+    closeHand(false, totalBeats);
+    closeHand(true, totalBeats);
+    return out;
   }
 }
 
-enum _Kind { dynamic, open, end, pedal, pedalUp }
+enum _Kind {
+  dynamic,
+  open,
+  end,
+  pedal,
+  pedalUp,
+  repeatStart,
+  repeatEnd,
+  voltaStart,
+  voltaEnd,
+  navigation,
+  chord,
+  lyric,
+  ottavaStart,
+  ottavaEnd,
+}
 
 class _Event {
   const _Event(
