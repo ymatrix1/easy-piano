@@ -299,6 +299,45 @@ class _ScorePageViewState extends State<ScorePageView>
     }
   }
 
+  void _onSeekSystem(ScoreSystem sys, double localX, ScorePageConfig config) {
+    final headerW = config.systemHeaderWidth;
+    double targetBeat = sys.startBeat;
+
+    if (localX <= headerW) {
+      targetBeat = sys.startBeat;
+    } else if (sys.measures.isNotEmpty) {
+      for (var i = 0; i < sys.measures.length; i++) {
+        final m = sys.measures[i];
+        final mLeft = headerW + sys.measureXs[i];
+        final mW = sys.measureWidths[i];
+        final mRight = mLeft + mW;
+
+        if (localX >= mLeft && localX <= mRight) {
+          final frac = mW > 0 ? ((localX - mLeft) / mW).clamp(0.0, 1.0) : 0.0;
+          targetBeat = m.startBeat + frac * (m.endBeat - m.startBeat);
+          break;
+        } else if (i == sys.measures.length - 1 && localX > mRight) {
+          targetBeat = m.endBeat;
+        }
+      }
+    }
+
+    targetBeat = targetBeat.clamp(0.0, widget.totalBeats);
+
+    // Audio preview of notes near clicked position (sightread.dev parity)
+    for (final n in widget.notes) {
+      if (n.isRest || n.isSpacer) continue;
+      if ((n.beat - targetBeat).abs() < 0.25) {
+        pianoSynth.noteOn(n.pitch, velocity: 85);
+      }
+    }
+
+    setState(() {
+      _currentBeat = targetBeat;
+      _lastMetronomeBeat = targetBeat.floorToDouble() - 1.0;
+    });
+  }
+
   void _printScore(List<ScorePage> pages, ScorePageConfig config) {
     ScorePdfPrinter.printScore(
       pages: pages,
@@ -427,18 +466,35 @@ class _ScorePageViewState extends State<ScorePageView>
                                   height: config.grandStaffHeight * _scale,
                                   child: FittedBox(
                                     fit: BoxFit.contain,
-                                    child: CustomPaint(
-                                      size: Size(
-                                        config.printableWidth,
-                                        config.grandStaffHeight,
-                                      ),
-                                      painter: SystemStaffPainter(
-                                        system: systems[s],
-                                        config: config,
-                                        staves: widget.staves,
-                                        keyFifths: widget.keyFifths,
-                                        beatsPerBar: widget.beatsPerBar,
-                                        playheadBeat: _currentBeat,
+                                    child: MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTapDown: (details) => _onSeekSystem(
+                                          systems[s],
+                                          details.localPosition.dx,
+                                          config,
+                                        ),
+                                        onHorizontalDragUpdate: (details) =>
+                                            _onSeekSystem(
+                                              systems[s],
+                                              details.localPosition.dx,
+                                              config,
+                                            ),
+                                        child: CustomPaint(
+                                          size: Size(
+                                            config.printableWidth,
+                                            config.grandStaffHeight,
+                                          ),
+                                          painter: SystemStaffPainter(
+                                            system: systems[s],
+                                            config: config,
+                                            staves: widget.staves,
+                                            keyFifths: widget.keyFifths,
+                                            beatsPerBar: widget.beatsPerBar,
+                                            playheadBeat: _currentBeat,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

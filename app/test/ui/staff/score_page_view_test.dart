@@ -63,5 +63,40 @@ void main() {
         expect(find.byType(CustomPaint), findsWidgets);
       },
     );
+
+    testWidgets(
+      'tapping on a score system seeks playhead and updates current measure',
+      (tester) async {
+        final notes = List.generate(
+          16,
+          (i) => StaffNote(60 + (i % 8), i * 1.0, 1.0, leftHand: i.isOdd),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ScorePageView(
+              notes: notes,
+              totalBeats: 16.0,
+              beatsPerBar: 4.0,
+              title: 'Tap Seek Test',
+            ),
+          ),
+        );
+
+        expect(find.text('MEASURE 1'), findsOneWidget);
+
+        // Tap the right side of the first staff system (measure 3 or 4)
+        final systemPaint = find.byWidgetPredicate(
+          (w) => w is CustomPaint && w.painter is SystemStaffPainter,
+        ).first;
+        await tester.tapAt(
+          tester.getCenter(systemPaint) + const Offset(150, 0),
+        );
+        await tester.pump();
+
+        // The measure indicator should update past measure 1
+        expect(find.text('MEASURE 1'), findsNothing);
+      },
+    );
   });
 }
