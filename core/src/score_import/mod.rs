@@ -8,6 +8,7 @@ pub mod abc;
 pub mod lilypond;
 pub mod midi;
 pub mod musicxml;
+pub mod song;
 
 /// Which hand a note is played by.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
