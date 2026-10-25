@@ -135,7 +135,7 @@ fn open_stream(
     };
 
     let err = |e| eprintln!("audio stream error: {e}");
-    let buffer_size = config.buffer_size().clone();
+    let buffer_size = *config.buffer_size();
     let mut cfg: cpal::StreamConfig = config.into();
     if let cpal::SupportedBufferSize::Range { min, max } = buffer_size {
         let desired = 512.clamp(min, max);
