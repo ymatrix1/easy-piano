@@ -2066,44 +2066,43 @@ class StaffPainter extends CustomPainter {
       final idx = chordAt(a.beat, a.leftHand);
       if (idx.isEmpty) continue;
       final onBass = onBassOf(a.leftHand);
-      var top = double.infinity;
-      var bottom = double.negativeInfinity;
-      final heads = <({double headX, bool hasAccidental})>[];
-      for (final i in idx) {
-        final y = _noteY(notes[i].pitch, onBass, l);
-        top = math.min(top, y - ArpeggioLayout.noteheadHalfHeightSp * space);
-        bottom = math.max(
-          bottom,
-          y + ArpeggioLayout.noteheadHalfHeightSp * space,
-        );
-        heads.add((headX: xOf(i), hasAccidental: notes[i].accidental != null));
-      }
-      final ox = ArpeggioLayout.originX(
-        leftmostInkX: ArpeggioLayout.leftmostInk(notes: heads, space: space),
+      final pitches = [for (final i in idx) notes[i].pitch];
+      final hiPitch = pitches.reduce((p, q) => p > q ? p : q);
+      final loPitch = pitches.reduce((p, q) => p < q ? p : q);
+      // Staff line indices as MuseScore counts them (0 = top staff line).
+      final topStep = diatonicStep(onBass ? 57 : 77); // A3 bass, F5 treble
+      final v = ArpeggioLayout.verticalBounds(
+        highestHeadY: _noteY(hiPitch, onBass, l),
+        lowestHeadY: _noteY(loPitch, onBass, l),
+        topLine: ArpeggioLayout.staffLine(
+          step: diatonicStep(hiPitch),
+          topLineStep: topStep,
+        ),
+        bottomLine: ArpeggioLayout.staffLine(
+          step: diatonicStep(loPitch),
+          topLineStep: topStep,
+        ),
         space: space,
       );
-      for (final by in ArpeggioLayout.wiggleBaselines(
-        top: top,
-        bottom: bottom,
-        space: space,
-      )) {
-        _drawGlyph(
-          canvas,
-          ArpeggioLayout.wiggleGlyph,
-          glyphSize,
-          Offset(ox, by),
-          color,
-        );
-      }
-      final arrow = ArpeggioLayout.arrowGlyph(a.direction);
-      final arrowY = ArpeggioLayout.arrowBaseline(
+      final heads = [
+        for (final i in idx)
+          (headX: xOf(i), hasAccidental: notes[i].accidental != null),
+      ];
+      final glyphs = ArpeggioLayout.layoutGlyphs(
         direction: a.direction,
-        top: top,
-        bottom: bottom,
+        top: v.top,
+        bottom: v.bottom,
+        rightEdge: ArpeggioLayout.rightEdge(notes: heads, space: space),
         space: space,
       );
-      if (arrow != null && arrowY != null) {
-        _drawGlyph(canvas, arrow, glyphSize, Offset(ox, arrowY), color);
+      for (final g in glyphs) {
+        // Glyphs are rotated about their baseline-left origin (tlayout.cpp
+        // "string is rotated -90 degrees" / "+90 degrees").
+        canvas.save();
+        canvas.translate(g.origin.dx, g.origin.dy);
+        canvas.rotate(g.angle);
+        _drawGlyph(canvas, g.glyph, glyphSize, Offset.zero, color);
+        canvas.restore();
       }
     }
 

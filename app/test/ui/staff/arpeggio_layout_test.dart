@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:easy_piano/ui/staff/staff_note.dart';
@@ -8,95 +9,152 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('ArpeggioLayout geometry', () {
-    test('wiggle glyphs stack from top to bottom, at least one', () {
-      final flat = ArpeggioLayout.wiggleBaselines(
-        top: 100,
-        bottom: 100,
-        space: 10,
-      );
-      expect(flat, hasLength(1));
+  group('ArpeggioLayout geometry (values from MuseScore v450 and Leland)', () {
+    const space = 10.0;
 
-      // 60 / (0.656 * 10) = 9.1 glyphs, so ten reach past the bottom.
-      final ys = ArpeggioLayout.wiggleBaselines(top: 0, bottom: 60, space: 10);
-      expect(ys, hasLength(10));
-      expect(ys.first, closeTo(6.56, 1e-9));
-      expect(ys.last, closeTo(65.6, 1e-9));
-    });
-
-    test('glyph right edge sits clearanceSp left of the leftmost ink', () {
-      final ox = ArpeggioLayout.originX(leftmostInkX: 100, space: 10);
+    test('staff line index: 0 is the top staff line, odd is a space', () {
+      // Treble top line F5 (step of MIDI 77) is line 0, bottom line E4 is 8.
+      final f5 = StaffPainter.diatonicStep(77);
+      expect(ArpeggioLayout.staffLine(step: f5, topLineStep: f5), 0);
       expect(
-        ox + ArpeggioLayout.wiggleRightSp * 10,
-        closeTo(100 - ArpeggioLayout.clearanceSp * 10, 1e-9),
-      );
-    });
-
-    test('an accidental moves the leftmost ink left, plain heads do not', () {
-      final plain = ArpeggioLayout.leftmostInk(
-        notes: [
-          (headX: 50, hasAccidental: false),
-          (headX: 52, hasAccidental: false),
-        ],
-        space: 10,
-      );
-      expect(plain, 50);
-
-      final withSharp = ArpeggioLayout.leftmostInk(
-        notes: [
-          (headX: 50, hasAccidental: false),
-          (headX: 52, hasAccidental: true),
-        ],
-        space: 10,
-      );
-      expect(withSharp, 52 - ArpeggioLayout.accidentalWidthSp * 10);
-    });
-
-    test('arrows: up above the stack, down below it, plain has none', () {
-      expect(
-        ArpeggioLayout.arrowBaseline(
-          direction: ArpeggioDirection.plain,
-          top: 50,
-          bottom: 80,
-          space: 10,
+        ArpeggioLayout.staffLine(
+          step: StaffPainter.diatonicStep(64),
+          topLineStep: f5,
         ),
-        isNull,
+        8,
       );
-      expect(ArpeggioLayout.arrowGlyph(ArpeggioDirection.plain), isNull);
+    });
 
-      // Up: arrow body (0.332 sp below its baseline) ends at the stack top.
-      final up = ArpeggioLayout.arrowBaseline(
+    test('vertical bounds run from the head edges (headHeight / 2)', () {
+      // 1.06 sp head (Leland uniE0A4 bounds) -> half 0.53 sp = 5.3 px.
+      final v = ArpeggioLayout.verticalBounds(
+        highestHeadY: 100,
+        lowestHeadY: 140,
+        topLine: 2,
+        bottomLine: 6,
+        space: space,
+      );
+      expect(v.top, closeTo(100 - 5.3, 1e-9));
+      expect(v.bottom, closeTo(140 + 5.3, 1e-9));
+    });
+
+    test(
+      'top rises 0.4 sp when both ends are on spaces, 0.25 sp otherwise',
+      () {
+        // calcTop: top note on a space (odd line) inside the staff.
+        final spaceBoth = ArpeggioLayout.verticalBounds(
+          highestHeadY: 100,
+          lowestHeadY: 140,
+          topLine: 1,
+          bottomLine: 3,
+          space: space,
+        );
+        expect(spaceBoth.top, closeTo(100 - 5.3 - 0.4 * space, 1e-9));
+
+        final spaceLine = ArpeggioLayout.verticalBounds(
+          highestHeadY: 100,
+          lowestHeadY: 140,
+          topLine: 1,
+          bottomLine: 2,
+          space: space,
+        );
+        expect(spaceLine.top, closeTo(100 - 5.3 - 0.25 * space, 1e-9));
+
+        // Top note on a line: no rise.
+        final onLine = ArpeggioLayout.verticalBounds(
+          highestHeadY: 100,
+          lowestHeadY: 140,
+          topLine: 2,
+          bottomLine: 3,
+          space: space,
+        );
+        expect(onLine.top, closeTo(100 - 5.3, 1e-9));
+      },
+    );
+
+    test('right edge: 0.4 sp left of the head, or 0.3 sp left of a sharp', () {
+      expect(
+        ArpeggioLayout.rightEdge(
+          notes: [(headX: 100, hasAccidental: false)],
+          space: space,
+        ),
+        closeTo(100 - 0.4 * space, 1e-9),
+      );
+      // Sharp at headX - 1.3 sp, then 0.3 sp more: 100 - 13 - 3 = 84.
+      expect(
+        ArpeggioLayout.rightEdge(
+          notes: [(headX: 100, hasAccidental: true)],
+          space: space,
+        ),
+        closeTo(100 - 13 - 0.3 * space, 1e-9),
+      );
+    });
+
+    test('plain wiggle: fills + end, stacked upwards by the 0.88 sp advance', () {
+      // h = 5 sp: fills = round((5 - 0.88) / 0.88) = 5, then the end glyph.
+      final gs = ArpeggioLayout.layoutGlyphs(
+        direction: ArpeggioDirection.plain,
+        top: 0,
+        bottom: 50,
+        rightEdge: 100,
+        space: space,
+      );
+      expect(gs, hasLength(6));
+      expect(gs.every((g) => g.glyph == ArpeggioLayout.wiggleGlyph), isTrue);
+      expect(gs.every((g) => g.angle == -math.pi / 2), isTrue);
+      // First origin: 0.088 sp above the bottom. Next ones 8.8 px higher.
+      expect(gs.first.origin.dy, closeTo(50 - 0.88, 1e-9));
+      expect(gs[1].origin.dy - gs.first.origin.dy, closeTo(-8.8, 1e-9));
+      // Right-aligned to the edge: the wiggle ink is 0 .. -0.656 sp left of it.
+      expect(gs.first.origin.dx, closeTo(100, 1e-9));
+    });
+
+    test('up arrow ends with U+EAAD rotated -90 at the top', () {
+      final gs = ArpeggioLayout.layoutGlyphs(
         direction: ArpeggioDirection.up,
-        top: 50,
-        bottom: 80,
-        space: 10,
+        top: 0,
+        bottom: 50,
+        rightEdge: 100,
+        space: space,
       );
-      expect(up! + ArpeggioLayout.arrowBelowSp * 10, closeTo(50, 1e-9));
-      expect(ArpeggioLayout.arrowGlyph(ArpeggioDirection.up), '\uEAAD');
+      expect(gs.last.glyph, ArpeggioLayout.arrowGlyph);
+      expect(gs.last.angle, -math.pi / 2);
+      expect(gs.last.origin.dy, lessThan(gs.first.origin.dy));
+      // The arrow reaches 0.332 sp right of the column origin.
+      expect(gs.first.origin.dx, closeTo(100 - 3.32, 1e-9));
+    });
 
-      // Down: arrow top (1.04 sp above its baseline) starts at the stack bottom.
-      final down = ArpeggioLayout.arrowBaseline(
+    test('down arrow reuses U+EAAD rotated +90 and stacks downwards', () {
+      final gs = ArpeggioLayout.layoutGlyphs(
         direction: ArpeggioDirection.down,
-        top: 50,
-        bottom: 80,
-        space: 10,
+        top: 0,
+        bottom: 50,
+        rightEdge: 100,
+        space: space,
       );
-      expect(down! - ArpeggioLayout.arrowAboveSp * 10, closeTo(80, 1e-9));
-      expect(ArpeggioLayout.arrowGlyph(ArpeggioDirection.down), '\uEAAE');
+      expect(gs.last.glyph, ArpeggioLayout.arrowGlyph);
+      expect(gs.last.angle, math.pi / 2);
+      expect(gs.last.origin.dy, greaterThan(gs.first.origin.dy));
+      // Down arrow reaches 1.04 sp to the right of its origin.
+      expect(gs.first.origin.dx, closeTo(100 - 10.4, 1e-9));
     });
 
-    test('glissando joins the two heads with a gap at each end', () {
-      final ends = ArpeggioLayout.glissandoEnds(
-        startHead: const Offset(100, 50),
-        endHead: const Offset(200, 40),
-        space: 10,
-      );
-      expect(ends, isNotNull);
-      expect(ends!.from.dx, closeTo(100 + 1.18 * 10 / 2, 1e-9));
-      expect(ends.to.dx, closeTo(200 - 0.3 * 10, 1e-9));
-      expect(ends.from.dy, 50);
-      expect(ends.to.dy, 40);
-    });
+    test(
+      'glissando starts at the start head edge and ends at the end head',
+      () {
+        final ends = ArpeggioLayout.glissandoEnds(
+          startHead: const Offset(100, 50),
+          endHead: const Offset(200, 40),
+          space: 10,
+        );
+        expect(ends, isNotNull);
+        // Head width 1.3 sp (Leland uniE0A4 advance 325 units).
+        expect(ends!.from.dx, closeTo(100 + 1.3 * 10, 1e-9));
+        expect(ends.to.dx, closeTo(200, 1e-9));
+        expect(ends.from.dy, 50);
+        expect(ends.to.dy, 40);
+      },
+    );
 
     test('glissando to a note on the left draws nothing', () {
       expect(

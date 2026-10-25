@@ -81,10 +81,12 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 - **Modern Bracket:** Continuous line with inverted notch on pedal changes (`___/\___|`), stroke width `space * 0.12`.
 
 ### 3. Arpeggios and Glissandi (`arpeggio_layout.dart`)
-- **Reference:** MuseScore `arpeggiolayout.cpp`.
-- **Status:** Delivered in PR 3 (`piano-i235`): plain, up and down arpeggios (`{arp}`, `{arp:up}`, `{arp:down}`) and straight glissandi (`{gliss}`). Wavy glissando is not done.
-- **Arpeggio:** Glyph `wiggleArpeggiatoUp` (U+EAA9) stacked vertically over the chord's notehead span (top head minus 0.5 sp to bottom head plus 0.5 sp). Its right edge sits `space * 0.8` left of the leftmost ink (accidental or notehead). Directed arpeggios add `wiggleArpeggiatoUpArrow` (U+EAAD) above or `wiggleArpeggiatoDownArrow` (U+EAAE) below.
-- **Glissando:** Straight line from the note of the start chord to the note of the end chord that are closest in pitch, with a small gap at each end, and centred italic label *gliss.* above.
+- **Reference:** MuseScore `rendering/score/arpeggiolayout.cpp` (`computeHeight`, `calcTop`, `insetDistance`, `clearAccidentals`), `rendering/score/tlayout.cpp` (`layoutArpeggio`, `symbolLine`, `layoutGlissandoSegment`), `rendering/score/tdraw.cpp` (`draw(Arpeggio)`), `rendering/paddingtable.cpp:166-168`, `data/styles/legacy-style-defaults-v450.mss:441-442, 1169-1170`.
+- **Status:** Delivered in PR 3 (`piano-i235`), reviewed against the source in the same PR: plain, up and down arpeggios (`{arp}`, `{arp:up}`, `{arp:down}`) and straight glissandi (`{gliss}`). Wavy glissando is not done. Glissando label placement is not yet checked against MuseScore.
+- **Column:** the wiggle is `wiggleArpeggiatoUp` (U+EAA9), rotated -90 degrees for plain and up, stacked upwards from the bottom at a 0.88 sp advance (`uniEAA9` advance 220 units). Fill count is `round((h - endAdvance) / 0.88)`, then one end glyph. Up ends with `wiggleArpeggiatoUpArrow` (U+EAAD) rotated -90. Down stacks downwards, rotated +90, and also ends with U+EAAD (MuseScore does not use a separate down-arrow glyph).
+- **Vertical span:** from the top head's top edge to the bottom head's bottom edge (head height 1.06 sp, Leland `uniE0A4`). A top note on a space rises 0.4 sp (both ends on spaces) or 0.25 sp (`calcTop`).
+- **Horizontal:** right edge at `arpeggioNoteDistance` 0.4 sp left of each notehead, or `arpeggioAccidentalDistance` 0.3 sp left of an accidental (`paddingtable.cpp:166-168`). MuseScore's `insetDistance` refinements are not implemented.
+- **Glissando:** straight line from the right edge of the start head to the left edge of the end head (the closest pair in pitch is a local choice, not a MuseScore rule). Line width 0.15 sp (`glissandoLineWidth`). Label text `gliss.` (`glissandoText`).
 - **Codepoints:** checked against `references/MuseScore/fonts/smufl/glyphnames.json` and the app's `Leland.otf` cmap. U+E634 is `arpeggiatoUp` (a different glyph), not the wiggle.
 
 ### 4. Grace Notes & Ornaments (`ornament_layout.dart`)

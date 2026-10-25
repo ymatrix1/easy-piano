@@ -2,8 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'dynamics_layout.dart';
-
 /// Arpeggio direction: a plain wiggle, or a wiggle with an arrowhead.
 enum ArpeggioDirection { plain, up, down }
 
@@ -37,131 +35,215 @@ class StaffGlissando {
   final bool leftHand;
 }
 
+/// One glyph of an arpeggio: drawn with its baseline-left point at [origin]
+/// and rotated by [angle] radians about that point.
+class ArpeggioGlyph {
+  const ArpeggioGlyph(this.glyph, this.origin, this.angle);
+
+  final String glyph;
+  final Offset origin;
+  final double angle;
+}
+
 /// Arpeggio and glissando geometry. Pure functions, no painting state.
 ///
-/// Follows MuseScore `rendering/score/arpeggiolayout.cpp` (wiggle stacked
-/// along the chord, arrowheads at the ends, clearance from the chord) and
-/// `tlayout.cpp` (glissando line with an italic `gliss.` label).
+/// Follows MuseScore `rendering/score/arpeggiolayout.cpp` and
+/// `rendering/score/tlayout.cpp` (`layoutArpeggio`, `layoutGlissandoSegment`).
+/// Every constant names its source. Values in staff spaces (sp).
 ///
-/// Glyph codepoints are SMuFL names from `fonts/smufl/glyphnames.json`.
-/// Metrics come from `fonts/leland/leland_metadata.json`.
+/// Font metrics come from `app/assets/fonts/Leland.otf` (font units / 250 =
+/// sp, em = 4 sp). Style values come from
+/// `references/MuseScore/src/engraving/data/styles/legacy-style-defaults-v450.mss`.
 abstract final class ArpeggioLayout {
-  /// `wiggleArpeggiatoUp` (U+EAA9): the vertical wiggle, bbox x -0.088..0.968,
-  /// y 0..0.656 staff spaces.
+  // --- Glyphs (SMuFL, MuseScore `glyphnames.json`) -------------------------
+
+  /// `wiggleArpeggiatoUp` U+EAA9: one wiggle segment. Advance 220 units.
   static const wiggleGlyph = '\uEAA9';
 
-  /// `wiggleArpeggiatoUpArrow` (U+EAAD): wiggle with arrowhead at the top.
-  static const arrowUpGlyph = '\uEAAD';
+  /// `wiggleArpeggiatoUpArrow` U+EAAD: wiggle with arrowhead. Advance 259.
+  /// MuseScore uses this one for both UP (rotated -90) and DOWN (rotated +90)
+  /// (`tlayout.cpp` layoutArpeggio, the `UP` and `DOWN` cases).
+  static const arrowGlyph = '\uEAAD';
 
-  /// `wiggleArpeggiatoDownArrow` (U+EAAE): wiggle with arrowhead at the bottom.
-  static const arrowDownGlyph = '\uEAAE';
+  /// Advance of [wiggleGlyph] in sp (`uniEAA9` advance 220 / 250). Each fill
+  /// glyph moves the column by this much.
+  static const wiggleAdvanceSp = 0.88;
 
-  /// Right edge of the wiggle glyph bbox, in staff spaces.
-  static const wiggleRightSp = 0.968;
+  /// Advance of [arrowGlyph] in sp (`uniEAAD` advance 259 / 250).
+  static const arrowAdvanceSp = 1.036;
 
-  /// Height of one wiggle glyph, in staff spaces. Stacks step by this much.
-  static const wiggleHeightSp = 0.656;
+  /// Ink left of the wiggle glyph along its advance, in sp (`uniEAA9` bounds
+  /// x -22 units / 250). Font bounds, see the comment in [layoutGlyphs].
+  static const _wiggleInkMinX = -0.088;
 
-  /// Arrow glyph extent above the baseline (bbox NE y) and below (bbox SW y).
-  static const arrowAboveSp = 1.04;
-  static const arrowBelowSp = 0.332;
+  // --- Notehead (Leland `uniE0A4`, black notehead) -------------------------
 
-  /// Clearance between the wiggle and the leftmost accidental or notehead,
-  /// in staff spaces (MuseScore `arpeggioNoteDistance` 0.8 sp).
-  static const clearanceSp = 0.8;
+  /// Black notehead height: bounds y -133..132 units = 1.06 sp.
+  static const headHeightSp = 1.06;
 
-  /// Half the height of a black notehead, in staff spaces. A chord's wiggle
-  /// spans from its topmost to its bottommost head, each padded by this.
-  static const noteheadHalfHeightSp = 0.5;
+  /// Black notehead width: advance 325 units = 1.3 sp.
+  static const headWidthSp = 1.3;
 
-  /// Extra space the accidental takes to the left of its notehead, in staff
-  /// spaces. Used by the painter to find the leftmost ink of a chord.
-  static const accidentalWidthSp = 1.0;
+  // --- Spacing (legacy-style-defaults-v450.mss) ----------------------------
 
-  /// Text drawn above a glissando line.
+  /// `arpeggioNoteDistance` = 0.4 sp (line 441). Padding ARPEGGIO-NOTE in
+  /// `paddingtable.cpp:166`, used as the gap to the notehead.
+  static const noteDistanceSp = 0.4;
+
+  /// `arpeggioAccidentalDistance` = 0.3 sp (line 442). Padding
+  /// ARPEGGIO-ACCIDENTAL in `paddingtable.cpp:168`.
+  static const accidentalDistanceSp = 0.3;
+
+  /// Left edge of an accidental relative to its notehead, in sp. Matches the
+  /// accidental offset used by `StaffPainter` (`space * 1.3`).
+  static const accidentalWidthSp = 1.3;
+
+  // --- Vertical extent (`ArpeggioLayout::calcTop`, arpeggiolayout.cpp) ----
+
+  /// Extra rise when the top note sits on a space and the bottom note sits
+  /// on a space too (`arpeggiolayout.cpp:346`, `0.4 * spatium`).
+  static const topRiseDownSpaceSp = 0.4;
+
+  /// Extra rise when the top note sits on a space and the bottom note on a
+  /// line (`arpeggiolayout.cpp:348`, `0.25 * spatium`).
+  static const topRiseDownLineSp = 0.25;
+
+  /// Bottom staff line index in MuseScore numbering (5 lines: 0..8).
+  static const _bottomLine = 8;
+
+  // --- Glissando (legacy-style-defaults-v450.mss) --------------------------
+
+  /// `glissandoLineWidth` = 0.15 sp (line 1169).
+  static const glissandoWidthSp = 0.15;
+
+  /// `glissandoText` = "gliss." (line 1170), shown (`glissandoShowText` 1).
   static const glissandoLabel = 'gliss.';
 
-  /// Glissando line thickness, in staff spaces.
-  static const glissandoWidthSp = 0.12;
+  // --- Horizontal placement ------------------------------------------------
 
-  /// Gap between the note edges and the ends of a glissando line, in spaces.
-  static const _glissandoEndGapSp = 0.3;
+  /// Right edge of the arpeggio's ink, relative to its origin, for each
+  /// direction. Used to right-align the column so the arrowhead does not
+  /// cross the chord. Plain: wiggle x max = 0. Up: arrow x max = 0.332
+  /// (arrow ink min x mirrored). Down: arrow x max = 1.04 (see [_inkRightSp]).
+  static double _inkRightSp(ArpeggioDirection d) => switch (d) {
+    ArpeggioDirection.plain => 0.0,
+    ArpeggioDirection.up => 0.332,
+    ArpeggioDirection.down => 1.04,
+  };
 
-  /// Left edge of the arpeggio given the leftmost ink of its chord.
-  ///
-  /// The glyph origin (its baseline-left point) is placed so that the glyph's
-  /// right edge sits [clearanceSp] to the left of [leftmostInkX].
-  static double originX({
-    required double leftmostInkX,
-    required double space,
-  }) => leftmostInkX - space * (clearanceSp + wiggleRightSp);
-
-  /// Leftmost ink of a chord, given the notehead x of each note and whether
-  /// it has an accidental.
-  static double leftmostInk({
+  /// Right edge of the arpeggio column given the chord's noteheads: the
+  /// column must sit [noteDistanceSp] left of every notehead and
+  /// [accidentalDistanceSp] left of every accidental (the notes' shape is
+  /// spaced by `chordlayout.cpp:207`, accidentals by `arpeggiolayout.cpp`
+  /// `clearAccidentals`). Takes the leftmost of those limits.
+  static double rightEdge({
     required Iterable<({double headX, bool hasAccidental})> notes,
     required double space,
   }) {
-    var left = double.infinity;
+    var edge = double.infinity;
     for (final n in notes) {
-      final x = n.hasAccidental ? n.headX - space * accidentalWidthSp : n.headX;
-      left = math.min(left, x);
+      edge = math.min(edge, n.headX - noteDistanceSp * space);
+      if (n.hasAccidental) {
+        final accLeft = n.headX - accidentalWidthSp * space;
+        edge = math.min(edge, accLeft - accidentalDistanceSp * space);
+      }
     }
-    return left;
+    return edge;
   }
 
-  /// Baseline y of each wiggle glyph, stacked from [top] down to [bottom]
-  /// (screen y grows downwards). Always at least one glyph.
-  static List<double> wiggleBaselines({
-    required double top,
-    required double bottom,
+  /// Top and bottom of the arpeggio column, in screen y.
+  ///
+  /// Starts at the highest notehead's top edge and ends at the lowest
+  /// notehead's bottom edge (`computeHeight`, arpeggiolayout.cpp:310-320).
+  /// [topLine] / [bottomLine] are staff line indices (0 = top staff line,
+  /// odd = space); see [staffLine]. A top note on a space rises by
+  /// [topRiseDownSpaceSp] or [topRiseDownLineSp] (`calcTop`).
+  static ({double top, double bottom}) verticalBounds({
+    required double highestHeadY,
+    required double lowestHeadY,
+    required int topLine,
+    required int bottomLine,
     required double space,
   }) {
-    final step = wiggleHeightSp * space;
-    final span = math.max(0.0, bottom - top);
-    final count = math.max(1, (span / step).ceil());
-    // Each glyph's baseline is its bottom edge (bbox SW y = 0).
-    return [for (var k = 0; k < count; k++) top + (k + 1) * step];
+    final half = headHeightSp * space / 2;
+    var top = highestHeadY - half;
+    final bottom = lowestHeadY + half;
+    final onSpace = topLine > 0 && topLine < _bottomLine && topLine.isOdd;
+    if (onSpace) {
+      final downOnSpace = bottomLine.isOdd && bottomLine < _bottomLine;
+      top -= (downOnSpace ? topRiseDownSpaceSp : topRiseDownLineSp) * space;
+    }
+    return (top: top, bottom: bottom);
   }
 
-  /// Baseline y of the arrowhead glyph. [ArpeggioDirection.up] puts the arrow
-  /// above [top] (its body bottom touches the stack), down puts it below
-  /// [bottom] (its body top touches the stack). Plain returns null.
-  static double? arrowBaseline({
+  /// Staff line index of a diatonic step, 0 = top staff line, counting down.
+  /// [topLineStep] is the diatonic step of the top staff line of the hand's
+  /// staff (treble F5 = step 38, bass A3 = step 26, see `StaffPainter`).
+  static int staffLine({required int step, required int topLineStep}) =>
+      topLineStep - step;
+
+  /// Glyphs of one arpeggio column, from [top] to [bottom] (screen y grows
+  /// downwards), right-aligned to [rightEdge].
+  ///
+  /// Mirrors `TLayout::layoutArpeggio`'s `symbolLine`: the number of fill
+  /// glyphs is `round((h - endAdvance) / fillAdvance)`, then one end glyph.
+  /// Plain and up are rotated -90 degrees and stack upwards from the bottom
+  /// (arrow last, at the top). Down is rotated +90 and stacks downwards from
+  /// the top (arrow last, at the bottom). `tdraw.cpp` `draw(Arpeggio)`.
+  static List<ArpeggioGlyph> layoutGlyphs({
     required ArpeggioDirection direction,
     required double top,
     required double bottom,
+    required double rightEdge,
     required double space,
-  }) => switch (direction) {
-    ArpeggioDirection.plain => null,
-    ArpeggioDirection.up => top - arrowBelowSp * space,
-    ArpeggioDirection.down => bottom + arrowAboveSp * space,
-  };
+  }) {
+    final isDown = direction == ArpeggioDirection.down;
+    final angle = isDown ? math.pi / 2 : -math.pi / 2;
+    final endGlyph = direction == ArpeggioDirection.plain
+        ? wiggleGlyph
+        : arrowGlyph;
+    final endAdvance = direction == ArpeggioDirection.plain
+        ? wiggleAdvanceSp
+        : arrowAdvanceSp;
 
-  /// Glyph for [direction], or null for a plain arpeggio.
-  static String? arrowGlyph(ArpeggioDirection direction) => switch (direction) {
-    ArpeggioDirection.plain => null,
-    ArpeggioDirection.up => arrowUpGlyph,
-    ArpeggioDirection.down => arrowDownGlyph,
-  };
+    final h = (bottom - top) / space;
+    final fills = math.max(0, ((h - endAdvance) / wiggleAdvanceSp).round());
 
-  /// Glissando endpoints between two noteheads, leaving a small gap at each
-  /// end. Returns null when the target is not to the right of the start.
+    final x = rightEdge - _inkRightSp(direction) * space;
+    // Rotated -90 (up): the first glyph's ink bottom is `origin + 0.088 sp`,
+    // so the origin sits 0.088 sp above `bottom`. Rotated +90 (down): the
+    // ink top is `origin - 0.088 sp`, so the origin sits 0.088 sp below `top`.
+    final origin0 = isDown
+        ? top - _wiggleInkMinX * space
+        : bottom + _wiggleInkMinX * space;
+    final step = (isDown ? 1 : -1) * wiggleAdvanceSp * space;
+
+    final out = <ArpeggioGlyph>[];
+    for (var k = 0; k < fills; k++) {
+      out.add(ArpeggioGlyph(wiggleGlyph, Offset(x, origin0 + step * k), angle));
+    }
+    // The end glyph follows the fills, one fill advance further on.
+    out.add(ArpeggioGlyph(endGlyph, Offset(x, origin0 + step * fills), angle));
+    return out;
+  }
+
+  /// Glissando endpoints between two noteheads. Starts at the right edge of
+  /// the start head and ends at the left edge of the end head (no padding
+  /// is applied: none is given in the style). Returns null when the target is
+  /// not to the right of the start.
   static ({Offset from, Offset to})? glissandoEnds({
     required Offset startHead,
     required Offset endHead,
     required double space,
   }) {
-    final from = Offset(
-      startHead.dx + DynamicsLayout.noteheadWidthSp * space / 2,
-      startHead.dy,
-    );
-    final to = Offset(endHead.dx - _glissandoEndGapSp * space, endHead.dy);
+    final from = Offset(startHead.dx + headWidthSp * space, startHead.dy);
+    final to = Offset(endHead.dx, endHead.dy);
     if (to.dx <= from.dx) return null;
     return (from: from, to: to);
   }
 
   /// Centre of the `gliss.` label: the line's midpoint, lifted above it.
+  /// The offset is a placeholder: MuseScore's label placement is not read yet.
   static Offset glissandoLabelCentre({
     required Offset from,
     required Offset to,
@@ -170,7 +252,7 @@ abstract final class ArpeggioLayout {
 
   /// Pair of noteheads (start, end) that a glissando joins: the two notes
   /// closest in pitch, so the line runs as short as possible. Returns null
-  /// when either chord is empty.
+  /// when either chord is empty. Not a MuseScore rule; it is a local choice.
   static (int, int)? closestPair(List<int> startPitches, List<int> endPitches) {
     if (startPitches.isEmpty || endPitches.isEmpty) return null;
     (int, int)? best;
