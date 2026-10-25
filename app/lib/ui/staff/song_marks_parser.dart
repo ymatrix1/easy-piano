@@ -3,14 +3,15 @@ import 'dart:math' as math;
 
 import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/harmony_layout.dart';
 import 'package:easy_piano/ui/staff/ornament_layout.dart';
 import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/repeat_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
 /// Dynamics, hairpins, repeat barlines, voltas, navigation marks, damper pedal
-/// spans, ornaments, acciaccaturas, arpeggios and glissandi of one song, in
-/// beats.
+/// spans, ornaments, acciaccaturas, arpeggios, glissandi, chord symbols and
+/// lyrics of one song, in beats.
 class SongMarks {
   const SongMarks({
     required this.dynamics,
@@ -23,6 +24,8 @@ class SongMarks {
     this.acciaccaturas = const [],
     this.arpeggios = const [],
     this.glissandi = const [],
+    this.chords = const [],
+    this.lyrics = const [],
   });
 
   static const empty = SongMarks(dynamics: [], hairpins: []);
@@ -44,15 +47,20 @@ class SongMarks {
   final List<StaffAcciaccatura> acciaccaturas;
   final List<StaffArpeggio> arpeggios;
   final List<StaffGlissando> glissandi;
+  final List<StaffChord> chords;
+  final List<StaffLyric> lyrics;
 }
 
-/// Reads dynamic, hairpin, repeat and navigation directives from a song JSON
-/// string.
+/// Reads dynamic, hairpin, repeat, navigation, chord and lyric directives from
+/// a song JSON string.
 ///
 /// Directives sit in a hand string like notes do (zero length):
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{chord:"Am7"}` sets a chord symbol (see [ChordSymbol.parse]).
+/// - `{lyric:"Hel-"}` sets a syllable, `{lyric:"_"}` an extension (see
+///   [StaffLyric.fromDirective]).
 /// - `{trill}`, `{mordent}`, `{turn}` put an ornament on the chord at that beat.
 /// - `{acc:"D5"}` puts an acciaccatura (grace note, pitch D5) before the chord
 ///   at that beat. `#` / `b` / `n` after the letter write an accidental.
@@ -75,13 +83,15 @@ class SongMarks {
 /// song (open end). Repeat and volta directives off a bar line are ignored.
 /// A pedal span left down runs to the end of the song without a release.
 /// Unknown dynamic text is ignored here; lint is responsible for rejecting it
-/// in content. Malformed ornament directives are ignored.
+/// in content. Malformed ornament, chord and lyric text is ignored.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
   static final _voltaDirective = RegExp(r'^\{volta:\s*\[\s*([12])\s*\]\s*\}$');
   static final _ornamentDirective = RegExp(r'^\{(trill|mordent|turn)\}$');
   static final _accDirective = RegExp(r'^\{acc:"([A-G])(#|b|n)?(\d+)"\}$');
   static final _arpDirective = RegExp(r'^\{arp(?::(up|down))?\}$');
+  static final _chordDirective = RegExp(r'^\{chord:"([^"]*)"\}$');
+  static final _lyricDirective = RegExp(r'^\{lyric:"([^"]*)"\}$');
   static const _letterSemitone = {
     'C': 0,
     'D': 2,
@@ -230,6 +240,8 @@ abstract final class SongMarksParser {
         dynamics: built.dynamics,
         hairpins: built.hairpins,
         pedals: built.pedals,
+        chords: built.chords,
+        lyrics: built.lyrics,
         repeatBarlines: structure.repeatBarlines,
         voltas: structure.voltas,
         navigation: structure.navigation,
@@ -264,6 +276,18 @@ abstract final class SongMarksParser {
       final mark = dyn.group(1)!;
       if (DynamicsLayout.glyphsFor(mark) == null) return null;
       return _Event(beat, _Kind.dynamic, mark: mark);
+    }
+    final chord = _chordDirective.firstMatch(tok);
+    if (chord != null) {
+      final text = chord.group(1)!;
+      if (ChordSymbol.parse(text) == null) return null;
+      return _Event(beat, _Kind.chord, mark: text);
+    }
+    final lyric = _lyricDirective.firstMatch(tok);
+    if (lyric != null) {
+      final text = lyric.group(1)!;
+      if (StaffLyric.fromDirective(beat, text) == null) return null;
+      return _Event(beat, _Kind.lyric, mark: text);
     }
     final volta = _voltaDirective.firstMatch(tok);
     if (volta != null) {
@@ -386,7 +410,9 @@ abstract final class SongMarksParser {
             _Kind.open ||
             _Kind.end ||
             _Kind.pedal ||
-            _Kind.pedalUp:
+            _Kind.pedalUp ||
+            _Kind.chord ||
+            _Kind.lyric:
           break;
       }
     }
@@ -408,6 +434,8 @@ abstract final class SongMarksParser {
     final dynamics = <StaffDynamic>[];
     final hairpins = <StaffHairpin>[];
     final pedals = <StaffPedal>[];
+    final chords = <StaffChord>[];
+    final lyrics = <StaffLyric>[];
 
     HairpinKind? openKind;
     var openAt = 0.0;
@@ -471,6 +499,18 @@ abstract final class SongMarksParser {
           }
         case _Kind.pedalUp:
           closePedal(e.beat, released: true);
+        case _Kind.chord:
+          final symbol = ChordSymbol.parse(e.mark ?? '');
+          if (symbol != null) {
+            chords.add(StaffChord(e.beat, symbol, leftHand: e.leftHand));
+          }
+        case _Kind.lyric:
+          final lyric = StaffLyric.fromDirective(
+            e.beat,
+            e.mark ?? '',
+            leftHand: e.leftHand,
+          );
+          if (lyric != null) lyrics.add(lyric);
         case _Kind.repeatStart ||
             _Kind.repeatEnd ||
             _Kind.voltaStart ||
@@ -481,7 +521,13 @@ abstract final class SongMarksParser {
     }
     closeAt(totalBeats);
     closePedal(totalBeats, released: false);
-    return SongMarks(dynamics: dynamics, hairpins: hairpins, pedals: pedals);
+    return SongMarks(
+      dynamics: dynamics,
+      hairpins: hairpins,
+      pedals: pedals,
+      chords: chords,
+      lyrics: lyrics,
+    );
   }
 }
 
@@ -496,6 +542,8 @@ enum _Kind {
   voltaStart,
   voltaEnd,
   navigation,
+  chord,
+  lyric,
 }
 
 class _Event {
