@@ -1039,62 +1039,23 @@ class StaffPainter extends CustomPainter {
       final group = entry.value;
       final onB = entry.key.$2;
 
-      // Accidental staggering in chords (MuseScore accidentalslayout.cpp)
-      final accNotes = <int>[];
-      for (final idx in group) {
-        if (noteAccidentals.containsKey(idx)) accNotes.add(idx);
-      }
-      if (accNotes.length <= 1) {
-        for (final idx in accNotes) {
-          chordAccidentalOffsets[idx] = 0.0;
-        }
-      } else {
-        accNotes.sort((a, b) => notes[a].pitch.compareTo(notes[b].pitch));
-        var col = 0;
-        double? lastY;
-        for (var k = accNotes.length - 1; k >= 0; k--) {
-          final idx = accNotes[k];
-          final ny = _noteY(notes[idx].pitch, onB, l);
-          if (lastY != null && (lastY - ny).abs() < space * 2.2) {
-            col++;
-          }
-          chordAccidentalOffsets[idx] = -col * space * 1.15;
-          lastY = ny;
-        }
-      }
+      final accOffsets = ChordLayout.computeAccidentalOffsets(
+        notes: notes,
+        chordIndices: group,
+        noteAccidentals: noteAccidentals,
+        noteY: (pitch, onBass) => _noteY(pitch, onBass, l),
+        onBass: onB,
+        space: space,
+      );
+      chordAccidentalOffsets.addAll(accOffsets);
 
-      // Dot alignment and space conflict resolution (MuseScore chordlayout.cpp getNoteListForDots)
-      final dottedNotes = group
-          .where((idx) => _isDotted(notes[idx].beats))
-          .toList();
-      if (dottedNotes.isNotEmpty) {
-        var maxHeadX = -1e9;
-        for (final idx in group) {
-          final hx = chordHeadOffsets[idx] ?? 0.0;
-          final hw = (notes[idx].beats >= 4 ? 1.5 : 1.3) * space;
-          if (hx + hw > maxHeadX) maxHeadX = hx + hw;
-        }
-        final dotBaseX = maxHeadX + space * 0.45;
-        dottedNotes.sort((a, b) => notes[b].pitch.compareTo(notes[a].pitch));
-        final occupiedSpaces = <int>{};
-        for (final idx in dottedNotes) {
-          final st = diatonicStep(notes[idx].pitch);
-          int dotSpace;
-          if (st.isOdd) {
-            dotSpace = st;
-          } else {
-            if (!occupiedSpaces.contains(st + 1)) {
-              dotSpace = st + 1;
-            } else {
-              dotSpace = st - 1;
-            }
-          }
-          occupiedSpaces.add(dotSpace);
-          final dy = -(dotSpace - st) * half;
-          final headOffset = chordHeadOffsets[idx] ?? 0.0;
-          chordDotOffsets[idx] = (dotBaseX - headOffset, dy);
-        }
-      }
+      final dotOffsets = ChordLayout.computeDotOffsets(
+        notes: notes,
+        chordIndices: group,
+        chordHeadOffsets: chordHeadOffsets,
+        space: space,
+      );
+      chordDotOffsets.addAll(dotOffsets);
     }
 
     final drawnUnisons = <(double, int, bool)>{};
@@ -1264,13 +1225,13 @@ class StaffPainter extends CustomPainter {
           };
           // In a chord, if any note is displaced left (e.g. interval of a second),
           // the accidental must sit to the left of the leftmost notehead.
-          var leftmostHeadX = noteXPos;
-          if (chordGroup != null) {
-            for (final idx in chordGroup) {
-              final hx = x + (chordHeadOffsets[idx] ?? 0.0);
-              if (hx < leftmostHeadX) leftmostHeadX = hx;
-            }
-          }
+          final lmOffset = chordGroup != null
+              ? ChordLayout.leftmostNoteheadOffset(
+                  chordIndices: chordGroup,
+                  chordHeadOffsets: chordHeadOffsets,
+                )
+              : math.min(0.0, chordHeadOffsets[i] ?? 0.0);
+          final leftmostHeadX = x + lmOffset;
           final extraShift = chordAccidentalOffsets[i] ?? 0.0;
           _drawGlyph(
             canvas,

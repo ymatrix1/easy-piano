@@ -407,6 +407,7 @@ class _ScorePageViewState extends State<ScorePageView>
             totalBeats: widget.totalBeats,
             space: config.space,
             minMeasureWidth: config.minMeasureWidth,
+            keyFifths: widget.keyFifths,
           );
 
           final systems = ScorePageLayout.breakSystems(
@@ -1244,60 +1245,22 @@ class SystemStaffPainter extends CustomPainter {
       }
     }
 
-    // 6. Real-time Playhead Cursor & Note X mapping with uniform, tranquil velocity
-    final pad = space * 1.4;
-    double beatToX(double b) {
-      for (var i = 0; i < system.measures.length; i++) {
-        final m = system.measures[i];
-        final isLast = i == system.measures.length - 1;
-        if (b >= m.startBeat &&
-            (b < m.endBeat || (isLast && b <= m.endBeat + 0.001))) {
-          final mLeft = headerW + system.measureXs[i];
-          final mW = system.measureWidths[i];
-          final mSpan = math.max(0.001, m.endBeat - m.startBeat);
-          final rel = (b - m.startBeat) / mSpan;
-          return mLeft + pad + rel * (mW - (isLast ? pad : 0.0));
-        }
-      }
-      if (b < system.startBeat) {
-        return headerW + pad;
-      }
-      return headerW + (system.measureXs.last + system.measureWidths.last);
-    }
-
-    if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
-      final curX = beatToX(playheadBeat);
-      final cursorRect = Rect.fromLTRB(
-        curX - space * 0.7,
-        staffTop - space * 1.0,
-        curX + space * 0.7,
-        staffBottom + space * 1.0,
-      );
-
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(cursorRect, const Radius.circular(3)),
-        Paint()
-          ..color = playheadColor.withValues(alpha: 0.35)
-          ..style = PaintingStyle.fill,
-      );
-    }
-
-    // Flatten all notes in system for cross-measure beaming and accidentals
+    // Flatten all notes in system and track measure note indices
     final allSysNotes = <StaffNote>[];
-    final noteXsMap = <int, double>{};
+    final measureNoteIndices = <int, List<int>>{};
 
     for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
       final m = system.measures[mIdx];
+      measureNoteIndices[mIdx] = [];
       for (final note in m.notes) {
         if (note.isSpacer) continue;
-        final nx = beatToX(note.beat);
         final globalIdx = allSysNotes.length;
         allSysNotes.add(note);
-        noteXsMap[globalIdx] = nx;
+        measureNoteIndices[mIdx]!.add(globalIdx);
       }
     }
 
-    // 7. Accidentals computation matching Mode 1 StaffPainter
+    // 6. Accidentals computation matching Mode 1 StaffPainter
     final noteAccidentals = StaffPainter.computeAccidentals(
       notes: allSysNotes,
       keyFifths: keyFifths,
@@ -1305,40 +1268,7 @@ class SystemStaffPainter extends CustomPainter {
       onBass: (n) => n.leftHand,
     );
 
-    // 8. Beaming layout matching Mode 1 StaffPainter
-    final beamGroups = BeamLayout.computeBeamGroups(
-      notes: allSysNotes,
-      first: 0,
-      lastBeat: allSysNotes.isEmpty ? 0.0 : allSysNotes.last.beat + 4.0,
-      onBass: (n) => n.leftHand,
-      noteY: (pitch, onB) => _noteY(pitch, onB, space, trebleBottomY, bassTopY),
-      noteXs: noteXsMap,
-      space: space,
-      beatsPerBar: beatsPerBar,
-      isGrandStaff: true,
-    );
-
-    final beamedIndices = <int>{};
-    for (final g in beamGroups) {
-      beamedIndices.addAll(g.allIndices);
-    }
-
-    // Render beams
-    for (final g in beamGroups) {
-      BeamLayout.drawBeamGroup(
-        canvas: canvas,
-        group: g,
-        notes: allSysNotes,
-        noteY: (pitch, onB) =>
-            _noteY(pitch, onB, space, trebleBottomY, bassTopY),
-        onBass: (n) => n.leftHand,
-        space: space,
-        defaultColor: ink,
-        colorOf: null,
-      );
-    }
-
-    // 9. Chord grouping & displacements (MuseScore chordlayout.cpp & Gould rules)
+    // 7. Chord grouping & displacements (MuseScore chordlayout.cpp & Gould rules)
     final chordGroups = <(int, bool), List<int>>{};
     for (var i = 0; i < allSysNotes.length; i++) {
       final n = allSysNotes[i];
@@ -1371,7 +1301,149 @@ class SystemStaffPainter extends CustomPainter {
       chordHeadOffsets.addAll(offsets);
     }
 
-    // 10. Render rests, ledger lines, accidentals, noteheads, and dots
+    // MuseScore parity: accidental staggering and dot conflict resolution for chords
+    final chordAccidentalOffsets = <int, double>{};
+    final chordDotOffsets = <int, (double, double)>{};
+    for (final entry in chordGroups.entries) {
+      final group = entry.value;
+      final onB = entry.key.$2;
+
+      final accOffsets = ChordLayout.computeAccidentalOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        noteAccidentals: noteAccidentals,
+        noteY: (pitch, onBass) =>
+            _noteY(pitch, onBass, space, trebleBottomY, bassTopY),
+        onBass: onB,
+        space: space,
+      );
+      chordAccidentalOffsets.addAll(accOffsets);
+
+      final dotOffsets = ChordLayout.computeDotOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        chordHeadOffsets: chordHeadOffsets,
+        space: space,
+      );
+      chordDotOffsets.addAll(dotOffsets);
+    }
+
+    // 8. Horizontal spacing per measure & tranquil playhead anchors (MuseScore measurelayout.cpp & horizontalspacing.cpp)
+    final noteXsMap = <int, double>{};
+    final measureAnchors = <int, List<(double, double)>>{};
+
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      final mLeft = headerW + system.measureXs[mIdx];
+      final mW = system.measureWidths[mIdx];
+      final indices = measureNoteIndices[mIdx] ?? const [];
+
+      final layoutRes = ScorePageLayout.layoutMeasureNotes(
+        allNotes: allSysNotes,
+        measureNoteIndices: indices,
+        measureStartBeat: m.startBeat,
+        measureEndBeat: m.endBeat,
+        measureLeft: mLeft,
+        measureWidth: mW,
+        chordHeadOffsets: chordHeadOffsets,
+        chordAccidentalOffsets: chordAccidentalOffsets,
+        chordDotOffsets: chordDotOffsets,
+        noteAccidentals: noteAccidentals,
+        chordGroups: chordGroups,
+        space: space,
+      );
+
+      noteXsMap.addAll(layoutRes.noteXs);
+      measureAnchors[mIdx] = layoutRes.anchors;
+    }
+
+    double beatToX(double b) {
+      if (system.measures.isEmpty) return headerW;
+      for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+        final m = system.measures[mIdx];
+        final isLast = mIdx == system.measures.length - 1;
+        if (b >= m.startBeat &&
+            (b < m.endBeat || (isLast && b <= m.endBeat + 0.001))) {
+          final anchors = measureAnchors[mIdx];
+          if (anchors == null || anchors.isEmpty) {
+            final mLeft = headerW + system.measureXs[mIdx];
+            final mW = system.measureWidths[mIdx];
+            final rel =
+                (b - m.startBeat) / math.max(0.001, m.endBeat - m.startBeat);
+            return mLeft + rel * mW;
+          }
+          if (b <= anchors.first.$1) return anchors.first.$2;
+          if (b >= anchors.last.$1) return anchors.last.$2;
+          for (var a = 0; a < anchors.length - 1; a++) {
+            final a0 = anchors[a];
+            final a1 = anchors[a + 1];
+            if (b >= a0.$1 && b <= a1.$1) {
+              final span = a1.$1 - a0.$1;
+              final t = span > 1e-4 ? (b - a0.$1) / span : 0.0;
+              return a0.$2 + t * (a1.$2 - a0.$2);
+            }
+          }
+          return anchors.last.$2;
+        }
+      }
+      if (b < system.startBeat) {
+        return headerW;
+      }
+      return headerW + (system.measureXs.last + system.measureWidths.last);
+    }
+
+    // 9. Real-time Playhead Cursor
+    if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
+      final curX = beatToX(playheadBeat);
+      final cursorRect = Rect.fromLTRB(
+        curX - space * 0.7,
+        staffTop - space * 1.0,
+        curX + space * 0.7,
+        staffBottom + space * 1.0,
+      );
+
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(cursorRect, const Radius.circular(3)),
+        Paint()
+          ..color = playheadColor.withValues(alpha: 0.35)
+          ..style = PaintingStyle.fill,
+      );
+    }
+
+    // 10. Beaming layout matching Mode 1 StaffPainter
+    final beamGroups = BeamLayout.computeBeamGroups(
+      notes: allSysNotes,
+      first: 0,
+      lastBeat: allSysNotes.isEmpty ? 0.0 : allSysNotes.last.beat + 4.0,
+      onBass: (n) => n.leftHand,
+      noteY: (pitch, onB) => _noteY(pitch, onB, space, trebleBottomY, bassTopY),
+      noteXs: noteXsMap,
+      space: space,
+      beatsPerBar: beatsPerBar,
+      isGrandStaff: true,
+    );
+
+    final beamedIndices = <int>{};
+    for (final g in beamGroups) {
+      beamedIndices.addAll(g.allIndices);
+    }
+
+    // Render beams
+    for (final g in beamGroups) {
+      BeamLayout.drawBeamGroup(
+        canvas: canvas,
+        group: g,
+        notes: allSysNotes,
+        noteY: (pitch, onB) =>
+            _noteY(pitch, onB, space, trebleBottomY, bassTopY),
+        onBass: (n) => n.leftHand,
+        space: space,
+        defaultColor: ink,
+        colorOf: null,
+      );
+    }
+
+    // 11. Render rests, ledger lines, accidentals, noteheads, and dots
     for (var i = 0; i < allSysNotes.length; i++) {
       final note = allSysNotes[i];
       final rawX = noteXsMap[i] ?? 0.0;
@@ -1431,11 +1503,21 @@ class SystemStaffPainter extends CustomPainter {
           AccidentalType.flat => Smufl.accidentalFlat,
           AccidentalType.natural => Smufl.accidentalNatural,
         };
+        final beatInt = (note.beat * 1000).round();
+        final grp = chordGroups[(beatInt, note.leftHand)];
+        final lmOffset = grp != null
+            ? ChordLayout.leftmostNoteheadOffset(
+                chordIndices: grp,
+                chordHeadOffsets: chordHeadOffsets,
+              )
+            : math.min(0.0, chordHeadOffsets[i] ?? 0.0);
+        final leftmostHeadX = rawX + lmOffset;
+        final extraShift = chordAccidentalOffsets[i] ?? 0.0;
         _drawGlyph(
           canvas,
           accGlyph,
           glyphSize,
-          Offset(nx - space * 1.3, ny),
+          Offset(leftmostHeadX - space * 1.3 + extraShift, ny),
           ink,
         );
       }
@@ -1449,14 +1531,15 @@ class SystemStaffPainter extends CustomPainter {
       _drawGlyph(canvas, headGlyph, glyphSize, Offset(nx, ny), ink);
 
       // Augmentation dot
-      if ((note.beats - 1.5).abs() < 1e-4 ||
-          (note.beats - 3.0).abs() < 1e-4 ||
-          (note.beats - 0.75).abs() < 1e-4 ||
-          (note.beats - 0.375).abs() < 1e-4) {
-        final half = space / 2;
-        final dy = step.isEven ? -half : 0.0;
+      if (ChordLayout.isDotted(note.beats)) {
+        final (dotDx, dy) =
+            chordDotOffsets[i] ??
+            (
+              (note.beats >= 4 ? 1.6 : 1.4) * space,
+              step.isEven ? -space / 2 : 0.0,
+            );
         canvas.drawCircle(
-          Offset(nx + (note.beats >= 4 ? 1.6 : 1.4) * space, ny + dy),
+          Offset(nx + dotDx, ny + dy),
           space * 0.18,
           Paint()..color = ink,
         );

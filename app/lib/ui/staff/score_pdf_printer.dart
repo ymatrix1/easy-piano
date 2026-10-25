@@ -58,6 +58,7 @@ abstract final class ScorePdfPrinter {
           totalBeats: totalBeats,
           space: printConfig.space,
           minMeasureWidth: printConfig.minMeasureWidth,
+          keyFifths: keyFifths,
         );
 
         final systems = ScorePageLayout.breakSystems(

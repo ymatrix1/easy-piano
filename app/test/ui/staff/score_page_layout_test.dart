@@ -191,6 +191,61 @@ void main() {
           expect(pages.first.systems.first.measures.isNotEmpty, isTrue);
         },
       );
+
+      test(
+        'layoutMeasureNotes provides collision-free coordinates and barline clearance (MuseScore measurelayout.cpp)',
+        () {
+          // Notes in measure with chord second and flat accidental (The Entertainer measure 5)
+          final notes = [
+            const StaffNote(55, 16.0, 1.0, leftHand: true), // G3
+            const StaffNote(58, 16.0, 1.0, leftHand: true, accidental: 'flat'), // Bb3
+            const StaffNote(60, 16.0, 1.0, leftHand: true), // C4
+            const StaffNote(64, 17.0, 1.0), // E4
+          ];
+
+          final res = ScorePageLayout.layoutMeasureNotes(
+            allNotes: notes,
+            measureNoteIndices: const [0, 1, 2, 3],
+            measureStartBeat: 16.0,
+            measureEndBeat: 20.0,
+            measureLeft: 100.0,
+            measureWidth: 200.0,
+            chordHeadOffsets: const {0: 0.0, 1: -11.8, 2: 0.0, 3: 0.0},
+            chordAccidentalOffsets: const {1: 0.0},
+            chordDotOffsets: const {},
+            noteAccidentals: const {1: 'flat'},
+            chordGroups: const {
+              (16000, true): [0, 1, 2],
+              (17000, false): [3],
+            },
+            space: 10.0,
+          );
+
+          expect(res.noteXs.length, equals(4));
+          // Chord notes at beat 16 all share the same base X
+          final chordBaseX = res.noteXs[0]!;
+          expect(res.noteXs[1], equals(chordBaseX));
+          expect(res.noteXs[2], equals(chordBaseX));
+
+          // The displaced notehead is at chordBaseX - 11.8
+          final leftmostHeadX = chordBaseX - 11.8;
+          // The accidental is at leftmostHeadX - 1.3 * space = chordBaseX - 24.8
+          final accidentalX = leftmostHeadX - 13.0;
+
+          // Accidental MUST sit comfortably to the right of the left barline (100.0) with at least 10px clearance
+          expect(accidentalX, greaterThanOrEqualTo(100.0 + 10.0));
+
+          // Next note at beat 17 is clearly separated from chord at beat 16
+          final nextNoteX = res.noteXs[3]!;
+          expect(nextNoteX - chordBaseX, greaterThan(35.0));
+
+          // Anchors include measure boundaries
+          expect(res.anchors.first.$1, equals(16.0));
+          expect(res.anchors.first.$2, equals(100.0));
+          expect(res.anchors.last.$1, equals(20.0));
+          expect(res.anchors.last.$2, equals(300.0));
+        },
+      );
     },
   );
 }

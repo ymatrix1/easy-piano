@@ -1,8 +1,7 @@
 import 'dart:math' as math;
 
-import 'key_signature.dart';
-import 'segment_layout.dart';
 import 'staff_note.dart';
+import 'staff_painter.dart';
 
 /// Single layout measure within a multi-system score layout (MuseScore `Measure`).
 class ScoreMeasure {
@@ -167,6 +166,7 @@ abstract final class ScorePageLayout {
     required double totalBeats,
     double space = 10.0,
     double minMeasureWidth = 90.0,
+    int keyFifths = 0,
     Map<int, AccidentalType> noteAccidentals = const {},
   }) {
     if (beatsPerBar <= 0) return const [];
@@ -196,6 +196,14 @@ abstract final class ScorePageLayout {
       // Estimate minimum width using segment layout density
       double minW = minMeasureWidth;
       if (mNotes.isNotEmpty) {
+        final mAccidentals = noteAccidentals.isNotEmpty
+            ? noteAccidentals
+            : StaffPainter.computeAccidentals(
+                notes: mNotes,
+                keyFifths: keyFifths,
+                beatsPerBar: beatsPerBar,
+                onBass: (n) => n.leftHand,
+              );
         final segments = SegmentLayout.buildSegments(
           notes: mNotes,
           anchorX: 0.0,
@@ -203,7 +211,7 @@ abstract final class ScorePageLayout {
           pixelsPerBeat: space * 3.0,
           space: space,
           beatsPerBar: beatsPerBar,
-          noteAccidentals: noteAccidentals,
+          noteAccidentals: mAccidentals,
         );
         if (segments.length > 1) {
           final span = segments.last.scoreX - segments.first.scoreX;
@@ -225,6 +233,100 @@ abstract final class ScorePageLayout {
     }
 
     return measures;
+  }
+
+  /// Computes non-linear, collision-free horizontal coordinates for all notes
+  /// in a measure, plus measure beat anchors for tranquil playhead movement
+  /// (MuseScore `measurelayout.cpp` & `horizontalspacing.cpp`).
+  static ({Map<int, double> noteXs, List<(double beat, double x)> anchors})
+  layoutMeasureNotes({
+    required List<StaffNote> allNotes,
+    required List<int> measureNoteIndices,
+    required double measureStartBeat,
+    required double measureEndBeat,
+    required double measureLeft,
+    required double measureWidth,
+    required Map<int, double> chordHeadOffsets,
+    required Map<int, double> chordAccidentalOffsets,
+    required Map<int, (double, double)> chordDotOffsets,
+    required Map<int, dynamic> noteAccidentals,
+    required Map<(int, bool), List<int>> chordGroups,
+    required double space,
+  }) {
+    final noteXs = <int, double>{};
+    if (measureNoteIndices.isEmpty) {
+      return (
+        noteXs: noteXs,
+        anchors: [
+          (measureStartBeat, measureLeft),
+          (measureEndBeat, measureLeft + measureWidth),
+        ],
+      );
+    }
+
+    // Group notes in this measure by unique beat (rounded to 1e-4)
+    final beatGroups = <double, List<int>>{};
+    for (final idx in measureNoteIndices) {
+      final b = (allNotes[idx].beat * 10000).round() / 10000;
+      beatGroups.putIfAbsent(b, () => []).add(idx);
+    }
+    final sortedBeats = beatGroups.keys.toList()..sort();
+
+    // Calculate required clearance to the left and right of nominal X for each beat
+    final leftClearances = <double>[];
+    final rightClearances = <double>[];
+
+    for (final b in sortedBeats) {
+      final bIndices = beatGroups[b]!;
+      final clearances = ChordLayout.computeBeatClearances(
+        notes: allNotes,
+        noteIndices: bIndices,
+        chordHeadOffsets: chordHeadOffsets,
+        chordAccidentalOffsets: chordAccidentalOffsets,
+        chordDotOffsets: chordDotOffsets,
+        noteAccidentals: noteAccidentals,
+        chordGroups: chordGroups,
+        space: space,
+      );
+      leftClearances.add(clearances.leftClearance);
+      rightClearances.add(clearances.rightClearance);
+    }
+
+    // Clearance from left barline to first beat, and last beat to right barline
+    final leftPad = math.max(space * 1.6, leftClearances.first + space * 1.0);
+    final rightPad = math.max(space * 1.2, rightClearances.last + space * 0.8);
+
+    // Spacing between consecutive beats
+    final xRels = <double>[0.0];
+    for (var k = 0; k < sortedBeats.length - 1; k++) {
+      final deltaBeats = sortedBeats[k + 1] - sortedBeats[k];
+      final minInkDist =
+          rightClearances[k] + space * 0.5 + leftClearances[k + 1];
+      final nominalDist =
+          SegmentLayout.durationStretch(deltaBeats) * space * 3.5;
+      final spacing = math.max(minInkDist, nominalDist);
+      xRels.add(xRels[k] + spacing);
+    }
+
+    final totalSpan = xRels.last;
+    final usableW = math.max(totalSpan, measureWidth - leftPad - rightPad);
+    final scale = totalSpan > 0 ? (usableW / totalSpan) : 1.0;
+
+    final anchors = <(double, double)>[];
+    anchors.add((measureStartBeat, measureLeft));
+
+    for (var k = 0; k < sortedBeats.length; k++) {
+      final b = sortedBeats[k];
+      final beatX = measureLeft + leftPad + xRels[k] * scale;
+      anchors.add((b, beatX));
+      for (final idx in beatGroups[b]!) {
+        noteXs[idx] = beatX;
+      }
+    }
+
+    anchors.add((measureEndBeat, measureLeft + measureWidth));
+
+    return (noteXs: noteXs, anchors: anchors);
   }
 
   /// Groups measures into lines/systems using balanced line breaking
