@@ -202,6 +202,16 @@ fn has_tie(note: &Node, kind: &str) -> bool {
         .any(|t| t.name == "tie" && t.attr("type") == Some(kind))
 }
 
+/// True if a part has a grand staff (two or more staves in its attributes).
+fn has_grand_staff(part: &Node) -> bool {
+    part.children
+        .iter()
+        .filter(|c| c.name == "measure")
+        .flat_map(|m| m.children.iter())
+        .filter(|c| c.name == "attributes")
+        .any(|a| a.child_i64("staves").is_some_and(|s| s >= 2))
+}
+
 fn find_tempo(node: &Node) -> Option<f64> {
     if node.name == "sound" {
         if let Some(t) = node.attr("tempo").and_then(|t| t.parse::<f64>().ok()) {
@@ -295,13 +305,20 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
     let mut right_clef = Clef::Treble;
     let mut left_clef = Clef::Bass;
 
-    for (pi, part) in root
-        .children
-        .iter()
-        .filter(|c| c.name == "part")
-        .enumerate()
-    {
-        if pi == 0 {
+    // A piano score is a part with two or more staves. When one exists, other parts
+    // (a sung line, a second instrument) are left out; otherwise every part is read.
+    let parts: Vec<&Node> = root.children.iter().filter(|c| c.name == "part").collect();
+    let grand: Vec<bool> = parts.iter().map(|p| has_grand_staff(p)).collect();
+    let keep: Vec<bool> = if grand.contains(&true) {
+        grand
+    } else {
+        vec![true; parts.len()]
+    };
+    let first_kept = keep.iter().position(|&k| k);
+
+    for (pi, part) in parts.iter().enumerate().filter(|(i, _)| keep[*i]) {
+        let first = Some(pi) == first_kept;
+        if first {
             tempo = find_tempo(part);
         }
         let mut st = PartState::new();
@@ -449,7 +466,7 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
             } else {
                 measure_beats(st.time).max(max_beats)
             };
-            if pi == 0 {
+            if first {
                 if mi == 0 {
                     right_clef = st.clef(1);
                     left_clef = st.clef(2);
@@ -725,6 +742,29 @@ mod tests {
         assert_eq!(s.notes[0].midi, 76); // E5 only
         assert_eq!(s.notes[0].start, 0.0);
         assert_eq!(s.measures[0].beats, 4.0);
+    }
+
+    #[test]
+    fn a_sung_part_is_left_out_when_a_piano_part_exists() {
+        let xml = r#"<?xml version="1.0"?>
+<score-partwise version="3.1">
+  <part-list><score-part id="P1"/><score-part id="P2"/></part-list>
+  <part id="P1"><measure number="1">
+    <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+      <clef><sign>G</sign></clef></attributes>
+    <note><pitch><step>A</step><octave>4</octave></pitch><duration>4</duration></note>
+  </measure></part>
+  <part id="P2"><measure number="1">
+    <attributes><divisions>1</divisions><staves>2</staves>
+      <clef number="1"><sign>G</sign></clef><clef number="2"><sign>F</sign></clef></attributes>
+    <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration><staff>1</staff></note>
+    <backup><duration>4</duration></backup>
+    <note><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><staff>2</staff></note>
+  </measure></part>
+</score-partwise>"#;
+        let s = parse(xml.as_bytes()).unwrap();
+        let midis: Vec<u8> = s.notes.iter().map(|n| n.midi).collect();
+        assert_eq!(midis, vec![48, 72]); // the piano's C3 and C5; A4 (the voice) is dropped
     }
 
     #[test]

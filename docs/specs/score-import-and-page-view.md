@@ -166,7 +166,7 @@ When a song/level is opened, the user can toggle between:
   - Import UI, library, drop target: `piano-uy13`.
   - Done in `piano-t6rt`: FFI `import_score` and conversion to the content `Song` (section 5.5).
   - Region filter for `restricted_in` songs: `piano-7os5`.
-- **Test evidence:** unit tests with inline fixtures only. No file produced by MuseScore, Mutopia, OpenScore or PDMX has been parsed yet (see 5.3).
+- **Test evidence:** unit tests with inline fixtures, and real files checked against independent oracles (core/tests/score_import_real.rs, see 5.3).
 
 ### 5.2 Known limitations
 Each limitation is a deliberate scope cut, not a bug, unless marked "bug candidate".
@@ -175,8 +175,8 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - Only `score-partwise`. `score-timewise` returns an error. Decided (piano-tgsm): stays rejected. MuseScore, Finale, Sibelius and OpenScore export partwise; timewise support is a new bean if a real source needs it.
 - Grace notes are skipped: they take no time and their pitches are not imported. Decided (piano-tgsm), same in all formats: ABC `{...}`, LilyPond `\grace`, `\acciaccatura`, `\appoggiatura` and the grace part of `\afterGrace`. Playing ornaments is out of scope.
 - Ties are merged only within the same hand and pitch, and only when the end of the first note meets the start of the next.
-- Hands come from the staff and clef of each note. A part with more than two staves is mapped the same way, with no separate handling.
-- Measures come from the first part. Later parts use the same bar grid.
+- Hands come from the staff and clef of each note. Piano parts: when a part has two or more staves, only those parts are read (a sung line or another instrument is left out). Without any such part, every part is read. Two piano parts (four staves) are both read, with hands by staff, so a duet is not split by player.
+- Measures come from the first part that is read. Later parts use the same bar grid.
 - Pickup bars (anacrusis) use the actual length of the bar. Their `number` attribute is kept as written.
 - Clef and key changes mid-piece are read per measure. `ImportedScore.right_clef` and `left_clef` only record the clef at the start.
 - Measure length (fixed in piano-tgsm): a regular bar lasts its time signature even when every voice ends early, so later bars keep their place. A bar longer than its time signature uses its longest voice. An implicit pickup (`implicit="yes"`) has the length of its notes.
@@ -197,7 +197,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - Accidentals reset at every bar line, as in ABC. Ties `-` join notes of the same pitch.
 
 **LilyPond (subset)**
-- Supported: `\header` (title, composer), `\score`, `\new Staff`, `\new PianoStaff`, `<< >>`, `\\` voices, `\relative`, `\clef`, `\key`, `\time`, `\tempo`, `\repeat unfold`, `\times`, chords, ties `~`, rests `r` `R`, spacers `s`.
+- Supported: `\header` (title, composer), `\score`, `\new Staff`, `\context Staff = ...`, `\new PianoStaff`, `<< >>`, `\\` voices, `\relative`, `\transpose from to` (interval only), music variables (`right = { ... }` used as `\right`), `\clef`, `\key`, `\time`, `\tempo`, `\repeat unfold`, `\times`, chords, ties `~`, rests `r` `R`, spacers `s`, cautionary accidentals `!` and `?` (no change of pitch).
 - Ignored: `\alternative` (its branches are skipped), `\repeat volta` (played once), `\new Lyrics` and `\new ChordNames` (with their content), scheme words starting with `#`.
 - Fixed (piano-tgsm): `\markup`, `\lyricmode`, `\lyrics`, `\addlyrics`, `\chordmode`, `\figuremode`, `\layout`, `\midi`, `\paper`, `\with` and grace blocks are skipped with their arguments, so words such as `a` in a markup are not notes. `\override`, `\revert` and `\set` drop their property path and `=`; the value is a scheme word or a string.
 - Pitch names are English (`c d e f g a b`, with `is` and `es` suffixes). Dutch `h` and non-standard names are rejected.
@@ -208,7 +208,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - Fingering, lyrics, and dynamic velocity values are not imported. ABC decorations and LilyPond articulation syntax are not imported. MusicXML expression positions are taken from the measure cursor; `<offset>` is not applied. Tie spans are merged into note durations; slurs remain separate expression spans.
 
 ### 5.3 Open items
-- **Real-file validation (`piano-niz2`, see 5.4):** the parsers have not been run on files from MuseScore/OpenScore (`.mxl`), Mutopia (`.ly`), PDMX, or DAW MIDI exports. Results and any fixes go in that bean.
+- **Real-file validation (`piano-niz2`):** done for three files: Mutopia LilyPond (checked against its own MIDI export), OpenScore MuseScore 4.5.2 `.mxl` (piano part counted with an independent script), and a CC0 sequencer MIDI (checked with `mido`). Fixes from this check: piano part selection in MusicXML, `\transpose`, music variables and `\context` in LilyPond, cautionary accidentals. Not checked yet: PDMX, and a MIDI whose DAW origin is confirmed (the CC0 file has sequencer metadata but its origin is not documented). Sources and oracles: `core/tests/fixtures/score_import/SOURCES.md`.
 - **Dependencies:** `quick-xml` 0.37 and `zip` 2 (deflate only) were added to `core`. See [D38](../DECISIONS.md) (proposed). The MIDI reader is in-house, [D39](../DECISIONS.md) (proposed).
 - **Placement:** parsers live in `core` (app side), not only in `tools/content-cli`. [D37](../DECISIONS.md) (proposed) puts them there. It conflicts with the accepted [D3](../DECISIONS.md) line "MusicXML and MIDI supported only as import sources via CLI", which needs an explicit decision by the user.
 
