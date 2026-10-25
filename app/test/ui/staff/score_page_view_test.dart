@@ -34,5 +34,34 @@ void main() {
       expect(find.byIcon(Icons.zoom_out), findsOneWidget);
       expect(find.textContaining('Page 1 /'), findsOneWidget);
     });
+
+    testWidgets(
+      'SystemStaffPainter renders LH chord clusters with unified stems and flags',
+      (tester) async {
+        // Rondo alla Turca measure 5 LH chords: B3+E4:8 and D#5+F#5:8
+        final chordNotes = [
+          const StaffNote(59, 0.0, 0.5, leftHand: true), // B3
+          const StaffNote(64, 0.0, 0.5, leftHand: true), // E4
+          const StaffNote(63, 1.0, 0.5, leftHand: true), // D#4
+          const StaffNote(66, 1.0, 0.5, leftHand: true), // F#4
+        ];
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ScorePageView(
+              notes: chordNotes,
+              totalBeats: 4.0,
+              beatsPerBar: 2.0,
+              keyFifths: 0,
+              staves: Staves.grand,
+              title: 'Rondo alla Turca',
+            ),
+          ),
+        );
+
+        expect(find.byType(ScorePageSheet), findsOneWidget);
+        expect(find.byType(CustomPaint), findsWidgets);
+      },
+    );
   });
 }

@@ -291,24 +291,20 @@ class _ScorePageViewState extends State<ScorePageView>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Fully responsive sheet width matching sightread.dev (expands to fill the window)
-        final availableW = constraints.maxWidth;
-        final availableH = constraints.maxHeight;
-
-        // On desktop/tablet, score expands edge-to-edge with standard padding
-        final sheetWidth = math.max(640.0, availableW - 48.0);
-        final sheetHeight = math.max(780.0, availableH - 128.0);
+        // Standard A4 portrait score dimensions matching MuseScore and ScorePdfPrinter
+        const standardPageWidth = 800.0;
+        const standardPageHeight = 1130.0;
 
         final config = ScorePageConfig(
-          pageWidth: sheetWidth,
-          pageHeight: sheetHeight,
+          pageWidth: standardPageWidth,
+          pageHeight: standardPageHeight,
           marginTop: 48.0,
-          marginBottom: 40.0,
-          marginLeft: 36.0,
-          marginRight: 36.0,
-          grandStaffHeight: 140.0,
-          systemDistance: 64.0,
-          minMeasureWidth: 110.0,
+          marginBottom: 48.0,
+          marginLeft: 40.0,
+          marginRight: 40.0,
+          grandStaffHeight: 135.0,
+          systemDistance: 50.0,
+          minMeasureWidth: 100.0,
           systemHeaderWidth: 70.0,
         );
 
@@ -746,24 +742,42 @@ class ScorePageSheet extends StatelessWidget {
             bottom: config.marginBottom,
             left: config.marginLeft,
             right: config.marginRight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final system in page.systems) ...[
-                  CustomPaint(
-                    size: Size(config.printableWidth, config.grandStaffHeight),
-                    painter: SystemStaffPainter(
-                      system: system,
-                      config: config,
-                      staves: staves,
-                      keyFifths: keyFifths,
-                      beatsPerBar: beatsPerBar,
-                      playheadBeat: playheadBeat,
-                    ),
-                  ),
-                  SizedBox(height: config.systemDistance),
-                ],
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final n = page.systems.length;
+                final totalStaffsH = n * config.grandStaffHeight;
+                final availableH = constraints.maxHeight;
+                // MuseScore vertical justification: distribute remaining vertical space evenly between systems
+                final dynamicGap = n > 1
+                    ? ((availableH - totalStaffsH) / (n - 1)).clamp(
+                        config.systemDistance,
+                        config.systemDistance * 1.4,
+                      )
+                    : config.systemDistance;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var s = 0; s < n; s++) ...[
+                      CustomPaint(
+                        size: Size(
+                          config.printableWidth,
+                          config.grandStaffHeight,
+                        ),
+                        painter: SystemStaffPainter(
+                          system: page.systems[s],
+                          config: config,
+                          staves: staves,
+                          keyFifths: keyFifths,
+                          beatsPerBar: beatsPerBar,
+                          playheadBeat: playheadBeat,
+                        ),
+                      ),
+                      if (s < n - 1) SizedBox(height: dynamicGap),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -896,10 +910,6 @@ class SystemStaffPainter extends CustomPainter {
       ..color = ink
       ..strokeWidth = 1.1;
 
-    final bracePaint = Paint()
-      ..color = ink
-      ..strokeWidth = 2.4;
-
     final space = config.space;
     final headerW = config.systemHeaderWidth;
     final trebleBottomY = space * 5.0;
@@ -923,39 +933,45 @@ class SystemStaffPainter extends CustomPainter {
       canvas.drawLine(Offset(0, yB), Offset(systemW, yB), staffPaint);
     }
 
-    // 2. Initial system line & brace
-    canvas.drawLine(Offset(0, staffTop), Offset(0, staffBottom), bracePaint);
+    // 2. Initial system line & brace (MuseScore Gould grand staff engraving)
+    canvas.drawLine(Offset(0, staffTop), Offset(0, staffBottom), barlinePaint);
 
-    final x0 = -space * 1.8,
-        top = staffTop,
-        bot = staffBottom,
-        mid = (top + bot) / 2,
-        w = space * 1.3;
+    // Calligraphic grand staff curly brace ({) in solid ink matching MuseScore tlayout.cpp:
+    final midY = (staffTop + staffBottom) / 2;
+    final h2 = (staffBottom - staffTop) / 2;
+    final braceW = space * 1.15;
+    double bx(double a) => (a / 560.0) * braceW - space * 0.15;
+    double by(double a) => midY + (a / 7024.0) * h2;
+
     final brace = Path()
-      ..moveTo(x0 + w, top)
-      ..cubicTo(
-        x0,
-        top + (mid - top) * 0.15,
-        x0 + w,
-        mid - (mid - top) * 0.25,
-        x0,
-        mid,
-      )
-      ..cubicTo(
-        x0 + w,
-        mid + (bot - mid) * 0.25,
-        x0,
-        bot - (bot - mid) * 0.15,
-        x0 + w,
-        bot,
-      );
+      ..moveTo(bx(-8), by(-2048))
+      ..cubicTo(bx(-8), by(-3192), bx(-360), by(-4304), bx(-360), by(-5400))
+      ..cubicTo(bx(-360), by(-5952), bx(-264), by(-6488), bx(32), by(-6968))
+      ..cubicTo(bx(36), by(-6974), bx(38), by(-6984), bx(38), by(-6990))
+      ..cubicTo(bx(38), by(-7008), bx(16), by(-7024), bx(0), by(-7024))
+      ..cubicTo(bx(-8), by(-7024), bx(-22), by(-7022), bx(-32), by(-7008))
+      ..cubicTo(bx(-416), by(-6392), bx(-544), by(-5680), bx(-544), by(-4960))
+      ..cubicTo(bx(-544), by(-3800), bx(-168), by(-2680), bx(-168), by(-1568))
+      ..cubicTo(bx(-168), by(-1016), bx(-264), by(-496), bx(-560), by(-16))
+      ..lineTo(bx(-560), by(0))
+      ..lineTo(bx(-560), by(16))
+      ..cubicTo(bx(-264), by(496), bx(-168), by(1016), bx(-168), by(1568))
+      ..cubicTo(bx(-168), by(2680), bx(-544), by(3800), bx(-544), by(4960))
+      ..cubicTo(bx(-544), by(5680), bx(-416), by(6392), bx(-32), by(7008))
+      ..cubicTo(bx(-22), by(7022), bx(-8), by(7024), bx(0), by(7024))
+      ..cubicTo(bx(16), by(7024), bx(38), by(7008), bx(38), by(6990))
+      ..cubicTo(bx(38), by(6984), bx(36), by(6974), bx(32), by(6968))
+      ..cubicTo(bx(-264), by(6488), bx(-360), by(5952), bx(-360), by(5400))
+      ..cubicTo(bx(-360), by(4304), bx(-8), by(3192), bx(-8), by(2048))
+      ..cubicTo(bx(-8), by(1320), bx(-136), by(624), bx(-512), by(0))
+      ..cubicTo(bx(-136), by(-624), bx(-8), by(-1320), bx(-8), by(-2048))
+      ..close();
+
     canvas.drawPath(
       brace,
       Paint()
-        ..color = ink.withValues(alpha: 0.5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = space * 0.45
-        ..strokeCap = StrokeCap.round,
+        ..color = ink
+        ..style = PaintingStyle.fill,
     );
 
     // 3. SMuFL Clefs (G Clef on G4, F Clef on F3)
@@ -1181,10 +1197,44 @@ class SystemStaffPainter extends CustomPainter {
       );
     }
 
-    // 9. Render notes, rests, ledger lines, noteheads, accidentals, and un-beamed stems
+    // 9. Chord grouping & displacements (MuseScore chordlayout.cpp & Gould rules)
+    final chordGroups = <(int, bool), List<int>>{};
+    for (var i = 0; i < allSysNotes.length; i++) {
+      final n = allSysNotes[i];
+      if (n.isRest || n.isSpacer) continue;
+      final beatInt = (n.beat * 1000).round();
+      chordGroups.putIfAbsent((beatInt, n.leftHand), () => []).add(i);
+    }
+
+    final chordHeadOffsets = <int, double>{};
+    final chordStemDown = <(int, bool), bool>{};
+
+    for (final entry in chordGroups.entries) {
+      final group = entry.value;
+      final onBass = entry.key.$2;
+      final chordPitches = group.map((idx) => allSysNotes[idx].pitch).toList();
+      final isDown = StemLayout.computeStemDown(
+        pitch: chordPitches.first,
+        onBass: onBass,
+        explicitStemDown: allSysNotes[group.first].stemDown,
+        chordPitches: chordPitches,
+      );
+      chordStemDown[entry.key] = isDown;
+
+      final offsets = ChordLayout.computeNoteheadOffsets(
+        notes: allSysNotes,
+        chordIndices: group,
+        stemDown: isDown,
+        space: space,
+      );
+      chordHeadOffsets.addAll(offsets);
+    }
+
+    // 10. Render rests, ledger lines, accidentals, noteheads, and dots
     for (var i = 0; i < allSysNotes.length; i++) {
       final note = allSysNotes[i];
-      final nx = noteXsMap[i] ?? 0.0;
+      final rawX = noteXsMap[i] ?? 0.0;
+      final nx = rawX + (chordHeadOffsets[i] ?? 0.0);
 
       if (note.isRest) {
         final restY = note.leftHand
@@ -1207,7 +1257,7 @@ class SystemStaffPainter extends CustomPainter {
             : note.beats >= 0.5
             ? Smufl.rest8th
             : Smufl.rest16th;
-        _drawGlyph(canvas, restGlyph, glyphSize, Offset(nx, restY), ink);
+        _drawGlyph(canvas, restGlyph, glyphSize, Offset(rawX, restY), ink);
         continue;
       }
 
@@ -1270,37 +1320,94 @@ class SystemStaffPainter extends CustomPainter {
           Paint()..color = ink,
         );
       }
+    }
 
-      // Stem and flag (for notes NOT part of a beam group)
-      if (!beamedIndices.contains(i) && note.beats < 4.0) {
-        final isRH = !note.leftHand;
-        final stemDown = isRH
-            ? step >= (_trebleBottomStep + 4)
-            : step >= (_bassTopStep - 4);
-        final stemX = StemLayout.stemX(
-          noteheadX: nx,
-          stemDown: stemDown,
-          space: space,
+    // 11. Stems and flags for unbeamed notes/chords (MuseScore parity)
+    for (final entry in chordGroups.entries) {
+      final group = entry.value;
+      final firstIdx = group.first;
+      final firstNote = allSysNotes[firstIdx];
+
+      // Beamed chords already have stems drawn by BeamLayout
+      if (beamedIndices.contains(firstIdx)) continue;
+      // Whole notes or longer have no stems
+      if (firstNote.beats >= 4.0) continue;
+
+      final onBass = entry.key.$2;
+      final stemDown = chordStemDown[entry.key] ?? false;
+      final nominalX = noteXsMap[firstIdx] ?? 0.0;
+
+      // Stem attaches to the normal (undisplaced) side of the notehead
+      final stemX = StemLayout.stemX(
+        noteheadX: nominalX,
+        stemDown: stemDown,
+        space: space,
+      );
+
+      final middleY = onBass ? bassTopY + space * 2 : trebleBottomY - space * 2;
+
+      // Find vertical extremes of the chord
+      var minY = 1e9;
+      var maxY = -1e9;
+      for (final idx in group) {
+        final ny = _noteY(
+          allSysNotes[idx].pitch,
+          onBass,
+          space,
+          trebleBottomY,
+          bassTopY,
         );
-        final tipY = StemLayout.calcStemTipY(
-          noteY: ny,
-          stemDown: stemDown,
+        if (ny < minY) minY = ny;
+        if (ny > maxY) maxY = ny;
+      }
+
+      if (stemDown) {
+        final chordTipY = StemLayout.calcStemTipY(
+          noteY: maxY,
+          stemDown: true,
           space: space,
-          middleLineY: note.leftHand
-              ? bassTopY + 2 * space
-              : trebleBottomY - 2 * space,
+          middleLineY: middleY,
         );
         canvas.drawLine(
-          Offset(stemX, ny),
-          Offset(stemX, tipY),
+          Offset(stemX, minY),
+          Offset(stemX, chordTipY),
           staffPaint..strokeWidth = 1.2,
         );
-
-        if (note.beats <= 0.75) {
-          final flagGlyph = note.beats <= 0.25
-              ? (stemDown ? Smufl.flag16thDown : Smufl.flag16thUp)
-              : (stemDown ? Smufl.flag8thDown : Smufl.flag8thUp);
-          _drawGlyph(canvas, flagGlyph, glyphSize, Offset(stemX, tipY), ink);
+        if (firstNote.beats <= 0.75) {
+          final flagGlyph = firstNote.beats <= 0.375
+              ? Smufl.flag16thDown
+              : Smufl.flag8thDown;
+          _drawGlyph(
+            canvas,
+            flagGlyph,
+            glyphSize,
+            Offset(stemX, chordTipY),
+            ink,
+          );
+        }
+      } else {
+        final chordTipY = StemLayout.calcStemTipY(
+          noteY: minY,
+          stemDown: false,
+          space: space,
+          middleLineY: middleY,
+        );
+        canvas.drawLine(
+          Offset(stemX, maxY),
+          Offset(stemX, chordTipY),
+          staffPaint..strokeWidth = 1.2,
+        );
+        if (firstNote.beats <= 0.75) {
+          final flagGlyph = firstNote.beats <= 0.375
+              ? Smufl.flag16thUp
+              : Smufl.flag8thUp;
+          _drawGlyph(
+            canvas,
+            flagGlyph,
+            glyphSize,
+            Offset(stemX, chordTipY),
+            ink,
+          );
         }
       }
     }
