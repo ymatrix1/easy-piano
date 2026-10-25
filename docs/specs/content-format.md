@@ -107,6 +107,15 @@ Status: rendering (piano-boat PR 1), lint and MIDI velocity grading (piano-rdr4)
 - `{end}`: close the open hairpin. A hairpin also closes at the next `{dyn}`, the next hairpin, or the end of the song.
 
 The same directive in both hands at the same beat is drawn once.
+
+## Directives: arpeggios and glissandi
+
+Status: rendering (piano-i235, PR 3). Parsed by `app/lib/ui/staff/song_marks_parser.dart`, drawn by `arpeggio_layout.dart`. Core lint does not check these yet (unknown directives are ignored there), so a typo is silently not drawn.
+
+- `{arp}`, `{arp:up}`, `{arp:down}`: arpeggio on the chord at that beat, in the hand the directive sits in. `up` / `down` add an arrowhead; any other argument is ignored.
+- `{gliss}`: glissando from the notes at that beat to the next note of the same hand. Rests do not end it. With no later note in that hand, nothing is drawn.
+
+Example: `{arp:up} C4E4G4:2 {gliss} D5:2` (chord syntax as in the grammar above).
 **Grading (informational).** For MIDI input, each matched note-on carries its velocity. A dynamic passes when at least half of the onsets from its beat to the next dynamic classify as it (MuseScore velocities: ppp 16, pp 33, p 49, mp 64, mf 80, f 96, ff 112, fff 126; nearest centre wins). `fp`, `sf` and `sfz` are not graded. A crescendo passes when the mean velocity of its second half exceeds the first by 8 or more (a diminuendo, the reverse). Mic and touch input have no velocity and are not graded.
  Parsed by `app/lib/ui/staff/song_marks_parser.dart`.
 

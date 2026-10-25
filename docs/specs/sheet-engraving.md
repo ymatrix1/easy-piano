@@ -37,7 +37,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Articulations (staccato, tenuto) | `dom/articulation.cpp` | Delivered | `engraving_decorations.dart` |
 | Dynamics (p..ff, sf, sfz) & Hairpins | `rendering/score/dynamicslayout.cpp`, `tlayout.cpp` (layoutHairpinSegment) | Delivered (rendering: notehead centring, grand-staff gap, collisions; grading in core) | `dynamics_layout.dart` |
 | Piano Damper Pedal (Ped., *) | `rendering/score/tlayout.cpp` (pedal) | Planned (PR 2) | `pedal_layout.dart` |
-| Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
+| Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Delivered (PR 3; straight glissando only) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
 | Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
 | Chord Symbols & Lyrics | `harmonylayout.cpp`, `lyricslayout.cpp` | Planned (PR 6) | `harmony_layout.dart` |
@@ -82,8 +82,10 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 
 ### 3. Arpeggios and Glissandi (`arpeggio_layout.dart`)
 - **Reference:** MuseScore `arpeggiolayout.cpp`.
-- **Arpeggio:** Repeated vertical wave glyph (`wiggleArpeggiato`, U+E634) connecting the bottom and top note of the chord, placed `space * 0.8` to the left of the chord.
-- **Glissando:** Diagonal stroke or wave connecting two notes with centered italic label *gliss.*
+- **Status:** Delivered in PR 3 (`piano-i235`): plain, up and down arpeggios (`{arp}`, `{arp:up}`, `{arp:down}`) and straight glissandi (`{gliss}`). Wavy glissando is not done.
+- **Arpeggio:** Glyph `wiggleArpeggiatoUp` (U+EAA9) stacked vertically over the chord's notehead span (top head minus 0.5 sp to bottom head plus 0.5 sp). Its right edge sits `space * 0.8` left of the leftmost ink (accidental or notehead). Directed arpeggios add `wiggleArpeggiatoUpArrow` (U+EAAD) above or `wiggleArpeggiatoDownArrow` (U+EAAE) below.
+- **Glissando:** Straight line from the note of the start chord to the note of the end chord that are closest in pitch, with a small gap at each end, and centred italic label *gliss.* above.
+- **Codepoints:** checked against `references/MuseScore/fonts/smufl/glyphnames.json` and the app's `Leland.otf` cmap. U+E634 is `arpeggiatoUp` (a different glyph), not the wiggle.
 
 ### 4. Grace Notes & Ornaments (`ornament_layout.dart`)
 - **Reference:** MuseScore `tlayout.cpp` and `chordlayout.cpp`.

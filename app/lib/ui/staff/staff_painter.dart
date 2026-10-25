@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'arpeggio_layout.dart';
 import 'beam_layout.dart';
 import 'chord_layout.dart';
 import 'dynamics_layout.dart';
@@ -14,6 +15,7 @@ import 'staff_note.dart';
 import 'stem_layout.dart';
 import 'tuplet_layout.dart';
 
+export 'arpeggio_layout.dart';
 export 'beam_layout.dart';
 export 'chord_layout.dart';
 export 'dynamics_layout.dart';
@@ -112,6 +114,8 @@ class StaffPainter extends CustomPainter {
     this.beatPulse,
     this.dynamics = const [],
     this.hairpins = const [],
+    this.arpeggios = const [],
+    this.glissandi = const [],
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -206,6 +210,12 @@ class StaffPainter extends CustomPainter {
 
   /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
   final List<StaffHairpin> hairpins;
+
+  /// Arpeggio wiggles on chords, drawn left of the chord (`{arp}`).
+  final List<StaffArpeggio> arpeggios;
+
+  /// Glissando lines between two notes of one hand (`{gliss}`).
+  final List<StaffGlissando> glissandi;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -1562,6 +1572,27 @@ class StaffPainter extends CustomPainter {
       );
     }
 
+    // Arpeggios and glissandi (MuseScore arpeggiolayout.cpp, tlayout.cpp).
+    if (arpeggios.isNotEmpty || glissandi.isNotEmpty) {
+      _drawArpeggiosAndGlissandi(
+        canvas,
+        l: l,
+        glyphSize: glyphSize,
+        color: staff,
+        xOf: (i) =>
+            xCache[i] ??
+            noteX(
+              index: i,
+              notes: notes,
+              anchorX: anchorX,
+              nowBeat: now,
+              pixelsPerBeat: pixelsPerBeat,
+              space: l.space,
+              xCache: xCache,
+            ),
+      );
+    }
+
     // Hit bursts: three rings that grow and fade.
     final t = clockSec?.call();
     if (t != null) {
@@ -2004,6 +2035,120 @@ class StaffPainter extends CustomPainter {
         final ly = bassTopY + (_bassTopStep - s) * half;
         drawLine(s, ly);
       }
+    }
+  }
+
+  /// Arpeggio wiggles and glissando lines. [xOf] gives the notehead x of a
+  /// note index; the chord is every note of the same hand at the same beat.
+  void _drawArpeggiosAndGlissandi(
+    Canvas canvas, {
+    required ({double space, double trebleBottomY, double bassTopY}) l,
+    required double glyphSize,
+    required Color color,
+    required double Function(int index) xOf,
+  }) {
+    final space = l.space;
+    bool onBassOf(bool leftHand) =>
+        staves == Staves.grand ? leftHand : staves == Staves.bass;
+
+    List<int> chordAt(double beat, bool leftHand) {
+      final out = <int>[];
+      var i = lowerBound(notes, beat - 1e-6);
+      while (i < notes.length && (notes[i].beat - beat).abs() < 1e-6) {
+        final n = notes[i];
+        if (n.leftHand == leftHand && !n.isRest && !n.isSpacer) out.add(i);
+        i++;
+      }
+      return out;
+    }
+
+    for (final a in arpeggios) {
+      final idx = chordAt(a.beat, a.leftHand);
+      if (idx.isEmpty) continue;
+      final onBass = onBassOf(a.leftHand);
+      var top = double.infinity;
+      var bottom = double.negativeInfinity;
+      final heads = <({double headX, bool hasAccidental})>[];
+      for (final i in idx) {
+        final y = _noteY(notes[i].pitch, onBass, l);
+        top = math.min(top, y - ArpeggioLayout.noteheadHalfHeightSp * space);
+        bottom = math.max(
+          bottom,
+          y + ArpeggioLayout.noteheadHalfHeightSp * space,
+        );
+        heads.add((headX: xOf(i), hasAccidental: notes[i].accidental != null));
+      }
+      final ox = ArpeggioLayout.originX(
+        leftmostInkX: ArpeggioLayout.leftmostInk(notes: heads, space: space),
+        space: space,
+      );
+      for (final by in ArpeggioLayout.wiggleBaselines(
+        top: top,
+        bottom: bottom,
+        space: space,
+      )) {
+        _drawGlyph(
+          canvas,
+          ArpeggioLayout.wiggleGlyph,
+          glyphSize,
+          Offset(ox, by),
+          color,
+        );
+      }
+      final arrow = ArpeggioLayout.arrowGlyph(a.direction);
+      final arrowY = ArpeggioLayout.arrowBaseline(
+        direction: a.direction,
+        top: top,
+        bottom: bottom,
+        space: space,
+      );
+      if (arrow != null && arrowY != null) {
+        _drawGlyph(canvas, arrow, glyphSize, Offset(ox, arrowY), color);
+      }
+    }
+
+    for (final g in glissandi) {
+      final starts = chordAt(g.startBeat, g.leftHand);
+      final ends = chordAt(g.endBeat, g.leftHand);
+      final pair = ArpeggioLayout.closestPair(
+        [for (final i in starts) notes[i].pitch],
+        [for (final i in ends) notes[i].pitch],
+      );
+      if (pair == null) continue;
+      final si = starts[pair.$1];
+      final ei = ends[pair.$2];
+      final onBass = onBassOf(g.leftHand);
+      final seg = ArpeggioLayout.glissandoEnds(
+        startHead: Offset(xOf(si), _noteY(notes[si].pitch, onBass, l)),
+        endHead: Offset(xOf(ei), _noteY(notes[ei].pitch, onBass, l)),
+        space: space,
+      );
+      if (seg == null) continue;
+      canvas.drawLine(
+        seg.from,
+        seg.to,
+        Paint()
+          ..color = color
+          ..strokeWidth = math.max(1.0, ArpeggioLayout.glissandoWidthSp * space)
+          ..strokeCap = StrokeCap.round,
+      );
+      final label = TextPainter(
+        text: TextSpan(
+          text: ArpeggioLayout.glissandoLabel,
+          style: TextStyle(
+            fontStyle: FontStyle.italic,
+            fontSize: space * 1.3,
+            color: color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final c = ArpeggioLayout.glissandoLabelCentre(
+        from: seg.from,
+        to: seg.to,
+        space: space,
+      );
+      label.paint(canvas, c - Offset(label.width / 2, label.height / 2));
     }
   }
 
