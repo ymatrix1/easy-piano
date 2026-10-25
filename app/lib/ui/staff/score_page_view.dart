@@ -26,6 +26,8 @@ class ScorePageView extends StatefulWidget {
     this.beatsPerBar = 4.0,
     this.keyFifths = 0,
     this.bpm = 100.0,
+    this.initialBeat = 0.0,
+    this.initialSpeed = 1.0,
     this.staves = Staves.grand,
     this.title = '',
     this.composer = '',
@@ -37,6 +39,8 @@ class ScorePageView extends StatefulWidget {
   final double beatsPerBar;
   final int keyFifths;
   final double bpm;
+  final double initialBeat;
+  final double initialSpeed;
   final Staves staves;
   final String title;
   final String composer;
@@ -68,8 +72,16 @@ class _ScorePageViewState extends State<ScorePageView>
   @override
   void initState() {
     super.initState();
+    _currentBeat = widget.initialBeat.clamp(0.0, widget.totalBeats);
+    _speedModifier = widget.initialSpeed;
     _ticker = createTicker(_onTick);
     _scrollController.addListener(_onScroll);
+
+    if (_currentBeat > 0.05) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _seekToBeat(_currentBeat);
+      });
+    }
   }
 
   @override
@@ -379,7 +391,14 @@ class _ScorePageViewState extends State<ScorePageView>
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: GameColors.ink),
-        onPressed: widget.onClose ?? () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (widget.onClose != null) {
+            widget.onClose!();
+          } else {
+            Navigator.of(context)
+                .pop((beat: _currentBeat, speed: _speedModifier));
+          }
+        },
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

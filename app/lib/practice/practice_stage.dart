@@ -1280,7 +1280,7 @@ class _PracticeStageState extends State<PracticeStage>
             ],
             IconButton(
               tooltip: 'Study / Static Score View',
-              onPressed: () {
+              onPressed: () async {
                 _pause();
                 String songTitle = '';
                 String composer = '';
@@ -1295,19 +1295,33 @@ class _PracticeStageState extends State<PracticeStage>
                   songTitle = widget.stage.score ?? 'Score';
                 }
 
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ScorePageView(
-                      notes: _notes,
-                      totalBeats: _totalBeats,
-                      beatsPerBar: _beatsPerBar,
-                      keyFifths: _keyFifths,
-                      staves: widget.staves,
-                      title: songTitle,
-                      composer: composer,
-                    ),
-                  ),
-                );
+                final currentBeat = math.max(0.0, _scroll.value);
+                final currentSpeed = _tempo;
+
+                final result = await Navigator.of(context)
+                    .push<({double beat, double speed})>(
+                      MaterialPageRoute(
+                        builder: (_) => ScorePageView(
+                          notes: _notes,
+                          totalBeats: _totalBeats,
+                          beatsPerBar: _beatsPerBar,
+                          keyFifths: _keyFifths,
+                          bpm: _bpm,
+                          initialBeat: currentBeat,
+                          initialSpeed: currentSpeed,
+                          staves: widget.staves,
+                          title: songTitle,
+                          composer: composer,
+                        ),
+                      ),
+                    );
+
+                if (result != null && mounted) {
+                  widget.onTempo(result.speed);
+                  setState(() {
+                    _scroll.value = result.beat;
+                  });
+                }
               },
               icon: const Icon(
                 Icons.menu_book_rounded,
