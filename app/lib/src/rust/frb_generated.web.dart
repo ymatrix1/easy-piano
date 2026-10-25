@@ -9,6 +9,7 @@
 import 'api/audio.dart';
 import 'api/notation.dart';
 import 'api/practice.dart';
+import 'api/score_import.dart';
 
 import 'dart:async';
 import 'dart:convert';

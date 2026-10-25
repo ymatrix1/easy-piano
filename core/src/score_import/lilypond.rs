@@ -829,6 +829,7 @@ impl Eval {
                     start,
                     beats,
                     hand,
+                    articulations: Vec::new(),
                 },
                 tie_start: false,
                 tie_stop: pending,
@@ -915,6 +916,7 @@ pub fn parse(src: &str) -> Result<ImportedScore, String> {
         left_clef,
         measures,
         notes,
+        expression: Vec::new(),
     })
 }
 
