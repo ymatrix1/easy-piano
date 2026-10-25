@@ -328,7 +328,9 @@ class _PracticeStageState extends State<PracticeStage>
         inSec: (b) => leadSec + b * _msPerBeat / 1000,
       );
     }, _totalBeats * _msPerBeat / 1000 + 4);
+    _startMs = widget.midi.now();
     pianoSynth.load();
+    pianoSynth.onStateChange = _onAudioStateChange;
     if (widget.stage.preListen && widget.failedAttempts == 0) {
       _startDemo();
     } else {
@@ -593,7 +595,13 @@ class _PracticeStageState extends State<PracticeStage>
     if (!mounted || !_demo) return;
     _demoStartMs = widget.midi.now() + 400;
     _scheduleDemo(fromBeat: 0);
-    _startMs = widget.midi.now();
+  }
+
+  void _onAudioStateChange() {
+    if (!mounted || !_demo) return;
+    final currentBeat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
+    pianoSynth.stopAll();
+    _scheduleDemo(fromBeat: math.max(0, currentBeat));
   }
 
   /// Pre-listen notes use the same voice as the learner's key presses
@@ -1057,6 +1065,7 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   void dispose() {
     if (widget.micMode) micInput.expected = const {};
+    pianoSynth.onStateChange = null;
     pianoSynth.stopAll();
     widget.feed?.removeListener(_onFeed);
     _ticker.dispose();

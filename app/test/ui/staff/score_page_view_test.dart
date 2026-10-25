@@ -86,9 +86,11 @@ void main() {
         expect(find.text('MEASURE 1'), findsOneWidget);
 
         // Tap the right side of the first staff system (measure 3 or 4)
-        final systemPaint = find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is SystemStaffPainter,
-        ).first;
+        final systemPaint = find
+            .byWidgetPredicate(
+              (w) => w is CustomPaint && w.painter is SystemStaffPainter,
+            )
+            .first;
         await tester.tapAt(
           tester.getCenter(systemPaint) + const Offset(150, 0),
         );

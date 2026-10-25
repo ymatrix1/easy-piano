@@ -280,6 +280,9 @@ impl Engine {
             let mut bus = [[0f32; 2]; 8];
             let mut direct = [0f32; 2];
             for v in &mut self.voices {
+                if v.done {
+                    continue;
+                }
                 let Some(sample) = sample_in(&bank, &v.source) else {
                     v.done = true;
                     continue;
@@ -318,8 +321,6 @@ impl Engine {
                     }
                 }
             }
-            self.voices.retain(|v| !v.done);
-
             let (mut band, mut live, mut send) = ([0f32; 2], [0f32; 2], [0f32; 2]);
             for p in Part::ALL {
                 let g = self.levels[p.index()];
@@ -341,6 +342,7 @@ impl Engine {
             frame[1] = soft_clip(lr + live[1] + direct[1]);
             self.now += 1;
         }
+        self.voices.retain(|v| !v.done);
     }
 }
 

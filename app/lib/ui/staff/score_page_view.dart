@@ -181,7 +181,11 @@ class _ScorePageViewState extends State<ScorePageView>
     for (final n in widget.notes) {
       if (n.isRest || n.isSpacer) continue;
       if (_currentBeat <= n.beat && nextBeat > n.beat) {
-        pianoSynth.noteOn(n.pitch, velocity: 85);
+        final durSec = (n.beats * 60.0 / (widget.bpm * _speedModifier)).clamp(
+          0.1,
+          4.0,
+        );
+        pianoSynth.schedule(n.pitch, 0, durSec, velocity: 85);
       }
     }
 
@@ -328,7 +332,11 @@ class _ScorePageViewState extends State<ScorePageView>
     for (final n in widget.notes) {
       if (n.isRest || n.isSpacer) continue;
       if ((n.beat - targetBeat).abs() < 0.25) {
-        pianoSynth.noteOn(n.pitch, velocity: 85);
+        final durSec = (n.beats * 60.0 / (widget.bpm * _speedModifier)).clamp(
+          0.1,
+          1.0,
+        );
+        pianoSynth.schedule(n.pitch, 0, durSec, velocity: 85);
       }
     }
 
