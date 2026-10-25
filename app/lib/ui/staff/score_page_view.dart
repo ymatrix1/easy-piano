@@ -346,13 +346,13 @@ class _ScorePageViewState extends State<ScorePageView>
     });
   }
 
-  void _printScore(List<ScorePage> pages, ScorePageConfig config) {
+  void _printScore() {
     ScorePdfPrinter.printScore(
-      pages: pages,
-      config: config,
+      notes: widget.notes,
+      totalBeats: widget.totalBeats,
+      beatsPerBar: widget.beatsPerBar,
       staves: widget.staves,
       keyFifths: widget.keyFifths,
-      beatsPerBar: widget.beatsPerBar,
       title: widget.title,
       composer: widget.composer,
     );
@@ -562,7 +562,7 @@ class _ScorePageViewState extends State<ScorePageView>
         IconButton(
           icon: const Icon(Icons.print_rounded, color: GameColors.ink),
           tooltip: 'Print Score / PDF',
-          onPressed: () => _printScore(pages, config),
+          onPressed: _printScore,
         ),
         const SizedBox(width: 4),
         IconButton(
