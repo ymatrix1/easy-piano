@@ -197,6 +197,8 @@ impl TaughtSet {
         t.rest_durations = a.rests.values().flat_map(|r| r.keys().cloned()).collect();
         t.times.insert(song.time.clone());
         t.keys.insert(song.key.clone());
+        t.keys
+            .extend(song.changes.iter().filter_map(|change| change.key.clone()));
         for (hand, hits) in &a.hits {
             let set = t.pitches.entry(hand.to_string()).or_default();
             for h in hits {
@@ -766,6 +768,18 @@ mod tests {
         assert_eq!((t.polyphony["RH"], t.polyphony["LH"]), (1, 3));
         assert!(t.rests && t.hands_together);
         assert_eq!(t.to_json()["accidentals"], json!(["F#"]));
+    }
+
+    #[test]
+    fn taught_set_includes_keys_introduced_mid_song() {
+        let s = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"X","source":"original",
+            "license":"CC0-1.0","composition_license":"public-domain","bpm":90,"time":"4/4","key":"C",
+            "changes":[{"bar":2,"key":"E"}],"bars":[{"RH":"C4:1"},{"RH":"G#4:1"}]}"#,
+        )
+        .unwrap();
+        let t = TaughtSet::from_song(&s).unwrap();
+        assert_eq!(t.keys, BTreeSet::from(["C".to_string(), "E".to_string()]));
     }
 
     #[test]

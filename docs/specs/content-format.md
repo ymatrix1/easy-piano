@@ -41,6 +41,7 @@ content/
   "source": "original", "source_url": null,
   "license": "CC-BY-SA-4.0", "composition_license": "public-domain",
   "bpm": 100, "time": "4/4", "key": "C",
+  "changes": [{"bar": 9, "key": "G", "time": "3/4"}],
   "bars": [
     {"RH": "E4:4@3 E4:4@3 F4:4@4 G4:4@5", "LH": "C3:1@5"},
     {"RH": "G4:4@5 F4:4@4 E4:4@3 D4:4@2", "LH": "G2:1@1"}
@@ -52,6 +53,8 @@ content/
 `source`: `original` (our arrangement from our own knowledge of the tune), `generated` (see below), or the edition it is based on, e.g. `mutopia` with `source_url` pointing at the Mutopia piece page (public domain or CC-BY-SA editions only; the simplified arrangement stays ours, `CC-BY-SA-4.0`).
 
 `bpm` counts the time signature's beat unit (its denominator note): `6/8` at 120 plays 120 eighths a minute, `2/2` at 60 plays 60 halves (session engine, [difficulty](difficulty.md)).
+
+Optional `changes` apply at the start of a one-based bar (`bar: 1` is represented by top-level `key` and `time`). Each entry sets `key`, `time`, or both. Only one entry per bar is allowed; bars must exist, keys must be supported key names, and time denominators must be powers of two. Bar strings are validated against the effective time signature. Beat values remain in the denominator unit of the top-level time signature, so a change from 4/4 to 3/8 occupies 1.5 song beats. Mid-bar signature changes are not supported by the bar-based content model. In the app, the new signature is drawn at the bar start; cancellation naturals before a new key signature are not drawn yet.
 
 ### Generated songs (optional fields)
 
@@ -110,7 +113,9 @@ The same directive in both hands at the same beat is drawn once.
 
 ## Directives: repeats, voltas and navigation
 
-Status: rendering only (piano-h90n, PR 5). Parser: `app/lib/ui/staff/song_marks_parser.dart`; geometry and codepoints: `app/lib/ui/staff/repeat_layout.dart`. Zero length, placed in a hand string like `{dyn}`. Song-wide: a directive in `RH` or `LH` applies to the whole song, and the same directive in both hands at one beat counts once.
+Status: core playback expansion and rendering (piano-h90n). Parser: `app/lib/ui/staff/song_marks_parser.dart`; geometry and codepoints: `app/lib/ui/staff/repeat_layout.dart`. Zero length, placed in a hand string like `{dyn}`. Song-wide: a directive in `RH` or `LH` applies to the whole song, and the same directive in both hands at one beat counts once.
+
+Play order expands repeats to two passes, selects first/second endings, then follows one D.C./D.S. al Fine / al Coda jump. Training critical sections are expanded to the corresponding played bar occurrences. Nested repeats are rejected. Signature changes use the top-level `changes` array described above and apply at bar starts only.
 
 | Directive | Where | Meaning |
 |---|---|---|
@@ -118,14 +123,15 @@ Status: rendering only (piano-h90n, PR 5). Parser: `app/lib/ui/staff/song_marks_
 | `{repeat_end}` | on a bar line | repeat sign `:\|`; with `{repeat_start}` on the same bar line, `:\|:` |
 | `{volta: [1]}` / `{volta: [2]}` | on a bar line | first or second ending starts there |
 | `{volta_end}` | on a bar line | ends the open ending without a repeat sign (no hook) |
-| `{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_coda}` | any beat | mark above the staff at that beat |
+| `{segno}`, `{coda}`, `{fine}`, `{to_coda}`, `{dc_al_fine}`, `{ds_al_fine}`, `{dc_al_coda}`, `{ds_al_coda}` | any beat | navigation marks above the staff; D.C./D.S. marks trigger the named jump during playback |
 
 Rules:
 
 - "On a bar line" means the beat is a multiple of the bar length (a directive at the end of a bar, after its last note, is on the next bar line). Repeat and volta directives off a bar line are ignored by the app; lint does not reject them yet.
 - A volta ends at the next `{repeat_end}` (its right end gets a hook), at the next volta, at `{volta_end}`, or at the end of the song (open end). A second ending followed by more music needs `{volta_end}`.
 - `{volta: [n]}` takes a JSON array with one element, `1` or `2`. Other numbers are ignored. `{ds_al_coda}` and `{volta_end}` are extra names beyond the bean's list.
-- Playback does not change: the app still plays the score once. Play-order expansion (repeats, endings, D.C. / D.S.) is not implemented.
+- Core expands repeats to two passes, selects the matching volta, and follows D.C./D.S. al Fine / al Coda navigation once. A repeat without `{repeat_start}` begins at the start of the score. To make a jump, use `{fine}` or `{to_coda}` with the corresponding navigation instruction; `{segno}` and `{coda}` mark their destinations.
+- Nested repeats are not supported. Navigation and repeat signs should be placed on bar lines; lint checks the repeat and volta positions.
 
 ```
 {"RH": "{repeat_start} C4:4 D4:4 E4:4 F4:4", "LH": "C3:1"},

@@ -371,7 +371,13 @@ class SongInfo {
   final String composer;
   final double bpm;
   final int beatsPerBar;
+  final int beatUnit;
   final int bars;
+
+  /// Expanded play-order duration, in the song's beat unit.
+  final double totalBeats;
+  final List<SongSignatureChange> signatureChanges;
+  final Float64List measureStarts;
 
   const SongInfo({
     required this.id,
@@ -379,7 +385,11 @@ class SongInfo {
     required this.composer,
     required this.bpm,
     required this.beatsPerBar,
+    required this.beatUnit,
     required this.bars,
+    required this.totalBeats,
+    required this.signatureChanges,
+    required this.measureStarts,
   });
 
   @override
@@ -389,7 +399,11 @@ class SongInfo {
       composer.hashCode ^
       bpm.hashCode ^
       beatsPerBar.hashCode ^
-      bars.hashCode;
+      beatUnit.hashCode ^
+      bars.hashCode ^
+      totalBeats.hashCode ^
+      signatureChanges.hashCode ^
+      measureStarts.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -401,7 +415,39 @@ class SongInfo {
           composer == other.composer &&
           bpm == other.bpm &&
           beatsPerBar == other.beatsPerBar &&
-          bars == other.bars;
+          beatUnit == other.beatUnit &&
+          bars == other.bars &&
+          totalBeats == other.totalBeats &&
+          signatureChanges == other.signatureChanges &&
+          measureStarts == other.measureStarts;
+}
+
+class SongSignatureChange {
+  final double beat;
+  final String key;
+  final int numerator;
+  final int denominator;
+
+  const SongSignatureChange({
+    required this.beat,
+    required this.key,
+    required this.numerator,
+    required this.denominator,
+  });
+
+  @override
+  int get hashCode =>
+      beat.hashCode ^ key.hashCode ^ numerator.hashCode ^ denominator.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SongSignatureChange &&
+          runtimeType == other.runtimeType &&
+          beat == other.beat &&
+          key == other.key &&
+          numerator == other.numerator &&
+          denominator == other.denominator;
 }
 
 /// One note or chord to play, for drawing.

@@ -35,6 +35,32 @@ void main() {
     expect(m.dynamics.single.mark, 'mf');
   });
 
+  test('signature changes set variable measure starts and draw keys', () {
+    final json = jsonEncode({
+      'time': '4/4',
+      'key': 'C',
+      'changes': [
+        {'bar': 2, 'time': '3/4', 'key': 'G'},
+      ],
+      'bars': [
+        {'RH': 'C4:1'},
+        {'RH': 'F#4:2.'},
+        {'RH': 'G4:2.'},
+      ],
+    });
+    final marks = SongMarksParser.parse(json);
+    expect(marks.signatureChanges, hasLength(1));
+    expect(marks.signatureChanges.single.beat, 4);
+    expect(marks.signatureChanges.single.keyFifths, 1);
+    expect(
+      (
+        marks.signatureChanges.single.numerator,
+        marks.signatureChanges.single.denominator,
+      ),
+      (3, 4),
+    );
+  });
+
   test('the same directive in both hands is kept once', () {
     final m = SongMarksParser.parse(
       _song([
@@ -207,6 +233,20 @@ void main() {
   });
 
   group('repeats, voltas and navigation', () {
+    test('tie directives preserve source noteheads for engraving', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': 'C4:2 {tie} r:2', 'LH': 'C3:1'},
+          {'RH': 'C4:2 D4:4 E4:4', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.ties, hasLength(1));
+      expect(m.ties.single.startBeat, 0);
+      expect(m.ties.single.endBeat, 4);
+      expect(m.ties.single.pitch, 60);
+      expect(m.ties.single.continuationBeats, 2);
+    });
+
     test('repeat start and end sit on the bar lines they are written on', () {
       final m = SongMarksParser.parse(
         _song([
@@ -305,6 +345,23 @@ void main() {
         (5.0, NavigationKind.coda),
         (6.0, NavigationKind.dcAlFine),
         (9.0, NavigationKind.dsAlCoda),
+      ]);
+    });
+
+    test('Fine, To Coda and all D.C./D.S. directions are retained', () {
+      final m = SongMarksParser.parse(
+        _song([
+          {
+            'RH': '{fine} C4:4 {to_coda} D4:4 {dc_al_coda} E4:4 {ds_al_fine} F4:4',
+            'LH': 'C3:1',
+          },
+        ]),
+      );
+      expect(m.navigation.map((n) => n.kind), [
+        NavigationKind.fine,
+        NavigationKind.toCoda,
+        NavigationKind.dcAlCoda,
+        NavigationKind.dsAlFine,
       ]);
     });
 

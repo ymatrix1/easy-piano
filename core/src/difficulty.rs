@@ -255,9 +255,14 @@ pub fn features(song: &Song) -> Features {
     let beat = 1.0 / unit as f64;
     let bars = song.bars.len().max(1);
     let per_bar = |n: usize| n as f64 / bars as f64;
-    let known = key_info(&song.key);
-    let unknown_key = known.is_none();
-    let (key_signature, scale) = known.unwrap_or_else(|| key_info("C").expect("C is a key"));
+    let key_at_bar: Vec<_> = (0..song.bars.len())
+        .map(|bar| key_info(&song.signature_at_bar(bar).0))
+        .collect();
+    let unknown_key = key_at_bar.iter().any(Option::is_none);
+    let fallback_scale = key_info("C").expect("C is a key").1;
+    let key_signature = key_info(&song.key)
+        .map(|(size, _)| size)
+        .unwrap_or_else(|| key_info("C").expect("C is a key").0);
     let mut f = Features {
         bars: song.bars.len(),
         hands: hs.len(),
@@ -286,7 +291,20 @@ pub fn features(song: &Song) -> Features {
             .iter()
             .filter(|&&p| if hand == "LH" { p > 60 } else { p < 60 })
             .count();
-        out_key += all.iter().filter(|&&p| !scale.contains(&(p % 12))).count();
+        out_key += h
+            .hits
+            .iter()
+            .map(|hit| {
+                let scale = key_at_bar
+                    .get(hit.bar)
+                    .and_then(Option::as_ref)
+                    .map_or(&fallback_scale, |(_, scale)| scale);
+                hit.pitches
+                    .iter()
+                    .filter(|p| !scale.contains(&(**p % 12)))
+                    .count()
+            })
+            .sum::<usize>();
         black += all.iter().filter(|&&p| is_black(p)).count();
         shift += shifts(&h.hits);
         for w in h.hits.windows(2) {
@@ -684,6 +702,32 @@ mod tests {
             r.level,
             evaluate(&song("C", 96, TWINKLE), &Model::builtin()).level
         );
+    }
+
+    #[test]
+    fn key_changes_update_out_of_key_note_analysis() {
+        let song = Song::from_json(
+            r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
+            "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
+            "bpm":60,"time":"4/4","key":"C","changes":[{"bar":2,"key":"E"}],
+            "bars":[{"RH":"G#4:1"},{"RH":"G#4:1"}]}"#,
+        )
+        .unwrap();
+        let f = features(&song);
+        assert_eq!(f.out_of_key_per_bar, 0.5);
+        assert_eq!(f.key_signature, 0);
+        assert!(!f.unknown_key);
+    }
+
+    #[test]
+    fn spanish_romance_major_strain_stays_inside_e_major() {
+        let song =
+            Song::from_json(include_str!("../../content/songs/spanish-romance.json")).unwrap();
+        let f = features(&song);
+        // The original strain is in E minor (D# as the raised leading tone);
+        // the added strain is in E major. Both are covered by their effective
+        // signature at each source bar.
+        assert!(f.out_of_key_per_bar < 0.07, "{}", f.out_of_key_per_bar);
     }
 
     fn meter(time: &str, bpm: u32, bars: &str) -> Song {

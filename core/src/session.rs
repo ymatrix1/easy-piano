@@ -419,10 +419,25 @@ fn group_targets(notes: &[TimedNote], hand: HandFilter) -> Vec<Target> {
 impl Session {
     pub fn new(song: &Song, settings: Settings) -> Session {
         let targets = group_targets(&song.timeline(), settings.hand);
+        let played_bars = song.played_bar_sources();
         let critical = if song.critical.is_empty() {
-            vec![[0, song.bars.len()]]
+            vec![[0, played_bars.len()]]
         } else {
-            song.critical.clone()
+            let mut ranges = Vec::new();
+            for [start, end] in &song.critical {
+                let mut range_start = None;
+                for (i, source_bar) in played_bars.iter().enumerate() {
+                    if (*start..*end).contains(source_bar) {
+                        range_start.get_or_insert(i);
+                    } else if let Some(a) = range_start.take() {
+                        ranges.push([a, i]);
+                    }
+                }
+                if let Some(a) = range_start {
+                    ranges.push([a, played_bars.len()]);
+                }
+            }
+            ranges
         };
         let section_count = critical.len();
         let wait_beat = targets.first().map_or(0.0, |t| t.beat);
@@ -1600,7 +1615,7 @@ mod tests {
     }
 
     #[test]
-    fn ties_are_preserved_in_targets() {
+    fn tied_notes_are_one_performance_target_with_source_tie_flag() {
         let s = Song::from_json(
             r#"{"id":"t","title":"T","composer":"Trad.","arranger":"x","source":"original",
             "source_url":null,"license":"CC-BY-SA-4.0","composition_license":"public-domain",
@@ -1620,11 +1635,11 @@ mod tests {
         );
 
         let ts = session.targets();
-        assert_eq!(ts.len(), 4);
+        assert_eq!(ts.len(), 3);
         assert_eq!(ts[0].ties, vec![false]);
         assert_eq!(ts[1].ties, vec![true]);
+        assert_eq!(ts[1].note_beats, vec![4.0]);
         assert_eq!(ts[2].ties, vec![false]);
-        assert_eq!(ts[3].ties, vec![false]);
     }
 
     fn marked_song() -> Song {

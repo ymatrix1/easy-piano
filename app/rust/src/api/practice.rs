@@ -6,7 +6,7 @@ use easy_piano_core::session::{
     ChordState, Feedback, HandFilter, Input, Mode, NoteEvent, SectionEvent, Session, Settings,
     Timing, WAIT_HINT_AFTER_US,
 };
-use easy_piano_core::song::Song;
+use easy_piano_core::song::{SignatureChange as CoreSignatureChange, Song};
 use flutter_rust_bridge::frb;
 
 /// One note or chord to play, for drawing.
@@ -96,7 +96,19 @@ pub struct SongInfo {
     pub composer: String,
     pub bpm: f64,
     pub beats_per_bar: u32,
+    pub beat_unit: u32,
     pub bars: u32,
+    /// Expanded play-order duration, in the song's beat unit.
+    pub total_beats: f64,
+    pub signature_changes: Vec<SongSignatureChange>,
+    pub measure_starts: Vec<f64>,
+}
+
+pub struct SongSignatureChange {
+    pub beat: f64,
+    pub key: String,
+    pub numerator: u32,
+    pub denominator: u32,
 }
 
 /// A note the app plays (companion hand, accompaniment, pre-listen).
@@ -147,7 +159,20 @@ pub fn inspect_song(json: String) -> Result<SongInfo, String> {
         composer: song.composer.clone(),
         bpm: song.bpm,
         beats_per_bar: song.time_signature().map_or(4, |(n, _)| n),
+        beat_unit: song.time_signature().map_or(4, |(_, d)| d),
         bars: song.bars.len() as u32,
+        total_beats: song.total_beats(),
+        signature_changes: song
+            .played_signature_changes()
+            .into_iter()
+            .map(|(beat, key, numerator, denominator)| SongSignatureChange {
+                beat,
+                key,
+                numerator,
+                denominator,
+            })
+            .collect(),
+        measure_starts: song.measure_starts(),
     })
 }
 

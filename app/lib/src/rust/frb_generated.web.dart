@@ -106,6 +106,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<SongSignatureChange> dco_decode_list_song_signature_change(dynamic raw);
+
+  @protected
   List<TargetView> dco_decode_list_target_view(dynamic raw);
 
   @protected
@@ -125,6 +128,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongInfo dco_decode_song_info(dynamic raw);
+
+  @protected
+  SongSignatureChange dco_decode_song_signature_change(dynamic raw);
 
   @protected
   TargetView dco_decode_target_view(dynamic raw);
@@ -221,6 +227,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<SongSignatureChange> sse_decode_list_song_signature_change(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<TargetView> sse_decode_list_target_view(SseDeserializer deserializer);
 
   @protected
@@ -242,6 +253,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongInfo sse_decode_song_info(SseDeserializer deserializer);
+
+  @protected
+  SongSignatureChange sse_decode_song_signature_change(
+    SseDeserializer deserializer,
+  );
 
   @protected
   TargetView sse_decode_target_view(SseDeserializer deserializer);
@@ -353,6 +369,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_song_signature_change(
+    List<SongSignatureChange> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_target_view(
     List<TargetView> self,
     SseSerializer serializer,
@@ -381,6 +403,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_song_info(SongInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_song_signature_change(
+    SongSignatureChange self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_target_view(TargetView self, SseSerializer serializer);

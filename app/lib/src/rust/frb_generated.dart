@@ -1253,6 +1253,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<SongSignatureChange> dco_decode_list_song_signature_change(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_song_signature_change)
+        .toList();
+  }
+
+  @protected
   List<TargetView> dco_decode_list_target_view(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_target_view).toList();
@@ -1333,15 +1341,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SongInfo dco_decode_song_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return SongInfo(
       id: dco_decode_String(arr[0]),
       title: dco_decode_String(arr[1]),
       composer: dco_decode_String(arr[2]),
       bpm: dco_decode_f_64(arr[3]),
       beatsPerBar: dco_decode_u_32(arr[4]),
-      bars: dco_decode_u_32(arr[5]),
+      beatUnit: dco_decode_u_32(arr[5]),
+      bars: dco_decode_u_32(arr[6]),
+      totalBeats: dco_decode_f_64(arr[7]),
+      signatureChanges: dco_decode_list_song_signature_change(arr[8]),
+      measureStarts: dco_decode_list_prim_f_64_strict(arr[9]),
+    );
+  }
+
+  @protected
+  SongSignatureChange dco_decode_song_signature_change(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return SongSignatureChange(
+      beat: dco_decode_f_64(arr[0]),
+      key: dco_decode_String(arr[1]),
+      numerator: dco_decode_u_32(arr[2]),
+      denominator: dco_decode_u_32(arr[3]),
     );
   }
 
@@ -1603,6 +1629,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<SongSignatureChange> sse_decode_list_song_signature_change(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SongSignatureChange>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_song_signature_change(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<TargetView> sse_decode_list_target_view(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1725,14 +1765,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_composer = sse_decode_String(deserializer);
     var var_bpm = sse_decode_f_64(deserializer);
     var var_beatsPerBar = sse_decode_u_32(deserializer);
+    var var_beatUnit = sse_decode_u_32(deserializer);
     var var_bars = sse_decode_u_32(deserializer);
+    var var_totalBeats = sse_decode_f_64(deserializer);
+    var var_signatureChanges = sse_decode_list_song_signature_change(
+      deserializer,
+    );
+    var var_measureStarts = sse_decode_list_prim_f_64_strict(deserializer);
     return SongInfo(
       id: var_id,
       title: var_title,
       composer: var_composer,
       bpm: var_bpm,
       beatsPerBar: var_beatsPerBar,
+      beatUnit: var_beatUnit,
       bars: var_bars,
+      totalBeats: var_totalBeats,
+      signatureChanges: var_signatureChanges,
+      measureStarts: var_measureStarts,
+    );
+  }
+
+  @protected
+  SongSignatureChange sse_decode_song_signature_change(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_beat = sse_decode_f_64(deserializer);
+    var var_key = sse_decode_String(deserializer);
+    var var_numerator = sse_decode_u_32(deserializer);
+    var var_denominator = sse_decode_u_32(deserializer);
+    return SongSignatureChange(
+      beat: var_beat,
+      key: var_key,
+      numerator: var_numerator,
+      denominator: var_denominator,
     );
   }
 
@@ -1996,6 +2063,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_song_signature_change(
+    List<SongSignatureChange> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_song_signature_change(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_target_view(
     List<TargetView> self,
     SseSerializer serializer,
@@ -2085,7 +2164,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.composer, serializer);
     sse_encode_f_64(self.bpm, serializer);
     sse_encode_u_32(self.beatsPerBar, serializer);
+    sse_encode_u_32(self.beatUnit, serializer);
     sse_encode_u_32(self.bars, serializer);
+    sse_encode_f_64(self.totalBeats, serializer);
+    sse_encode_list_song_signature_change(self.signatureChanges, serializer);
+    sse_encode_list_prim_f_64_strict(self.measureStarts, serializer);
+  }
+
+  @protected
+  void sse_encode_song_signature_change(
+    SongSignatureChange self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_f_64(self.beat, serializer);
+    sse_encode_String(self.key, serializer);
+    sse_encode_u_32(self.numerator, serializer);
+    sse_encode_u_32(self.denominator, serializer);
   }
 
   @protected

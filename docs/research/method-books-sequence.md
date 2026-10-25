@@ -54,7 +54,7 @@ Used only to pick which PD works fit a level (our arrangements are our own or ba
 | Damper pedal (simple, overlapping) | Missing | No notation, no playback | piano-boat |
 | Ties | Worked around (restrike or longer value) | `{tie}` not graded as one note | piano-h90n |
 | Repeats, 1st/2nd endings, D.C./D.S. al Fine/Coda | Written out in full | No notation | piano-h90n |
-| Key or meter change inside a piece | Avoided (Spanish Romance major strain dropped) | One key/time per song | piano-h90n |
+| Key or meter change inside a piece | Bar-start changes supported; Spanish Romance major strain restored | No mid-bar changes or cancellation naturals before a new key signature | piano-h90n |
 | Two voices in one hand | ACC substitute or simplified | One line per hand (spec in PR #74, D34) | piano-16vk, then piano-5zp3 |
 | A, E, Eb, Ab major; B, F#, C#, C minor | Touched in passing only | Content | piano-0caa |
 | Augmented triads, transposition | Missing | Content | piano-0caa |

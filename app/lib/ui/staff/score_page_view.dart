@@ -10,6 +10,7 @@ import 'score_page_layout.dart';
 import 'score_pdf_printer.dart';
 import 'staff_note.dart';
 import 'staff_painter.dart';
+import 'song_marks_parser.dart';
 
 /// Full interactive score visualizer (sightread.dev / Flowkey parity & Easy Piano visual style):
 /// - Clean edge-to-edge responsive layout matching sightread.dev (no wasted black borders)
@@ -25,6 +26,10 @@ class ScorePageView extends StatefulWidget {
     required this.totalBeats,
     this.beatsPerBar = 4.0,
     this.keyFifths = 0,
+    this.beatUnit = 4,
+    this.measureStarts = const [],
+    this.signatureChanges = const [],
+    this.rootTimeDenominator = 4,
     this.bpm = 100.0,
     this.initialBeat = 0.0,
     this.initialSpeed = 1.0,
@@ -38,6 +43,10 @@ class ScorePageView extends StatefulWidget {
   final double totalBeats;
   final double beatsPerBar;
   final int keyFifths;
+  final int beatUnit;
+  final List<double> measureStarts;
+  final List<StaffSignatureChange> signatureChanges;
+  final int rootTimeDenominator;
   final double bpm;
   final double initialBeat;
   final double initialSpeed;
@@ -400,6 +409,9 @@ class _ScorePageViewState extends State<ScorePageView>
             space: config.space,
             minMeasureWidth: config.minMeasureWidth,
             keyFifths: widget.keyFifths,
+            measureStarts: widget.measureStarts,
+            signatureChanges: widget.signatureChanges,
+            baseDenominator: widget.rootTimeDenominator,
           );
 
           final systems = ScorePageLayout.breakSystems(
@@ -518,6 +530,11 @@ class _ScorePageViewState extends State<ScorePageView>
                                               staves: widget.staves,
                                               keyFifths: widget.keyFifths,
                                               beatsPerBar: widget.beatsPerBar,
+                                              beatUnit: widget.beatUnit,
+                                              signatureChanges:
+                                                  widget.signatureChanges,
+                                              measureStarts:
+                                                  widget.measureStarts,
                                               playheadBeat: _currentBeat,
                                             ),
                                           ),
@@ -821,7 +838,10 @@ class ScorePageSheet extends StatelessWidget {
     required this.staves,
     required this.keyFifths,
     required this.beatsPerBar,
+    this.beatUnit = 4,
     required this.playheadBeat,
+    this.signatureChanges = const [],
+    this.measureStarts = const [],
     this.title = '',
     this.composer = '',
   });
@@ -831,7 +851,10 @@ class ScorePageSheet extends StatelessWidget {
   final Staves staves;
   final int keyFifths;
   final double beatsPerBar;
+  final int beatUnit;
   final double playheadBeat;
+  final List<StaffSignatureChange> signatureChanges;
+  final List<double> measureStarts;
   final String title;
   final String composer;
 
@@ -941,7 +964,20 @@ class ScorePageSheet extends StatelessWidget {
                           config: config,
                           staves: staves,
                           keyFifths: keyFifths,
-                          beatsPerBar: beatsPerBar,
+                          beatsPerBar:
+                              signatureChanges
+                                  .where(
+                                    (c) =>
+                                        c.beat <=
+                                        page.systems[s].startBeat + 1e-6,
+                                  )
+                                  .lastOrNull
+                                  ?.numerator
+                                  .toDouble() ??
+                              beatsPerBar,
+                          signatureChanges: signatureChanges,
+                          measureStarts: measureStarts,
+                          beatUnit: beatUnit,
                           playheadBeat: playheadBeat,
                         ),
                       ),
@@ -968,6 +1004,9 @@ class SystemStaffPainter extends CustomPainter {
     required this.keyFifths,
     required this.beatsPerBar,
     required this.playheadBeat,
+    this.beatUnit = 4,
+    this.signatureChanges = const [],
+    this.measureStarts = const [],
   }) : super(repaint: musicFontReady);
 
   final ScoreSystem system;
@@ -976,6 +1015,9 @@ class SystemStaffPainter extends CustomPainter {
   final int keyFifths;
   final double beatsPerBar;
   final double playheadBeat;
+  final int beatUnit;
+  final List<StaffSignatureChange> signatureChanges;
+  final List<double> measureStarts;
 
   static const Color ink = Color(0xFF1A1A1A);
   static const Color playheadColor = Color(
@@ -1158,7 +1200,7 @@ class SystemStaffPainter extends CustomPainter {
 
     if (system.systemIndex == 0 && beatsPerBar > 0) {
       final numGlyph = Smufl.digitGlyph(beatsPerBar.round());
-      final denGlyph = Smufl.digitGlyph(4);
+      final denGlyph = Smufl.digitGlyph(beatUnit);
       final tsSize = space * 3.2;
       if (numGlyph != null && denGlyph != null) {
         _drawGlyph(
@@ -1528,6 +1570,9 @@ class SystemStaffPainter extends CustomPainter {
     return oldDelegate.system != system ||
         oldDelegate.config != config ||
         oldDelegate.keyFifths != keyFifths ||
+        oldDelegate.beatUnit != beatUnit ||
+        oldDelegate.signatureChanges != signatureChanges ||
+        oldDelegate.measureStarts != measureStarts ||
         oldDelegate.playheadBeat != playheadBeat;
   }
 }

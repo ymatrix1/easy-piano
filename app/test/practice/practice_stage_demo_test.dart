@@ -7,6 +7,7 @@ import 'package:easy_piano/src/rust/frb_generated.dart';
 import 'package:easy_piano/ui/keyboard_painter.dart';
 import 'package:easy_piano/ui/staff/staff_painter.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,15 +15,18 @@ import 'package:flutter_test/flutter_test.dart';
 /// (C4, D4) at 120 bpm, so the demo lasts about 1.25 s after a 0.4 s lead.
 class _FakeApi implements RustLibApi {
   @override
-  SongInfo crateApiPracticeInspectSong({required String json}) =>
-      const SongInfo(
-        id: 't',
-        title: 't',
-        composer: 't',
-        bpm: 120,
-        beatsPerBar: 4,
-        bars: 1,
-      );
+  SongInfo crateApiPracticeInspectSong({required String json}) => SongInfo(
+    id: 't',
+    title: 't',
+    composer: 't',
+    bpm: 120,
+    beatsPerBar: 4,
+    beatUnit: 4,
+    bars: 1,
+    totalBeats: 4,
+    measureStarts: Float64List.fromList([0, 4]),
+    signatureChanges: const [],
+  );
 
   @override
   PracticeSession crateApiPracticePracticeSessionCreate({

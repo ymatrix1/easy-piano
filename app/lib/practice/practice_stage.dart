@@ -214,6 +214,11 @@ class _PracticeStageState extends State<PracticeStage>
   // song's directives, redrawn with the staff.
   SongMarks _songMarks = SongMarks.empty;
   late final double _beatsPerBar;
+  late final int _beatUnit;
+  late final int _rootTimeDenominator;
+  late final List<StaffSignatureChange> _signatureChanges;
+  late final List<double> _measureStarts;
+  late double _songBeats;
   late double _usPerBeat; // changes when training slows a section down
   late final double _bpm;
   late double _tempo; // tempo of the current run
@@ -274,6 +279,19 @@ class _PracticeStageState extends State<PracticeStage>
     }
     final info = inspectSong(json: widget.songJson);
     _beatsPerBar = info.beatsPerBar.toDouble();
+    _beatUnit = info.beatUnit;
+    _rootTimeDenominator = _timeDenominator(widget.songJson);
+    _signatureChanges = [
+      for (final change in info.signatureChanges)
+        StaffSignatureChange(
+          beat: change.beat,
+          keyFifths: KeySignatureLayout.parseKey(change.key),
+          numerator: change.numerator,
+          denominator: change.denominator,
+        ),
+    ];
+    _measureStarts = info.measureStarts;
+    _songBeats = info.totalBeats;
     _bpm = info.bpm;
     _tempo = widget.tempo;
     _usPerBeat = 60e6 / (info.bpm * widget.tempo);
@@ -378,13 +396,24 @@ class _PracticeStageState extends State<PracticeStage>
         final two = k < t.twoStems.length && t.twoStems[k];
         final isLh = k < t.leftHands.length ? t.leftHands[k] : (p < 60);
         final dur = k < t.noteBeats.length ? t.noteBeats[k] : t.beats;
-        final hasTie = k < t.ties.length && t.ties[k];
+        final initialTies = _songMarks.ties
+            .where(
+              (tie) =>
+                  tie.startBeat == t.beat &&
+                  tie.pitch == p &&
+                  tie.leftHand == isLh,
+            )
+            .toList();
+        final hasTie =
+            (k < t.ties.length && t.ties[k]) || initialTies.isNotEmpty;
         pending.add((
           beat: t.beat,
           note: StaffNote(
             p,
             t.beat,
-            dur,
+            initialTies.isEmpty
+                ? dur
+                : math.min(dur, initialTies.first.endBeat - t.beat),
             leftHand: isLh,
             stemDown: down ? true : null,
             twoStems: two,
@@ -393,6 +422,43 @@ class _PracticeStageState extends State<PracticeStage>
           ),
           targetIdx: i,
         ));
+        var frontier = initialTies;
+        final seenHeads = <double>{t.beat};
+        while (frontier.isNotEmpty) {
+          final nextFrontier = <StaffTie>[];
+          for (final tie in frontier) {
+            final outgoing = _songMarks.ties
+                .where(
+                  (next) =>
+                      next.startBeat == tie.endBeat &&
+                      next.pitch == tie.pitch &&
+                      next.leftHand == tie.leftHand &&
+                      next.voice == tie.voice,
+                )
+                .toList();
+            final noteBeats = outgoing.isEmpty
+                ? tie.continuationBeats
+                : math.min(
+                    tie.continuationBeats,
+                    outgoing.first.endBeat - tie.endBeat,
+                  );
+            pending.add((
+              beat: tie.endBeat,
+              note: StaffNote(
+                tie.pitch,
+                tie.endBeat,
+                noteBeats,
+                leftHand: tie.leftHand,
+                voice: tie.voice,
+                stemDown: down ? true : null,
+                tie: outgoing.isNotEmpty,
+              ),
+              targetIdx: i,
+            ));
+            if (seenHeads.add(tie.endBeat)) nextFrontier.addAll(outgoing);
+          }
+          frontier = nextFrontier;
+        }
       }
     }
 
@@ -455,6 +521,7 @@ class _PracticeStageState extends State<PracticeStage>
     }
     _addTargets(_session.targets());
     _scheduledBars = _barCount(widget.feed!.json);
+    _songBeats = inspectSong(json: widget.feed!.json).totalBeats;
     if (_playAlong) {
       // New bars may bring backing parts (endless practice accompaniment).
       _backing = _companionNotes();
@@ -482,6 +549,17 @@ class _PracticeStageState extends State<PracticeStage>
     return 0;
   }
 
+  static int _timeDenominator(String json) {
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is Map<String, dynamic>) {
+        final time = decoded['time'] as String?;
+        if (time != null) return int.tryParse(time.split('/').last) ?? 4;
+      }
+    } catch (_) {}
+    return 4;
+  }
+
   bool get _streaming => widget.feed != null && !widget.feed!.ended;
 
   List<BackingNote> _companionNotes() => [
@@ -493,11 +571,10 @@ class _PracticeStageState extends State<PracticeStage>
   ];
 
   double get _totalBeats {
-    final songEnd = _scheduledBars * _beatsPerBar;
     final targetEnd = _initialTargets.isEmpty
         ? 1.0
         : _initialTargets.last.beat + _initialTargets.last.beats;
-    return math.max(songEnd, targetEnd);
+    return math.max(_songBeats, targetEnd);
   }
 
   bool get _hasSubdivisions =>
@@ -1321,6 +1398,10 @@ class _PracticeStageState extends State<PracticeStage>
                           totalBeats: _totalBeats,
                           beatsPerBar: _beatsPerBar,
                           keyFifths: _keyFifths,
+                          beatUnit: _beatUnit,
+                          measureStarts: _measureStarts,
+                          signatureChanges: _signatureChanges,
+                          rootTimeDenominator: _rootTimeDenominator,
                           bpm: _bpm,
                           initialBeat: currentBeat,
                           initialSpeed: currentSpeed,
@@ -1503,6 +1584,9 @@ class _PracticeStageState extends State<PracticeStage>
                           bandColor: StagePalette.band,
                           beatsPerBar: _beatsPerBar,
                           keyFifths: _keyFifths,
+                          beatUnit: _beatUnit,
+                          signatureChanges: _signatureChanges,
+                          measureStarts: _measureStarts,
                           dynamics: _songMarks.dynamics,
                           hairpins: _songMarks.hairpins,
                           ottavas: _songMarks.ottavas,

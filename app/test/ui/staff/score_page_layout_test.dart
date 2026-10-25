@@ -33,6 +33,26 @@ void main() {
         expect(measures[2].notes.length, equals(1));
       });
 
+      test('buildMeasures uses explicit variable measure starts', () {
+        final notes = [
+          const StaffNote(60, 0, 1),
+          const StaffNote(62, 4, 1),
+          const StaffNote(64, 7, 1),
+        ];
+        final measures = ScorePageLayout.buildMeasures(
+          notes: notes,
+          beatsPerBar: 4,
+          totalBeats: 10,
+          measureStarts: const [0, 4, 7, 10],
+        );
+        expect(measures.map((m) => (m.startBeat, m.endBeat)), [
+          (0.0, 4.0),
+          (4.0, 7.0),
+          (7.0, 10.0),
+        ]);
+        expect(measures.map((m) => m.notes.single.pitch), [60, 62, 64]);
+      });
+
       test('breakSystems packs measures within printable line limits', () {
         const config = ScorePageConfig(
           pageWidth: 800.0,

@@ -139,7 +139,7 @@ Soloist and Chords tracks (bean piano-wo7k). Each course has 12–15 nodes, 16�
 | Chord Styling II | 17 in 13 | Sloop John B, Swing Low Sweet Chariot, Danny Boy |
 | Chord Styling III | 17 in 13 | Shenandoah (two styles), Clementine, Streets of Laredo |
 | Pop Chords III | 19 in 15 | Loch Lomond, Wayfaring Stranger, The Water Is Wide |
-| Arpeggios I | 19 in 15 | Prelude in C BWV 846 (M), Spanish Romance (M) |
+| Arpeggios I | 19 in 15 | Prelude in C BWV 846 (M), Spanish Romance (M; 32 written bars, both strains repeated) |
 | Blues Chords I | 17 in 13 | Frankie and Johnny, Careless Love, Joshua Fit the Battle |
 | Jazz Chords I | 18 in 14 | Down by the Riverside, Bill Bailey, When the Saints |
 | Jazz Chords II | 17 in 13 | St. James Infirmary, Hard Times Come Again No More (M), After the Ball |
@@ -148,7 +148,7 @@ Soloist and Chords tracks (bean piano-wo7k). Each course has 12–15 nodes, 16�
 | Lead Sheet III | 19 in 15 | Skip to My Lou, Oh Dear What Can the Matter Be, Beautiful Dreamer |
 | Slash Chords | 16 in 12 | Canon in D, Ave Maria (Bach/Gounod) (M) |
 
-Known limits of this first pass: melodies not based on Mutopia were written from memory or checked against public transcriptions and need a by-ear review; the notation has one rhythm per hand, no ties, pedal or dynamics, so two-voice textures (Moonlight Sonata melody over triplets, the nocturne) give one layer to the app (`ACC`) passage by passage; content levels of most songs (3–7) sit below the intended 6–9 for late courses because the difficulty model's course ramp stops at 6. Gaps vs Alfred/Faber and their beans: [method-books-sequence](../research/method-books-sequence.md#gaps-after-the-first-soloist-and-chords-pass).
+Known limits of this first pass: melodies not based on Mutopia were written from memory or checked against public transcriptions and need a by-ear review; lessons for ties, repeats, endings, and in-piece key/meter changes remain open; the notation has one rhythm per hand, no pedal or dynamics, so two-voice textures (Moonlight Sonata melody over triplets, the nocturne) give one layer to the app (`ACC`) passage by passage; content levels of most songs (3–7) sit below the intended 6–9 for late courses because the difficulty model's course ramp stops at 6. Gaps vs Alfred/Faber and their beans: [method-books-sequence](../research/method-books-sequence.md#gaps-after-the-first-soloist-and-chords-pass).
 
 Reference shape (local scan, stats only): Essentials I 25 nodes / 50 levels with 9 song nodes and 5 star gates (3–4 songs each, 2–5 stars needed); Essentials II 14 / 41, 2 gates (7 stars of 4 songs); Essentials III 19 / 55, 3 gates (5–6 stars). Ours is smaller and grows by adding songs to gates. No accidentals yet in Essentials I and II; F position avoids B♭ until Essentials III (beginner rubric in [song-import.md](../research/song-import.md)).
 
