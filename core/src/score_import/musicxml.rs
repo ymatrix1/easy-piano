@@ -440,10 +440,14 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
                     _ => {}
                 }
             }
-            let beats = if max_end > 0 {
-                max_end as f64 / st.divisions as f64
+            let max_beats = max_end as f64 / st.divisions as f64;
+            // A regular bar has the length of its time signature, even if a voice
+            // ends early; only an overfull bar is longer. A pickup (implicit="yes")
+            // has the length of the notes it holds.
+            let beats = if measure.attr("implicit") == Some("yes") && max_end > 0 {
+                max_beats
             } else {
-                measure_beats(st.time)
+                measure_beats(st.time).max(max_beats)
             };
             if pi == 0 {
                 if mi == 0 {
@@ -654,6 +658,73 @@ mod tests {
         let d = s.notes.iter().find(|n| n.midi == 38).unwrap();
         assert_eq!(d.beats, 3.0); // quarter (1 beat) + half (2 beats)
         assert_eq!(s.notes.iter().filter(|n| n.midi == 38).count(), 1);
+    }
+
+    /// A one-part, partwise document with the given `<measure>` elements.
+    fn one_part(measures: &str) -> String {
+        format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="3.1">
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">{measures}</part>
+</score-partwise>"#
+        )
+    }
+
+    #[test]
+    fn unfinished_voice_keeps_the_bar_length() {
+        // Bar 1 is 4/4; the left hand ends after two beats. The bar still lasts four
+        // beats, so bar 2 starts at beat 4 (before the fix it started at beat 3).
+        let xml = one_part(
+            r#"<measure number="1">
+  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time>
+    <staves>2</staves><clef number="1"><sign>G</sign></clef><clef number="2"><sign>F</sign></clef></attributes>
+  <note><pitch><step>C</step><octave>5</octave></pitch><duration>3</duration><staff>1</staff></note>
+  <backup><duration>3</duration></backup>
+  <note><pitch><step>C</step><octave>3</octave></pitch><duration>2</duration><staff>2</staff></note>
+</measure>
+<measure number="2">
+  <note><pitch><step>D</step><octave>5</octave></pitch><duration>4</duration><staff>1</staff></note>
+</measure>"#,
+        );
+        let s = parse(xml.as_bytes()).unwrap();
+        assert_eq!(s.measures[0].beats, 4.0);
+        assert_eq!(s.measures[1].start, 4.0);
+        let d = s.notes.iter().find(|n| n.midi == 74).unwrap(); // D5
+        assert_eq!(d.start, 4.0);
+    }
+
+    #[test]
+    fn pickup_measure_has_the_length_of_its_notes() {
+        let xml = one_part(
+            r#"<measure number="0" implicit="yes">
+  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+  <note><pitch><step>G</step><octave>4</octave></pitch><duration>1</duration></note>
+</measure>
+<measure number="1">
+  <note><pitch><step>C</step><octave>5</octave></pitch><duration>4</duration></note>
+</measure>"#,
+        );
+        let s = parse(xml.as_bytes()).unwrap();
+        assert_eq!(s.measures[0].number, 0);
+        assert_eq!(s.measures[0].beats, 1.0);
+        assert_eq!(s.measures[1].start, 1.0);
+    }
+
+    #[test]
+    fn grace_notes_take_no_time_and_are_not_imported() {
+        let xml = one_part(
+            r#"<measure number="1">
+  <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+  <note><grace/><pitch><step>D</step><octave>5</octave></pitch><voice>1</voice><type>16th</type></note>
+  <note><pitch><step>E</step><octave>5</octave></pitch><duration>4</duration></note>
+</measure>"#,
+        );
+        let s = parse(xml.as_bytes()).unwrap();
+        assert_eq!(s.notes.len(), 1);
+        assert_eq!(s.notes[0].midi, 76); // E5 only
+        assert_eq!(s.notes[0].start, 0.0);
+        assert_eq!(s.measures[0].beats, 4.0);
     }
 
     #[test]

@@ -265,6 +265,7 @@ mod tests {
             start,
             beats,
             hand,
+            articulations: Vec::new(),
         }
     }
 
@@ -277,6 +278,7 @@ mod tests {
             left_clef: Clef::Bass,
             measures,
             notes,
+            expression: Vec::new(),
         }
     }
 

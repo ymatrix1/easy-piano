@@ -46,6 +46,10 @@ impl Voice {
 
 struct Parser {
     meter: (u32, u32),
+    /// Meter in force at the start of the tune (from `K:`).
+    first_meter: (u32, u32),
+    /// Meter changes in the body (`M:` lines or `[M:...]`), in order.
+    meter_changes: Vec<Change>,
     unit: (u32, u32),
     fifths: i8,
     default_clef: Clef,
@@ -59,6 +63,8 @@ impl Parser {
     fn new() -> Parser {
         Parser {
             meter: (4, 4),
+            first_meter: (4, 4),
+            meter_changes: Vec::new(),
             unit: (1, 8),
             fifths: 0,
             default_clef: Clef::Treble,
@@ -67,6 +73,25 @@ impl Parser {
             current: "1".to_string(),
             raws: Vec::new(),
         }
+    }
+
+    /// A meter change in the body. Voices are read one after another, so the change
+    /// is placed at the furthest voice cursor.
+    fn set_meter(&mut self, meter: (u32, u32)) {
+        if meter == self.meter {
+            return;
+        }
+        let at = self
+            .voices
+            .values()
+            .map(|v| v.cursor)
+            .fold(0.0f64, f64::max);
+        self.meter = meter;
+        self.meter_changes.push(Change {
+            start: at,
+            time: meter,
+            key_fifths: self.fifths,
+        });
     }
 
     fn clef_for(&self, id: &str) -> Clef {
@@ -244,6 +269,8 @@ impl Parser {
     fn inline_field(&mut self, content: &str) {
         if let Some(rest) = content.strip_prefix("V:") {
             self.switch_voice(rest);
+        } else if let Some(rest) = content.strip_prefix("M:") {
+            self.set_meter(parse_meter(rest));
         }
     }
 
@@ -503,6 +530,7 @@ pub fn parse(text: &str) -> Result<ImportedScore, String> {
                     }
                     let m = meter.unwrap_or((4, 4));
                     p.meter = m;
+                    p.first_meter = m;
                     // Default unit: 1/16 for slow meters (below 3/4), else 1/8.
                     p.unit = unit.unwrap_or(if (m.0 as f64 / m.1 as f64) < 0.75 {
                         (1, 16)
@@ -526,6 +554,7 @@ pub fn parse(text: &str) -> Result<ImportedScore, String> {
                     p.switch_voice(v);
                 }
                 Some(('X', _)) if body_started => break,
+                Some(('M', v)) => p.set_meter(parse_meter(v)),
                 Some(_) => {}
                 None => {
                     body_started = true;
@@ -542,11 +571,12 @@ pub fn parse(text: &str) -> Result<ImportedScore, String> {
         return Err("abc: no notes found".into());
     }
     let end = p.voices.values().map(|v| v.cursor).fold(0.0f64, f64::max);
-    let changes = [Change {
+    let mut changes = vec![Change {
         start: 0.0,
-        time: p.meter,
+        time: p.first_meter,
         key_fifths: p.fifths,
     }];
+    changes.append(&mut p.meter_changes);
     let measures = build_measures(&changes, end);
     let mut notes = merge_ties(p.raws);
     sort_notes(&mut notes);
@@ -656,6 +686,37 @@ mod tests {
         let s = parse(abc).unwrap();
         assert_eq!(s.notes[0].midi, 70); // B4 flattened by the key
         assert_eq!(s.notes[1].midi, 72); // c5 not in Bb's flats
+    }
+
+    #[test]
+    fn meter_change_in_the_body_starts_a_new_bar_length() {
+        let abc = "M:3/4\nL:1/4\nK:C\nCDE|\nM:4/4\nCDEF|\n";
+        let s = parse(abc).unwrap();
+        assert_eq!(s.measures.len(), 2);
+        assert_eq!(s.measures[0].time, (3, 4));
+        assert_eq!(s.measures[1].time, (4, 4));
+        assert!(approx(s.measures[1].start, 3.0));
+        assert!(approx(s.measures[1].beats, 4.0));
+    }
+
+    #[test]
+    fn inline_meter_change_counts_like_a_body_line() {
+        let abc = "M:3/4\nL:1/4\nK:C\nCDE [M:4/4] CDEF|\n";
+        let s = parse(abc).unwrap();
+        assert_eq!(s.measures.len(), 2);
+        assert_eq!(s.measures[1].time, (4, 4));
+        assert!(approx(s.measures[1].start, 3.0));
+    }
+
+    #[test]
+    fn grace_notes_take_no_time_and_are_not_imported() {
+        let abc = "M:4/4\nL:1/4\nK:C\n{g}CDEF|\n";
+        let s = parse(abc).unwrap();
+        assert_eq!(s.notes.len(), 4);
+        assert!(!s.notes.iter().any(|n| n.midi == 67)); // the grace G4 is dropped
+        assert!(approx(s.notes[0].start, 0.0));
+        assert!(approx(s.notes[3].start, 3.0));
+        assert_eq!(s.measures.len(), 1);
     }
 
     #[test]

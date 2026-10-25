@@ -172,14 +172,14 @@ When a song/level is opened, the user can toggle between:
 Each limitation is a deliberate scope cut, not a bug, unless marked "bug candidate".
 
 **MusicXML**
-- Only `score-partwise`. `score-timewise` returns an error.
-- Grace notes are skipped. Their time is not counted.
+- Only `score-partwise`. `score-timewise` returns an error. Decided (piano-tgsm): stays rejected. MuseScore, Finale, Sibelius and OpenScore export partwise; timewise support is a new bean if a real source needs it.
+- Grace notes are skipped: they take no time and their pitches are not imported. Decided (piano-tgsm), same in all formats: ABC `{...}`, LilyPond `\grace`, `\acciaccatura`, `\appoggiatura` and the grace part of `\afterGrace`. Playing ornaments is out of scope.
 - Ties are merged only within the same hand and pitch, and only when the end of the first note meets the start of the next.
 - Hands come from the staff and clef of each note. A part with more than two staves is mapped the same way, with no separate handling.
 - Measures come from the first part. Later parts use the same bar grid.
 - Pickup bars (anacrusis) use the actual length of the bar. Their `number` attribute is kept as written.
 - Clef and key changes mid-piece are read per measure. `ImportedScore.right_clef` and `left_clef` only record the clef at the start.
-- Bug candidate: measure duration uses the longest voice (`max_end`). A bar with an unfinished voice and a longer one gives the longest length, which may not match the printed bar.
+- Measure length (fixed in piano-tgsm): a regular bar lasts its time signature even when every voice ends early, so later bars keep their place. A bar longer than its time signature uses its longest voice. An implicit pickup (`implicit="yes"`) has the length of its notes.
 
 **MIDI**
 - SMPTE time division is rejected.
@@ -190,7 +190,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 
 **ABC**
 - Only the first tune in a file is read. A blank line ends the tune.
-- Header fields `M`, `L`, `Q`, `K` written inside the body are ignored. Only the header values apply.
+- Meter changes in the body (`M:` lines and `[M:...]`) are read (piano-tgsm). A change starts a new bar length at the furthest voice position. `L`, `Q` and `K` written inside the body are ignored; key changes are not read.
 - `Z` (multi-bar rest) is approximated as bars of the header meter.
 - Voices (`V:`) are read with `clef=bass` (left hand) or default (right hand). Other clefs are treated as the right hand.
 - Chord symbols, decorations, lyrics (`w:`) and grace notes `{...}` are skipped.
@@ -199,12 +199,12 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 **LilyPond (subset)**
 - Supported: `\header` (title, composer), `\score`, `\new Staff`, `\new PianoStaff`, `<< >>`, `\\` voices, `\relative`, `\clef`, `\key`, `\time`, `\tempo`, `\repeat unfold`, `\times`, chords, ties `~`, rests `r` `R`, spacers `s`.
 - Ignored: `\alternative` (its branches are skipped), `\repeat volta` (played once), `\new Lyrics` and `\new ChordNames` (with their content), scheme words starting with `#`.
-- Not handled (bug candidate): the content of `\markup`, `\lyricmode` and `\override` blocks is read as music. Words that look like pitch names (for example `a`) can become notes. Fix in `piano-tgsm`.
+- Fixed (piano-tgsm): `\markup`, `\lyricmode`, `\lyrics`, `\addlyrics`, `\chordmode`, `\figuremode`, `\layout`, `\midi`, `\paper`, `\with` and grace blocks are skipped with their arguments, so words such as `a` in a markup are not notes. `\override`, `\revert` and `\set` drop their property path and `=`; the value is a scheme word or a string.
 - Pitch names are English (`c d e f g a b`, with `is` and `es` suffixes). Dutch `h` and non-standard names are rejected.
 - `\key` applies to plain note names, as in LilyPond. `\relative` uses the nearest pitch within a fourth.
 
 **All formats**
-- Measure grid is computed from the time signature. Mid-piece meter changes inside the body of ABC and LilyPond are ignored; in MIDI they are read from meta events.
+- Measure grid is computed from the time signature in force. Mid-piece meter changes are read in all formats: MIDI from meta events, LilyPond from `\time`, ABC from `M:` and `[M:...]` (piano-tgsm). Key changes are read in MIDI and LilyPond, not in ABC.
 - Fingering, lyrics, and dynamic velocity values are not imported. ABC decorations and LilyPond articulation syntax are not imported. MusicXML expression positions are taken from the measure cursor; `<offset>` is not applied. Tie spans are merged into note durations; slurs remain separate expression spans.
 
 ### 5.3 Open items
@@ -216,7 +216,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - `piano-t6rt`: FFI and conversion to the content `Song` format. Done, see 5.5.
 - `piano-uy13`: import UI, library and drop target.
 - `piano-niz2`: validate parsers on real exported files (fixtures, expected notes, measures and hands).
-- `piano-tgsm`: close parser gaps (the "bug candidate" in 5.2, grace notes, timewise MusicXML, mid-piece meter changes), or record them as out of scope.
+- `piano-tgsm`: close parser gaps. Done: measure length, LilyPond text and settings as music, ABC mid-piece meter. Recorded as out of scope in 5.2: grace notes (time and pitch), timewise MusicXML.
 
 ### 5.5 Conversion to a content song (`piano-t6rt`)
 `score_import::song::import_song_json(file_name, bytes)` parses a file and returns content song JSON; the FFI `import_score` (`app/rust/src/api/score_import.rs`) calls it. Decision: [D40](../DECISIONS.md) (proposed).

@@ -379,6 +379,11 @@ impl Parser<'_> {
                         self.pos += 1;
                     }
                 }
+                // `\with { ... }` sets context properties; its block is not music.
+                if matches!(self.t.get(self.pos), Some(Tok::Cmd(c)) if c == "with") {
+                    self.pos += 1;
+                    let _ = self.expr();
+                }
                 match kind.as_str() {
                     "Staff" => Some(Expr::Staff(Box::new(self.expr()?))),
                     "Lyrics" | "ChordNames" | "FiguredBass" => {
@@ -440,6 +445,35 @@ impl Parser<'_> {
             }
             "alternative" => {
                 let _ = self.expr();
+                None
+            }
+            // Text and lyrics: the argument is not music. Without this, words such as
+            // `a` in a markup block become notes (docs/specs/score-import-and-page-view.md 5.2).
+            "markup" | "lyricmode" | "lyrics" | "addlyrics" | "chordmode" | "figuremode"
+            | "layout" | "midi" | "paper" => {
+                let _ = self.expr();
+                None
+            }
+            // Grace notes take no time in the bar; their pitches are not imported.
+            "grace" | "acciaccatura" | "appoggiatura" => {
+                let _ = self.expr();
+                None
+            }
+            // `\afterGrace main { grace }`: the main note counts, the grace block does not.
+            "afterGrace" => {
+                let main = self.expr();
+                let _ = self.expr();
+                main
+            }
+            "override" | "revert" | "set" => {
+                // Context property path and `=`; the value is a scheme word (dropped by
+                // the lexer) or a string, which `until` skips.
+                if matches!(self.t.get(self.pos), Some(Tok::Word(_))) {
+                    self.pos += 1;
+                }
+                if self.t.get(self.pos) == Some(&Tok::Eq) {
+                    self.pos += 1;
+                }
                 None
             }
             "header" => {
@@ -920,6 +954,41 @@ mod tests {
         // D major has F# and C#: plain c' is C#4 (61), and f' is F#4 (66).
         let midis: Vec<u8> = s.notes.iter().map(|n| n.midi).collect();
         assert_eq!(midis, vec![61, 66]);
+    }
+
+    #[test]
+    fn meter_change_in_the_body_starts_a_new_bar_length() {
+        let src = r#"\score { \new Staff { \time 3/4 c4 d e \time 4/4 c d e f } }"#;
+        let s = parse(src).unwrap();
+        assert_eq!(s.measures.len(), 2);
+        assert_eq!(s.measures[0].time, (3, 4));
+        assert_eq!(s.measures[1].time, (4, 4));
+        assert_eq!(s.measures[1].start, 3.0);
+        assert_eq!(s.measures[1].beats, 4.0);
+    }
+
+    #[test]
+    fn markup_grace_and_settings_are_not_music() {
+        // `a` and `e` in the markup are words, not notes; the grace block and the
+        // grace part of \afterGrace take no time; \override and \layout add nothing.
+        let src = r#"\score { \new Staff \with { instrumentName = "Piano" } {
+            c4 ^\markup { a e } d4 \grace { f16 g16 } e4
+            \override NoteHead.color = #red
+            f4 \afterGrace g2 { a16 } g4 } }
+            \layout { \context { \Score } }"#;
+        let s = parse(src).unwrap();
+        let got: Vec<(u8, f64, f64)> = s.notes.iter().map(|n| (n.midi, n.start, n.beats)).collect();
+        assert_eq!(
+            got,
+            vec![
+                (48, 0.0, 1.0),
+                (50, 1.0, 1.0),
+                (52, 2.0, 1.0),
+                (53, 3.0, 1.0),
+                (55, 4.0, 2.0),
+                (55, 6.0, 1.0),
+            ]
+        );
     }
 
     #[test]
