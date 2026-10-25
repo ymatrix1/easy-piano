@@ -8,6 +8,7 @@ import 'dynamics_layout.dart';
 import 'engraving_decorations.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
+import 'repeat_layout.dart';
 import 'segment_layout.dart';
 import 'smufl.dart';
 import 'staff_note.dart';
@@ -112,6 +113,9 @@ class StaffPainter extends CustomPainter {
     this.beatPulse,
     this.dynamics = const [],
     this.hairpins = const [],
+    this.repeatBarlines = const [],
+    this.voltas = const [],
+    this.navigation = const [],
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -206,6 +210,16 @@ class StaffPainter extends CustomPainter {
 
   /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
   final List<StaffHairpin> hairpins;
+
+  /// Repeat signs on bar lines (`|:`, `:|`). Each replaces the plain bar line
+  /// at its beat. See [RepeatLayout].
+  final List<StaffRepeatBarline> repeatBarlines;
+
+  /// First and second endings, drawn above the top staff.
+  final List<StaffVolta> voltas;
+
+  /// Segno, coda and jump marks, drawn above the top staff at their beat.
+  final List<StaffNavigation> navigation;
 
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
@@ -845,6 +859,28 @@ class StaffPainter extends CustomPainter {
     );
     final xCache = SegmentLayout.computeNoteXs(segments);
 
+    // Repeat signs: their geometry is computed once here. A repeat sign
+    // replaces the plain bar line at its beat (MuseScore: the BarLine item of
+    // that measure boundary is START_REPEAT / END_REPEAT, not NORMAL).
+    final repeatGeom = <int, RepeatBarlineGeometry>{};
+    for (final r in repeatBarlines) {
+      final x = SegmentLayout.barLineX(
+        barBeat: r.beat,
+        nowBeat: now,
+        anchorX: anchorX,
+        pixelsPerBeat: pixelsPerBeat,
+        space: space,
+        segments: segments,
+      );
+      repeatGeom[_beatKey(r.beat)] = RepeatLayout.barlineGeometry(
+        start: r.start,
+        end: r.end,
+        x: x,
+        space: space,
+      );
+    }
+    bool hasRepeatAt(double beat) => repeatGeom.containsKey(_beatKey(beat));
+
     if (bpb != null && bpb > 0) {
       final now0 = scrollBeat.value;
       final firstBar = ((now0 - anchorX / pixelsPerBeat) / bpb).floor();
@@ -855,6 +891,7 @@ class StaffPainter extends CustomPainter {
         final barBeat = b * bpb.toDouble();
         // The final barline replaces the regular one at the end of the piece.
         if (endBeat != null && barBeat >= endBeat! - 1e-6) continue;
+        if (hasRepeatAt(barBeat)) continue;
         final bx = SegmentLayout.barLineX(
           barBeat: barBeat,
           nowBeat: now0,
@@ -869,7 +906,8 @@ class StaffPainter extends CustomPainter {
     }
 
     final end = endBeat;
-    if (end != null && end > 0) {
+    // A repeat sign at the end of the piece draws its own closing lines.
+    if (end != null && end > 0 && !hasRepeatAt(end)) {
       final ex = SegmentLayout.barLineX(
         barBeat: end,
         nowBeat: scrollBeat.value,
@@ -893,6 +931,43 @@ class StaffPainter extends CustomPainter {
         canvas.drawLine(Offset(ex, staffTop), Offset(ex, staffBottom), thin);
         final tx = ex + thinW / 2 + space * 0.37 + thickW / 2;
         canvas.drawLine(Offset(tx, staffTop), Offset(tx, staffBottom), thick);
+      }
+    }
+
+    // Repeat signs: thick and thin lines over the system, two dots in spaces
+    // 2 and 3 of each staff (MuseScore TDraw::draw(BarLine), drawDots).
+    final staffBottoms = [
+      if (_hasTreble) trebleBottomY,
+      if (_hasBass) bassTopY + space * 4,
+    ];
+    for (final r in repeatBarlines) {
+      final g = repeatGeom[_beatKey(r.beat)]!;
+      if (g.left < clefRight || g.left > size.width) continue;
+      final lines = Paint()..color = staff;
+      for (final x in g.thinX) {
+        lines.strokeWidth = g.thinWidth;
+        canvas.drawLine(Offset(x, staffTop), Offset(x, staffBottom), lines);
+      }
+      for (final x in g.thickX) {
+        lines.strokeWidth = g.thickWidth;
+        canvas.drawLine(Offset(x, staffTop), Offset(x, staffBottom), lines);
+      }
+      for (final bottom in staffBottoms) {
+        final dotYs = RepeatLayout.dotCentresY(
+          bottomLineY: bottom,
+          space: space,
+        );
+        for (final x in g.dotsX) {
+          for (final y in dotYs) {
+            _drawGlyph(
+              canvas,
+              RepeatLayout.repeatDotGlyph,
+              glyphSize,
+              Offset(x, y),
+              staff,
+            );
+          }
+        }
       }
     }
 
@@ -1593,6 +1668,102 @@ class StaffPainter extends CustomPainter {
       }
     }
 
+    // Voltas: horizontal line above the top staff, hook at the left end and
+    // at the right end when the ending closes with a repeat (volta.cpp).
+    for (final v in voltas) {
+      final startX = RepeatLayout.voltaStartX(
+        barX: SegmentLayout.barLineX(
+          barBeat: v.startBeat,
+          nowBeat: now,
+          anchorX: anchorX,
+          pixelsPerBeat: pixelsPerBeat,
+          space: space,
+          segments: segments,
+        ),
+        group: repeatGeom[_beatKey(v.startBeat)],
+        space: space,
+      );
+      final endX = RepeatLayout.voltaEndX(
+        barX: SegmentLayout.barLineX(
+          barBeat: v.endBeat,
+          nowBeat: now,
+          anchorX: anchorX,
+          pixelsPerBeat: pixelsPerBeat,
+          space: space,
+          segments: segments,
+        ),
+        group: repeatGeom[_beatKey(v.endBeat)],
+        space: space,
+      );
+      if (endX <= startX || endX < clefRight || startX > size.width) continue;
+      final vg = RepeatLayout.voltaGeometry(
+        startX: startX,
+        endX: endX,
+        staffTopY: staffTop,
+        space: space,
+        closedEnd: v.closedEnd,
+      );
+      final vp = Paint()
+        ..color = staff
+        ..strokeWidth = RepeatLayout.voltaLineWidthSp * space;
+      canvas.drawLine(
+        Offset(vg.startX, vg.lineY),
+        Offset(vg.endX, vg.lineY),
+        vp,
+      );
+      canvas.drawLine(
+        Offset(vg.startX, vg.lineY),
+        Offset(vg.startX, vg.hookBottomY),
+        vp,
+      );
+      if (vg.closedEnd) {
+        canvas.drawLine(
+          Offset(vg.endX, vg.lineY),
+          Offset(vg.endX, vg.hookBottomY),
+          vp,
+        );
+      }
+      _drawText(
+        canvas,
+        '${v.number}.',
+        origin: vg.labelOrigin,
+        fontSize: space * 1.6,
+        color: staff,
+        fontWeight: FontWeight.bold,
+      );
+    }
+
+    // Navigation marks above the top staff, at the note's x when a note sits
+    // on the beat, else at the beat's nominal x. Under a volta they sit higher.
+    for (final nav in navigation) {
+      final i = _lowerBound(nav.beat - 1e-6);
+      final onNote =
+          i < notes.length && (notes[i].beat - nav.beat).abs() < 1e-6;
+      final x = onNote && xCache.containsKey(i)
+          ? xCache[i]!
+          : anchorX + (nav.beat - now) * pixelsPerBeat;
+      if (x < clefRight || x > size.width) continue;
+      final baseY = RepeatLayout.navigationBaselineY(
+        staffTopY: staffTop,
+        space: space,
+        overVolta: RepeatLayout.withinVolta(nav.beat, voltas),
+      );
+      final glyph = RepeatLayout.navigationGlyph(nav.kind);
+      if (glyph != null) {
+        _drawGlyph(canvas, glyph, glyphSize, Offset(x, baseY), staff);
+      } else {
+        _drawText(
+          canvas,
+          RepeatLayout.navigationLabel(nav.kind)!,
+          origin: Offset(x, baseY),
+          fontSize: space * 1.8,
+          color: staff,
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
+        );
+      }
+    }
+
     // Dynamics and hairpins (MuseScore dynamicslayout.cpp, tlayout.cpp
     // layoutHairpinSegment, systemlayout.cpp centerItemGroup, autoplace).
     if (hairpins.isNotEmpty || dynamics.isNotEmpty) {
@@ -2007,6 +2178,40 @@ class StaffPainter extends CustomPainter {
     }
   }
 
+  /// Map key for a beat, so that float noise in bar and note beats match.
+  static int _beatKey(double beat) => (beat * 1000).round();
+
+  /// Draws plain text (volta numbers, D.C. / D.S. labels) with its baseline
+  /// origin at [origin]. Text uses the app's default font, not Leland.
+  void _drawText(
+    Canvas canvas,
+    String text, {
+    required Offset origin,
+    required double fontSize,
+    required Color color,
+    FontWeight fontWeight = FontWeight.normal,
+    FontStyle fontStyle = FontStyle.normal,
+  }) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: fontSize,
+          color: color,
+          fontWeight: fontWeight,
+          fontStyle: fontStyle,
+          height: 1,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final baseline = tp.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    tp.paint(canvas, Offset(origin.dx, origin.dy - baseline));
+    tp.dispose();
+  }
+
   /// Draws a SMuFL glyph with its baseline origin at [origin].
   void _drawGlyph(
     Canvas canvas,
@@ -2037,5 +2242,8 @@ class StaffPainter extends CustomPainter {
       old.introStartSec != introStartSec ||
       old.dynamics != dynamics ||
       old.hairpins != hairpins ||
+      old.repeatBarlines != repeatBarlines ||
+      old.voltas != voltas ||
+      old.navigation != navigation ||
       old.pixelsPerBeat != pixelsPerBeat;
 }

@@ -39,7 +39,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Piano Damper Pedal (Ped., *) | `rendering/score/tlayout.cpp` (pedal) | Planned (PR 2) | `pedal_layout.dart` |
 | Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
-| Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
+| Repeat signs, Voltas (1st/2nd) & navigation (segno, coda, D.C./D.S.) | `rendering/score/tdraw.cpp` (BarLine), `rendering/score/measurelayout.cpp`, `dom/volta.cpp` | Delivered (rendering only: play order is not expanded, mid-piece key/meter not done; see section 5) | `repeat_layout.dart`, `staff_painter.dart` |
 | Chord Symbols & Lyrics | `harmonylayout.cpp`, `lyricslayout.cpp` | Planned (PR 6) | `harmony_layout.dart` |
 | Ottava (8va/8vb) & Clef Changes | `systemheaderlayout.cpp`, `tlayout.cpp` | Planned (PR 7) | `ottava_layout.dart` |
 | Shared Staff Multi-Voice | `rendering/score/stavesharinglayout.cpp`| Planned (PR 8) | `voice_sharing_layout.dart` |
@@ -90,8 +90,19 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 - **Acciaccatura:** Scaled notehead ($60\%$) with upward stem sliced by a diagonal slash (U+E560).
 - **Trills & Turns:** Standard SMuFL glyphs (`ornamentTrill`, `ornamentTurn`, `ornamentMordent`) centered above the notehead.
 
-### 5. Repeats, Voltas & System Breaks (`repeat_layout.dart`)
-- **Reference:** MuseScore `measurelayout.cpp` and `barline.cpp`.
-- **Repeat Barlines:** Thick-thin dual line with dots in staff spaces 2 and 3.
-- **Volta Brackets:** Horizontal line above measure with open/closed right edge and number label ("1.", "2.").
-- **Navigation:** Segno, Coda, D.C. al Fine, D.S. al Coda.
+### 5. Repeats, Voltas & Navigation (`repeat_layout.dart`, `staff_painter.dart`)
+- **Status:** rendering delivered (piano-h90n, PR 5). Not done: play-order expansion in core (repeats do not change timing or grading), mid-piece key and time signature changes, lint and lessons for the new directives, re-arranging songs. System breaks are not part of this PR.
+- **Reference:** MuseScore `rendering/score/tdraw.cpp` (`TDraw::draw(BarLine)`: `START_REPEAT`, `END_REPEAT`, `END_START_REPEAT`; `drawDots`), `dom/barline.cpp` (repeat barline types), `rendering/score/measurelayout.cpp` (repeat barlines on measure edges), `dom/volta.cpp` (hook at each end; the closed right hook only when the ending closes with a repeat), `data/styles/legacy-style-defaults-v450.mss`.
+- **Style values:** `barWidth` 0.18 sp, `endBarWidth` 0.55 sp, `endBarDistance` 0.37 sp, `repeatBarlineDotSeparation` 0.37 sp, `voltaPosAbove` y=-3 sp, `voltaHook` 2.2 sp, `voltaLineWidth` 0.11 sp, `markerPosAbove` y=-2 sp.
+- **Repeat signs:** `|:` is thick, thin, dots (`START_REPEAT`). `:|` is dots, thin, thick (`END_REPEAT`). `:|:` is dots, thin, thick, thin, dots (`END_START_REPEAT`). Dots are `repeatDot` (U+E044) per staff, centred 1.5 sp and 2.5 sp above the bottom line (spaces 2 and 3). A repeat sign replaces the plain bar line at its beat, including the end barline when it sits at `endBeat` (the group then draws the closing lines). The group is centred on the x that spacing gives a plain bar line. No horizontal spacing is added for it.
+- **Voltas:** one line 3 sp above the top staff line, 0.11 sp thick. A hook 2.2 sp down at the left end, and at the right end only when the ending closes with a repeat sign. Label `1.` or `2.` (default font, bold, 1.6 sp), 0.5 sp right of the start, baseline 0.45 sp above the line. A volta starts 0.2 sp after a repeat sign on its bar line and stops 0.2 sp before one.
+- **Navigation:** `segno` (U+E047) and `coda` (U+E048) above the top staff at their beat, on the note's x when a note sits on the beat. Baseline 2 sp above the top line, or 4.6 sp when the beat is under a volta. `D.C. al Fine` and `D.S. al Coda` are plain text in the default font.
+- **Codepoints** (checked against `app/assets/fonts/Leland.otf` cmap and `references/MuseScore/fonts/smufl/glyphnames.json`; metrics from `fonts/leland/leland_metadata.json`): U+E044 `repeatDot`, U+E047 `segno`, U+E048 `coda` are in Leland and used. U+E040 `repeatLeft`, U+E041 `repeatRight`, U+E045 `dalSegno`, U+E046 `daCapo` are SMuFL names but NOT in Leland (only Bravura), so the bar lines are drawn as lines and the jump marks as text. U+E043 `repeatDots` exists in Leland but is not used (two `repeatDot` glyphs, as in `drawDots`).
+- **Horizontal:** a volta end that meets a repeat sign is placed next to that sign's ink, not on the bar line. Scrolling marks (voltas, navigation) go through the same edge-fade layer as notes; repeat signs are drawn with the bar lines.
+- **Limitations (verified, not fixed):**
+  - *Tight gaps:* with no spacing added for repeat signs, a group that falls in a gap of less than about 2 sp can touch the notes next to it. A start repeat on the first bar is drawn only when it clears the clef.
+  - *Text labels:* volta numbers and D.C./D.S. text use the default font, not Leland or Edwin. Widget tests paint them as placeholder boxes.
+  - *Single line:* the app paints one scrolling line, so a volta never breaks across systems.
+  - *Repeat counts* (`playCount`) and `repeatBarTips` are not drawn.
+  - *No pixel comparison* with MuseScore output has been done.
+- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-repeats-voltas-and-navigation).

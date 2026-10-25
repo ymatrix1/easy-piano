@@ -209,7 +209,8 @@ class _PracticeStageState extends State<PracticeStage>
   late final List<int>
   _targetFirstNote; // target index → first staff note index
   int _parsedRestBars = 0;
-  // Dynamics and hairpins from the song's directives, redrawn with the staff.
+  // Dynamics, hairpins, repeat signs, endings and navigation marks from the
+  // song's directives, redrawn with the staff.
   SongMarks _songMarks = SongMarks.empty;
   late final double _beatsPerBar;
   late double _usPerBeat; // changes when training slows a section down
@@ -1423,6 +1424,9 @@ class _PracticeStageState extends State<PracticeStage>
                           keyFifths: _keyFifths,
                           dynamics: _songMarks.dynamics,
                           hairpins: _songMarks.hairpins,
+                          repeatBarlines: _songMarks.repeatBarlines,
+                          voltas: _songMarks.voltas,
+                          navigation: _songMarks.navigation,
                           // Streamed feeds do not know their end yet.
                           endBeat:
                               widget.feed == null && _initialTargets.isNotEmpty
