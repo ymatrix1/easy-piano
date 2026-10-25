@@ -2,30 +2,43 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/harmony_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics and hairpins of one song, in beats.
+/// Dynamics, hairpins, chord symbols and lyrics of one song, in beats.
 class SongMarks {
-  const SongMarks({required this.dynamics, required this.hairpins});
+  const SongMarks({
+    required this.dynamics,
+    required this.hairpins,
+    this.chords = const [],
+    this.lyrics = const [],
+  });
 
   static const empty = SongMarks(dynamics: [], hairpins: []);
 
   final List<StaffDynamic> dynamics;
   final List<StaffHairpin> hairpins;
+  final List<StaffChord> chords;
+  final List<StaffLyric> lyrics;
 }
 
-/// Reads dynamic and hairpin directives from a song JSON string.
+/// Reads dynamic, hairpin, chord and lyric directives from a song JSON string.
 ///
 /// Directives sit in a hand string like notes do (zero length):
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{chord:"Am7"}` sets a chord symbol (see [ChordSymbol.parse]).
+/// - `{lyric:"Hel-"}` sets a syllable, `{lyric:"_"}` an extension (see
+///   [StaffLyric.fromDirective]).
 ///
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
 /// end of the song. Unknown dynamic text is ignored here; lint is responsible
-/// for rejecting it in content.
+/// for rejecting it in content. Malformed chord or lyric text is dropped.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
+  static final _chordDirective = RegExp(r'^\{chord:"([^"]*)"\}$');
+  static final _lyricDirective = RegExp(r'^\{lyric:"([^"]*)"\}$');
 
   static SongMarks parse(String songJson) {
     if (songJson.isEmpty) return SongMarks.empty;
@@ -107,6 +120,18 @@ abstract final class SongMarksParser {
       if (DynamicsLayout.glyphsFor(mark) == null) return null;
       return _Event(beat, _Kind.dynamic, mark: mark);
     }
+    final chord = _chordDirective.firstMatch(tok);
+    if (chord != null) {
+      final text = chord.group(1)!;
+      if (ChordSymbol.parse(text) == null) return null;
+      return _Event(beat, _Kind.chord, mark: text);
+    }
+    final lyric = _lyricDirective.firstMatch(tok);
+    if (lyric != null) {
+      final text = lyric.group(1)!;
+      if (StaffLyric.fromDirective(beat, text) == null) return null;
+      return _Event(beat, _Kind.lyric, mark: text);
+    }
     return switch (tok) {
       '{cresc}' => _Event(beat, _Kind.open, hairpin: HairpinKind.crescendo),
       '{dim}' => _Event(beat, _Kind.open, hairpin: HairpinKind.diminuendo),
@@ -119,6 +144,8 @@ abstract final class SongMarksParser {
     events.sort((a, b) => a.beat.compareTo(b.beat));
     final dynamics = <StaffDynamic>[];
     final hairpins = <StaffHairpin>[];
+    final chords = <StaffChord>[];
+    final lyrics = <StaffLyric>[];
 
     HairpinKind? openKind;
     var openAt = 0.0;
@@ -153,14 +180,31 @@ abstract final class SongMarksParser {
           openLeftHand = e.leftHand;
         case _Kind.end:
           closeAt(e.beat);
+        case _Kind.chord:
+          final symbol = ChordSymbol.parse(e.mark ?? '');
+          if (symbol != null) {
+            chords.add(StaffChord(e.beat, symbol, leftHand: e.leftHand));
+          }
+        case _Kind.lyric:
+          final lyric = StaffLyric.fromDirective(
+            e.beat,
+            e.mark ?? '',
+            leftHand: e.leftHand,
+          );
+          if (lyric != null) lyrics.add(lyric);
       }
     }
     closeAt(totalBeats);
-    return SongMarks(dynamics: dynamics, hairpins: hairpins);
+    return SongMarks(
+      dynamics: dynamics,
+      hairpins: hairpins,
+      chords: chords,
+      lyrics: lyrics,
+    );
   }
 }
 
-enum _Kind { dynamic, open, end }
+enum _Kind { dynamic, open, end, chord, lyric }
 
 class _Event {
   const _Event(

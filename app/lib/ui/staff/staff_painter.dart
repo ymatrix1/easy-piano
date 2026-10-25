@@ -6,6 +6,7 @@ import 'beam_layout.dart';
 import 'chord_layout.dart';
 import 'dynamics_layout.dart';
 import 'engraving_decorations.dart';
+import 'harmony_layout.dart';
 import 'key_signature.dart';
 import 'music_font.dart';
 import 'segment_layout.dart';
@@ -18,6 +19,7 @@ export 'beam_layout.dart';
 export 'chord_layout.dart';
 export 'dynamics_layout.dart';
 export 'engraving_decorations.dart';
+export 'harmony_layout.dart';
 export 'key_signature.dart';
 export 'segment_layout.dart';
 export 'smufl.dart';
@@ -112,6 +114,8 @@ class StaffPainter extends CustomPainter {
     this.beatPulse,
     this.dynamics = const [],
     this.hairpins = const [],
+    this.chords = const [],
+    this.lyrics = const [],
     Listenable? repaintAlso,
   }) : scrollBeat = playheadBeat,
        super(
@@ -207,6 +211,12 @@ class StaffPainter extends CustomPainter {
   /// Hairpins (crescendo / diminuendo), drawn below the bottom staff.
   final List<StaffHairpin> hairpins;
 
+  /// Chord symbols, drawn above the top staff (see [HarmonyLayout]).
+  final List<StaffChord> chords;
+
+  /// Lyric syllables and extensions, drawn below the staff of their hand.
+  final List<StaffLyric> lyrics;
+
   // Diatonic step within an octave for each pitch class (sharp spelling).
   static const _stepOf = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
   static const _isSharp = [
@@ -232,6 +242,22 @@ class StaffPainter extends CustomPainter {
   static final _bassTopStep = diatonicStep(57);
 
   final _glyphCache = <String, TextPainter>{};
+
+  final _textCache = <String, TextPainter>{};
+
+  /// Plain sans text for chord symbols and lyrics (not SMuFL; see
+  /// [HarmonyLayout]). The default font of the app theme is used.
+  TextPainter _plainText(String text, double size, Color color) {
+    return _textCache.putIfAbsent('$text@$size@${color.toARGB32()}', () {
+      return TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(fontSize: size, color: color, height: 1),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+    });
+  }
 
   TextPainter _glyph(String g, double size, [Color? color]) {
     final c = color ?? inkColor;
@@ -1593,6 +1619,19 @@ class StaffPainter extends CustomPainter {
       }
     }
 
+    if (chords.isNotEmpty || lyrics.isNotEmpty) {
+      _drawChordsAndLyrics(
+        canvas,
+        size: size,
+        l: l,
+        anchorX: anchorX,
+        now: now,
+        xCache: xCache,
+        headOffsets: chordHeadOffsets,
+        color: staff,
+      );
+    }
+
     // Dynamics and hairpins (MuseScore dynamicslayout.cpp, tlayout.cpp
     // layoutHairpinSegment, systemlayout.cpp centerItemGroup, autoplace).
     if (hairpins.isNotEmpty || dynamics.isNotEmpty) {
@@ -1841,6 +1880,260 @@ class StaffPainter extends CustomPainter {
     canvas.restore();
   }
 
+  /// Chord symbols above the top staff, and lyrics below the staff of their
+  /// hand (MuseScore harmonylayout.cpp, lyricslayout.cpp). Geometry is in
+  /// [HarmonyLayout]; this method only measures text and paints it.
+  void _drawChordsAndLyrics(
+    Canvas canvas, {
+    required Size size,
+    required ({double space, double trebleBottomY, double bassTopY}) l,
+    required double anchorX,
+    required double now,
+    required Map<int, double> xCache,
+    required Map<int, double> headOffsets,
+    required Color color,
+  }) {
+    final space = l.space;
+    final ppb = pixelsPerBeat;
+    final width = size.width;
+
+    // Indices of the notes that start at [beat].
+    Iterable<int> indicesAt(double beat) sync* {
+      for (
+        var i = lowerBound(notes, beat - 1e-6);
+        i < notes.length && (notes[i].beat - beat).abs() < 1e-6;
+        i++
+      ) {
+        yield i;
+      }
+    }
+
+    // Left edge of the notehead of note [i], including chord displacement.
+    double headLeft(int i) =>
+        (xCache[i] ??
+            noteX(
+              index: i,
+              notes: notes,
+              anchorX: anchorX,
+              nowBeat: now,
+              pixelsPerBeat: ppb,
+              space: space,
+              xCache: xCache,
+              beatsPerBar: beatsPerBar,
+            )) +
+        (headOffsets[i] ?? 0.0);
+
+    // The note of hand [leftHand] at [beat]; another hand's note when that
+    // hand has none there.
+    int? noteAt(double beat, bool leftHand) {
+      int? any;
+      for (final i in indicesAt(beat)) {
+        final n = notes[i];
+        if (n.isSpacer) continue;
+        if (n.leftHand == leftHand) return i;
+        any ??= i;
+      }
+      return any;
+    }
+
+    // Chords: left aligned on the note, above the top staff line or above the
+    // highest notehead at their onset, whichever is higher.
+    final chordTop = _hasTreble ? l.trebleBottomY - space * 4 : l.bassTopY;
+    final rootPx = space * HarmonyLayout.chordSizeSp;
+    for (final c in chords) {
+      final i = noteAt(c.beat, c.leftHand);
+      final x = i == null ? anchorX + (c.beat - now) * ppb : headLeft(i);
+      double? noteTop;
+      for (final j in indicesAt(c.beat)) {
+        final n = notes[j];
+        if (n.isSpacer || n.isRest) continue;
+        final top =
+            _noteY(n.pitch, _onBass(n), l) -
+            DynamicsLayout.noteheadHeightSp * space / 2;
+        noteTop = noteTop == null ? top : math.min(noteTop, top);
+      }
+      final baseline = HarmonyLayout.chordBaselineY(
+        staffTopY: chordTop,
+        noteTopY: noteTop,
+        space: space,
+      );
+      final runs = [
+        for (final r in HarmonyLayout.chordRuns(c.symbol))
+          (
+            tp: _plainText(r.text, rootPx * r.scale, color),
+            rise: r.riseEm * rootPx,
+          ),
+      ];
+      final total = runs.fold(0.0, (w, r) => w + r.tp.width);
+      if (x > width || x + total < 0) continue;
+      var cx = x;
+      for (final r in runs) {
+        final base = baseline - r.rise;
+        r.tp.paint(
+          canvas,
+          Offset(
+            cx,
+            base -
+                r.tp.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+          ),
+        );
+        cx += r.tp.width;
+      }
+    }
+
+    if (lyrics.isEmpty) return;
+    final lyricPx = space * HarmonyLayout.lyricSizeSp;
+    final ref = _plainText('Ag', lyricPx, color);
+    final baseOffset = ref.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    final lineW = math.max(1.2, HarmonyLayout.lineThicknessSp * space);
+    final linePaint = Paint()
+      ..color = color
+      ..strokeWidth = lineW;
+
+    for (final hand in const [false, true]) {
+      // Items of this hand in beat order.
+      final row = [
+        for (final s in lyrics)
+          if (s.leftHand == hand) s,
+      ]..sort((a, b) => a.beat.compareTo(b.beat));
+      if (row.isEmpty) continue;
+
+      // Staff of this hand: the bass staff for LH on a grand staff.
+      final onBassStaff = switch (staves) {
+        Staves.treble => false,
+        Staves.bass => true,
+        Staves.grand => hand,
+      };
+      final staffBottomY = onBassStaff
+          ? l.bassTopY + space * 4
+          : l.trebleBottomY;
+      final middleY = onBassStaff
+          ? l.bassTopY + space * 2
+          : l.trebleBottomY - space * 2;
+
+      // Lowest ink of the notes at each lyric's onset (heads and down stems).
+      double? lowestInkAt(double beat) {
+        double? lowest;
+        for (final j in indicesAt(beat)) {
+          final m = notes[j];
+          if (m.isSpacer || m.isRest || m.leftHand != hand) continue;
+          final y = _noteY(m.pitch, onBassStaff, l);
+          var bottom = y + DynamicsLayout.noteheadHeightSp * space / 2;
+          if (m.beats < 4 &&
+              m.isStemDown(onBassStaff, isGrandStaff: staves == Staves.grand)) {
+            bottom = math.max(
+              bottom,
+              StemLayout.calcStemTipY(
+                noteY: y,
+                stemDown: true,
+                space: space,
+                middleLineY: middleY,
+              ),
+            );
+          }
+          lowest = lowest == null ? bottom : math.max(lowest, bottom);
+        }
+        return lowest;
+      }
+
+      final slots = <_LyricSlot>[];
+      double? rowLowest;
+      for (final s in row) {
+        final i = noteAt(s.beat, hand);
+        final whole = i != null && notes[i].beats >= 4;
+        final centre = i == null
+            ? anchorX +
+                  (s.beat - now) * ppb +
+                  DynamicsLayout.noteheadCentreSp(whole: false) * space
+            : headLeft(i) +
+                  DynamicsLayout.noteheadCentreSp(whole: whole) * space;
+        final width = s.isExtension
+            ? 0.0
+            : _plainText(s.text, lyricPx, color).width;
+        final slot = _LyricSlot(
+          s,
+          centre: centre,
+          width: width,
+          beats: i == null ? 1.0 : notes[i].beats,
+        );
+        slots.add(slot);
+        final low = lowestInkAt(s.beat);
+        if (low != null) {
+          rowLowest = rowLowest == null ? low : math.max(rowLowest, low);
+        }
+      }
+
+      // One baseline for the whole row of this hand, so syllables line up
+      // even where stems differ in length.
+      final top = HarmonyLayout.lyricTop(
+        staffBottomY: staffBottomY,
+        lowestInkY: rowLowest,
+        space: space,
+      );
+      for (final slot in slots) {
+        slot
+          ..boxTop = top
+          ..baseline = top + baseOffset;
+      }
+
+      for (var k = 0; k < slots.length; k++) {
+        final slot = slots[k];
+        final s = slot.lyric;
+        if (slot.right < 0 || slot.left > width) continue;
+        if (!s.isExtension) {
+          _plainText(
+            s.text,
+            lyricPx,
+            color,
+          ).paint(canvas, Offset(slot.left, slot.boxTop));
+        }
+        final y = HarmonyLayout.dashY(baselineY: slot.baseline, space: space);
+        if (s.hyphen && !s.isExtension && k + 1 < slots.length) {
+          final next = slots[k + 1];
+          if (!next.lyric.isExtension) {
+            final seg = HarmonyLayout.hyphenSegment(
+              prevRight: slot.right,
+              nextLeft: next.left,
+              space: space,
+            );
+            if (seg != null) {
+              canvas.drawLine(Offset(seg.x0, y), Offset(seg.x1, y), linePaint);
+            }
+          }
+        }
+        if (s.isExtension) {
+          // From the previous lyric to the next one, or to the end of the
+          // note (duration in beats, but not past the next note of the hand).
+          final from = k > 0 ? slots[k - 1].anchorRight : slot.centre;
+          double to;
+          if (k + 1 < slots.length) {
+            to = slots[k + 1].anchorLeft;
+          } else {
+            to = slot.centre + slot.beats * ppb;
+            // Not past the next notehead of this hand.
+            final later = lowerBound(notes, s.beat + 1e-6);
+            for (var j = later; j < notes.length; j++) {
+              final m = notes[j];
+              if (m.isSpacer || m.leftHand != hand) continue;
+              to = math.min(to, headLeft(j));
+              break;
+            }
+          }
+          final seg = HarmonyLayout.dashSegment(
+            fromX: from,
+            toX: to,
+            space: space,
+          );
+          if (seg != null) {
+            canvas.drawLine(Offset(seg.x0, y), Offset(seg.x1, y), linePaint);
+          }
+        }
+      }
+    }
+  }
+
   static bool _isDotted(double beats) =>
       const [0.75, 1.5, 3.0, 6.0].any((d) => (beats - d).abs() < 1e-6);
 
@@ -2037,5 +2330,41 @@ class StaffPainter extends CustomPainter {
       old.introStartSec != introStartSec ||
       old.dynamics != dynamics ||
       old.hairpins != hairpins ||
+      old.chords != chords ||
+      old.lyrics != lyrics ||
       old.pixelsPerBeat != pixelsPerBeat;
+}
+
+/// A lyric item placed for drawing on its hand's row (see
+/// `StaffPainter._drawChordsAndLyrics`).
+class _LyricSlot {
+  _LyricSlot(
+    this.lyric, {
+    required this.centre,
+    required this.width,
+    required this.beats,
+  });
+
+  final StaffLyric lyric;
+
+  /// Centre of the notehead it sits under.
+  final double centre;
+
+  /// Text width; zero for an extension.
+  final double width;
+
+  /// Duration of that note, in beats.
+  final double beats;
+
+  /// Top of the row, and its baseline. Set once the row is laid out.
+  double boxTop = 0;
+  double baseline = 0;
+
+  double get left => HarmonyLayout.lyricLeft(centreX: centre, width: width);
+  double get right => left + width;
+
+  /// Where a melisma line meets this item: the text edge, or the note centre
+  /// for an extension.
+  double get anchorLeft => lyric.isExtension ? centre : left;
+  double get anchorRight => lyric.isExtension ? centre : right;
 }

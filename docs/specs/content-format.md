@@ -110,6 +110,19 @@ The same directive in both hands at the same beat is drawn once.
 **Grading (informational).** For MIDI input, each matched note-on carries its velocity. A dynamic passes when at least half of the onsets from its beat to the next dynamic classify as it (MuseScore velocities: ppp 16, pp 33, p 49, mp 64, mf 80, f 96, ff 112, fff 126; nearest centre wins). `fp`, `sf` and `sfz` are not graded. A crescendo passes when the mean velocity of its second half exceeds the first by 8 or more (a diminuendo, the reverse). Mic and touch input have no velocity and are not graded.
  Parsed by `app/lib/ui/staff/song_marks_parser.dart`.
 
+## Directives: chord symbols and lyrics
+
+Status: rendering only (piano-r16m, PR 6). Parsed by `app/lib/ui/staff/song_marks_parser.dart`, drawn per [sheet-engraving](sheet-engraving.md#6-chord-symbols-and-lyrics-harmony_layoutdart-staff_painterdart). Zero length, placed in a hand string like a note: `{chord:"G7/B"} G3:2 {lyric:"Hel-"} C4:4 {lyric:"lo"} D4:4 {lyric:"_"} E4:2`.
+
+- `{chord:"<symbol>"}`: a chord symbol at that beat, drawn above the top staff over the note that starts there in that hand. Symbol: root `A`-`G` with an optional `#` or `b`, a suffix (letters, digits and `+ - ( ) # ° ø`), then an optional `/` and a bass note: `C`, `Am7`, `G7/B`, `F#m7b5`, `Bb`, `Bbm7/Db`, `Cmaj7(#11)`. Other text is ignored by the app and must be rejected by lint once lint checks it.
+- `{lyric:"<syllable>"}`: a syllable drawn under the note at that beat, centred on its notehead, below the staff of its hand. A trailing `-` (`{lyric:"Hel-"}`) draws a hyphen to the next syllable of that hand. A syllable has no spaces and no `_`, `"`, `{`, `}` or inner `-`.
+- `{lyric:"_"}`: an extension (melisma). A line from the previous lyric of that hand to the next lyric, or to the end of the note.
+- Same directive, same beat, in both hands: drawn once, on the treble staff.
+- Malformed text (`{chord:"c7"}`, `{chord:"C/"}`, `{lyric:""}`, `{lyric:"a b"}`) is ignored.
+- Chords and lyrics do not close an open hairpin.
+
+No song or level uses these yet. Multi-verse lyrics, playback and lint checks are not part of this format yet.
+
 ## Two voices per hand (`RH2`, `LH2`)
 
 Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.

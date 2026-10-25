@@ -40,7 +40,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
 | Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
-| Chord Symbols & Lyrics | `harmonylayout.cpp`, `lyricslayout.cpp` | Planned (PR 6) | `harmony_layout.dart` |
+| Chord Symbols & Lyrics (single verse) | `harmonylayout.cpp`, `lyricslayout.cpp` | Delivered (PR 6, `piano-r16m`: rendering only; multi-verse, playback and lint not included) | `harmony_layout.dart` |
 | Ottava (8va/8vb) & Clef Changes | `systemheaderlayout.cpp`, `tlayout.cpp` | Planned (PR 7) | `ottava_layout.dart` |
 | Shared Staff Multi-Voice | `rendering/score/stavesharinglayout.cpp`| Planned (PR 8) | `voice_sharing_layout.dart` |
 | Static Multi-System Page View | `rendering/score/pagelayout.cpp` | Planned (`piano-ev1n`) | `score_page_layout.dart` |
@@ -95,3 +95,30 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 - **Repeat Barlines:** Thick-thin dual line with dots in staff spaces 2 and 3.
 - **Volta Brackets:** Horizontal line above measure with open/closed right edge and number label ("1.", "2.").
 - **Navigation:** Segno, Coda, D.C. al Fine, D.S. al Coda.
+
+### 6. Chord Symbols and Lyrics (`harmony_layout.dart`, `staff_painter.dart`)
+- **Reference:** MuseScore `rendering/score/harmonylayout.cpp` (chord symbol as text above the staff; extension raised, bass after a slash lowered), `rendering/score/lyricslayout.cpp` (syllable centred under the note, hyphen between syllables, melisma line). Style values from `data/styles/legacy-style-defaults-v450.mss` where noted.
+- **Data:** song JSON directives, see [content-format.md](content-format.md#directives-chord-symbols-and-lyrics). Chords and lyrics are only read from song JSON; no level or content file uses them yet.
+- **Chord symbols** (`{chord:"Am7"}`): `ChordSymbol.parse` splits root (`A`-`G`, optional `#` or `b`), suffix (letters, digits and `+ - ( ) # ° ø`, up to 16 characters in total) and bass (`/` then a note). Anything else is ignored (lower-case root, empty bass, spaces, a second slash).
+  - Runs: root at 1.5 sp; suffix at 0.7 scale, raised 0.22 root em (superscript, top aligned with the root); `/` on the baseline; bass at 0.7 scale, lowered 0.2 em (subscript).
+  - Accidentals are ASCII `#` and `b`. Text uses the app's default sans font, not SMuFL, so no codepoints are involved.
+  - Placement: left aligned on the notehead of the hand's note at that beat (any hand's note, or the nominal beat position when none). Baseline 0.8 sp above the top staff line, or above the top of the notes at that onset when they are higher. Anchored to the top staff (treble on a grand staff; bass alone on a bass staff).
+  - A chord in both hands at the same beat is drawn once, on the treble.
+- **Lyrics** (`{lyric:"Hel-"}`, `{lyric:"lo"}`, `{lyric:"_"}`): `StaffLyric.fromDirective`.
+  - A syllable is centred on the notehead centre (0.59 sp, or 0.844 sp for whole notes). Font size 1.4 sp, default sans font.
+  - One row per hand. The row sits 1 sp below the bottom line of the hand's staff (`lyricsMinTopDistance`), lowered so it clears the lowest ink (noteheads, down stems) of that hand's onsets by 0.25 sp (`lyricsMinDistance`). The row baseline is computed over all lyrics of the hand, so it does not move while the score scrolls. Left hand on a grand staff sits below the bass staff.
+  - Hyphen (syllable ends with `-`): a line of 0.2 to 0.5 sp centred in the gap to the next syllable of that hand, 0.1 sp clearance from each syllable, 0.1 sp thick, 0.35 sp above the baseline. Not drawn when the gap is under 0.4 sp or the next lyric is an extension.
+  - Extension (`_`): a line from the previous lyric of that hand (its text edge, or the note centre for an extension) to the next lyric's left edge (or the note centre for an extension), or to the end of its note (centre plus duration in beats times `pixelsPerBeat`, not past the next notehead of that hand). Padded 0.2 sp at each end, not drawn under 0.4 sp (`lyricsMelismaPad`, `lyricsDashMinLength`).
+  - A lyric in both hands at the same beat and with the same text is drawn once, on the treble staff.
+- **Not implemented (by design or not yet):**
+  - Multi-verse stacking (verse 2, verse 3) and verse numbers.
+  - Playback, grading or any use of chord and lyric text outside drawing.
+  - Core parser and lint checks for chord and lyric text. Core accepts any directive; lint does not check these yet.
+  - Chord symbol and lyric collisions with dynamics, hairpins, finger labels and ornaments: no clearance pass beyond the notehead and stem rows above.
+  - Lyric lines are not broken across systems (the app paints one scrolling line).
+  - `lyricsPosBelow` (3 sp in MuseScore) is not used; the 1 sp row sits in the grand staff gap so the treble row does not reach the bass staff. Dense treble lyrics on a grand staff can still touch bass-staff ledger lines.
+  - Chord text is left aligned on the note, not centred or placed by `harmonyPlacement` style.
+- **Known limitations (verified, not fixed):**
+  - Text widths come from the font loaded at run time. Paint tests use flutter_test's placeholder font, so they check for ink in regions, not exact glyph boxes.
+  - No pixel comparison with MuseScore output has been done.
+  - Parser (`song_marks_parser.dart`) and geometry (`harmony_layout.dart`) are unit-tested. Paint tests (`harmony_paint_test.dart`) show that each mark adds ink where expected.
