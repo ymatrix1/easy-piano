@@ -29,6 +29,7 @@ void main() {
       expect(g.thinWidth, closeTo(1.8, 1e-9));
       expect(g.left, closeTo(100 - 9.43, 1e-9));
       expect(g.right, closeTo(100 + 9.43, 1e-9));
+      expect(g.leftDots, isFalse);
     });
 
     test('end repeat: dots, thin, then thick line; same width as start', () {
@@ -43,6 +44,7 @@ void main() {
       expect(g.thinX.single, closeTo(100 - 9.43 + 8.76, 1e-9));
       expect(g.thickX.single, closeTo(100 - 9.43 + 16.11, 1e-9));
       expect(g.right - g.left, closeTo(18.86, 1e-9));
+      expect(g.leftDots, isTrue);
     });
 
     test(
@@ -97,8 +99,10 @@ void main() {
       expect(v.startX, 40);
       expect(v.endX, 90);
       expect(v.closedEnd, isTrue);
-      expect(v.labelOrigin.dx, closeTo(45, 1e-9));
-      expect(v.labelOrigin.dy, closeTo(65.5, 1e-9));
+      // Label: start + voltaOffset x 0.6 sp = 40 + 6; line + voltaOffset y
+      // 2.2 sp (below the line, volta.cpp:109) = 70 + 22.
+      expect(v.labelOrigin.dx, closeTo(46, 1e-9));
+      expect(v.labelOrigin.dy, closeTo(92, 1e-9));
     });
 
     test(
@@ -116,20 +120,53 @@ void main() {
           x: 200,
           space: 10,
         );
+        // volta.cpp:376: start = segment width (group right) - lw / 2 with
+        // lw = 1.1 sp at space 10, so minus 0.55.
         expect(
           RepeatLayout.voltaStartX(barX: 100, group: start, space: 10),
-          closeTo(start.right + 2, 1e-9),
+          closeTo(start.right - 0.55, 1e-9),
         );
+        // volta.cpp:387-390: origin + dot width 4.16 + separation 3.7 +
+        // lw / 2 0.55 = origin + 8.41.
         expect(
           RepeatLayout.voltaEndX(barX: 200, group: end, space: 10),
-          closeTo(end.left - 2, 1e-9),
+          closeTo(end.left + 8.41, 1e-9),
         );
       },
     );
 
-    test('a volta without a repeat sign meets the bar line itself', () {
-      expect(RepeatLayout.voltaStartX(barX: 100, group: null, space: 10), 100);
-      expect(RepeatLayout.voltaEndX(barX: 200, group: null, space: 10), 200);
+    test('a volta without a repeat sign uses the bar line centre', () {
+      // Plain bar: centre = origin + barWidth / 2 (tdraw.cpp:735). Start =
+      // origin + barWidth - lw / 2 = centre + (1.8 - 1.1) / 2 = centre + 0.35.
+      expect(
+        RepeatLayout.voltaStartX(barX: 100, group: null, space: 10),
+        closeTo(100.35, 1e-9),
+      );
+      // End = origin + lw / 2 = centre - 0.35 (volta.cpp:390).
+      expect(
+        RepeatLayout.voltaEndX(barX: 200, group: null, space: 10),
+        closeTo(199.65, 1e-9),
+      );
+    });
+
+    test('segno and coda are centred on x, 18 pt at space 20', () {
+      // 18 pt / 4.96 pt per sp = 3.629 sp em = 72.58 px at space 20.
+      expect(RepeatLayout.navigationGlyphEm(20), closeTo(72.58, 0.01));
+      // Segno is 0.654 em wide: origin 360 - 0.327 * 72.58 = 336.27.
+      expect(
+        RepeatLayout.navigationGlyphOriginX(
+          kind: NavigationKind.segno,
+          x: 360,
+          space: 20,
+        ),
+        closeTo(336.27, 0.01),
+      );
+    });
+
+    test('volta and jump text sizes: 11 pt at space 20', () {
+      // 11 pt / 4.96 pt per sp = 2.218 sp, 44.35 px at space 20.
+      expect(RepeatLayout.voltaFontSize(20), closeTo(44.35, 0.01));
+      expect(RepeatLayout.jumpFontSize(20), closeTo(44.35, 0.01));
     });
 
     test('a volta covers its start beat and not its end beat', () {
@@ -142,7 +179,7 @@ void main() {
       expect(RepeatLayout.withinVolta(3.9, voltas), isFalse);
     });
 
-    test('navigation sits 2 sp above the staff, 4.6 sp under a volta', () {
+    test('navigation sits 2 sp above the staff (markerPosAbove)', () {
       expect(
         RepeatLayout.navigationBaselineY(
           staffTopY: 100,
@@ -151,15 +188,22 @@ void main() {
         ),
         80,
       );
-      expect(
-        RepeatLayout.navigationBaselineY(
-          staffTopY: 100,
-          space: 10,
-          overVolta: true,
-        ),
-        closeTo(54, 1e-9),
-      );
     });
+
+    test(
+      'navigation over a volta: volta line 3 sp + repeatMinDistance 0.5 sp',
+      () {
+        // Volta line at 100 - 30 = 70; the mark's baseline 0.5 sp above it.
+        expect(
+          RepeatLayout.navigationBaselineY(
+            staffTopY: 100,
+            space: 10,
+            overVolta: true,
+          ),
+          closeTo(65, 1e-9),
+        );
+      },
+    );
 
     test('codepoints: repeat dot, segno, coda; text for the jumps', () {
       expect(RepeatLayout.repeatDotGlyph, '\uE044');
@@ -236,13 +280,18 @@ void main() {
       expect(extra.every((p) => p.$2 < 160), isTrue);
       // The horizontal line at y 100 runs from x 344 to 464.
       expect(extra.any((p) => p.$2 == 100 && p.$1 > 360 && p.$1 < 450), isTrue);
-      // Left hook at x 344 and closed right hook at x 464, down toward 144.
+      // Plain bar at 344 (centre): start 344.7 (+0.7 for lw 2.2 px), closed
+      // end 463.3 (-0.7). Hooks run 2.2 sp = 44 px down from y 100.
       expect(
-        extra.any((p) => p.$1 == 344 && p.$2 >= 110 && p.$2 <= 140),
+        extra.any(
+          (p) => p.$1 >= 343 && p.$1 <= 346 && p.$2 >= 110 && p.$2 <= 140,
+        ),
         isTrue,
       );
       expect(
-        extra.any((p) => p.$1 == 464 && p.$2 >= 110 && p.$2 <= 140),
+        extra.any(
+          (p) => p.$1 >= 462 && p.$1 <= 465 && p.$2 >= 110 && p.$2 <= 140,
+        ),
         isTrue,
       );
     });
@@ -255,9 +304,10 @@ void main() {
       );
       final extra = _extraPixels(base, marked);
       expect(extra, isNotEmpty);
-      // Glyph origin x 360, baseline y 120; ink rises about 70 px above it.
+      // Centred on x 360: origin 336.3, width 0.654 em = 47 px; baseline y
+      // 120, ink rises 3.48 sp = 70 px above it.
       expect(extra.every((p) => p.$2 < 160), isTrue);
-      expect(extra.every((p) => p.$1 > 355 && p.$1 < 420), isTrue);
+      expect(extra.every((p) => p.$1 > 330 && p.$1 < 390), isTrue);
     });
 
     testWidgets('D.C. al Fine text sits above the staff at its beat', (

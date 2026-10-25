@@ -1723,11 +1723,13 @@ class StaffPainter extends CustomPainter {
           vp,
         );
       }
+      // Label below the line, bold, 11 pt spatium-dependent (volta.cpp:109,
+      // v450:497-500). Font face is local, see RepeatLayout.
       _drawText(
         canvas,
         '${v.number}.',
         origin: vg.labelOrigin,
-        fontSize: space * 1.6,
+        fontSize: RepeatLayout.voltaFontSize(space),
         color: staff,
         fontWeight: FontWeight.bold,
       );
@@ -1750,16 +1752,29 @@ class StaffPainter extends CustomPainter {
       );
       final glyph = RepeatLayout.navigationGlyph(nav.kind);
       if (glyph != null) {
-        _drawGlyph(canvas, glyph, glyphSize, Offset(x, baseY), staff);
+        // Segno and coda: 18 pt symbol, centred on x (marker.cpp:180-183).
+        _drawGlyph(
+          canvas,
+          glyph,
+          RepeatLayout.navigationGlyphEm(space),
+          Offset(
+            RepeatLayout.navigationGlyphOriginX(
+              kind: nav.kind,
+              x: x,
+              space: space,
+            ),
+            baseY,
+          ),
+          staff,
+        );
       } else {
+        // Jump text: 11 pt, normal style (v450:1094-1097).
         _drawText(
           canvas,
           RepeatLayout.navigationLabel(nav.kind)!,
           origin: Offset(x, baseY),
-          fontSize: space * 1.8,
+          fontSize: RepeatLayout.jumpFontSize(space),
           color: staff,
-          fontWeight: FontWeight.bold,
-          fontStyle: FontStyle.italic,
         );
       }
     }
