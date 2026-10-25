@@ -250,6 +250,29 @@ void main() {
         expect(res.anchors.last.$2, equals(300.0));
       });
 
+      test('playhead glides continuously across the barline (no jump)', () {
+        final notes = [
+          for (var i = 0; i < 8; i++) StaffNote(60 + i, i * 1.0, 1.0),
+        ];
+        const config = ScorePageConfig(pageWidth: 800.0);
+        final measures = ScorePageLayout.buildMeasures(
+          notes: notes,
+          beatsPerBar: 4.0,
+          totalBeats: 8.0,
+          space: config.space,
+          minMeasureWidth: 100.0,
+        );
+        final sys = ScorePageLayout.breakSystems(
+          measures: measures,
+          config: config,
+        ).first;
+        double x(double b) =>
+            sys.beatToX(b, config: config, keyFifths: 0, beatsPerBar: 4.0);
+        final before = x(4.0 - 0.001);
+        final after = x(4.0);
+        expect((after - before).abs(), lessThan(1.0));
+      });
+
       test('ScoreSystem beatToX and xToBeat invert accurately with notehead snapping', () {
         final notes = [
           const StaffNote(60, 0.0, 1.0), // C4 at beat 0

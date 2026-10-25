@@ -385,7 +385,7 @@ class _ScorePageViewState extends State<ScorePageView>
             marginLeft: 36.0,
             marginRight: 36.0,
             grandStaffHeight: 135.0,
-            systemDistance: 50.0,
+            systemDistance: 70.0,
             minMeasureWidth: 100.0,
             systemHeaderWidth: 70.0,
           );
@@ -1207,10 +1207,31 @@ class SystemStaffPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      measureNumText.paint(
-        canvas,
-        Offset(mLeft + space * 0.6, staffTop - space * 1.5),
+      // MuseScore measurenumberlayout.cpp: autoplace keeps the number clear of
+      // anything beneath it. Raise it above notes that reach into its box.
+      final numLayout = system.getLayout(
+        config: config,
+        keyFifths: keyFifths,
+        beatsPerBar: beatsPerBar,
       );
+      final numX = mLeft + space * 0.6;
+      var numY = staffTop - space * 1.5;
+      for (var ni = 0; ni < numLayout.allNotes.length; ni++) {
+        final n = numLayout.allNotes[ni];
+        if (n.isRest || n.leftHand) continue;
+        final nx =
+            (numLayout.noteXs[ni] ?? 0.0) +
+            (numLayout.chordHeadOffsets[ni] ?? 0.0);
+        if (nx + space * 1.2 < numX || nx > numX + measureNumText.width) {
+          continue;
+        }
+        final ny = _noteY(n.pitch, false, space, trebleBottomY, bassTopY);
+        final top = ny - space * 0.6;
+        if (top < numY + measureNumText.height + space * 0.25) {
+          numY = math.min(numY, top - measureNumText.height - space * 0.25);
+        }
+      }
+      measureNumText.paint(canvas, Offset(numX, numY));
 
       // Right barline (last barline of the piece drawn with standard double end barline)
       if (x <= size.width + 2.0) {

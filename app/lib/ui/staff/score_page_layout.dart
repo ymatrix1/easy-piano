@@ -871,6 +871,21 @@ abstract final class ScorePageLayout {
       measureAnchors[mIdx] = layoutRes.anchors;
     }
 
+    // Continuous playhead across barlines: the last segment of a measure
+    // glides to the first notehead of the next measure instead of stopping at
+    // the barline (which made the cursor jump by the leading padding).
+    for (var mIdx = 0; mIdx < system.measures.length - 1; mIdx++) {
+      final cur = measureAnchors[mIdx];
+      final next = measureAnchors[mIdx + 1];
+      if (cur == null || next == null || cur.length < 2 || next.length < 2) {
+        continue;
+      }
+      final nextFirstX = next.length > 2 ? next[1].$2 : next.first.$2;
+      if (nextFirstX > cur.last.$2) {
+        cur[cur.length - 1] = (cur.last.$1, nextFirstX);
+      }
+    }
+
     return SystemLayoutResult(
       allNotes: allSysNotes,
       noteXs: noteXsMap,
