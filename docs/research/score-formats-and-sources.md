@@ -56,5 +56,5 @@ Beginner levels need simplified arrangements anyway, so most curriculum content 
 
 ## Follow-ups
 
-- Bean: MusicXML importer in `tools/content-cli`.
+- Bean: MusicXML importer in `tools/content-cli`. Update: the parser was built in `core/src/score_import` (`piano-gy3o`, [D37](../DECISIONS.md)); the CLI import, if still wanted, reuses it.
 - Bean: curated list of 50 OpenScore/Mutopia pieces with licenses verified.

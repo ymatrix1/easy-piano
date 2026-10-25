@@ -62,6 +62,7 @@ Skills live in `.agents/skills/`; `.claude/skills` points there.
 
 - `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` in `core/` and `audio/` (audio runs the web parity test)
 - `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings` in `tools/content-cli/`, then `cargo run -- lint ../../content`
+- `python tools/check_tests.py` (every source file has a unit test, ratchet in `tools/test-baseline.txt`) and `python -m pytest tools/tests`. Rule: `.agents/rules/testing.md`.
 - In `tools/melody-model/` (uv): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest`. Training deps: `uv sync --extra train` (not in CI). Fix formatting with `uv run ruff format`.
 - In `tools/mic-model/` (uv, CUDA torch wheels, not in CI): `uv sync`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest` (needs node for the web parity tests). Data setup: `uv run python fetch_pianos.py`, `pianos.py extract`, `fetch_maestro.py`
 - `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze` and `flutter test` in `app/` when app code changes

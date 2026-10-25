@@ -226,3 +226,44 @@ fn spread<T: Copy + Default>(
         }
     }
 }
+
+// Only the pure conversion is tested here. Opening a device (`Player::start`)
+// needs audio hardware and is checked by hand on each platform (D30 stage 2).
+#[cfg(test)]
+mod tests {
+    use super::spread;
+
+    #[test]
+    fn stereo_device_gets_left_and_right() {
+        let stereo = [0.1, 0.2, 0.3, 0.4];
+        let mut out = [0.0f32; 4];
+        spread(&mut out, &stereo, 2, |v| v);
+        assert_eq!(out, [0.1, 0.2, 0.3, 0.4]);
+    }
+
+    #[test]
+    fn mono_device_gets_the_average() {
+        let stereo = [0.2, 0.4];
+        let mut out = [0.0f32; 1];
+        spread(&mut out, &stereo, 1, |v| v);
+        assert!((out[0] - 0.3).abs() < 1e-6);
+    }
+
+    #[test]
+    fn extra_channels_stay_silent() {
+        let stereo = [0.5, 0.25];
+        let mut out = [9.0f32; 4];
+        spread(&mut out, &stereo, 4, |v| v);
+        assert_eq!(out, [0.5, 0.25, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn i16_conversion_clamps_to_range() {
+        let stereo = [2.0, -2.0];
+        let mut out = [0i16; 2];
+        spread(&mut out, &stereo, 2, |v| {
+            (v.clamp(-1.0, 1.0) * 32767.0) as i16
+        });
+        assert_eq!(out, [32767, -32767]);
+    }
+}

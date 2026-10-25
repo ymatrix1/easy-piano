@@ -109,3 +109,72 @@ pub fn envelope(instrument: crate::bank::Instrument) -> (f32, f32) {
         Choir => (0.15, 0.25),
     }
 }
+
+// Constant sanity checks run at compile time: a bad value breaks the build.
+const _: () = assert!(GLUE.0 < 0.0 && GLUE.2 > 1.0);
+const _: () = assert!(LIMITER.0 < 0.0 && LIMITER.2 >= GLUE.2);
+const _: () = assert!(REVERB_SECONDS > 0.0);
+const _: () = assert!(SOFT_HAT_BELOW < 127);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::bank::Instrument;
+
+    #[test]
+    fn index_follows_all_order() {
+        for (i, part) in Part::ALL.iter().enumerate() {
+            assert_eq!(part.index(), i);
+        }
+    }
+
+    #[test]
+    fn from_key_maps_score_parts_and_defaults_to_piano() {
+        assert_eq!(Part::from_key("live"), Part::Live);
+        assert_eq!(Part::from_key("ACC"), Part::Acc);
+        assert_eq!(Part::from_key("DRUMS"), Part::Drums);
+        assert_eq!(Part::from_key("BASS"), Part::Bass);
+        assert_eq!(Part::from_key("PAD"), Part::Pad);
+        assert_eq!(Part::from_key("CHOIR"), Part::Choir);
+        assert_eq!(Part::from_key("sfx"), Part::Sfx);
+        assert_eq!(Part::from_key("RH"), Part::Piano);
+        assert_eq!(Part::from_key("piano"), Part::Piano);
+    }
+
+    #[test]
+    fn levels_are_positive_and_drums_sit_below_piano() {
+        for part in Part::ALL {
+            assert!(part.level() > 0.0, "{part:?}");
+        }
+        assert!(Part::Drums.level() < Part::Piano.level());
+    }
+
+    #[test]
+    fn reverb_sends_are_fractions_and_pads_are_wetter_than_drums() {
+        for part in Part::ALL {
+            assert!((0.0..=1.0).contains(&part.reverb_send()), "{part:?}");
+        }
+        assert!(Part::Pad.reverb_send() > Part::Drums.reverb_send());
+    }
+
+    #[test]
+    fn velocity_gain_is_monotonic_bounded_and_clamped() {
+        assert!(velocity_gain(1) > 0.0);
+        assert!((velocity_gain(127) - 1.0).abs() < 1e-6);
+        assert!(velocity_gain(64) < velocity_gain(100));
+        assert_eq!(velocity_gain(0), velocity_gain(1));
+    }
+
+    #[test]
+    fn piano_cutoff_rises_with_velocity() {
+        assert!(piano_cutoff_hz(1) < piano_cutoff_hz(127));
+        assert!((piano_cutoff_hz(127) - 15200.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn strings_and_choir_attack_slower_than_piano() {
+        let (piano_attack, _) = envelope(Instrument::Piano);
+        assert!(envelope(Instrument::Strings).0 > piano_attack);
+        assert!(envelope(Instrument::Choir).0 > piano_attack);
+    }
+}
