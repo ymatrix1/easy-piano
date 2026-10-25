@@ -11,6 +11,8 @@
 //! Hands: a staff with an explicit `\clef bass` is the left hand; otherwise the first
 //! staff is the right hand and later staves the left hand.
 
+use std::collections::HashMap;
+
 use super::{
     build_measures, key_alter_for, letter_semitone, major_tonic_fifths, merge_ties, midi_pitch,
     sort_notes, Change, Clef, Hand, ImportedNote, ImportedScore, TieNote,
@@ -139,6 +141,11 @@ struct Dur {
     dots: u32,
 }
 
+/// Pitch of a note name in semitones, for `\transpose`: `c` is C3 (=36), `c'` is C4.
+fn pitch_value(n: &NoteTok) -> i32 {
+    36 + 12 * n.marks + letter_semitone(LETTERS[n.letter]).unwrap_or(0) + n.alter.unwrap_or(0)
+}
+
 fn dur_beats(d: Dur) -> f64 {
     4.0 / d.n as f64 * (2.0 - 0.5f64.powi(d.dots as i32))
 }
@@ -170,6 +177,8 @@ enum Expr {
         spacer: bool,
     },
     Tie,
+    /// `\transpose from to { }`: shift by this many semitones.
+    Transpose(i32, Box<Expr>),
     Clef(Clef),
     Key(i8),
     Time((u32, u32)),
@@ -216,6 +225,8 @@ fn parse_note_word(w: &str) -> Option<NoteTok> {
             break;
         }
     }
+    // Cautionary (`!`) and optional (`?`) accidentals do not change the pitch.
+    rest = rest.trim_start_matches(['!', '?']);
     let mut marks = 0;
     loop {
         match rest.chars().next() {
@@ -292,6 +303,8 @@ struct Parser<'a> {
     pos: usize,
     title: String,
     composer: String,
+    /// Music variables (`right = { ... }`), used as `\right`.
+    vars: HashMap<String, Expr>,
 }
 
 impl Parser<'_> {
@@ -371,7 +384,20 @@ impl Parser<'_> {
                 let inner = self.expr()?;
                 Some(Expr::Relative(reference, Box::new(inner)))
             }
-            "new" => {
+            "transpose" => {
+                // `\transpose from to expr`: the two pitches give the interval.
+                let from = self.next_word().and_then(|w| parse_note_word(&w));
+                let to = self.next_word().and_then(|w| parse_note_word(&w));
+                let inner = self.expr()?;
+                match (from, to) {
+                    (Some(a), Some(b)) => Some(Expr::Transpose(
+                        pitch_value(&b) - pitch_value(&a),
+                        Box::new(inner),
+                    )),
+                    _ => Some(inner),
+                }
+            }
+            "new" | "context" => {
                 let kind = self.next_word()?;
                 if self.t.get(self.pos) == Some(&Tok::Eq) {
                     self.pos += 1;
@@ -483,7 +509,8 @@ impl Parser<'_> {
                 None
             }
             "score" => self.expr(),
-            _ => None,
+            // A music variable such as `\right`.
+            _ => self.vars.get(name).cloned(),
         }
     }
 
@@ -525,6 +552,17 @@ impl Parser<'_> {
             }
             Tok::Word(w) => {
                 self.pos += 1;
+                // `name = { ... }` defines a music variable (names are letters only).
+                if self.t.get(self.pos) == Some(&Tok::Eq)
+                    && w.chars().all(|c| c.is_ascii_alphabetic())
+                    && w.len() > 1
+                {
+                    self.pos += 1;
+                    if let Some(e) = self.expr() {
+                        self.vars.insert(w, e);
+                    }
+                    return None;
+                }
                 if let Some(n) = parse_note_word(&w) {
                     return Some(Expr::Note(n));
                 }
@@ -594,6 +632,8 @@ struct Ctx {
     cursor: f64,
     rel: Option<(usize, i32)>,
     scale: f64,
+    /// Semitones added by enclosing `\transpose`.
+    shift: i32,
 }
 
 struct Eval {
@@ -666,6 +706,14 @@ impl Eval {
             Expr::Times(f, inner) => {
                 let mut c2 = Ctx {
                     scale: ctx.scale * f,
+                    ..*ctx
+                };
+                self.eval(inner, &mut c2);
+                ctx.cursor = c2.cursor;
+            }
+            Expr::Transpose(semitones, inner) => {
+                let mut c2 = Ctx {
+                    shift: ctx.shift + semitones,
                     ..*ctx
                 };
                 self.eval(inner, &mut c2);
@@ -761,7 +809,11 @@ impl Eval {
             let letter = LETTERS[n.letter];
             let alter = n.alter.unwrap_or_else(|| key_alter_for(fifths, letter));
             if let Some(m) = midi_pitch(letter_semitone(letter).unwrap_or(0), oct, alter) {
-                midis.push(m);
+                if let Ok(shifted) = u8::try_from(i32::from(m) + ctx.shift) {
+                    if shifted <= 127 {
+                        midis.push(shifted);
+                    }
+                }
             }
         }
         if ctx.rel.is_some() {
@@ -798,6 +850,7 @@ pub fn parse(src: &str) -> Result<ImportedScore, String> {
         pos: 0,
         title: String::new(),
         composer: String::new(),
+        vars: HashMap::new(),
     };
     let mut top = Vec::new();
     while p.pos < toks.len() {
@@ -827,6 +880,7 @@ pub fn parse(src: &str) -> Result<ImportedScore, String> {
         cursor: 0.0,
         rel: None,
         scale: 1.0,
+        shift: 0,
     };
     ev.eval(&Expr::Block(top), &mut ctx);
 
@@ -963,6 +1017,17 @@ mod tests {
         assert_eq!(s.measures[1].time, (4, 4));
         assert_eq!(s.measures[1].start, 3.0);
         assert_eq!(s.measures[1].beats, 4.0);
+    }
+
+    #[test]
+    fn variables_transpose_and_cautionary_accidentals() {
+        // `\right` is a music variable; `\transpose c c'` raises it an octave;
+        // `e!` is E with a cautionary accidental (no change of pitch).
+        let src = r#"right = { \transpose c c' { c4 e!4 } }
+            \score { \context PianoStaff << \context Staff = "a" { \right d4 } >> }"#;
+        let s = parse(src).unwrap();
+        let got: Vec<(u8, f64)> = s.notes.iter().map(|n| (n.midi, n.start)).collect();
+        assert_eq!(got, vec![(60, 0.0), (64, 1.0), (50, 2.0)]); // d4 is D3: no transpose outside \transpose
     }
 
     #[test]
