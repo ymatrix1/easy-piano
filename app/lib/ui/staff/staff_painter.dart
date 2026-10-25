@@ -783,37 +783,14 @@ class StaffPainter extends CustomPainter {
           ink,
         );
 
-        // Brace left of the system line.
-        final x0 = sys.systemX - space * 1.9,
-            top = staffTop,
-            bot = staffBottom,
-            mid = (top + bot) / 2,
-            w = space * 1.4;
-        final brace = Path()
-          ..moveTo(x0 + w, top)
-          ..cubicTo(
-            x0,
-            top + (mid - top) * 0.15,
-            x0 + w,
-            mid - (mid - top) * 0.25,
-            x0,
-            mid,
-          )
-          ..cubicTo(
-            x0 + w,
-            mid + (bot - mid) * 0.25,
-            x0,
-            bot - (bot - mid) * 0.15,
-            x0 + w,
-            bot,
-          );
-        canvas.drawPath(
-          brace,
-          Paint()
-            ..color = staff.withValues(alpha: 0.4)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = space * 0.45
-            ..strokeCap = StrokeCap.round,
+        // Classical grand staff curly brace ({) matching MuseScore Leland engraving
+        EngravingDecorations.drawGrandStaffBrace(
+          canvas,
+          systemX: sys.systemX,
+          staffTop: staffTop,
+          staffBottom: staffBottom,
+          space: space,
+          color: inkColor,
         );
       }
     }

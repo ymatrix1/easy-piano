@@ -1016,42 +1016,13 @@ class SystemStaffPainter extends CustomPainter {
     // 2. Initial system line & brace (MuseScore Gould grand staff engraving)
     canvas.drawLine(Offset(0, staffTop), Offset(0, staffBottom), barlinePaint);
 
-    // Calligraphic grand staff curly brace ({) in solid ink matching MuseScore tlayout.cpp:
-    final midY = (staffTop + staffBottom) / 2;
-    final h2 = (staffBottom - staffTop) / 2;
-    final braceW = space * 1.15;
-    double bx(double a) => (a / 560.0) * braceW - space * 0.15;
-    double by(double a) => midY + (a / 7024.0) * h2;
-
-    final brace = Path()
-      ..moveTo(bx(-8), by(-2048))
-      ..cubicTo(bx(-8), by(-3192), bx(-360), by(-4304), bx(-360), by(-5400))
-      ..cubicTo(bx(-360), by(-5952), bx(-264), by(-6488), bx(32), by(-6968))
-      ..cubicTo(bx(36), by(-6974), bx(38), by(-6984), bx(38), by(-6990))
-      ..cubicTo(bx(38), by(-7008), bx(16), by(-7024), bx(0), by(-7024))
-      ..cubicTo(bx(-8), by(-7024), bx(-22), by(-7022), bx(-32), by(-7008))
-      ..cubicTo(bx(-416), by(-6392), bx(-544), by(-5680), bx(-544), by(-4960))
-      ..cubicTo(bx(-544), by(-3800), bx(-168), by(-2680), bx(-168), by(-1568))
-      ..cubicTo(bx(-168), by(-1016), bx(-264), by(-496), bx(-560), by(-16))
-      ..lineTo(bx(-560), by(0))
-      ..lineTo(bx(-560), by(16))
-      ..cubicTo(bx(-264), by(496), bx(-168), by(1016), bx(-168), by(1568))
-      ..cubicTo(bx(-168), by(2680), bx(-544), by(3800), bx(-544), by(4960))
-      ..cubicTo(bx(-544), by(5680), bx(-416), by(6392), bx(-32), by(7008))
-      ..cubicTo(bx(-22), by(7022), bx(-8), by(7024), bx(0), by(7024))
-      ..cubicTo(bx(16), by(7024), bx(38), by(7008), bx(38), by(6990))
-      ..cubicTo(bx(38), by(6984), bx(36), by(6974), bx(32), by(6968))
-      ..cubicTo(bx(-264), by(6488), bx(-360), by(5952), bx(-360), by(5400))
-      ..cubicTo(bx(-360), by(4304), bx(-8), by(3192), bx(-8), by(2048))
-      ..cubicTo(bx(-8), by(1320), bx(-136), by(624), bx(-512), by(0))
-      ..cubicTo(bx(-136), by(-624), bx(-8), by(-1320), bx(-8), by(-2048))
-      ..close();
-
-    canvas.drawPath(
-      brace,
-      Paint()
-        ..color = ink
-        ..style = PaintingStyle.fill,
+    EngravingDecorations.drawGrandStaffBrace(
+      canvas,
+      systemX: 0,
+      staffTop: staffTop,
+      staffBottom: staffBottom,
+      space: space,
+      color: ink,
     );
 
     // 3. SMuFL Clefs (G Clef on G4, F Clef on F3)
