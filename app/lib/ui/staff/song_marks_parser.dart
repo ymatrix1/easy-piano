@@ -1,16 +1,20 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
 import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics, hairpins and damper pedal spans of one song, in beats.
+/// Dynamics, hairpins, damper pedal spans, arpeggios and glissandi of one song,
+/// in beats.
 class SongMarks {
   const SongMarks({
     required this.dynamics,
     required this.hairpins,
     this.pedals = const [],
+    this.arpeggios = const [],
+    this.glissandi = const [],
   });
 
   static const empty = SongMarks(dynamics: [], hairpins: []);
@@ -18,6 +22,8 @@ class SongMarks {
   final List<StaffDynamic> dynamics;
   final List<StaffHairpin> hairpins;
   final List<StaffPedal> pedals;
+  final List<StaffArpeggio> arpeggios;
+  final List<StaffGlissando> glissandi;
 }
 
 /// Reads dynamic and hairpin directives from a song JSON string.
@@ -29,6 +35,9 @@ class SongMarks {
 /// - `{ped}` presses the damper pedal. Pressed while already down, it is a
 ///   pedal change.
 /// - `{ped-up}` releases the damper pedal.
+/// - `{arp}`, `{arp:up}`, `{arp:down}` put an arpeggio on the chord at that beat.
+/// - `{gliss}` starts a glissando that ends at the next note of the same hand
+///   (rests do not end it).
 ///
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
 /// end of the song. A pedal span left down runs to the end of the song without
@@ -36,6 +45,7 @@ class SongMarks {
 /// rejecting it in content.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
+  static final _arpDirective = RegExp(r'^\{arp(?::(up|down))?\}$');
 
   static SongMarks parse(String songJson) {
     if (songJson.isEmpty) return SongMarks.empty;
@@ -52,6 +62,10 @@ abstract final class SongMarksParser {
 
       final events = <_Event>[];
       final index = <String, int>{};
+      final arpeggios = <StaffArpeggio>[];
+      final glissandi = <StaffGlissando>[];
+      // Open `{gliss}` per hand (key: left hand?). Closed by the next note.
+      final pendingGliss = <bool, double>{};
       void add(_Event e) {
         // RH and LH often repeat the same directive at the same beat. Keep one
         // event, on the treble staff when either hand carries it.
@@ -87,12 +101,41 @@ abstract final class SongMarksParser {
             if (tok.isEmpty) continue;
             final beat = barStart + t;
             if (tok.startsWith('{')) {
-              final e = _directive(tok, beat);
-              if (e != null) add(e.withHand(isLh));
+              final arp = _arpDirective.firstMatch(tok);
+              if (arp != null) {
+                arpeggios.add(
+                  StaffArpeggio(
+                    beat,
+                    direction: switch (arp.group(1)) {
+                      'up' => ArpeggioDirection.up,
+                      'down' => ArpeggioDirection.down,
+                      _ => ArpeggioDirection.plain,
+                    },
+                    leftHand: isLh,
+                  ),
+                );
+              } else if (tok == '{gliss}') {
+                pendingGliss[isLh] = beat;
+              } else {
+                final e = _directive(tok, beat);
+                if (e != null) add(e.withHand(isLh));
+              }
               continue;
             }
             final colonIdx = tok.indexOf(':');
             if (colonIdx == -1) continue;
+            final isRest = tok.substring(0, colonIdx) == 'r';
+            final glissStart = pendingGliss[isLh];
+            if (!isRest && glissStart != null && beat > glissStart) {
+              glissandi.add(
+                StaffGlissando(
+                  startBeat: glissStart,
+                  endBeat: beat,
+                  leftHand: isLh,
+                ),
+              );
+              pendingGliss.remove(isLh);
+            }
             var tail = tok.substring(colonIdx + 1);
             final parenIdx = tail.indexOf('(');
             if (parenIdx != -1) tail = tail.substring(0, parenIdx);
@@ -103,7 +146,14 @@ abstract final class SongMarksParser {
         }
       }
 
-      return _build(events, totalBeats: rawBars.length * num);
+      final built = _build(events, totalBeats: rawBars.length * num);
+      return SongMarks(
+        dynamics: built.dynamics,
+        hairpins: built.hairpins,
+        pedals: built.pedals,
+        arpeggios: arpeggios,
+        glissandi: glissandi,
+      );
     } catch (_) {
       // Malformed song: draw no marks rather than break the score.
       return SongMarks.empty;

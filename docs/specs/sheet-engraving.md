@@ -37,7 +37,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Articulations (staccato, tenuto) | `dom/articulation.cpp` | Delivered | `engraving_decorations.dart` |
 | Dynamics (p..ff, sf, sfz) & Hairpins | `rendering/score/dynamicslayout.cpp`, `tlayout.cpp` (layoutHairpinSegment) | Delivered (rendering: notehead centring, grand-staff gap, collisions; grading in core) | `dynamics_layout.dart` |
 | Piano Damper Pedal (Ped., *) | `dom/pedal.cpp`, `rendering/score/tlayout.cpp` (layoutPedal, layoutPedalSegment) | Delivered (down/release marks, bracket line, change notches; hooks approximated) | `pedal_layout.dart` |
-| Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
+| Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Delivered (PR 3; straight glissando only) | `arpeggio_layout.dart` |
 | Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
 | Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
 | Chord Symbols & Lyrics | `harmonylayout.cpp`, `lyricslayout.cpp` | Planned (PR 6) | `harmony_layout.dart` |
@@ -92,9 +92,13 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
   - *Lint:* `{ped}` and `{ped-up}` are not checked by `tools/content-cli` (see [content-format.md](content-format.md#directives-damper-pedal)).
 
 ### 3. Arpeggios and Glissandi (`arpeggio_layout.dart`)
-- **Reference:** MuseScore `arpeggiolayout.cpp`.
-- **Arpeggio:** Repeated vertical wave glyph (`wiggleArpeggiato`, U+E634) connecting the bottom and top note of the chord, placed `space * 0.8` to the left of the chord.
-- **Glissando:** Diagonal stroke or wave connecting two notes with centered italic label *gliss.*
+- **Reference:** MuseScore `rendering/score/arpeggiolayout.cpp` (`computeHeight`, `calcTop`, `insetDistance`, `clearAccidentals`), `rendering/score/tlayout.cpp` (`layoutArpeggio`, `symbolLine`, `layoutGlissandoSegment`), `rendering/score/tdraw.cpp` (`draw(Arpeggio)`), `rendering/paddingtable.cpp:166-168`, `data/styles/legacy-style-defaults-v450.mss:441-442, 1169-1170`.
+- **Status:** Delivered in PR 3 (`piano-i235`), reviewed against the source in the same PR: plain, up and down arpeggios (`{arp}`, `{arp:up}`, `{arp:down}`) and straight glissandi (`{gliss}`). Wavy glissando is not done. Glissando label placement is not yet checked against MuseScore.
+- **Column:** the wiggle is `wiggleArpeggiatoUp` (U+EAA9), rotated -90 degrees for plain and up, stacked upwards from the bottom at a 0.88 sp advance (`uniEAA9` advance 220 units). Fill count is `round((h - endAdvance) / 0.88)`, then one end glyph. Up ends with `wiggleArpeggiatoUpArrow` (U+EAAD) rotated -90. Down stacks downwards, rotated +90, and also ends with U+EAAD (MuseScore does not use a separate down-arrow glyph).
+- **Vertical span:** from the top head's top edge to the bottom head's bottom edge (head height 1.06 sp, Leland `uniE0A4`). A top note on a space rises 0.4 sp (both ends on spaces) or 0.25 sp (`calcTop`).
+- **Horizontal:** right edge at `arpeggioNoteDistance` 0.4 sp left of each notehead, or `arpeggioAccidentalDistance` 0.3 sp left of an accidental (`paddingtable.cpp:166-168`). MuseScore's `insetDistance` refinements are not implemented.
+- **Glissando:** straight line from the right edge of the start head to the left edge of the end head (the closest pair in pitch is a local choice, not a MuseScore rule). Line width 0.15 sp (`glissandoLineWidth`). Label text `gliss.` (`glissandoText`).
+- **Codepoints:** checked against `references/MuseScore/fonts/smufl/glyphnames.json` and the app's `Leland.otf` cmap. U+E634 is `arpeggiatoUp` (a different glyph), not the wiggle.
 
 ### 4. Grace Notes & Ornaments (`ornament_layout.dart`)
 - **Reference:** MuseScore `tlayout.cpp` and `chordlayout.cpp`.
