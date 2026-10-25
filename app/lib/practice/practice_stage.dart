@@ -1423,6 +1423,8 @@ class _PracticeStageState extends State<PracticeStage>
                           keyFifths: _keyFifths,
                           dynamics: _songMarks.dynamics,
                           hairpins: _songMarks.hairpins,
+                          ornaments: _songMarks.ornaments,
+                          acciaccaturas: _songMarks.acciaccaturas,
                           pedals: _songMarks.pedals,
                           arpeggios: _songMarks.arpeggios,
                           glissandi: _songMarks.glissandi,

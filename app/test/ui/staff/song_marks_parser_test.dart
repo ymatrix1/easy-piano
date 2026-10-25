@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/ornament_layout.dart';
 import 'package:easy_piano/ui/staff/song_marks_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -204,6 +205,83 @@ void main() {
     expect(m.dynamics.single.leftHand, isFalse);
   });
 
+  test('ornament directives mark the chord at their beat, per hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{trill} C4:2 {turn} D4:2', 'LH': '{mordent} C3:1'},
+      ]),
+    );
+    expect(m.ornaments, hasLength(3));
+    final rh = m.ornaments.where((o) => !o.leftHand).toList();
+    expect(rh.map((o) => o.beat), [0, 2]);
+    expect(rh.map((o) => o.kind), [OrnamentKind.trill, OrnamentKind.turn]);
+    final lh = m.ornaments.where((o) => o.leftHand).single;
+    expect(lh.beat, 0);
+    expect(lh.kind, OrnamentKind.mordent);
+  });
+
+  test('ornament in RH and RH2 at one beat is kept once', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{trill} C4:4 D4:4 E4:4 F4:4', 'RH2': '{trill} G3:2 G3:2'},
+      ]),
+    );
+    expect(m.ornaments, hasLength(1));
+  });
+
+  test('unknown or malformed ornament directives are ignored', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH':
+              '{tremolo} C4:1 {trill:"x"} D4:1 {trill } E4:1 {Trill} F4:1 '
+              '{acc:H5} {acc:"H5"} {acc:"D"} {acc:"D5x"} {acc:"G10"}',
+          'LH': 'C3:1',
+        },
+      ]),
+    );
+    expect(m.ornaments, isEmpty);
+    expect(m.acciaccaturas, isEmpty);
+    expect(m.dynamics, isEmpty);
+  });
+
+  test('an acciaccatura takes its pitch from the name, no time', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH': '{acc:"D5"} C5:4 {acc:"F#4"} G4:4 {acc:"Bb3"} C4:2',
+          'LH': 'C3:1',
+        },
+      ]),
+    );
+    expect(m.acciaccaturas.map((a) => a.beat), [0, 1, 2]);
+    expect(m.acciaccaturas.map((a) => a.pitch), [74, 66, 58]);
+    expect(m.acciaccaturas.map((a) => a.accidental), [null, 'sharp', 'flat']);
+    expect(m.acciaccaturas.every((a) => !a.leftHand), isTrue);
+  });
+
+  test('acciaccatura names: natural sign and out-of-range pitch', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{acc:"Cn4"} C4:2 {acc:"C10"} D4:2', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.acciaccaturas, hasLength(1));
+    expect(m.acciaccaturas.single.pitch, 60);
+    expect(m.acciaccaturas.single.accidental, 'natural');
+  });
+
+  test(
+    'ornaments on a rest are parsed; the painter draws no note for them',
+    () {
+      final m = SongMarksParser.parse(
+        _song([
+          {'RH': '{trill} r:4 C4:4 D4:2', 'LH': 'C3:1'},
+        ]),
+      );
+      expect(m.ornaments.single.beat, 0);
+    },
+  );
   test('arpeggio directives set plain, up and down arpeggios per hand', () {
     final m = SongMarksParser.parse(
       _song([

@@ -3,16 +3,19 @@ import 'dart:math' as math;
 
 import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/ornament_layout.dart';
 import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics, hairpins, damper pedal spans, arpeggios and glissandi of one song,
-/// in beats.
+/// Dynamics, hairpins, damper pedal spans, ornaments, arpeggios and glissandi
+/// of one song, in beats.
 class SongMarks {
   const SongMarks({
     required this.dynamics,
     required this.hairpins,
     this.pedals = const [],
+    this.ornaments = const [],
+    this.acciaccaturas = const [],
     this.arpeggios = const [],
     this.glissandi = const [],
   });
@@ -22,6 +25,8 @@ class SongMarks {
   final List<StaffDynamic> dynamics;
   final List<StaffHairpin> hairpins;
   final List<StaffPedal> pedals;
+  final List<StaffOrnament> ornaments;
+  final List<StaffAcciaccatura> acciaccaturas;
   final List<StaffArpeggio> arpeggios;
   final List<StaffGlissando> glissandi;
 }
@@ -32,6 +37,9 @@ class SongMarks {
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{trill}`, `{mordent}`, `{turn}` put an ornament on the chord at that beat.
+/// - `{acc:"D5"}` puts an acciaccatura (grace note, pitch D5) before the chord
+///   at that beat. `#` / `b` / `n` after the letter write an accidental.
 /// - `{ped}` presses the damper pedal. Pressed while already down, it is a
 ///   pedal change.
 /// - `{ped-up}` releases the damper pedal.
@@ -42,10 +50,21 @@ class SongMarks {
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
 /// end of the song. A pedal span left down runs to the end of the song without
 /// a release. Unknown dynamic text is ignored here; lint is responsible for
-/// rejecting it in content.
+/// rejecting it in content. Malformed ornament directives are ignored.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
+  static final _ornamentDirective = RegExp(r'^\{(trill|mordent|turn)\}$');
+  static final _accDirective = RegExp(r'^\{acc:"([A-G])(#|b|n)?(\d+)"\}$');
   static final _arpDirective = RegExp(r'^\{arp(?::(up|down))?\}$');
+  static const _letterSemitone = {
+    'C': 0,
+    'D': 2,
+    'E': 4,
+    'F': 5,
+    'G': 7,
+    'A': 9,
+    'B': 11,
+  };
 
   static SongMarks parse(String songJson) {
     if (songJson.isEmpty) return SongMarks.empty;
@@ -62,6 +81,10 @@ abstract final class SongMarksParser {
 
       final events = <_Event>[];
       final index = <String, int>{};
+      final ornaments = <StaffOrnament>[];
+      final acciaccaturas = <StaffAcciaccatura>[];
+      // RH and RH2 (or LH and LH2) can repeat a mark at one beat: keep one.
+      final seenMarks = <String>{};
       final arpeggios = <StaffArpeggio>[];
       final glissandi = <StaffGlissando>[];
       // Open `{gliss}` per hand (key: left hand?). Closed by the next note.
@@ -101,6 +124,34 @@ abstract final class SongMarksParser {
             if (tok.isEmpty) continue;
             final beat = barStart + t;
             if (tok.startsWith('{')) {
+              final orn = _ornamentDirective.firstMatch(tok);
+              if (orn != null) {
+                final kind = OrnamentKind.values.byName(orn.group(1)!);
+                if (seenMarks.add('orn|$beat|$kind|$isLh')) {
+                  ornaments.add(StaffOrnament(beat, kind, leftHand: isLh));
+                }
+                continue;
+              }
+              final acc = _accDirective.firstMatch(tok);
+              if (acc != null) {
+                final pitch = _gracePitch(acc);
+                if (pitch != null && seenMarks.add('acc|$beat|$pitch|$isLh')) {
+                  acciaccaturas.add(
+                    StaffAcciaccatura(
+                      beat: beat,
+                      pitch: pitch,
+                      accidental: switch (acc.group(2)) {
+                        '#' => 'sharp',
+                        'b' => 'flat',
+                        'n' => 'natural',
+                        _ => null,
+                      },
+                      leftHand: isLh,
+                    ),
+                  );
+                }
+                continue;
+              }
               final arp = _arpDirective.firstMatch(tok);
               if (arp != null) {
                 arpeggios.add(
@@ -151,6 +202,8 @@ abstract final class SongMarksParser {
         dynamics: built.dynamics,
         hairpins: built.hairpins,
         pedals: built.pedals,
+        ornaments: ornaments,
+        acciaccaturas: acciaccaturas,
         arpeggios: arpeggios,
         glissandi: glissandi,
       );
@@ -158,6 +211,20 @@ abstract final class SongMarksParser {
       // Malformed song: draw no marks rather than break the score.
       return SongMarks.empty;
     }
+  }
+
+  /// MIDI pitch of an `{acc:"..."}` name (C4 = 60), or null when out of range.
+  static int? _gracePitch(RegExpMatch m) {
+    final letter = _letterSemitone[m.group(1)!]!;
+    final alter = switch (m.group(2)) {
+      '#' => 1,
+      'b' => -1,
+      _ => 0,
+    };
+    final octave = int.tryParse(m.group(3)!);
+    if (octave == null) return null;
+    final midi = (octave + 1) * 12 + letter + alter;
+    return midi >= 0 && midi <= 127 ? midi : null;
   }
 
   static _Event? _directive(String tok, double beat) {
