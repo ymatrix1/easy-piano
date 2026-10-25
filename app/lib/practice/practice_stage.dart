@@ -1304,7 +1304,12 @@ class _PracticeStageState extends State<PracticeStage>
                   songTitle = widget.stage.score ?? 'Score';
                 }
 
-                final currentBeat = math.max(0.0, _scroll.value);
+                // Wait-mode: _scroll is the page's left edge, not the note the
+                // student is on, so open the study view at the current note.
+                final curIdx = _currentNoteIndex();
+                final currentBeat = curIdx != null && curIdx < _notes.length
+                    ? _notes[curIdx].beat
+                    : math.max(0.0, _scroll.value);
                 final currentSpeed = _tempo;
 
                 final result = await Navigator.of(context)

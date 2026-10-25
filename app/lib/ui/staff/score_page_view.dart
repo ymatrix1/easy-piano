@@ -387,7 +387,10 @@ class _ScorePageViewState extends State<ScorePageView>
             grandStaffHeight: 135.0,
             systemDistance: 70.0,
             minMeasureWidth: 100.0,
-            systemHeaderWidth: 70.0,
+            systemHeaderWidth: ScorePageLayout.systemHeaderWidthFor(
+              keyFifths: widget.keyFifths,
+              space: 10.0,
+            ),
           );
 
           final measures = ScorePageLayout.buildMeasures(

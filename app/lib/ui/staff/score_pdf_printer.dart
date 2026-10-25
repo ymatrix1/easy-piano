@@ -45,9 +45,12 @@ abstract final class ScorePdfPrinter {
           marginLeft: 40.0,
           marginRight: 40.0,
           grandStaffHeight: 135.0,
-          systemDistance: 52.0,
+          systemDistance: 70.0,
           minMeasureWidth: 105.0,
-          systemHeaderWidth: 64.0,
+          systemHeaderWidth: ScorePageLayout.systemHeaderWidthFor(
+            keyFifths: keyFifths,
+            space: 10.0,
+          ),
           maxMeasuresPerSystem: 4,
           minMeasuresPerSystem: 2,
         );

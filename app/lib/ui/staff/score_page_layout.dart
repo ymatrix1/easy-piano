@@ -730,6 +730,17 @@ abstract final class ScorePageLayout {
   static final _trebleBottomStep = diatonicStep(64); // E4 = 30
   static final _bassTopStep = diatonicStep(57); // A3 = 26
 
+  /// Width reserved at the start of each system for clef, key signature and
+  /// time signature plus a trailing gap, so the first notes/chords never sit
+  /// on top of the time signature (MuseScore lays the header out first and
+  /// only then spaces the first segment).
+  static double systemHeaderWidthFor({
+    required int keyFifths,
+    required double space,
+  }) =>
+      space * (0.4 + 3.4 + 2.0 + 1.5) +
+      KeySignatureLayout.width(keyFifths, space);
+
   /// Calculates vertical baseline Y coordinate for a given pitch on grand staff.
   static double noteY(
     int pitch,
