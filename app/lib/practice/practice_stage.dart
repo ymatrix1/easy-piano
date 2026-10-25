@@ -21,6 +21,7 @@ import '../ui/game/sfx.dart';
 import '../ui/key_geometry.dart';
 import '../ui/keyboard_painter.dart';
 import '../ui/metronome_icon.dart';
+import '../ui/staff/score_page_view.dart';
 import '../ui/staff/song_marks_parser.dart';
 import '../ui/staff/song_rest_parser.dart';
 import '../ui/staff/staff_note.dart';
@@ -328,7 +329,9 @@ class _PracticeStageState extends State<PracticeStage>
         inSec: (b) => leadSec + b * _msPerBeat / 1000,
       );
     }, _totalBeats * _msPerBeat / 1000 + 4);
+    _startMs = widget.midi.now();
     pianoSynth.load();
+    pianoSynth.onStateChange = _onAudioStateChange;
     if (widget.stage.preListen && widget.failedAttempts == 0) {
       _startDemo();
     } else {
@@ -593,7 +596,13 @@ class _PracticeStageState extends State<PracticeStage>
     if (!mounted || !_demo) return;
     _demoStartMs = widget.midi.now() + 400;
     _scheduleDemo(fromBeat: 0);
-    _startMs = widget.midi.now();
+  }
+
+  void _onAudioStateChange() {
+    if (!mounted || !_demo) return;
+    final currentBeat = (widget.midi.now() - _demoStartMs) / _msPerBeat;
+    pianoSynth.stopAll();
+    _scheduleDemo(fromBeat: math.max(0, currentBeat));
   }
 
   /// Pre-listen notes use the same voice as the learner's key presses
@@ -1057,6 +1066,7 @@ class _PracticeStageState extends State<PracticeStage>
   @override
   void dispose() {
     if (widget.micMode) micInput.expected = const {};
+    pianoSynth.onStateChange = null;
     pianoSynth.stopAll();
     widget.feed?.removeListener(_onFeed);
     _ticker.dispose();
@@ -1278,6 +1288,77 @@ class _PracticeStageState extends State<PracticeStage>
               ),
               const SizedBox(width: 4),
             ],
+            IconButton(
+              tooltip: 'Study / Static Score View',
+              onPressed: () async {
+                _pause();
+                String songTitle = '';
+                String composer = '';
+                try {
+                  final decoded = jsonDecode(widget.songJson);
+                  if (decoded is Map<String, dynamic>) {
+                    songTitle = decoded['title'] as String? ?? '';
+                    composer = decoded['composer'] as String? ?? '';
+                  }
+                } catch (_) {}
+                if (songTitle.isEmpty) {
+                  songTitle = widget.stage.score ?? 'Score';
+                }
+
+                // Wait-mode: _scroll is the page's left edge, not the note the
+                // student is on, so open the study view at the current note.
+                final curIdx = _currentNoteIndex();
+                final currentBeat = curIdx != null && curIdx < _notes.length
+                    ? _notes[curIdx].beat
+                    : math.max(0.0, _scroll.value);
+                final currentSpeed = _tempo;
+
+                final result = await Navigator.of(context)
+                    .push<({double beat, double speed})>(
+                      MaterialPageRoute(
+                        builder: (_) => ScorePageView(
+                          notes: _notes,
+                          totalBeats: _totalBeats,
+                          beatsPerBar: _beatsPerBar,
+                          keyFifths: _keyFifths,
+                          bpm: _bpm,
+                          initialBeat: currentBeat,
+                          initialSpeed: currentSpeed,
+                          staves: widget.staves,
+                          title: songTitle,
+                          composer: composer,
+                        ),
+                      ),
+                    );
+
+                if (result != null && mounted) {
+                  final newSpeed = result.speed;
+                  if ((newSpeed - _tempo).abs() > 0.01) {
+                    _tempo = newSpeed;
+                    _usPerBeat = 60e6 / (_bpm * _tempo);
+                  }
+                  final targetBeat = result.beat.clamp(0.0, _totalBeats);
+                  _startMs = widget.midi.now() - (targetBeat * _msPerBeat);
+                  if (_pausedAtMs != null) _pausedAtMs = widget.midi.now();
+                  if (_demo) {
+                    _demoStartMs =
+                        widget.midi.now() - (targetBeat * _msPerBeat);
+                    var idx = 0;
+                    while (idx + 1 < _initialTargets.length &&
+                        _initialTargets[idx + 1].beat <= targetBeat) {
+                      idx++;
+                    }
+                    _demoIndex = idx;
+                  }
+                  _scroll.value = targetBeat;
+                  setState(() {});
+                }
+              },
+              icon: const Icon(
+                Icons.menu_book_rounded,
+                color: StagePalette.text,
+              ),
+            ),
             IconButton(
               tooltip: pianoSynth.enabled
                   ? AppLocalizations.of(context).mutePianoSound

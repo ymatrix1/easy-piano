@@ -71,13 +71,58 @@ const _partInstrument = {
 };
 
 class _Voice {
-  _Voice(this.source, this.gain);
+  _Voice(this.source, this.gain, [this.tone]);
   final web.AudioBufferSourceNode source;
   final web.GainNode gain;
+  final web.BiquadFilterNode? tone;
+
+  void disconnect() {
+    try {
+      source.disconnect();
+      tone?.disconnect();
+      gain.disconnect();
+    } catch (_) {}
+  }
 }
 
 class _WebPianoSynth implements PianoSynth {
-  _WebPianoSynth([this._offline]);
+  _WebPianoSynth([this._offline]) {
+    _initUnlockListeners();
+  }
+
+  void Function()? _onStateChange;
+
+  @override
+  set onStateChange(void Function()? callback) {
+    _onStateChange = callback;
+  }
+
+  @override
+  Future<void> resumeAudio() async {
+    final ctx = _context();
+    if (_offline == null && ctx.state == 'suspended') {
+      try {
+        await (ctx as web.AudioContext).resume().toDart;
+      } catch (_) {}
+    }
+  }
+
+  bool _unlockListening = false;
+  void _initUnlockListeners() {
+    if (_offline != null || _unlockListening) return;
+    _unlockListening = true;
+    void unlock([web.Event? _]) {
+      final c = _ctx;
+      if (c != null && c.state == 'suspended') {
+        (c as web.AudioContext).resume();
+      }
+    }
+
+    web.window.addEventListener('pointerdown', unlock.toJS, true.toJS);
+    web.window.addEventListener('touchstart', unlock.toJS, true.toJS);
+    web.window.addEventListener('keydown', unlock.toJS, true.toJS);
+    web.window.addEventListener('click', unlock.toJS, true.toJS);
+  }
 
   static const _prefKey = 'easy_piano.sound';
 
@@ -150,6 +195,11 @@ class _WebPianoSynth implements PianoSynth {
         web.AudioContext(
           web.AudioContextOptions(latencyHint: 'interactive'.toJS),
         );
+    if (_offline == null) {
+      (ctx as web.AudioContext).onstatechange = ((web.Event _) {
+        _onStateChange?.call();
+      }).toJS;
+    }
     // Soft clipper on the very end: no look-ahead (no latency), catches the
     // learner's loud chords that skip the limiter.
     final clip = ctx.createWaveShaper()
@@ -230,8 +280,15 @@ class _WebPianoSynth implements PianoSynth {
   }
 
   @override
-  Future<void> load() =>
-      Future.wait([_loadInstrument('piano'), _loadInstrument('click')]);
+  Future<void> load() async {
+    final ctx = _context();
+    if (_offline == null && ctx.state == 'suspended') {
+      try {
+        await (ctx as web.AudioContext).resume().toDart;
+      } catch (_) {}
+    }
+    await Future.wait([_loadInstrument('piano'), _loadInstrument('click')]);
+  }
 
   @override
   Future<void> loadParts(Iterable<String> parts) => Future.wait([
@@ -384,9 +441,10 @@ class _WebPianoSynth implements PianoSynth {
     } else {
       gain.gain.setValueAtTime(level, when);
     }
+    web.BiquadFilterNode? tone;
     if (inst == 'piano') {
       final v = velocity.clamp(1, 127) / 127;
-      final tone = ctx.createBiquadFilter()
+      tone = ctx.createBiquadFilter()
         ..type = 'lowpass'
         ..Q.value = 0.5
         ..frequency.value = 1200 + 14000 * v * v;
@@ -397,7 +455,13 @@ class _WebPianoSynth implements PianoSynth {
     }
     gain.connect(dest);
     src.start(when);
-    return _Voice(src, gain);
+    final v = _Voice(src, gain, tone);
+    src.onended = ((web.Event _) {
+      v.disconnect();
+      _scheduled.remove(v);
+      _band.remove(v);
+    }).toJS;
+    return v;
   }
 
   /// Damper-style release: [tau] is the fade time constant.
@@ -456,6 +520,12 @@ class _WebPianoSynth implements PianoSynth {
       final src = ctx.createBufferSource()..buffer = sample;
       src.connect(_out!);
       src.start(at);
+      src.onended = ((web.Event _) {
+        try {
+          src.disconnect();
+        } catch (_) {}
+        _clicks.remove(src);
+      }).toJS;
       _clicks.add(src);
       return;
     }
@@ -546,6 +616,10 @@ class _WebPianoSynth implements PianoSynth {
     gain.connect(_bus('DRUMS'));
     src.start(at);
     final v = _Voice(src, gain);
+    src.onended = ((web.Event _) {
+      v.disconnect();
+      _band.remove(v);
+    }).toJS;
     if (gmPitch == 46) _openHat = v;
     _band.add(v);
   }
@@ -603,6 +677,7 @@ class _WebPianoSynth implements PianoSynth {
     for (final o in _clicks) {
       try {
         o.stop();
+        o.disconnect();
       } catch (_) {}
     }
     _clicks.clear();
@@ -611,8 +686,9 @@ class _WebPianoSynth implements PianoSynth {
     for (final v in [..._voices.values, ..._scheduled, ..._band]) {
       try {
         v.gain.gain.cancelScheduledValues(ctx.currentTime);
-        v.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
-        v.source.stop(ctx.currentTime + 0.1);
+        v.gain.gain.setValueAtTime(0, ctx.currentTime);
+        v.source.stop(ctx.currentTime);
+        v.disconnect();
       } catch (_) {}
     }
     _voices.clear();

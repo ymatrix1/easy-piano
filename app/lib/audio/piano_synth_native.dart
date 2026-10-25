@@ -255,6 +255,12 @@ class _NativePianoSynth implements PianoSynth {
   void stopAll() => _call(audioStopAll);
 
   @override
+  Future<void> resumeAudio() => _noBridge ? Future.value() : _start();
+
+  @override
+  set onStateChange(void Function()? callback) {}
+
+  @override
   void debugRegisterMixProbe(
     void Function(PianoSynth synth, double leadSec) schedule,
     double durSec,

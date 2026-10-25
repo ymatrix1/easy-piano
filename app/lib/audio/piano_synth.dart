@@ -65,6 +65,14 @@ abstract class PianoSynth {
   /// Stops everything scheduled or sounding.
   void stopAll();
 
+  /// Ensures audio output context is running. Resumes the context if suspended
+  /// (e.g. by browser autoplay restrictions).
+  Future<void> resumeAudio();
+
+  /// Registers a callback notified when the audio output state changes
+  /// (e.g. browser context unlocks from suspended to running).
+  set onStateChange(void Function()? callback);
+
   /// Web with `?mixprobe` in the URL: exposes `window.epMeasureMix()`, which renders
   /// [schedule] offline (all parts, then each part solo) and resolves to JSON
   /// with RMS and peak per part. Used for mix measurements; no-op elsewhere.

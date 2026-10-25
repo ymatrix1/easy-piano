@@ -77,6 +77,12 @@ class RecordingSynth implements PianoSynth {
   void stopAll() {}
 
   @override
+  Future<void> resumeAudio() async {}
+
+  @override
+  set onStateChange(void Function()? callback) {}
+
+  @override
   void debugRegisterMixProbe(
     void Function(PianoSynth synth, double leadSec) schedule,
     double durSec,

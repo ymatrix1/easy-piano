@@ -14,6 +14,9 @@ abstract final class Smufl {
   static const rest8th = '';
   static const rest16th = '';
 
+  // Brackets and braces (SMuFL range U+E000 - U+E00F)
+  static const brace = '\uE000';
+
   // Flags for 8th and 16th notes
   static const flag8thUp = '\uE240';
   static const flag8thDown = '\uE241';
