@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
 import 'package:easy_piano/ui/staff/repeat_layout.dart';
 import 'package:easy_piano/ui/staff/song_marks_parser.dart';
@@ -111,6 +113,86 @@ void main() {
     );
     expect(m.dynamics.single.leftHand, isTrue);
     expect(m.hairpins.single.leftHand, isFalse);
+  });
+
+  test('ped ... ped-up makes one released pedal span', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    final p = m.pedals.single;
+    expect(p.startBeat, 0);
+    expect(p.endBeat, 2);
+    expect(p.released, isTrue);
+    expect(p.changeBeats, isEmpty);
+  });
+
+  test('ped while already down is a change at that beat', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {
+          'RH': 'C4:4 D4:4 E4:4 F4:4',
+          'LH': '{ped} C3:4 {ped} C3:4 {ped-up} C3:4',
+        },
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, [1]);
+    expect(m.pedals.single.endBeat, 2);
+  });
+
+  test('pedal left down runs to the end of the song, unreleased', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': '{ped} C3:1'},
+        {'RH': 'C4:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.pedals.single.endBeat, 8);
+    expect(m.pedals.single.released, isFalse);
+  });
+
+  test('a pedal pressed and lifted on the same beat draws nothing', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:4 {ped} {ped-up} C3:4 C3:2'},
+      ]),
+    );
+    expect(m.pedals, isEmpty);
+  });
+
+  test(
+    'content/songs/pedal-demo.json has the pedal spans it is written for',
+    () {
+      final json = File('../content/songs/pedal-demo.json').readAsStringSync();
+      final pedals = SongMarksParser.parse(json).pedals;
+      expect(pedals, hasLength(3));
+      // bar 1 down, change in bar 3 (beat 8), release in bar 4 (beat 14)
+      expect(pedals[0].startBeat, 0);
+      expect(pedals[0].changeBeats, [8]);
+      expect(pedals[0].endBeat, 14);
+      expect(pedals[0].released, isTrue);
+      // bar 5 down, release in bar 6 (beat 22)
+      expect(pedals[1].startBeat, 16);
+      expect(pedals[1].endBeat, 22);
+      expect(pedals[1].released, isTrue);
+      // bar 7 down, never released: runs to the end at beat 28
+      expect(pedals[2].startBeat, 24);
+      expect(pedals[2].endBeat, 28);
+      expect(pedals[2].released, isFalse);
+    },
+  );
+
+  test('ped directive in both hands is kept once', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{ped} C4:2 {ped-up} D4:2', 'LH': '{ped} C3:2 {ped-up} C3:2'},
+      ]),
+    );
+    expect(m.pedals, hasLength(1));
+    expect(m.pedals.single.changeBeats, isEmpty);
   });
 
   test('same directive in both hands stays on the treble staff', () {
@@ -269,5 +351,75 @@ void main() {
       expect(SongMarksParser.parse('not json').voltas, isEmpty);
       expect(SongMarksParser.parse('[]').navigation, isEmpty);
     });
+  });
+
+  test('arpeggio directives set plain, up and down arpeggios per hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{arp} C4:2 {arp:up} D4:2', 'LH': '{arp:down} C3:1'},
+      ]),
+    );
+    expect(m.arpeggios, hasLength(3));
+    final rh = m.arpeggios.where((a) => !a.leftHand).toList();
+    expect(rh.map((a) => a.beat), [0, 2]);
+    expect(rh.map((a) => a.direction), [
+      ArpeggioDirection.plain,
+      ArpeggioDirection.up,
+    ]);
+    final lh = m.arpeggios.where((a) => a.leftHand).single;
+    expect(lh.leftHand, isTrue);
+    expect(lh.direction, ArpeggioDirection.down);
+  });
+
+  test('a malformed arpeggio directive is ignored', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{arp:sideways} C4:4 D4:4 E4:4 F4:4', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.arpeggios, isEmpty);
+  });
+
+  test('gliss runs from its note to the next note of the same hand', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 E5:2', 'LH': 'C3:1'},
+        {'RH': 'G5:1 A5:1 B5:1 C6:1', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, hasLength(1));
+    final g = m.glissandi.single;
+    expect(g.startBeat, 0);
+    expect(g.endBeat, 2);
+    expect(g.leftHand, isFalse);
+  });
+
+  test('a rest does not end a glissando', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 r:2 E5:4', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, hasLength(1));
+    // C4:2 then a 2-beat rest: the gliss ends at E5, on beat 4.
+    expect(m.glissandi.single.endBeat, 4);
+  });
+
+  test('a gliss with no following note in its hand draws nothing', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': 'C4:2 {gliss}', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi, isEmpty);
+  });
+
+  test('the gliss start is not closed by the note sitting on its beat', () {
+    final m = SongMarksParser.parse(
+      _song([
+        {'RH': '{gliss} C4:2 E5:2', 'LH': 'C3:1'},
+      ]),
+    );
+    expect(m.glissandi.single.startBeat, 0);
   });
 }

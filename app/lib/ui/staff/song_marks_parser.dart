@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:easy_piano/ui/staff/arpeggio_layout.dart';
 import 'package:easy_piano/ui/staff/dynamics_layout.dart';
+import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/repeat_layout.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
-/// Dynamics, hairpins, repeat barlines, voltas and navigation marks of one
-/// song, in beats.
+/// Dynamics, hairpins, repeat barlines, voltas, navigation marks, damper pedal
+/// spans, arpeggios and glissandi of one song, in beats.
 class SongMarks {
   const SongMarks({
     required this.dynamics,
@@ -14,6 +16,9 @@ class SongMarks {
     this.repeatBarlines = const [],
     this.voltas = const [],
     this.navigation = const [],
+    this.pedals = const [],
+    this.arpeggios = const [],
+    this.glissandi = const [],
   });
 
   static const empty = SongMarks(dynamics: [], hairpins: []);
@@ -29,6 +34,10 @@ class SongMarks {
 
   /// Segno, coda and jump marks above the staff.
   final List<StaffNavigation> navigation;
+
+  final List<StaffPedal> pedals;
+  final List<StaffArpeggio> arpeggios;
+  final List<StaffGlissando> glissandi;
 }
 
 /// Reads dynamic, hairpin, repeat and navigation directives from a song JSON
@@ -38,6 +47,12 @@ class SongMarks {
 /// - `{dyn:"p"}` sets a dynamic at that beat (see [DynamicsLayout.glyphsFor]).
 /// - `{cresc}` / `{dim}` open a hairpin at that beat.
 /// - `{end}` closes the open hairpin.
+/// - `{ped}` presses the damper pedal. Pressed while already down, it is a
+///   pedal change.
+/// - `{ped-up}` releases the damper pedal.
+/// - `{arp}`, `{arp:up}`, `{arp:down}` put an arpeggio on the chord at that beat.
+/// - `{gliss}` starts a glissando that ends at the next note of the same hand
+///   (rests do not end it).
 /// - `{repeat_start}` / `{repeat_end}` put a repeat sign on the bar line at
 ///   that beat (`|:` / `:|`; both on one bar line draw `:|:`).
 /// - `{volta: [1]}` / `{volta: [2]}` open a first or second ending on that bar
@@ -50,11 +65,13 @@ class SongMarks {
 /// then has a hook), at the next volta, at `{volta_end}`, or at the end of the
 /// song (open end). Repeat and volta directives off a bar line are ignored.
 ///
+/// A pedal span left down runs to the end of the song without a release.
 /// Unknown dynamic text is ignored here; lint is responsible for rejecting it
 /// in content.
 abstract final class SongMarksParser {
   static final _dynDirective = RegExp(r'^\{dyn:"([^"]*)"\}$');
   static final _voltaDirective = RegExp(r'^\{volta:\s*\[\s*([12])\s*\]\s*\}$');
+  static final _arpDirective = RegExp(r'^\{arp(?::(up|down))?\}$');
 
   static SongMarks parse(String songJson) {
     if (songJson.isEmpty) return SongMarks.empty;
@@ -71,6 +88,10 @@ abstract final class SongMarksParser {
 
       final events = <_Event>[];
       final index = <String, int>{};
+      final arpeggios = <StaffArpeggio>[];
+      final glissandi = <StaffGlissando>[];
+      // Open `{gliss}` per hand (key: left hand?). Closed by the next note.
+      final pendingGliss = <bool, double>{};
       void add(_Event e) {
         // RH and LH often repeat the same directive at the same beat. Keep one
         // event, on the treble staff when either hand carries it.
@@ -106,12 +127,41 @@ abstract final class SongMarksParser {
             if (tok.isEmpty) continue;
             final beat = barStart + t;
             if (tok.startsWith('{')) {
-              final e = _directive(tok, beat, num);
-              if (e != null) add(e.withHand(isLh));
+              final arp = _arpDirective.firstMatch(tok);
+              if (arp != null) {
+                arpeggios.add(
+                  StaffArpeggio(
+                    beat,
+                    direction: switch (arp.group(1)) {
+                      'up' => ArpeggioDirection.up,
+                      'down' => ArpeggioDirection.down,
+                      _ => ArpeggioDirection.plain,
+                    },
+                    leftHand: isLh,
+                  ),
+                );
+              } else if (tok == '{gliss}') {
+                pendingGliss[isLh] = beat;
+              } else {
+                final e = _directive(tok, beat, num);
+                if (e != null) add(e.withHand(isLh));
+              }
               continue;
             }
             final colonIdx = tok.indexOf(':');
             if (colonIdx == -1) continue;
+            final isRest = tok.substring(0, colonIdx) == 'r';
+            final glissStart = pendingGliss[isLh];
+            if (!isRest && glissStart != null && beat > glissStart) {
+              glissandi.add(
+                StaffGlissando(
+                  startBeat: glissStart,
+                  endBeat: beat,
+                  leftHand: isLh,
+                ),
+              );
+              pendingGliss.remove(isLh);
+            }
             var tail = tok.substring(colonIdx + 1);
             final parenIdx = tail.indexOf('(');
             if (parenIdx != -1) tail = tail.substring(0, parenIdx);
@@ -124,12 +174,16 @@ abstract final class SongMarksParser {
 
       final totalBeats = rawBars.length * num;
       final structure = _buildStructure(events, totalBeats: totalBeats);
-      return _build(
-        events,
-        totalBeats: totalBeats,
+      final built = _build(events, totalBeats: totalBeats);
+      return SongMarks(
+        dynamics: built.dynamics,
+        hairpins: built.hairpins,
+        pedals: built.pedals,
         repeatBarlines: structure.repeatBarlines,
         voltas: structure.voltas,
         navigation: structure.navigation,
+        arpeggios: arpeggios,
+        glissandi: glissandi,
       );
     } catch (_) {
       // Malformed song: draw no marks rather than break the score.
@@ -167,6 +221,8 @@ abstract final class SongMarksParser {
       '{cresc}' => _Event(beat, _Kind.open, hairpin: HairpinKind.crescendo),
       '{dim}' => _Event(beat, _Kind.open, hairpin: HairpinKind.diminuendo),
       '{end}' => _Event(beat, _Kind.end),
+      '{ped}' => _Event(beat, _Kind.pedal),
+      '{ped-up}' => _Event(beat, _Kind.pedalUp),
       _ => null,
     };
   }
@@ -259,7 +315,11 @@ abstract final class SongMarksParser {
           navigation.add(
             StaffNavigation(e.beat, NavigationKind.values.byName(e.mark!)),
           );
-        case _Kind.dynamic || _Kind.open || _Kind.end:
+        case _Kind.dynamic ||
+            _Kind.open ||
+            _Kind.end ||
+            _Kind.pedal ||
+            _Kind.pedalUp:
           break;
       }
     }
@@ -276,16 +336,11 @@ abstract final class SongMarksParser {
     );
   }
 
-  static SongMarks _build(
-    List<_Event> events, {
-    required double totalBeats,
-    required List<StaffRepeatBarline> repeatBarlines,
-    required List<StaffVolta> voltas,
-    required List<StaffNavigation> navigation,
-  }) {
+  static SongMarks _build(List<_Event> events, {required double totalBeats}) {
     events.sort((a, b) => a.beat.compareTo(b.beat));
     final dynamics = <StaffDynamic>[];
     final hairpins = <StaffHairpin>[];
+    final pedals = <StaffPedal>[];
 
     HairpinKind? openKind;
     var openAt = 0.0;
@@ -308,6 +363,27 @@ abstract final class SongMarksParser {
       openKind = null;
     }
 
+    double? pedalDownAt;
+    var pedalChanges = <double>[];
+
+    void closePedal(double beat, {required bool released}) {
+      if (pedalDownAt == null) return;
+      final end = math.min(beat, totalBeats);
+      // A pedal pressed and released on the same beat draws nothing.
+      if (end > pedalDownAt!) {
+        pedals.add(
+          StaffPedal(
+            startBeat: pedalDownAt!,
+            endBeat: end,
+            changeBeats: pedalChanges,
+            released: released,
+          ),
+        );
+      }
+      pedalDownAt = null;
+      pedalChanges = <double>[];
+    }
+
     for (final e in events) {
       switch (e.kind) {
         case _Kind.dynamic:
@@ -320,6 +396,14 @@ abstract final class SongMarksParser {
           openLeftHand = e.leftHand;
         case _Kind.end:
           closeAt(e.beat);
+        case _Kind.pedal:
+          if (pedalDownAt == null) {
+            pedalDownAt = e.beat;
+          } else if (e.beat > pedalDownAt!) {
+            pedalChanges.add(e.beat);
+          }
+        case _Kind.pedalUp:
+          closePedal(e.beat, released: true);
         case _Kind.repeatStart ||
             _Kind.repeatEnd ||
             _Kind.voltaStart ||
@@ -329,13 +413,8 @@ abstract final class SongMarksParser {
       }
     }
     closeAt(totalBeats);
-    return SongMarks(
-      dynamics: dynamics,
-      hairpins: hairpins,
-      repeatBarlines: repeatBarlines,
-      voltas: voltas,
-      navigation: navigation,
-    );
+    closePedal(totalBeats, released: false);
+    return SongMarks(dynamics: dynamics, hairpins: hairpins, pedals: pedals);
   }
 }
 
@@ -343,6 +422,8 @@ enum _Kind {
   dynamic,
   open,
   end,
+  pedal,
+  pedalUp,
   repeatStart,
   repeatEnd,
   voltaStart,
