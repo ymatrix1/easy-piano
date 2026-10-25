@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/staff_note.dart';
 import 'package:easy_piano/ui/staff/staff_painter.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +37,7 @@ const _bottomY = 200 + _space * 2;
 StaffPainter _painter({
   List<StaffDynamic> dynamics = const [],
   List<StaffHairpin> hairpins = const [],
+  List<StaffPedal> pedals = const [],
 }) => StaffPainter(
   // Notes above the staff: no ledger lines below to confuse the sample.
   // C5 stems point down to y = 190 + 3.5 sp = 260.
@@ -48,6 +50,7 @@ StaffPainter _painter({
   inkColor: const Color(0xFF000000),
   dynamics: dynamics,
   hairpins: hairpins,
+  pedals: pedals,
 );
 
 void main() {
@@ -165,5 +168,22 @@ void main() {
       ),
       greaterThan(0),
     );
+  });
+
+  testWidgets('a pedal span draws below the staff, not above its line', (
+    tester,
+  ) async {
+    final bytes = await _render(
+      tester,
+      _painter(pedals: const [StaffPedal(startBeat: 0, endBeat: 2)]),
+    );
+    // Treble only: pedalPosBelow puts the line 2.5 sp under the bottom line
+    // (240), so 290 before clearance. The line and the Ped. glyph ink lie
+    // around it.
+    expect(_maxAlpha(bytes, 150, 280, 230, 330), greaterThan(0));
+    // Nothing from the pedal sits in the gap between the staff and the line.
+    // Stems of the three notes hang to y = 260, so sample a column between
+    // them (notes at x = 120, 180, 240).
+    expect(_maxAlpha(bytes, 152, 245, 166, 258), 0);
   });
 }
