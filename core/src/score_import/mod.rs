@@ -33,6 +33,39 @@ pub struct ImportedNote {
     /// Length in quarter-note beats.
     pub beats: f64,
     pub hand: Hand,
+    /// Articulations attached to this note in the source score.
+    pub articulations: Vec<Articulation>,
+}
+
+/// Note-level articulation preserved by score import.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Articulation {
+    Staccato,
+    Accent,
+    Tenuto,
+    Fermata,
+}
+
+/// Expression marks positioned on the imported score's quarter-note timeline.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpressionMark {
+    Dynamic {
+        beat: f64,
+        value: String,
+    },
+    Hairpin {
+        start: f64,
+        end: f64,
+        crescendo: bool,
+    },
+    Slur {
+        start: f64,
+        end: f64,
+    },
+    Pedal {
+        start: f64,
+        end: f64,
+    },
 }
 
 /// One bar of the score.
@@ -63,6 +96,8 @@ pub struct ImportedScore {
     pub measures: Vec<ImportedMeasure>,
     /// Sorted by start, then pitch.
     pub notes: Vec<ImportedNote>,
+    /// Expression marks retained by parsers that support them (currently MusicXML).
+    pub expression: Vec<ExpressionMark>,
 }
 
 /// Recognised input formats, chosen by file extension.
