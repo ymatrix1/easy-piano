@@ -80,7 +80,7 @@ class _ScorePageViewState extends State<ScorePageView>
 
     if (_currentBeat > 0.05) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _seekToBeat(_currentBeat);
+        _seekToBeat(_currentBeat, animate: false);
       });
     }
   }
@@ -258,7 +258,7 @@ class _ScorePageViewState extends State<ScorePageView>
     });
   }
 
-  void _seekToBeat(double beat) {
+  void _seekToBeat(double beat, {bool animate = true}) {
     setState(() {
       _currentBeat = beat.clamp(0.0, widget.totalBeats);
       _lastMetronomeBeat = _currentBeat.floorToDouble() - 1.0;
@@ -269,11 +269,15 @@ class _ScorePageViewState extends State<ScorePageView>
         _lastConfig != null &&
         _scrollController.hasClients) {
       if (_currentBeat <= 0.05) {
-        _scrollController.animateTo(
-          0.0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
+        if (animate) {
+          _scrollController.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        } else {
+          _scrollController.jumpTo(0.0);
+        }
         return;
       }
       final config = _lastConfig!;
@@ -292,11 +296,15 @@ class _ScorePageViewState extends State<ScorePageView>
             0.0,
             _scrollController.position.maxScrollExtent,
           );
-          _scrollController.animateTo(
-            targetScroll,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-          );
+          if (animate) {
+            _scrollController.animateTo(
+              targetScroll,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+            );
+          } else {
+            _scrollController.jumpTo(targetScroll);
+          }
           break;
         }
       }
@@ -360,147 +368,165 @@ class _ScorePageViewState extends State<ScorePageView>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Continuous edge-to-edge score layout matching MuseScore Continuous View
-        final availableW = constraints.maxWidth;
-        final scoreWidth = math.min(1200.0, math.max(680.0, availableW - 64.0));
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (widget.onClose != null) {
+          widget.onClose!();
+        } else {
+          Navigator.of(context)
+              .pop((beat: _currentBeat, speed: _speedModifier));
+        }
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Continuous edge-to-edge score layout matching MuseScore Continuous View
+          final availableW = constraints.maxWidth;
+          final scoreWidth = math.min(
+            1200.0,
+            math.max(680.0, availableW - 64.0),
+          );
 
-        final config = ScorePageConfig(
-          pageWidth: scoreWidth,
-          pageHeight: 1130.0, // used for PDF pagination
-          marginTop: 36.0,
-          marginBottom: 36.0,
-          marginLeft: 36.0,
-          marginRight: 36.0,
-          grandStaffHeight: 135.0,
-          systemDistance: 50.0,
-          minMeasureWidth: 100.0,
-          systemHeaderWidth: 70.0,
-        );
+          final config = ScorePageConfig(
+            pageWidth: scoreWidth,
+            pageHeight: 1130.0, // used for PDF pagination
+            marginTop: 36.0,
+            marginBottom: 36.0,
+            marginLeft: 36.0,
+            marginRight: 36.0,
+            grandStaffHeight: 135.0,
+            systemDistance: 50.0,
+            minMeasureWidth: 100.0,
+            systemHeaderWidth: 70.0,
+          );
 
-        final measures = ScorePageLayout.buildMeasures(
-          notes: widget.notes,
-          beatsPerBar: widget.beatsPerBar,
-          totalBeats: widget.totalBeats,
-          space: config.space,
-          minMeasureWidth: config.minMeasureWidth,
-        );
+          final measures = ScorePageLayout.buildMeasures(
+            notes: widget.notes,
+            beatsPerBar: widget.beatsPerBar,
+            totalBeats: widget.totalBeats,
+            space: config.space,
+            minMeasureWidth: config.minMeasureWidth,
+          );
 
-        final systems = ScorePageLayout.breakSystems(
-          measures: measures,
-          config: config,
-        );
+          final systems = ScorePageLayout.breakSystems(
+            measures: measures,
+            config: config,
+          );
 
-        final pages = ScorePageLayout.paginate(
-          systems: systems,
-          config: config,
-        );
+          final pages = ScorePageLayout.paginate(
+            systems: systems,
+            config: config,
+          );
 
-        _lastConfig = config;
-        _lastSystems = systems;
-        _lastPages = pages;
+          _lastConfig = config;
+          _lastSystems = systems;
+          _lastPages = pages;
 
-        final currentMeasureNum = widget.beatsPerBar > 0
-            ? (_currentBeat / widget.beatsPerBar).floor() + 1
-            : 1;
+          final currentMeasureNum = widget.beatsPerBar > 0
+              ? (_currentBeat / widget.beatsPerBar).floor() + 1
+              : 1;
 
-        return Scaffold(
-          // Clean unified ivory paper background across entire screen
-          backgroundColor: const Color(0xFFFCFCF9),
-          appBar: _buildTopBar(pages.length, pages, config),
-          body: Column(
-            children: [
-              Expanded(
-                child: systems.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No score data available',
-                          style: TextStyle(color: GameColors.ink, fontSize: 16),
-                        ),
-                      )
-                    : ListView(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        children: [
-                          // 1. Header: Title & Composer
-                          if (widget.title.isNotEmpty ||
-                              widget.composer.isNotEmpty)
-                            Center(
-                              child: Container(
-                                width: config.printableWidth * _scale,
-                                padding: const EdgeInsets.only(bottom: 28.0),
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        widget.title,
-                                        style: const TextStyle(
-                                          fontFamily: 'serif',
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
+          return Scaffold(
+            // Clean unified ivory paper background across entire screen
+            backgroundColor: const Color(0xFFFCFCF9),
+            appBar: _buildTopBar(pages.length, pages, config),
+            body: Column(
+              children: [
+                Expanded(
+                  child: systems.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No score data available',
+                            style: TextStyle(
+                              color: GameColors.ink,
+                              fontSize: 16,
+                            ),
+                          ),
+                        )
+                      : ListView(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          children: [
+                            // 1. Header: Title & Composer
+                            if (widget.title.isNotEmpty ||
+                                widget.composer.isNotEmpty)
+                              Center(
+                                child: Container(
+                                  width: config.printableWidth * _scale,
+                                  padding: const EdgeInsets.only(bottom: 28.0),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          widget.title,
+                                          style: const TextStyle(
+                                            fontFamily: 'serif',
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (widget.composer.isNotEmpty)
-                                      Text(
-                                        widget.composer,
-                                        style: const TextStyle(
-                                          fontFamily: 'serif',
-                                          fontSize: 14,
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.black87,
+                                      if (widget.composer.isNotEmpty)
+                                        Text(
+                                          widget.composer,
+                                          style: const TextStyle(
+                                            fontFamily: 'serif',
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.black87,
+                                          ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
 
-                          // 2. Continuous Systems (Infinite downward scroll)
-                          for (var s = 0; s < systems.length; s++)
-                            Center(
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: config.systemDistance * _scale,
-                                ),
-                                child: SizedBox(
-                                  width: config.printableWidth * _scale,
-                                  height: config.grandStaffHeight * _scale,
-                                  child: FittedBox(
-                                    fit: BoxFit.contain,
-                                    child: MouseRegion(
-                                      cursor: SystemMouseCursors.click,
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTapDown: (details) => _onSeekSystem(
-                                          systems[s],
-                                          details.localPosition.dx,
-                                          config,
-                                        ),
-                                        onHorizontalDragUpdate: (details) =>
-                                            _onSeekSystem(
-                                              systems[s],
-                                              details.localPosition.dx,
-                                              config,
-                                            ),
-                                        child: CustomPaint(
-                                          size: Size(
-                                            config.printableWidth,
-                                            config.grandStaffHeight,
+                            // 2. Continuous Systems (Infinite downward scroll)
+                            for (var s = 0; s < systems.length; s++)
+                              Center(
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: config.systemDistance * _scale,
+                                  ),
+                                  child: SizedBox(
+                                    width: config.printableWidth * _scale,
+                                    height: config.grandStaffHeight * _scale,
+                                    child: FittedBox(
+                                      fit: BoxFit.contain,
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: GestureDetector(
+                                          behavior: HitTestBehavior.opaque,
+                                          onTapDown: (details) => _onSeekSystem(
+                                            systems[s],
+                                            details.localPosition.dx,
+                                            config,
                                           ),
-                                          painter: SystemStaffPainter(
-                                            system: systems[s],
-                                            config: config,
-                                            staves: widget.staves,
-                                            keyFifths: widget.keyFifths,
-                                            beatsPerBar: widget.beatsPerBar,
-                                            playheadBeat: _currentBeat,
+                                          onHorizontalDragUpdate: (details) =>
+                                              _onSeekSystem(
+                                                systems[s],
+                                                details.localPosition.dx,
+                                                config,
+                                              ),
+                                          child: CustomPaint(
+                                            size: Size(
+                                              config.printableWidth,
+                                              config.grandStaffHeight,
+                                            ),
+                                            painter: SystemStaffPainter(
+                                              system: systems[s],
+                                              config: config,
+                                              staves: widget.staves,
+                                              keyFifths: widget.keyFifths,
+                                              beatsPerBar: widget.beatsPerBar,
+                                              playheadBeat: _currentBeat,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -508,15 +534,15 @@ class _ScorePageViewState extends State<ScorePageView>
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-              ),
-              _buildTransportBar(currentMeasureNum),
-            ],
-          ),
-        );
-      },
+                          ],
+                        ),
+                ),
+                _buildTransportBar(currentMeasureNum),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

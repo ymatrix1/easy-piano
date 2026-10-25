@@ -1326,10 +1326,26 @@ class _PracticeStageState extends State<PracticeStage>
                     );
 
                 if (result != null && mounted) {
-                  widget.onTempo(result.speed);
-                  setState(() {
-                    _scroll.value = result.beat;
-                  });
+                  final newSpeed = result.speed;
+                  if ((newSpeed - _tempo).abs() > 0.01) {
+                    _tempo = newSpeed;
+                    _usPerBeat = 60e6 / (_bpm * _tempo);
+                  }
+                  final targetBeat = result.beat.clamp(0.0, _totalBeats);
+                  _startMs = widget.midi.now() - (targetBeat * _msPerBeat);
+                  if (_pausedAtMs != null) _pausedAtMs = widget.midi.now();
+                  if (_demo) {
+                    _demoStartMs =
+                        widget.midi.now() - (targetBeat * _msPerBeat);
+                    var idx = 0;
+                    while (idx + 1 < _initialTargets.length &&
+                        _initialTargets[idx + 1].beat <= targetBeat) {
+                      idx++;
+                    }
+                    _demoIndex = idx;
+                  }
+                  _scroll.value = targetBeat;
+                  setState(() {});
                 }
               },
               icon: const Icon(
