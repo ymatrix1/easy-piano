@@ -1427,6 +1427,8 @@ class _PracticeStageState extends State<PracticeStage>
                           repeatBarlines: _songMarks.repeatBarlines,
                           voltas: _songMarks.voltas,
                           navigation: _songMarks.navigation,
+                          ornaments: _songMarks.ornaments,
+                          acciaccaturas: _songMarks.acciaccaturas,
                           pedals: _songMarks.pedals,
                           arpeggios: _songMarks.arpeggios,
                           glissandi: _songMarks.glissandi,
