@@ -1087,80 +1087,29 @@ class SystemStaffPainter extends CustomPainter {
       }
     }
 
-    // Flatten all notes in system for cross-measure beaming and accidentals
-    final allSysNotes = <StaffNote>[];
-    final noteXsMap = <int, double>{};
-    final beatPoints = <({double beat, double x})>[];
-
-    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
-      final m = system.measures[mIdx];
-      final mLeft = headerW + system.measureXs[mIdx];
-      final mW = system.measureWidths[mIdx];
-      final mSpan = math.max(0.001, m.endBeat - m.startBeat);
-      final padLeft = space * 1.8;
-      final padRight = space * 1.5;
-      final usableW = math.max(10.0, mW - padLeft - padRight);
-
-      // Map unique beats in this measure
-      final mBeats = <double>{};
-      for (final n in m.notes) {
-        if (!n.isSpacer) mBeats.add(n.beat);
-      }
-      if (mBeats.isEmpty) {
-        mBeats.add(m.startBeat);
-      }
-      final sortedBeats = mBeats.toList()..sort();
-      for (final b in sortedBeats) {
-        final rel = ((b - m.startBeat) / mSpan).clamp(0.0, 1.0);
-        final x = mLeft + padLeft + rel * usableW;
-        beatPoints.add((beat: b, x: x));
-      }
-
-      for (final note in m.notes) {
-        if (note.isSpacer) continue;
-        final relBeat = ((note.beat - m.startBeat) / mSpan).clamp(0.0, 1.0);
-        final nx = mLeft + padLeft + relBeat * usableW;
-        final globalIdx = allSysNotes.length;
-        allSysNotes.add(note);
-        noteXsMap[globalIdx] = nx;
-      }
-    }
-
-    // Boundary beat points for smooth interpolation across lines and barlines
-    if (beatPoints.isNotEmpty) {
-      if (beatPoints.first.beat > system.startBeat) {
-        beatPoints.insert(0, (
-          beat: system.startBeat,
-          x: headerW + space * 1.5,
-        ));
-      }
-      if (beatPoints.last.beat < system.endBeat) {
-        beatPoints.add((
-          beat: system.endBeat,
-          x:
-              headerW +
-              (system.measureXs.last + system.measureWidths.last) -
-              space * 1.5,
-        ));
-      }
-    }
-
-    // 6. Real-time Playhead Cursor (Sightread-style smooth gliding highlight band)
-    if (playheadBeat >= system.startBeat &&
-        playheadBeat <= system.endBeat &&
-        beatPoints.length >= 2) {
-      double curX = beatPoints.first.x;
-      for (var k = 0; k < beatPoints.length - 1; k++) {
-        final p0 = beatPoints[k];
-        final p1 = beatPoints[k + 1];
-        if (playheadBeat >= p0.beat && playheadBeat <= p1.beat) {
-          final span = p1.beat - p0.beat;
-          final t = span > 0 ? (playheadBeat - p0.beat) / span : 0.0;
-          curX = p0.x + t * (p1.x - p0.x);
-          break;
+    // 6. Real-time Playhead Cursor & Note X mapping with uniform, tranquil velocity
+    final pad = space * 1.4;
+    double beatToX(double b) {
+      for (var i = 0; i < system.measures.length; i++) {
+        final m = system.measures[i];
+        final isLast = i == system.measures.length - 1;
+        if (b >= m.startBeat &&
+            (b < m.endBeat || (isLast && b <= m.endBeat + 0.001))) {
+          final mLeft = headerW + system.measureXs[i];
+          final mW = system.measureWidths[i];
+          final mSpan = math.max(0.001, m.endBeat - m.startBeat);
+          final rel = (b - m.startBeat) / mSpan;
+          return mLeft + pad + rel * (mW - (isLast ? pad : 0.0));
         }
       }
+      if (b < system.startBeat) {
+        return headerW + pad;
+      }
+      return headerW + (system.measureXs.last + system.measureWidths.last);
+    }
 
+    if (playheadBeat >= system.startBeat && playheadBeat <= system.endBeat) {
+      final curX = beatToX(playheadBeat);
       final cursorRect = Rect.fromLTRB(
         curX - space * 0.7,
         staffTop - space * 1.0,
@@ -1174,6 +1123,21 @@ class SystemStaffPainter extends CustomPainter {
           ..color = playheadColor.withValues(alpha: 0.35)
           ..style = PaintingStyle.fill,
       );
+    }
+
+    // Flatten all notes in system for cross-measure beaming and accidentals
+    final allSysNotes = <StaffNote>[];
+    final noteXsMap = <int, double>{};
+
+    for (var mIdx = 0; mIdx < system.measures.length; mIdx++) {
+      final m = system.measures[mIdx];
+      for (final note in m.notes) {
+        if (note.isSpacer) continue;
+        final nx = beatToX(note.beat);
+        final globalIdx = allSysNotes.length;
+        allSysNotes.add(note);
+        noteXsMap[globalIdx] = nx;
+      }
     }
 
     // 7. Accidentals computation matching Mode 1 StaffPainter
