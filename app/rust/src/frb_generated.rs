@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1021618670;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -359543816;
 
 // Section: executor
 
@@ -958,6 +958,41 @@ fn wire__crate__api__practice__companion_impl(
         },
     )
 }
+fn wire__crate__api__score_import__import_score_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "import_score",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_file_name = <String>::sse_decode(&mut deserializer);
+            let api_data = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok =
+                        crate::api::score_import::import_score(api_file_name, api_data)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__notation__init_app_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1487,7 +1522,8 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         11 => wire__crate__api__audio__audio_add_sample_impl(port, ptr, rust_vec_len, data_len),
         20 => wire__crate__api__audio__audio_start_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__score_import__import_score_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__notation__init_app_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1529,9 +1565,9 @@ fn pde_ffi_dispatcher_sync_impl(
         21 => wire__crate__api__audio__audio_stop_all_impl(ptr, rust_vec_len, data_len),
         22 => wire__crate__api__practice__check_generated_impl(ptr, rust_vec_len, data_len),
         23 => wire__crate__api__practice__companion_impl(ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__practice__inspect_song_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__notation__parse_pitch_impl(ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__notation__pitch_name_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

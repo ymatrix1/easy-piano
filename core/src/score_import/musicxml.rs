@@ -6,8 +6,8 @@
 //! staff 2 = left). Measures come from the first part.
 
 use super::{
-    letter_semitone, measure_beats, merge_ties, midi_pitch, sort_notes, Clef, Hand,
-    ImportedMeasure, ImportedNote, ImportedScore, TieNote,
+    letter_semitone, measure_beats, merge_ties, midi_pitch, sort_notes, Articulation, Clef,
+    ExpressionMark, Hand, ImportedMeasure, ImportedNote, ImportedScore, TieNote,
 };
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
@@ -287,6 +287,10 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
 
     let mut raws: Vec<TieNote> = Vec::new();
     let mut measures: Vec<ImportedMeasure> = Vec::new();
+    let mut expression = Vec::new();
+    let mut slurs: HashMap<String, f64> = HashMap::new();
+    let mut open_hairpin: Option<(f64, bool)> = None;
+    let mut open_pedal: Option<f64> = None;
     let mut tempo = None;
     let mut right_clef = Clef::Treble;
     let mut left_clef = Clef::Bass;
@@ -315,6 +319,53 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
             for c in &measure.children {
                 match c.name.as_str() {
                     "attributes" => st.apply_attributes(c),
+                    "direction" if pi == 0 => {
+                        let beat = m_start + cursor as f64 / st.divisions as f64;
+                        if let Some(dt) = c.child("direction-type") {
+                            if let Some(dyns) = dt.child("dynamics") {
+                                if let Some(mark) = dyns.children.first() {
+                                    expression.push(ExpressionMark::Dynamic {
+                                        beat,
+                                        value: mark.name.clone(),
+                                    });
+                                }
+                            }
+                            if let Some(wedge) = dt.child("wedge") {
+                                match wedge.attr("type") {
+                                    Some("crescendo") => open_hairpin = Some((beat, true)),
+                                    Some("diminuendo") => open_hairpin = Some((beat, false)),
+                                    Some("stop") => {
+                                        if let Some((start, crescendo)) = open_hairpin.take() {
+                                            expression.push(ExpressionMark::Hairpin {
+                                                start,
+                                                end: beat,
+                                                crescendo,
+                                            });
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            if let Some(pedal) = dt.child("pedal") {
+                                match pedal.attr("type") {
+                                    Some("start") => open_pedal = Some(beat),
+                                    Some("stop") => {
+                                        if let Some(start) = open_pedal.take() {
+                                            expression
+                                                .push(ExpressionMark::Pedal { start, end: beat });
+                                        }
+                                    }
+                                    Some("change") => {
+                                        if let Some(start) = open_pedal.replace(beat) {
+                                            expression
+                                                .push(ExpressionMark::Pedal { start, end: beat });
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
                     "note" => {
                         if c.child("grace").is_some() {
                             continue;
@@ -323,6 +374,42 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
                         let dur = c.child_i64("duration").unwrap_or(0);
                         let start = if chord { last_start } else { cursor };
                         let staff = c.child_i64("staff").unwrap_or(1);
+                        let mut articulations = Vec::new();
+                        if let Some(notations) = c.child("notations") {
+                            if let Some(arts) = notations.child("articulations") {
+                                for art in &arts.children {
+                                    match art.name.as_str() {
+                                        "staccato" => articulations.push(Articulation::Staccato),
+                                        "accent" => articulations.push(Articulation::Accent),
+                                        "tenuto" => articulations.push(Articulation::Tenuto),
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            if notations.child("fermata").is_some() {
+                                articulations.push(Articulation::Fermata);
+                            }
+                            for slur in notations.children.iter().filter(|n| n.name == "slur") {
+                                let key = slur.attr("number").unwrap_or("1").to_string();
+                                match (pi == 0, slur.attr("type")) {
+                                    (true, Some("start")) => {
+                                        slurs.insert(
+                                            key,
+                                            m_start + start as f64 / st.divisions as f64,
+                                        );
+                                    }
+                                    (true, Some("stop")) => {
+                                        if let Some(begin) = slurs.remove(&key) {
+                                            expression.push(ExpressionMark::Slur {
+                                                start: begin,
+                                                end: m_start + start as f64 / st.divisions as f64,
+                                            });
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
                         if c.child("rest").is_none() {
                             if let Some(midi) = pitch_midi(c) {
                                 let div = st.divisions as f64;
@@ -332,6 +419,7 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
                                         start: m_start + start as f64 / div,
                                         beats: dur as f64 / div,
                                         hand: st.hand(staff),
+                                        articulations,
                                     },
                                     tie_start: has_tie(c, "start"),
                                     tie_stop: has_tie(c, "stop"),
@@ -386,6 +474,20 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
     }
     let mut notes = merge_ties(raws);
     sort_notes(&mut notes);
+    let end_beat = measures.last().map_or(0.0, |m| m.start + m.beats);
+    if let Some((start, crescendo)) = open_hairpin {
+        expression.push(ExpressionMark::Hairpin {
+            start,
+            end: end_beat,
+            crescendo,
+        });
+    }
+    if let Some(start) = open_pedal {
+        expression.push(ExpressionMark::Pedal {
+            start,
+            end: end_beat,
+        });
+    }
     Ok(ImportedScore {
         title: title_of(&root),
         composer: composer_of(&root),
@@ -394,6 +496,7 @@ fn parse_str(text: &str) -> Result<ImportedScore, String> {
         left_clef,
         measures,
         notes,
+        expression,
     })
 }
 
@@ -442,6 +545,71 @@ mod tests {
         assert_eq!(s.title, "Test Piece");
         assert_eq!(s.composer, "Test Composer");
         assert_eq!(s.tempo_bpm, Some(96.0));
+    }
+
+    #[test]
+    fn preserves_expression_marks_and_note_articulations() {
+        let xml = SAMPLE
+            .replace(
+                "<direction><direction-type><metronome><per-minute>96</per-minute></metronome></direction-type>",
+                "<direction><direction-type><dynamics><mf/></dynamics></direction-type></direction>\n      <direction><direction-type><wedge type=\"crescendo\"/></direction-type></direction>\n      <direction><direction-type><pedal type=\"start\"/></direction-type></direction>\n      <direction><direction-type><metronome><per-minute>96</per-minute></metronome></direction-type>",
+            )
+            .replace(
+                "<staff>1</staff></note>\n      <note><pitch><step>B</step>",
+                "<staff>1</staff><notations><slur type=\"start\"/><articulations><staccato/></articulations></notations></note>\n      <note><pitch><step>B</step>",
+            )
+            .replace(
+                "<staff>1</staff></note>\n      <note><rest/>",
+                "<staff>1</staff><notations><slur type=\"stop\"/><articulations><accent/><tenuto/></articulations></notations></note>\n      <note><rest/>",
+            )
+            .replace(
+                "<note><pitch><step>F</step><alter>1</alter><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>",
+                "<direction><direction-type><wedge type=\"stop\"/></direction-type></direction><direction><direction-type><pedal type=\"stop\"/></direction-type></direction><direction><direction-type><dynamics><f/></dynamics></direction-type></direction><note><pitch><step>F</step><alter>1</alter><octave>4</octave></pitch><duration>2</duration><voice>1</voice><type>quarter</type><staff>1</staff><notations><fermata/></notations></note>",
+            );
+        let score = parse(xml.as_bytes()).unwrap();
+        assert_eq!(
+            score
+                .notes
+                .iter()
+                .find(|n| n.midi == 67)
+                .unwrap()
+                .articulations,
+            vec![Articulation::Staccato]
+        );
+        assert_eq!(
+            score
+                .notes
+                .iter()
+                .find(|n| n.midi == 71)
+                .unwrap()
+                .articulations,
+            vec![Articulation::Accent, Articulation::Tenuto]
+        );
+        assert!(score
+            .notes
+            .iter()
+            .any(|n| n.articulations.contains(&Articulation::Fermata)));
+        assert!(score.expression.contains(&ExpressionMark::Dynamic {
+            beat: 0.0,
+            value: "mf".into()
+        }));
+        assert!(score.expression.contains(&ExpressionMark::Dynamic {
+            beat: 3.0,
+            value: "f".into()
+        }));
+        assert!(score.expression.contains(&ExpressionMark::Slur {
+            start: 0.0,
+            end: 1.0
+        }));
+        assert!(score.expression.contains(&ExpressionMark::Hairpin {
+            start: 0.0,
+            end: 3.0,
+            crescendo: true
+        }));
+        assert!(score.expression.contains(&ExpressionMark::Pedal {
+            start: 0.0,
+            end: 3.0
+        }));
     }
 
     #[test]

@@ -153,7 +153,7 @@ When a song/level is opened, the user can toggle between:
 |---|---|---|---|
 | **PR 1: Docs & Spec** | *Current* | Architecture spec, MuseScore & sightread analysis, bean plan. | Docs committed, reviewed. |
 | **PR 2: Page Layout** | `piano-ev1n` | `score_page_layout.dart`, Knuth-Plass measure breaks, system justification, static page view UI. | `app/test/ui/staff/score_page_layout_test.dart` passes. |
-| **PR 3: Core Importer** | `piano-gy3o` | Parsers for MusicXML, MIDI, ABC, LilyPond into AST in `core` + FFI. **Status:** parsers and AST done (`core/src/score_import/`); FFI and conversion to the content `Song` pending in a follow-up bean. | `cargo test --manifest-path core/Cargo.toml` (score_import tests). |
+| **PR 3: Core Importer** | `piano-gy3o` | Parsers for MusicXML, MIDI, ABC, LilyPond into AST in `core` + FFI. **Status:** parsers, AST, FFI `import_score` and conversion to the content `Song` done (`core/src/score_import/`, `piano-t6rt`). | `cargo test --manifest-path core/Cargo.toml` (score_import tests). |
 | **PR 4: Import UI & Library**| `piano-uy13` | Custom scores library, file drop target, PracticeTab card, TopBar action. | `flutter test` widget tests for library and drop target. |
 
 ---
@@ -161,10 +161,10 @@ When a song/level is opened, the user can toggle between:
 ## 5. Status, Limitations and Open Items
 
 ### 5.1 Status
-- **Done (`piano-gy3o`, PR 3 parsers):** `core/src/score_import/` reads MusicXML (`.xml`, `.musicxml`, `.mxl`), MIDI (`.mid`, `.midi`), ABC (`.abc`) and a LilyPond subset (`.ly`) into a format-independent `ImportedScore` (notes in quarter-note beats with hand, measures with time and key, tempo, title, composer). Entry point: `score_import::import(file_name, bytes)`.
+- **Done (`piano-gy3o`, PR 3 parsers):** `core/src/score_import/` reads MusicXML (`.xml`, `.musicxml`, `.mxl`), MIDI (`.mid`, `.midi`), ABC (`.abc`) and a LilyPond subset (`.ly`) into a format-independent `ImportedScore` (notes in quarter-note beats with hand, measures with time and key, tempo, title, composer). MusicXML also retains note articulations (staccato, accent, tenuto, fermata) and expression spans/marks (slurs, dynamics, hairpins, damper pedal). Other parsers currently return no expression marks. Entry point: `score_import::import(file_name, bytes)`.
 - **Not done:**
-  - FFI binding and conversion of `ImportedScore` into the content `Song` format: `piano-t6rt`.
   - Import UI, library, drop target: `piano-uy13`.
+  - Done in `piano-t6rt`: FFI `import_score` and conversion to the content `Song` (section 5.5).
   - Region filter for `restricted_in` songs: `piano-7os5`.
 - **Test evidence:** unit tests with inline fixtures only. No file produced by MuseScore, Mutopia, OpenScore or PDMX has been parsed yet (see 5.3).
 
@@ -205,7 +205,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 
 **All formats**
 - Measure grid is computed from the time signature in force. Mid-piece meter changes are read in all formats: MIDI from meta events, LilyPond from `\time`, ABC from `M:` and `[M:...]` (piano-tgsm). Key changes are read in MIDI and LilyPond, not in ABC.
-- `ImportedScore` carries no fingering, dynamics, articulation, pedal or lyric data.
+- Fingering, lyrics, and dynamic velocity values are not imported. ABC decorations and LilyPond articulation syntax are not imported. MusicXML expression positions are taken from the measure cursor; `<offset>` is not applied. Tie spans are merged into note durations; slurs remain separate expression spans.
 
 ### 5.3 Open items
 - **Real-file validation (`piano-niz2`, see 5.4):** the parsers have not been run on files from MuseScore/OpenScore (`.mxl`), Mutopia (`.ly`), PDMX, or DAW MIDI exports. Results and any fixes go in that bean.
@@ -213,7 +213,24 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - **Placement:** parsers live in `core` (app side), not only in `tools/content-cli`. [D37](../DECISIONS.md) (proposed) puts them there. It conflicts with the accepted [D3](../DECISIONS.md) line "MusicXML and MIDI supported only as import sources via CLI", which needs an explicit decision by the user.
 
 ### 5.4 Follow-up beans
-- `piano-t6rt`: FFI and conversion to the content `Song` format.
+- `piano-t6rt`: FFI and conversion to the content `Song` format. Done, see 5.5.
 - `piano-uy13`: import UI, library and drop target.
 - `piano-niz2`: validate parsers on real exported files (fixtures, expected notes, measures and hands).
 - `piano-tgsm`: close parser gaps. Done: measure length, LilyPond text and settings as music, ABC mid-piece meter. Recorded as out of scope in 5.2: grace notes (time and pitch), timewise MusicXML.
+
+### 5.5 Conversion to a content song (`piano-t6rt`)
+`score_import::song::import_song_json(file_name, bytes)` parses a file and returns content song JSON; the FFI `import_score` (`app/rust/src/api/score_import.rs`) calls it. Decision: [D40](../DECISIONS.md) (proposed).
+
+- Metadata: `title` and `composer` from the parser (fallbacks: file stem, `Unknown`); `arranger` `Imported`; `source` `custom`; `source_url` null; `license` and `composition_license` `user-provided`. The content lint rejects these values on purpose (shipped content only).
+- Id: `custom-` plus the file stem as a lowercase slug (`Für Elise.mid` gives `custom-f-r-elise`).
+- Tempo: `tempo_bpm` (quarter notes) times the beat unit over 4, clamped to 20-300; 120 when the file has no tempo.
+- Layout: notes of one hand that start and end together form one chord token. A hand has at most two voices: the first in `RH`/`LH`, the second in `RH2`/`LH2`, which is added only in bars where it sounds. Voices are filled with rests. A note that crosses a bar line is split with `{tie}`. Durations are exact fractions of a whole note (triplets become `1/12` etc.); time is kept to 1/120 of a quarter.
+- Key: the first measure's key signature (`Song.key`, a major tonic name).
+- Limits (errors or ignored, to be fixed in a later bean if needed):
+  - More than two voices in one hand at one moment: error `more than two voices in one hand at beat N`. Common in piano music with a held chord under moving notes; the import fails.
+  - Meter change in the piece: error. `Song.time` has one value.
+  - Key change in the piece: ignored (the notes keep their absolute pitch; only the key signature drawn is wrong after the change).
+  - Measure grid comes from the parser (`ImportedMeasure`); pickup bars are padded by the grid, not shown as shorter.
+  - No fingering, dynamics or lyrics (not in `ImportedScore`).
+- Tests: `core/src/score_import/song.rs` (layout, ties, voices, errors, key and tempo, id slug, ABC round trip) and `app/rust/src/api/score_import.rs`.
+- Not verified: the Web (wasm) build of the bridge, and an import from a real file; both belong to `piano-niz2` and the Web check of `piano-t6rt`. The import UI (`piano-uy13`) is not built yet, so no screen shows an imported song.

@@ -161,6 +161,7 @@ impl Parser {
                     start,
                     beats,
                     hand,
+                    articulations: Vec::new(),
                 },
                 tie_start: false,
                 tie_stop: pending,
@@ -588,6 +589,7 @@ pub fn parse(text: &str) -> Result<ImportedScore, String> {
         left_clef: Clef::Bass,
         measures,
         notes,
+        expression: Vec::new(),
     })
 }
 
