@@ -224,6 +224,7 @@ pub fn parse(data: &[u8]) -> Result<ImportedScore, String> {
                 start: s.start as f64 / ppq,
                 beats: s.dur as f64 / ppq,
                 hand,
+                articulations: Vec::new(),
             });
         }
     }
@@ -287,6 +288,7 @@ pub fn parse(data: &[u8]) -> Result<ImportedScore, String> {
         left_clef: Clef::Bass,
         measures,
         notes,
+        expression: Vec::new(),
     })
 }
 

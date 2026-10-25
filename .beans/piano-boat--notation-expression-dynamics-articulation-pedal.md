@@ -5,7 +5,7 @@ status: in-progress
 type: task
 priority: normal
 created_at: 2026-10-24T18:51:13Z
-updated_at: 2026-10-24T18:58:36Z
+updated_at: 2026-10-25T21:56:15Z
 ---
 
 # piano-boat: Notation: expression (dynamics, articulation, pedal)
@@ -49,3 +49,5 @@ PR 1 (dynamics and hairpins, rendering only). Grading, lint and lessons are open
 - `app/lib/practice/practice_stage.dart`: passes the parsed marks from the song JSON.
 - Tests: `dynamics_layout_test.dart`, `song_marks_parser_test.dart`, `staff_dynamics_paint_test.dart`.
 - Docs: `docs/specs/sheet-engraving.md` (parity row, section 1), `docs/specs/content-format.md` (directives).
+
+\n## PR 2: Preserve expressive notation during MusicXML import\n- [x] Add imported-note articulation values for staccato, accent, tenuto and fermata.\n- [x] Preserve dynamics, slurs, hairpins and damper-pedal spans on the score beat timeline.\n- [x] Keep other format parsers compatible with empty expression data.\n- [x] Cover the MusicXML marks with an inline fixture test.\n- [ ] Teaching lessons for each mark remain open.\n\nThe MusicXML parser currently uses the measure cursor for expression positions; <offset> is not applied. Conversion into the app content Song format remains tracked separately by piano-t6rt.

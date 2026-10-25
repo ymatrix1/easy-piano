@@ -161,7 +161,7 @@ When a song/level is opened, the user can toggle between:
 ## 5. Status, Limitations and Open Items
 
 ### 5.1 Status
-- **Done (`piano-gy3o`, PR 3 parsers):** `core/src/score_import/` reads MusicXML (`.xml`, `.musicxml`, `.mxl`), MIDI (`.mid`, `.midi`), ABC (`.abc`) and a LilyPond subset (`.ly`) into a format-independent `ImportedScore` (notes in quarter-note beats with hand, measures with time and key, tempo, title, composer). Entry point: `score_import::import(file_name, bytes)`.
+- **Done (`piano-gy3o`, PR 3 parsers):** `core/src/score_import/` reads MusicXML (`.xml`, `.musicxml`, `.mxl`), MIDI (`.mid`, `.midi`), ABC (`.abc`) and a LilyPond subset (`.ly`) into a format-independent `ImportedScore` (notes in quarter-note beats with hand, measures with time and key, tempo, title, composer). MusicXML also retains note articulations (staccato, accent, tenuto, fermata) and expression spans/marks (slurs, dynamics, hairpins, damper pedal). Other parsers currently return no expression marks. Entry point: `score_import::import(file_name, bytes)`.
 - **Not done:**
   - FFI binding and conversion of `ImportedScore` into the content `Song` format: `piano-t6rt`.
   - Import UI, library, drop target: `piano-uy13`.
@@ -205,7 +205,7 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 
 **All formats**
 - Measure grid is computed from the time signature. Mid-piece meter changes inside the body of ABC and LilyPond are ignored; in MIDI they are read from meta events.
-- `ImportedScore` carries no fingering, dynamics, articulation, pedal or lyric data.
+- Fingering, lyrics, and dynamic velocity values are not imported. ABC decorations and LilyPond articulation syntax are not imported. MusicXML expression positions are taken from the measure cursor; `<offset>` is not applied. Tie spans are merged into note durations; slurs remain separate expression spans.
 
 ### 5.3 Open items
 - **Real-file validation (`piano-niz2`, see 5.4):** the parsers have not been run on files from MuseScore/OpenScore (`.mxl`), Mutopia (`.ly`), PDMX, or DAW MIDI exports. Results and any fixes go in that bean.
