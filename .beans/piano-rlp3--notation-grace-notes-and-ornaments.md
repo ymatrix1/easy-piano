@@ -17,9 +17,9 @@ Play the exact ornamental notes composers wrote with standard professional engra
 ## Acceptance Criteria
 - [ ] Syntax for acciaccatura, appoggiatura, trill, mordent, turn (written out vs symbolic). Delivered: symbolic directives `{acc:"D5"}`, `{trill}`, `{mordent}`, `{turn}`. Appoggiatura not done.
 - [x] Engraving rendering (`ornament_layout.dart`):
-  - [x] Grace notes rendered with scaled notehead ($\approx 60\%$) and stem.
-  - [x] Acciaccatura diagonal stem slash: `graceNoteSlashStemUp` U+E564 (the bean's U+E560 was wrong: it is `graceNoteAcciaccaturaStemUp`).
-  - [x] Trill symbols with wavy continuation line (generated sine path, not `wiggleTrill`), mordents, and turns centered above noteheads.
+  - [x] Grace notes rendered with notehead and stem at `graceNoteMag` 0.7 (`v450:376`, `chord.cpp:2071`); stem length 3.5 sp x 0.7 (`v450:151`).
+  - [x] Acciaccatura stem slash drawn as a line, not a glyph, per `TLayout::layoutStemSlash` (`tlayout.cpp:5378`): angle 40 deg (`v450:171`), position 2 sp (`v450:170`), thickness 0.125 sp (`v450:172`). The earlier glyph choice (U+E564) was wrong; U+E560 is `graceNoteAcciaccaturaStemUp`, not the slash.
+  - [x] Trill drawn as `ornamentTrill` (U+E566) at the chord origin followed by `wiggleTrill` (U+EAA4) fills, as `TrillSegment::symbolLine` (`dom/trill.cpp:73`). No generated sine path. Mordents and turns centred on the head, placed per `ChordLayout::layoutArticulations` (`chordlayout.cpp:1048`), not per `vertMargin`.
 - [ ] Core parser, lint, and playback audio handling (grace notes steal small fractional time before beat). Delivered: none in core (unknown directives are ignored there). Grace notes take no time and are not played differently.
 - [ ] Converter keeps them; Mikrokosmos Nos. 62 and 134 re-imported.
 - [ ] Teaching lessons (scene, drill, song) for grace notes, trills, and mordents.
@@ -31,7 +31,7 @@ Play the exact ornamental notes composers wrote with standard professional engra
 
 ## Summary of Changes
 PR 4 (`feat/ornaments-trills`), rendering only:
-- `app/lib/ui/staff/ornament_layout.dart`: pure geometry (glyph metrics, ornament placement above the chord, trill line ends, generated wave, grace head, stem, slash origin). Codepoints checked against `glyphnames.json` and the Leland cmap.
+- `app/lib/ui/staff/ornament_layout.dart`: pure geometry, each constant cited to MuseScore `file:line` or labelled a local choice (grace head and gap, stem, stem-slash line, trill symbols and baseline, mordent/turn baseline). Codepoints checked against `glyphnames.json` and the Leland cmap; advances and bboxes read from `Leland.otf`.
 - `app/lib/ui/staff/song_marks_parser.dart`: parses `{trill}`, `{mordent}`, `{turn}`, `{acc:"..."}` per hand; malformed input ignored; duplicates across RH/RH2 kept once.
 - `app/lib/ui/staff/staff_painter.dart`, `app/lib/practice/practice_stage.dart`: new `ornaments` and `acciaccaturas` params and wiring.
 - Tests: `ornament_layout_test.dart` (geometry and paint), `song_marks_parser_test.dart` (directives, malformed, dedupe).
