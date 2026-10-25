@@ -110,6 +110,19 @@ The same directive in both hands at the same beat is drawn once.
 **Grading (informational).** For MIDI input, each matched note-on carries its velocity. A dynamic passes when at least half of the onsets from its beat to the next dynamic classify as it (MuseScore velocities: ppp 16, pp 33, p 49, mp 64, mf 80, f 96, ff 112, fff 126; nearest centre wins). `fp`, `sf` and `sfz` are not graded. A crescendo passes when the mean velocity of its second half exceeds the first by 8 or more (a diminuendo, the reverse). Mic and touch input have no velocity and are not graded.
  Parsed by `app/lib/ui/staff/song_marks_parser.dart`.
 
+## Directives: ornaments and acciaccaturas
+
+Status: rendering only (piano-rlp3, PR 4). Parsed by `app/lib/ui/staff/song_marks_parser.dart`, drawn from `ornament_layout.dart`. Core (`core/src/dynamics.rs`) ignores these names (`Ok(None)`), and lint does not check them yet, so a typo is silently not drawn. Zero length, placed in a hand string like a note.
+
+- `{trill}`, `{mordent}`, `{turn}`: ornament above the chord that starts at that beat, in the hand the directive sits in. A trill also gets a wavy line to the next onset of that hand. With no note at that beat, nothing is drawn.
+- `{acc:"D5"}`: acciaccatura (grace note, pitch D5) before the chord that starts at that beat. Write it directly before the main note, at the same beat. The name is a note name as in the grammar above (`[A-G]`, optional `#` / `b` / `n`, octave): `{acc:"F#4"}`, `{acc:"Bb3"}`, `{acc:"Cn4"}`. A `#`, `b` or `n` is drawn as an accidental; without one, none is drawn. Grace notes take no time, so they are not in the bar sum.
+
+Example: `{trill} C5:2 {acc:"D5"} E5:4 {mordent} G5:4` (the trill and the mordent sit on the chords at beats 0 and 3; the grace D5 leans on the E5 at beat 2).
+
+Malformed names are ignored (`{acc:D5}` without quotes, `{acc:"H5"}`, out-of-range pitches, `{trill:"x"}`). Not in this version: appoggiatura, playback of grace notes, and any directive that changes the timeline.
+
+Duplicate directives in `RH` and `RH2` (or `LH` and `LH2`) at one beat are drawn once.
+
 ## Two voices per hand (`RH2`, `LH2`)
 
 Status: implemented ([D34](../DECISIONS.md), proposed; bean piano-16vk). Needed by most of Mikrokosmos Books 2-6: 69 of 147 pieces have a hand that holds one line while it plays another.

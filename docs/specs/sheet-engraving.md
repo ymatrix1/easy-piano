@@ -38,7 +38,7 @@ The engraving engine is designed for full algorithmic parity with **MuseScore St
 | Dynamics (p..ff, sf, sfz) & Hairpins | `rendering/score/dynamicslayout.cpp`, `tlayout.cpp` (layoutHairpinSegment) | Delivered (rendering: notehead centring, grand-staff gap, collisions; grading in core) | `dynamics_layout.dart` |
 | Piano Damper Pedal (Ped., *) | `rendering/score/tlayout.cpp` (pedal) | Planned (PR 2) | `pedal_layout.dart` |
 | Arpeggios & Glissandi | `rendering/score/arpeggiolayout.cpp` | Planned (PR 3) | `arpeggio_layout.dart` |
-| Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments)| Planned (PR 4) | `ornament_layout.dart` |
+| Grace Notes & Ornaments | `rendering/score/tlayout.cpp` (ornaments), `chordlayout.cpp` (grace notes) | Delivered (PR 4, `piano-rlp3`: trill, mordent, turn, acciaccatura; no appoggiatura, no playback) | `ornament_layout.dart` |
 | Repeat signs & Voltas (1st/2nd) | `rendering/score/measurelayout.cpp` | Planned (PR 5) | `repeat_layout.dart` |
 | Chord Symbols & Lyrics | `harmonylayout.cpp`, `lyricslayout.cpp` | Planned (PR 6) | `harmony_layout.dart` |
 | Ottava (8va/8vb) & Clef Changes | `systemheaderlayout.cpp`, `tlayout.cpp` | Planned (PR 7) | `ottava_layout.dart` |
@@ -86,9 +86,18 @@ See [score-import-and-page-view.md](score-import-and-page-view.md) for the end-t
 - **Glissando:** Diagonal stroke or wave connecting two notes with centered italic label *gliss.*
 
 ### 4. Grace Notes & Ornaments (`ornament_layout.dart`)
-- **Reference:** MuseScore `tlayout.cpp` and `chordlayout.cpp`.
-- **Acciaccatura:** Scaled notehead ($60\%$) with upward stem sliced by a diagonal slash (U+E560).
-- **Trills & Turns:** Standard SMuFL glyphs (`ornamentTrill`, `ornamentTurn`, `ornamentMordent`) centered above the notehead.
+- **Reference:** MuseScore `tlayout.cpp` (`layoutOrnament`, vertical margin 0.35 sp) and `chordlayout.cpp` (grace notes, `graceNoteMag` 0.6).
+- **Status:** Delivered in PR 4 (`piano-rlp3`), rendering only. Syntax in [content-format.md](content-format.md#directives-ornaments-and-acciaccaturas).
+- **Trill:** `ornamentTrill` (U+E566) centred above the top head of the chord, its ink bottom 0.35 sp above the chord (or above the stem tip for a stem-up chord). A wavy line runs from the glyph to the next onset of the same hand. The wave is a generated sine path (amplitude 0.12 sp, wavelength 0.7 sp, stroke 0.12 sp), not the SMuFL `wiggleTrill` (U+EAA4) repeated. Reason: the Leland metadata has no advance width for repeating a symbol line, and a generated path is unit-testable. No line is drawn when there is no later onset or less than 1 sp of room.
+- **Mordent and turn:** `ornamentMordent` (U+E56D) and `ornamentTurn` (U+E567), centred above the top head like the trill.
+- **Acciaccatura:** Notehead `noteheadBlack` at 0.6 of normal size, placed so its right edge sits 0.5 sp left of the leftmost ink of the main chord (an accidental counts). A stem-up stem of 3.5 sp x 0.6 rises from its right edge. The slash `graceNoteSlashStemUp` (U+E564) at 0.6 scale is centred on the middle of that stem. Grace notes take no time: the timeline does not move. A written accidental (`#`, `b`, `n`) is drawn left of the grace head.
+- **Codepoints:** checked against `references/MuseScore/fonts/smufl/glyphnames.json` and the cmap of `app/assets/fonts/Leland.otf`. U+E560 is `graceNoteAcciaccaturaStemUp` (a whole acciaccatura glyph with its own stem), so the earlier "U+E560 slash" was wrong.
+- **Not done (out of scope for PR 4):**
+  - Appoggiatura syntax and drawing (`graceNoteAppoggiaturaStemUp`, U+E562).
+  - Playback: grace notes do not steal time from the main note.
+  - Grace notes are not in the bar sum, so lint does not check them.
+  - Ledger lines of a grace note are drawn at its scaled head width, which is approximate.
+  - No collision check against the previous note or beams: a grace note at a dense rhythm can touch the note before it, and an ornament can touch a beam. Verified only by a rendered image of a test score, not against MuseScore output.
 
 ### 5. Repeats, Voltas & System Breaks (`repeat_layout.dart`)
 - **Reference:** MuseScore `measurelayout.cpp` and `barline.cpp`.
