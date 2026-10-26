@@ -644,10 +644,10 @@ impl Song {
                             }
                             "volta_end" if at_start => out[i].volta_end = true,
                             "segno" | "coda" | "dc_al_fine" | "dc_al_coda" | "ds_al_fine"
-                            | "ds_al_coda" | "fine" | "to_coda" => {
-                                if !out[i].navigation.contains(name) {
-                                    out[i].navigation.push(name.clone());
-                                }
+                            | "ds_al_coda" | "fine" | "to_coda"
+                                if !out[i].navigation.contains(name) =>
+                            {
+                                out[i].navigation.push(name.clone());
                             }
                             _ => {}
                         }
