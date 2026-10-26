@@ -38,7 +38,16 @@ class StaffVolta {
 }
 
 /// Navigation mark kinds (`{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_coda}`).
-enum NavigationKind { segno, coda, dcAlFine, dsAlCoda }
+enum NavigationKind {
+  segno,
+  coda,
+  dcAlFine,
+  dsAlFine,
+  dcAlCoda,
+  dsAlCoda,
+  fine,
+  toCoda,
+}
 
 /// A navigation mark above the staff at [beat].
 class StaffNavigation {
@@ -141,6 +150,10 @@ abstract final class RepeatLayout {
   /// (`DS_AL_CODA` "D.S. al Coda").
   static const dcAlFineLabel = 'D.C. al Fine';
   static const dsAlCodaLabel = 'D.S. al Coda';
+  static const dcAlCodaLabel = 'D.C. al Coda';
+  static const dsAlFineLabel = 'D.S. al Fine';
+  static const fineLabel = 'Fine';
+  static const toCodaLabel = 'To Coda';
 
   /// Default spatium in mm (`spatium` 1.74978, v450:1606). Used to turn MuseScore
   /// point sizes into staff spaces: 1 in = 72 pt = 25.4 mm (standard
@@ -436,6 +449,10 @@ abstract final class RepeatLayout {
   static String? navigationLabel(NavigationKind kind) => switch (kind) {
     NavigationKind.dcAlFine => dcAlFineLabel,
     NavigationKind.dsAlCoda => dsAlCodaLabel,
+    NavigationKind.dcAlCoda => dcAlCodaLabel,
+    NavigationKind.dsAlFine => dsAlFineLabel,
+    NavigationKind.fine => fineLabel,
+    NavigationKind.toCoda => toCodaLabel,
     NavigationKind.segno || NavigationKind.coda => null,
   };
 
@@ -443,6 +460,11 @@ abstract final class RepeatLayout {
   static String? navigationGlyph(NavigationKind kind) => switch (kind) {
     NavigationKind.segno => segnoGlyph,
     NavigationKind.coda => codaGlyph,
-    NavigationKind.dcAlFine || NavigationKind.dsAlCoda => null,
+    NavigationKind.dcAlFine ||
+    NavigationKind.dsAlFine ||
+    NavigationKind.dcAlCoda ||
+    NavigationKind.dsAlCoda ||
+    NavigationKind.fine ||
+    NavigationKind.toCoda => null,
   };
 }

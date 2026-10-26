@@ -50,6 +50,7 @@ abstract final class SegmentLayout {
     required double space,
     required double? beatsPerBar,
     required Map<int, AccidentalType> noteAccidentals,
+    List<double> measureStarts = const [],
   }) {
     final segmentsByBeat = <double, List<int>>{};
     for (var i = 0; i < notes.length; i++) {
@@ -101,11 +102,14 @@ abstract final class SegmentLayout {
       } else {
         final prev = segments[k - 1];
         final deltaBeats = seg.beat - prev.beat;
-        final bool crossedBar =
-            beatsPerBar != null &&
-            beatsPerBar > 0 &&
-            ((seg.beat / beatsPerBar).floor() >
-                (prev.beat / beatsPerBar).floor());
+        final bool crossedBar = measureStarts.isNotEmpty
+            ? measureStarts.any(
+                (beat) => beat > prev.beat + 1e-6 && beat <= seg.beat + 1e-6,
+              )
+            : beatsPerBar != null &&
+                  beatsPerBar > 0 &&
+                  ((seg.beat / beatsPerBar).floor() >
+                      (prev.beat / beatsPerBar).floor());
 
         // Non-linear duration stretch (quarter note = 1.0 stretch, eighth = 0.667 stretch, 16th = 0.444 stretch)
         final nominalSpacing = durationStretch(deltaBeats) * pixelsPerBeat;

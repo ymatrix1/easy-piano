@@ -17,6 +17,7 @@ import 'repeat_layout.dart';
 import 'segment_layout.dart';
 import 'smufl.dart';
 import 'staff_note.dart';
+import 'song_marks_parser.dart';
 import 'stem_layout.dart';
 import 'tuplet_layout.dart';
 
@@ -116,6 +117,9 @@ class StaffPainter extends CustomPainter {
     this.beatsPerBar,
     this.endBeat,
     this.keyFifths = 0,
+    this.beatUnit = 4,
+    this.signatureChanges = const [],
+    this.measureStarts = const [],
     this.dimmed = false,
     this.waitBeamOpacity,
     this.introStartSec,
@@ -212,6 +216,9 @@ class StaffPainter extends CustomPainter {
 
   /// Key signature in fifths (positive = sharps, negative = flats, 0 = C maj).
   final int keyFifths;
+  final int beatUnit;
+  final List<StaffSignatureChange> signatureChanges;
+  final List<double> measureStarts;
 
   /// Paused look: band and notation fade.
   final bool dimmed;
@@ -463,6 +470,7 @@ class StaffPainter extends CustomPainter {
     required double space,
     Map<int, double>? xCache,
     double? beatsPerBar,
+    List<double> measureStarts = const [],
   }) {
     if (xCache != null && xCache.containsKey(index)) return xCache[index]!;
     final n = notes[index];
@@ -489,6 +497,7 @@ class StaffPainter extends CustomPainter {
               space: space,
               xCache: xCache,
               beatsPerBar: beatsPerBar,
+              measureStarts: measureStarts,
             );
       final pWidth = prev.isRest
           ? space * 1.0
@@ -505,12 +514,15 @@ class StaffPainter extends CustomPainter {
 
     var result = nominalX;
     if (prevRight != null) {
-      final hasBarline =
-          beatsPerBar != null &&
-          beatsPerBar > 0 &&
-          prevNote != null &&
-          ((n.beat / beatsPerBar).floor() >
-              (prevNote.beat / beatsPerBar).floor());
+      final hasBarline = measureStarts.isNotEmpty
+          ? measureStarts.any(
+              (beat) => beat > prevNote!.beat + 1e-6 && beat <= n.beat + 1e-6,
+            )
+          : beatsPerBar != null &&
+                beatsPerBar > 0 &&
+                prevNote != null &&
+                ((n.beat / beatsPerBar).floor() >
+                    (prevNote.beat / beatsPerBar).floor());
       var hasAccidental = _isSharp[n.pitch % 12];
       if (!hasAccidental) {
         for (var i = index + 1; i < notes.length; i++) {
@@ -560,6 +572,8 @@ class StaffPainter extends CustomPainter {
     required int keyFifths,
     required double? beatsPerBar,
     required bool Function(StaffNote) onBass,
+    List<double> measureStarts = const [],
+    List<StaffSignatureChange> signatureChanges = const [],
   }) {
     final noteAccidentals = <int, AccidentalType>{};
     if (notes.isEmpty) return noteAccidentals;
@@ -584,21 +598,42 @@ class StaffPainter extends CustomPainter {
     final sortedIndices = List<int>.generate(notes.length, (i) => i);
     sortedIndices.sort((a, b) => notes[a].beat.compareTo(notes[b].beat));
 
-    final trebleState = AccidentalState(keyFifths: keyFifths);
-    final bassState = AccidentalState(keyFifths: keyFifths);
+    var currentKey = keyFifths;
+    var trebleState = AccidentalState(keyFifths: currentKey);
+    var bassState = AccidentalState(keyFifths: currentKey);
     int? currentMeasure;
+    var changeIndex = 0;
 
     for (final idx in sortedIndices) {
       final n = notes[idx];
       if (n.isSpacer || n.isRest) continue;
 
-      if (beatsPerBar != null && beatsPerBar > 0) {
-        final measure = (n.beat / beatsPerBar).floor();
+      if (measureStarts.isNotEmpty ||
+          (beatsPerBar != null && beatsPerBar > 0)) {
+        final measure = measureStarts.isNotEmpty
+            ? measureStarts.lastIndexWhere((beat) => beat <= n.beat + 1e-6)
+            : (n.beat / beatsPerBar!).floor();
         if (currentMeasure == null || measure != currentMeasure) {
-          trebleState.reset();
-          bassState.reset();
+          while (changeIndex < signatureChanges.length &&
+              signatureChanges[changeIndex].beat <= n.beat + 1e-6) {
+            currentKey = signatureChanges[changeIndex].keyFifths;
+            changeIndex++;
+          }
+          trebleState = AccidentalState(keyFifths: currentKey);
+          bassState = AccidentalState(keyFifths: currentKey);
           currentMeasure = measure;
         }
+      }
+
+      while (changeIndex < signatureChanges.length &&
+          signatureChanges[changeIndex].beat <= n.beat + 1e-6) {
+        final changedKey = signatureChanges[changeIndex].keyFifths;
+        if (changedKey != currentKey) {
+          currentKey = changedKey;
+          trebleState = AccidentalState(keyFifths: currentKey);
+          bassState = AccidentalState(keyFifths: currentKey);
+        }
+        changeIndex++;
       }
 
       final isBass = onBass(n);
@@ -806,9 +841,7 @@ class StaffPainter extends CustomPainter {
       if (bpb != null && bpb > 0) {
         final numDigit = bpb.round();
         final numGlyph = Smufl.digitGlyph(numDigit);
-        final denGlyph = Smufl.digitGlyph(
-          4,
-        ); // Default quarter note denominator
+        final denGlyph = Smufl.digitGlyph(beatUnit);
         final ksWidth = keyFifths != 0
             ? KeySignatureLayout.width(keyFifths, space)
             : 0.0;
@@ -884,6 +917,8 @@ class StaffPainter extends CustomPainter {
       keyFifths: keyFifths,
       beatsPerBar: bpb,
       onBass: _onBass,
+      measureStarts: measureStarts,
+      signatureChanges: signatureChanges,
     );
 
     final segments = SegmentLayout.buildSegments(
@@ -894,6 +929,7 @@ class StaffPainter extends CustomPainter {
       space: space,
       beatsPerBar: bpb?.toDouble(),
       noteAccidentals: noteAccidentals,
+      measureStarts: measureStarts,
     );
     final xCache = SegmentLayout.computeNoteXs(segments);
 
@@ -919,7 +955,7 @@ class StaffPainter extends CustomPainter {
     }
     bool hasRepeatAt(double beat) => repeatGeom.containsKey(_beatKey(beat));
 
-    if (bpb != null && bpb > 0) {
+    if (bpb != null && bpb > 0 && measureStarts.length <= 1) {
       final now0 = scrollBeat.value;
       final firstBar = ((now0 - anchorX / pixelsPerBeat) / bpb).floor();
       final lastBar = ((now0 + (size.width - anchorX) / pixelsPerBeat) / bpb)
@@ -940,6 +976,102 @@ class StaffPainter extends CustomPainter {
         );
         if (bx < clefRight) continue;
         canvas.drawLine(Offset(bx, staffTop), Offset(bx, staffBottom), ink);
+      }
+    }
+    if (measureStarts.length > 1) {
+      for (final barBeat in measureStarts.skip(1)) {
+        if (endBeat != null && barBeat >= endBeat! - 1e-6) continue;
+        if (hasRepeatAt(barBeat)) continue;
+        final x = SegmentLayout.barLineX(
+          barBeat: barBeat,
+          nowBeat: now,
+          anchorX: anchorX,
+          pixelsPerBeat: pixelsPerBeat,
+          space: space,
+          segments: segments,
+        );
+        if (x >= clefRight && x <= size.width) {
+          canvas.drawLine(Offset(x, staffTop), Offset(x, staffBottom), ink);
+        }
+      }
+    }
+
+    for (final change in signatureChanges) {
+      final x = SegmentLayout.barLineX(
+        barBeat: change.beat,
+        nowBeat: scrollBeat.value,
+        anchorX: anchorX,
+        pixelsPerBeat: pixelsPerBeat,
+        space: space,
+        segments: segments,
+      );
+      if (x < clefRight - space || x > size.width) continue;
+      canvas.drawLine(Offset(x, staffTop), Offset(x, staffBottom), ink);
+      final timeNum = Smufl.digitGlyph(change.numerator);
+      final timeDen = Smufl.digitGlyph(change.denominator);
+      final timeX = x + space * 0.7;
+      if (timeNum != null && timeDen != null) {
+        if (_hasTreble) {
+          _drawGlyph(
+            canvas,
+            timeNum,
+            space * 3.4,
+            Offset(timeX, trebleBottomY - space * 3),
+            staff,
+          );
+          _drawGlyph(
+            canvas,
+            timeDen,
+            space * 3.4,
+            Offset(timeX, trebleBottomY - space),
+            staff,
+          );
+        }
+        if (_hasBass) {
+          _drawGlyph(
+            canvas,
+            timeNum,
+            space * 3.4,
+            Offset(timeX, bassTopY + space),
+            staff,
+          );
+          _drawGlyph(
+            canvas,
+            timeDen,
+            space * 3.4,
+            Offset(timeX, bassTopY + space * 3),
+            staff,
+          );
+        }
+      }
+      final keyX = timeX + space * 2.5;
+      if (change.keyFifths != 0) {
+        if (_hasTreble) {
+          KeySignatureLayout.drawKeySignature(
+            canvas: canvas,
+            startX: keyX,
+            fifths: change.keyFifths,
+            onBass: false,
+            space: space,
+            trebleBottomY: trebleBottomY,
+            bassTopY: bassTopY,
+            color: staff,
+            drawGlyph: (c, g, sz, off, clr) => _drawGlyph(c, g, sz, off, clr),
+          );
+        }
+        if (_hasBass) {
+          KeySignatureLayout.drawKeySignature(
+            canvas: canvas,
+            startX: keyX,
+            fifths: change.keyFifths,
+            onBass: true,
+            space: space,
+            trebleBottomY: trebleBottomY,
+            bassTopY: bassTopY,
+            color: staff,
+            drawGlyph: (c, g, sz, off, clr) => _drawGlyph(c, g, sz, off, clr),
+          );
+        }
       }
     }
 
@@ -2189,6 +2321,7 @@ class StaffPainter extends CustomPainter {
               space: space,
               xCache: xCache,
               beatsPerBar: beatsPerBar,
+              measureStarts: measureStarts,
             )) +
         (headOffsets[i] ?? 0.0);
 
@@ -3083,6 +3216,8 @@ class StaffPainter extends CustomPainter {
       old.dimmed != dimmed ||
       old.beatsPerBar != beatsPerBar ||
       old.endBeat != endBeat ||
+      old.beatUnit != beatUnit ||
+      old.signatureChanges != signatureChanges ||
       old.staves != staves ||
       old.lineRatio != lineRatio ||
       old.introStartSec != introStartSec ||

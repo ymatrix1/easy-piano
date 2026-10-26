@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:easy_piano/ui/staff/repeat_layout.dart';
+import 'package:easy_piano/ui/staff/song_marks_parser.dart';
 import 'package:easy_piano/ui/staff/staff_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -218,6 +219,16 @@ void main() {
         RepeatLayout.navigationLabel(NavigationKind.dsAlCoda),
         'D.S. al Coda',
       );
+      expect(
+        RepeatLayout.navigationLabel(NavigationKind.dcAlCoda),
+        'D.C. al Coda',
+      );
+      expect(
+        RepeatLayout.navigationLabel(NavigationKind.dsAlFine),
+        'D.S. al Fine',
+      );
+      expect(RepeatLayout.navigationLabel(NavigationKind.fine), 'Fine');
+      expect(RepeatLayout.navigationLabel(NavigationKind.toCoda), 'To Coda');
       expect(RepeatLayout.navigationLabel(NavigationKind.segno), isNull);
     });
   });
@@ -327,6 +338,27 @@ void main() {
       expect(extra.every((p) => p.$2 < 160 && p.$2 > 40), isTrue);
       expect(extra.every((p) => p.$1 >= 355), isTrue);
     });
+
+    testWidgets('signature change draws a measure line and new signature', (
+      tester,
+    ) async {
+      final base = await _render(tester, _painter());
+      final marked = await _render(
+        tester,
+        _painter(
+          signatureChanges: const [
+            StaffSignatureChange(
+              beat: 4,
+              keyFifths: 1,
+              numerator: 3,
+              denominator: 4,
+            ),
+          ],
+          measureStarts: const [0, 4, 7],
+        ),
+      );
+      expect(_extraPixels(base, marked), isNotEmpty);
+    });
   });
 }
 
@@ -337,6 +369,8 @@ StaffPainter _painter({
   List<StaffRepeatBarline> repeatBarlines = const [],
   List<StaffVolta> voltas = const [],
   List<StaffNavigation> navigation = const [],
+  List<StaffSignatureChange> signatureChanges = const [],
+  List<double> measureStarts = const [],
 }) => StaffPainter(
   notes: const [],
   playheadBeat: ValueNotifier<double>(0),
@@ -348,6 +382,8 @@ StaffPainter _painter({
   repeatBarlines: repeatBarlines,
   voltas: voltas,
   navigation: navigation,
+  signatureChanges: signatureChanges,
+  measureStarts: measureStarts,
 );
 
 /// Renders [painter] and returns the raw RGBA bytes.

@@ -8,11 +8,43 @@ import 'package:easy_piano/ui/staff/ornament_layout.dart';
 import 'package:easy_piano/ui/staff/ottava_layout.dart';
 import 'package:easy_piano/ui/staff/pedal_layout.dart';
 import 'package:easy_piano/ui/staff/repeat_layout.dart';
+import 'package:easy_piano/ui/staff/key_signature.dart';
 import 'package:easy_piano/ui/staff/song_rest_parser.dart';
 
 /// Dynamics, hairpins, ottava spanners, repeat barlines, voltas, navigation
 /// marks, damper pedal spans, ornaments, acciaccaturas, arpeggios, glissandi,
 /// chord symbols and lyrics of one song, in beats.
+class StaffTie {
+  const StaffTie({
+    required this.startBeat,
+    required this.endBeat,
+    required this.pitch,
+    required this.leftHand,
+    required this.voice,
+    required this.continuationBeats,
+  });
+
+  final double startBeat;
+  final double endBeat;
+  final int pitch;
+  final bool leftHand;
+  final int voice;
+  final double continuationBeats;
+}
+
+class StaffSignatureChange {
+  const StaffSignatureChange({
+    required this.beat,
+    required this.keyFifths,
+    required this.numerator,
+    required this.denominator,
+  });
+  final double beat;
+  final int keyFifths;
+  final int numerator;
+  final int denominator;
+}
+
 class SongMarks {
   const SongMarks({
     required this.dynamics,
@@ -21,6 +53,8 @@ class SongMarks {
     this.repeatBarlines = const [],
     this.voltas = const [],
     this.navigation = const [],
+    this.ties = const [],
+    this.signatureChanges = const [],
     this.pedals = const [],
     this.ornaments = const [],
     this.acciaccaturas = const [],
@@ -46,6 +80,8 @@ class SongMarks {
 
   /// Segno, coda and jump marks above the staff.
   final List<StaffNavigation> navigation;
+  final List<StaffTie> ties;
+  final List<StaffSignatureChange> signatureChanges;
 
   final List<StaffPedal> pedals;
   final List<StaffOrnament> ornaments;
@@ -82,7 +118,8 @@ class SongMarks {
 ///   that beat (`|:` / `:|`; both on one bar line draw `:|:`).
 /// - `{volta: [1]}` / `{volta: [2]}` open a first or second ending on that bar
 ///   line. `{volta_end}` closes it on a bar line without a repeat sign.
-/// - `{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_coda}` put a navigation mark
+/// - `{segno}`, `{coda}`, `{dc_al_fine}`, `{ds_al_fine}`, `{dc_al_coda}`,
+///   `{ds_al_coda}`, `{fine}`, `{to_coda}` put a navigation mark
 ///   above the staff at that beat.
 ///
 /// An open hairpin also closes at the next dynamic, the next hairpin, or the
@@ -125,8 +162,43 @@ abstract final class SongMarksParser {
       final parts = timeSig.split('/');
       final num = double.tryParse(parts[0]) ?? 4.0;
       final den = parts.length > 1 ? (double.tryParse(parts[1]) ?? 4.0) : 4.0;
+      final signatureChanges = <StaffSignatureChange>[];
+      final changes = decoded['changes'];
+      final orderedChanges = changes is List
+          ? changes.whereType<Map>().toList()
+          : <Map>[];
+      if (changes is List) {
+        var currentKey = KeySignatureLayout.parseKey(decoded['key'] as String?);
+        var currentTime = (num.toInt(), den.toInt());
+        final ordered = orderedChanges
+          ..sort(
+            (a, b) =>
+                ((a['bar'] as int?) ?? 0).compareTo((b['bar'] as int?) ?? 0),
+          );
+        for (final change in ordered) {
+          final bar = change['bar'] as int?;
+          if (bar == null || bar < 2) continue;
+          if (change['key'] is String) {
+            currentKey = KeySignatureLayout.parseKey(change['key'] as String?);
+          }
+          final time = _parseTime(change['time'] as String?);
+          if (time != null) currentTime = time;
+          signatureChanges.add(
+            StaffSignatureChange(
+              beat: _barStartBeat(num.toInt(), den.toInt(), ordered, bar - 1),
+              keyFifths: currentKey,
+              numerator: currentTime.$1,
+              denominator: currentTime.$2,
+            ),
+          );
+        }
+      }
 
       final events = <_Event>[];
+      final barStarts = <double>[
+        for (var bar = 0; bar <= rawBars.length; bar++)
+          _barStartBeat(num.toInt(), den.toInt(), orderedChanges, bar),
+      ];
       final index = <String, int>{};
       final ornaments = <StaffOrnament>[];
       final acciaccaturas = <StaffAcciaccatura>[];
@@ -134,6 +206,10 @@ abstract final class SongMarksParser {
       final seenMarks = <String>{};
       final arpeggios = <StaffArpeggio>[];
       final glissandi = <StaffGlissando>[];
+      final ties = <StaffTie>[];
+      final previousNotes =
+          <String, ({List<int> pitches, double beat, double beats})>{};
+      final pendingTies = <String, List<(int pitch, double beat)>>{};
       // Open `{gliss}` per hand (key: left hand?). Closed by the next note.
       final pendingGliss = <bool, double>{};
       void add(_Event e) {
@@ -157,7 +233,12 @@ abstract final class SongMarksParser {
       for (var b = 0; b < rawBars.length; b++) {
         final barMap = rawBars[b];
         if (barMap is! Map) continue;
-        final barStart = b * num;
+        final barStart = _barStartBeat(
+          num.toInt(),
+          den.toInt(),
+          orderedChanges,
+          b,
+        );
 
         for (final entry in barMap.entries) {
           final handKey = entry.key.toString();
@@ -176,6 +257,16 @@ abstract final class SongMarksParser {
             if (tok.isEmpty) continue;
             final beat = barStart + t;
             if (tok.startsWith('{')) {
+              if (tok == '{tie}') {
+                final previous = previousNotes[handKey];
+                if (previous != null) {
+                  pendingTies.putIfAbsent(handKey, () => []).addAll([
+                    for (final pitch in previous.pitches)
+                      (pitch, previous.beat),
+                  ]);
+                }
+                continue;
+              }
               final orn = _ornamentDirective.firstMatch(tok);
               if (orn != null) {
                 final kind = OrnamentKind.values.byName(orn.group(1)!);
@@ -220,7 +311,7 @@ abstract final class SongMarksParser {
               } else if (tok == '{gliss}') {
                 pendingGliss[isLh] = beat;
               } else {
-                final e = _directive(tok, beat, num);
+                final e = _directive(tok, beat, barStarts, b);
                 if (e != null) add(e.withHand(isLh));
               }
               continue;
@@ -244,12 +335,43 @@ abstract final class SongMarksParser {
             if (parenIdx != -1) tail = tail.substring(0, parenIdx);
             final atIdx = tail.indexOf('@');
             if (atIdx != -1) tail = tail.substring(0, atIdx);
-            t += SongRestParser.parseDurBeats(tail, den);
+            final tokenBeats = SongRestParser.parseDurBeats(tail, den);
+            if (!isRest) {
+              final pitches = _parsePitches(tok.substring(0, colonIdx));
+              final pending = pendingTies.remove(handKey) ?? const [];
+              for (final link in pending) {
+                if (pitches.contains(link.$1)) {
+                  ties.add(
+                    StaffTie(
+                      startBeat: link.$2,
+                      endBeat: beat,
+                      pitch: link.$1,
+                      leftHand: isLh,
+                      voice: handKey.endsWith('2') ? 2 : 1,
+                      continuationBeats: tokenBeats,
+                    ),
+                  );
+                }
+              }
+              previousNotes[handKey] = (
+                pitches: pitches,
+                beat: beat,
+                beats: tokenBeats,
+              );
+            }
+            t += tokenBeats;
           }
         }
       }
 
-      final totalBeats = rawBars.length * num;
+      final totalBeats = rawBars.isEmpty
+          ? 0.0
+          : _barStartBeat(
+              num.toInt(),
+              den.toInt(),
+              orderedChanges,
+              rawBars.length,
+            );
       final structure = _buildStructure(events, totalBeats: totalBeats);
       final built = _build(events, totalBeats: totalBeats);
       return SongMarks(
@@ -262,6 +384,8 @@ abstract final class SongMarksParser {
         repeatBarlines: structure.repeatBarlines,
         voltas: structure.voltas,
         navigation: structure.navigation,
+        ties: ties,
+        signatureChanges: signatureChanges,
         ornaments: ornaments,
         acciaccaturas: acciaccaturas,
         arpeggios: arpeggios,
@@ -271,6 +395,57 @@ abstract final class SongMarksParser {
       // Malformed song: draw no marks rather than break the score.
       return SongMarks.empty;
     }
+  }
+
+  static (int, int)? _parseTime(String? value) {
+    if (value == null) return null;
+    final parts = value.split('/');
+    if (parts.length != 2) return null;
+    final numerator = int.tryParse(parts[0]);
+    final denominator = int.tryParse(parts[1]);
+    if (numerator == null ||
+        denominator == null ||
+        numerator <= 0 ||
+        denominator <= 0) {
+      return null;
+    }
+    return (numerator, denominator);
+  }
+
+  static double _barStartBeat(
+    int baseNum,
+    int baseDen,
+    List changes,
+    int sourceBar,
+  ) {
+    var beat = 0.0;
+    var time = (baseNum, baseDen);
+    for (var bar = 0; bar < sourceBar; bar++) {
+      for (final change in changes) {
+        if (change is Map && (change['bar'] as num?)?.toInt() == bar + 1) {
+          time = _parseTime(change['time'] as String?) ?? time;
+        }
+      }
+      beat += time.$1 * baseDen / time.$2;
+    }
+    return beat;
+  }
+
+  static List<int> _parsePitches(String token) {
+    const semitones = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11};
+    final out = <int>[];
+    final pitch = RegExp(r'([A-G])([#bn]?)(\d+)');
+    for (final match in pitch.allMatches(token)) {
+      final letter = match.group(1)!;
+      final accidental = switch (match.group(2)) {
+        '#' => 1,
+        'b' => -1,
+        _ => 0,
+      };
+      final octave = int.tryParse(match.group(3)!) ?? -10;
+      out.add((octave + 1) * 12 + semitones[letter]! + accidental);
+    }
+    return out;
   }
 
   /// MIDI pitch of an `{acc:"..."}` name (C4 = 60), or null when out of range.
@@ -287,7 +462,12 @@ abstract final class SongMarksParser {
     return midi >= 0 && midi <= 127 ? midi : null;
   }
 
-  static _Event? _directive(String tok, double beat, double num) {
+  static _Event? _directive(
+    String tok,
+    double beat,
+    List<double> barStarts,
+    int sourceBar,
+  ) {
     final dyn = _dynDirective.firstMatch(tok);
     if (dyn != null) {
       final mark = dyn.group(1)!;
@@ -312,7 +492,7 @@ abstract final class SongMarksParser {
     }
     final volta = _voltaDirective.firstMatch(tok);
     if (volta != null) {
-      if (!_onBarLine(beat, num)) return null;
+      if (!_onBarLine(beat, barStarts, sourceBar)) return null;
       return _Event(beat, _Kind.voltaStart, mark: volta.group(1)!);
     }
     final nav = _navigationKinds[tok];
@@ -326,7 +506,7 @@ abstract final class SongMarksParser {
       _ => null,
     };
     if (structural != null) {
-      if (!_onBarLine(beat, num)) return null;
+      if (!_onBarLine(beat, barStarts, sourceBar)) return null;
       return _Event(beat, structural);
     }
     return switch (tok) {
@@ -344,15 +524,17 @@ abstract final class SongMarksParser {
     '{segno}': NavigationKind.segno,
     '{coda}': NavigationKind.coda,
     '{dc_al_fine}': NavigationKind.dcAlFine,
+    '{ds_al_fine}': NavigationKind.dsAlFine,
+    '{dc_al_coda}': NavigationKind.dcAlCoda,
     '{ds_al_coda}': NavigationKind.dsAlCoda,
+    '{fine}': NavigationKind.fine,
+    '{to_coda}': NavigationKind.toCoda,
   };
 
   /// True when [beat] falls on the start of a bar (or the end of the last
   /// bar). [num] is the bar length in beats.
-  static bool _onBarLine(double beat, double num) {
-    if (num <= 0) return false;
-    final k = beat / num;
-    return (k - k.roundToDouble()).abs() < 1e-6;
+  static bool _onBarLine(double beat, List<double> barStarts, int sourceBar) {
+    return barStarts.any((start) => (beat - start).abs() < 1e-6);
   }
 
   /// Repeat signs, voltas and navigation marks, from the structural events.

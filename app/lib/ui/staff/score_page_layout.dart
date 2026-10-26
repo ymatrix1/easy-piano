@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'staff_note.dart';
 import 'staff_painter.dart';
+import 'song_marks_parser.dart';
 
 /// Single layout measure within a multi-system score layout (MuseScore `Measure`).
 class ScoreMeasure {
@@ -11,6 +12,8 @@ class ScoreMeasure {
     required this.endBeat,
     required this.notes,
     required this.minWidth,
+    this.numerator = 4,
+    this.denominator = 4,
   });
 
   /// 0-indexed measure ordinal in the score.
@@ -27,6 +30,8 @@ class ScoreMeasure {
 
   /// Minimum intrinsic width (in points/pixels) required to render without collisions.
   final double minWidth;
+  final int numerator;
+  final int denominator;
 }
 
 /// A horizontal system line containing one or more measures (MuseScore `System`).
@@ -386,10 +391,19 @@ abstract final class ScorePageLayout {
     double minMeasureWidth = 90.0,
     int keyFifths = 0,
     Map<int, AccidentalType> noteAccidentals = const {},
+    List<double> measureStarts = const [],
+    List<StaffSignatureChange> signatureChanges = const [],
+    int baseDenominator = 4,
   }) {
     if (beatsPerBar <= 0) return const [];
 
-    final numMeasures = math.max(1, (totalBeats / beatsPerBar).ceil());
+    final starts = measureStarts.isEmpty
+        ? List<double>.generate(
+            (totalBeats / beatsPerBar).ceil() + 1,
+            (i) => i * beatsPerBar,
+          )
+        : measureStarts;
+    final numMeasures = math.max(1, starts.length - 1);
     final measuresNotes = List.generate(
       numMeasures,
       (_) => <StaffNote>[],
@@ -399,7 +413,12 @@ abstract final class ScorePageLayout {
     for (var i = 0; i < notes.length; i++) {
       final n = notes[i];
       if (n.isSpacer) continue;
-      final mIdx = (n.beat / beatsPerBar).floor();
+      final mIdx = measureStarts.isEmpty
+          ? (n.beat / beatsPerBar).floor()
+          : math.max(
+              0,
+              measureStarts.lastIndexWhere((beat) => beat <= n.beat + 1e-6),
+            );
       if (mIdx >= 0 && mIdx < numMeasures) {
         measuresNotes[mIdx].add(n);
       }
@@ -407,9 +426,13 @@ abstract final class ScorePageLayout {
 
     final measures = <ScoreMeasure>[];
     for (var m = 0; m < numMeasures; m++) {
-      final start = m * beatsPerBar;
-      final end = (m + 1) * beatsPerBar;
+      final start = starts[m];
+      final end = starts[m + 1];
+      final change = signatureChanges
+          .where((c) => c.beat <= start + 1e-6)
+          .lastOrNull;
       final mNotes = measuresNotes[m];
+      final measureBpb = end - start;
 
       // Estimate minimum width using segment layout density
       double minW = minMeasureWidth;
@@ -419,7 +442,9 @@ abstract final class ScorePageLayout {
             : StaffPainter.computeAccidentals(
                 notes: mNotes,
                 keyFifths: keyFifths,
-                beatsPerBar: beatsPerBar,
+                beatsPerBar: measureBpb,
+                measureStarts: [start],
+                signatureChanges: signatureChanges,
                 onBass: (n) => n.leftHand,
               );
         final segments = SegmentLayout.buildSegments(
@@ -428,7 +453,8 @@ abstract final class ScorePageLayout {
           nowBeat: start,
           pixelsPerBeat: space * 3.0,
           space: space,
-          beatsPerBar: beatsPerBar,
+          beatsPerBar: measureBpb,
+          measureStarts: [start],
           noteAccidentals: mAccidentals,
         );
         if (segments.length > 1) {
@@ -446,6 +472,8 @@ abstract final class ScorePageLayout {
           endBeat: end,
           notes: mNotes,
           minWidth: minW,
+          numerator: change?.numerator ?? beatsPerBar.round(),
+          denominator: change?.denominator ?? baseDenominator,
         ),
       );
     }
@@ -713,6 +741,9 @@ abstract final class ScorePageLayout {
     required double totalBeats,
     ScorePageConfig config = const ScorePageConfig(),
     Map<int, AccidentalType> noteAccidentals = const {},
+    List<double> measureStarts = const [],
+    List<StaffSignatureChange> signatureChanges = const [],
+    int baseDenominator = 4,
   }) {
     final measures = buildMeasures(
       notes: notes,
@@ -721,6 +752,9 @@ abstract final class ScorePageLayout {
       space: config.space,
       minMeasureWidth: config.minMeasureWidth,
       noteAccidentals: noteAccidentals,
+      measureStarts: measureStarts,
+      signatureChanges: signatureChanges,
+      baseDenominator: baseDenominator,
     );
 
     final systems = breakSystems(measures: measures, config: config);

@@ -1310,6 +1310,20 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Vec<crate::api::practice::SongSignatureChange> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::practice::SongSignatureChange>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::practice::TargetView> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1436,14 +1450,39 @@ impl SseDecode for crate::api::practice::SongInfo {
         let mut var_composer = <String>::sse_decode(deserializer);
         let mut var_bpm = <f64>::sse_decode(deserializer);
         let mut var_beatsPerBar = <u32>::sse_decode(deserializer);
+        let mut var_beatUnit = <u32>::sse_decode(deserializer);
         let mut var_bars = <u32>::sse_decode(deserializer);
+        let mut var_totalBeats = <f64>::sse_decode(deserializer);
+        let mut var_signatureChanges =
+            <Vec<crate::api::practice::SongSignatureChange>>::sse_decode(deserializer);
+        let mut var_measureStarts = <Vec<f64>>::sse_decode(deserializer);
         return crate::api::practice::SongInfo {
             id: var_id,
             title: var_title,
             composer: var_composer,
             bpm: var_bpm,
             beats_per_bar: var_beatsPerBar,
+            beat_unit: var_beatUnit,
             bars: var_bars,
+            total_beats: var_totalBeats,
+            signature_changes: var_signatureChanges,
+            measure_starts: var_measureStarts,
+        };
+    }
+}
+
+impl SseDecode for crate::api::practice::SongSignatureChange {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_beat = <f64>::sse_decode(deserializer);
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_numerator = <u32>::sse_decode(deserializer);
+        let mut var_denominator = <u32>::sse_decode(deserializer);
+        return crate::api::practice::SongSignatureChange {
+            beat: var_beat,
+            key: var_key,
+            numerator: var_numerator,
+            denominator: var_denominator,
         };
     }
 }
@@ -1753,7 +1792,11 @@ impl flutter_rust_bridge::IntoDart for crate::api::practice::SongInfo {
             self.composer.into_into_dart().into_dart(),
             self.bpm.into_into_dart().into_dart(),
             self.beats_per_bar.into_into_dart().into_dart(),
+            self.beat_unit.into_into_dart().into_dart(),
             self.bars.into_into_dart().into_dart(),
+            self.total_beats.into_into_dart().into_dart(),
+            self.signature_changes.into_into_dart().into_dart(),
+            self.measure_starts.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1766,6 +1809,29 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::practice::SongInfo>
     for crate::api::practice::SongInfo
 {
     fn into_into_dart(self) -> crate::api::practice::SongInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::practice::SongSignatureChange {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.beat.into_into_dart().into_dart(),
+            self.key.into_into_dart().into_dart(),
+            self.numerator.into_into_dart().into_dart(),
+            self.denominator.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::practice::SongSignatureChange
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::practice::SongSignatureChange>
+    for crate::api::practice::SongSignatureChange
+{
+    fn into_into_dart(self) -> crate::api::practice::SongSignatureChange {
         self
     }
 }
@@ -1946,6 +2012,16 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Vec<crate::api::practice::SongSignatureChange> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::practice::SongSignatureChange>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::practice::TargetView> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2031,7 +2107,24 @@ impl SseEncode for crate::api::practice::SongInfo {
         <String>::sse_encode(self.composer, serializer);
         <f64>::sse_encode(self.bpm, serializer);
         <u32>::sse_encode(self.beats_per_bar, serializer);
+        <u32>::sse_encode(self.beat_unit, serializer);
         <u32>::sse_encode(self.bars, serializer);
+        <f64>::sse_encode(self.total_beats, serializer);
+        <Vec<crate::api::practice::SongSignatureChange>>::sse_encode(
+            self.signature_changes,
+            serializer,
+        );
+        <Vec<f64>>::sse_encode(self.measure_starts, serializer);
+    }
+}
+
+impl SseEncode for crate::api::practice::SongSignatureChange {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.beat, serializer);
+        <String>::sse_encode(self.key, serializer);
+        <u32>::sse_encode(self.numerator, serializer);
+        <u32>::sse_encode(self.denominator, serializer);
     }
 }
 
