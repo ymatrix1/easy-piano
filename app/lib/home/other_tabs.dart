@@ -9,12 +9,20 @@ import 'home_page.dart' show Progress;
 
 /// Practice tab: training modes outside the course path.
 class PracticeTab extends StatelessWidget {
-  const PracticeTab({super.key, required this.onFreePlay, this.onEndless});
+  const PracticeTab({
+    super.key,
+    required this.onFreePlay,
+    this.onEndless,
+    this.onSongLibrary,
+  });
 
   final VoidCallback onFreePlay;
 
   /// Endless generated practice (docs/specs/practice-mode.md); null = soon.
   final VoidCallback? onEndless;
+
+  /// Imported scores library (piano-uy13); null = soon.
+  final VoidCallback? onSongLibrary;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +42,13 @@ class PracticeTab extends StatelessWidget {
         onEndless,
       ),
       (
+        AppLocalizations.of(context).songLibrary,
+        AppLocalizations.of(context).songLibraryDesc,
+        Icons.library_music_rounded,
+        GameTone.red,
+        onSongLibrary,
+      ),
+      (
         AppLocalizations.of(context).sightReading,
         AppLocalizations.of(context).sightReadingDesc,
         Icons.visibility_rounded,
@@ -45,13 +60,6 @@ class PracticeTab extends StatelessWidget {
         AppLocalizations.of(context).rhythmDrillsDesc,
         Icons.av_timer_rounded,
         GameTone.green,
-        null,
-      ),
-      (
-        AppLocalizations.of(context).songLibrary,
-        AppLocalizations.of(context).songLibraryDesc,
-        Icons.library_music_rounded,
-        GameTone.red,
         null,
       ),
     ];

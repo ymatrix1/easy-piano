@@ -137,7 +137,7 @@ pub fn companion(song_json: String, hand: String) -> Result<Vec<NoteView>, Strin
 #[frb(sync)]
 pub fn inspect_song(json: String) -> Result<SongInfo, String> {
     let song = Song::from_json(&json)?;
-    let errs = song.validate();
+    let errs = song.validate_playable();
     if !errs.is_empty() {
         return Err(errs.join("; "));
     }
@@ -172,7 +172,7 @@ impl PracticeSession {
         training: bool,
     ) -> Result<PracticeSession, String> {
         let song = Song::from_json(&song_json)?;
-        let errs = song.validate();
+        let errs = song.validate_playable();
         if !errs.is_empty() {
             return Err(errs.join("; "));
         }
@@ -392,4 +392,58 @@ pub fn accompany_bars(
     let played: Vec<&str> = hands.iter().map(String::as_str).collect();
     let out = easy_piano_core::accompany::accompany(&song, &style, &played);
     serde_json::to_string(&out.bars).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const IMPORTED: &str = r#"{"id":"twinkle","title":"Twinkle","composer":"Trad.",
+        "arranger":"Imported","source":"custom","source_url":null,
+        "license":"user-provided","composition_license":"user-provided",
+        "bpm":100,"time":"4/4","key":"C","bars":[{"RH":"C4:4 C4:4 G4:4 G4:4"}]}"#;
+
+    #[test]
+    fn inspects_an_imported_song_without_a_content_license() {
+        let info = inspect_song(IMPORTED.into()).unwrap();
+        assert_eq!((info.bars, info.beats_per_bar), (1, 4));
+    }
+
+    #[test]
+    fn a_practice_session_starts_on_an_imported_song() {
+        let session = PracticeSession::create(
+            IMPORTED.into(),
+            "wait".into(),
+            "touch".into(),
+            "both".into(),
+            1.0,
+            0.8,
+            0,
+            false,
+        )
+        .unwrap();
+        assert_eq!(session.targets().len(), 4);
+    }
+
+    #[test]
+    fn a_practice_session_still_rejects_a_bad_imported_bar() {
+        let bad = IMPORTED.replace("G4:4 G4:4", "G4:9 G4:4");
+        let made = PracticeSession::create(
+            bad,
+            "wait".into(),
+            "touch".into(),
+            "both".into(),
+            1.0,
+            0.8,
+            0,
+            false,
+        );
+        assert!(made.is_err());
+    }
+
+    #[test]
+    fn inspect_still_rejects_a_bad_imported_bar() {
+        let bad = IMPORTED.replace("G4:4 G4:4", "G4:9 G4:4");
+        assert!(inspect_song(bad).is_err());
+    }
 }

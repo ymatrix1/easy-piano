@@ -256,5 +256,61 @@
   },
   "midiUnavailableApp": "MIDI input is not available on this device.",
   "micUnavailableApp": "Microphone input is not available on this device.",
-  "micDeniedApp": "Microphone access was blocked. Allow it in the app's system settings and try again."
+  "micDeniedApp": "Microphone access was blocked. Allow it in the app's system settings and try again.",
+  "songLibraryNoMatch": "No score matches \"{query}\".",
+  "@songLibraryNoMatch": { "placeholders": { "query": { "type": "String" } } },
+  "importScore": "Import score",
+  "importScoreDesc": "Open a MusicXML, MIDI, ABC or LilyPond file.",
+  "importScoreFailed": "This file could not be imported.",
+  "importScoreUnsupported": "Unsupported file. Use .xml, .musicxml, .mxl, .mid, .midi, .abc or .ly.",
+  "songLibraryEmpty": "No imported scores yet. Import a file or drop it on the window.",
+  "songLibrarySearch": "Search scores",
+  "scoreDropHint": "Drop score file to import",
+  "scoreDelete": "Delete",
+  "scoreDeleteConfirm": "Remove this score from your library?",
+  "scorePractice": "Practice",
+  "scoreBars": "{count} bars",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Time {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "importResultsTitle": "Import results",
+  "importAdded": "{count, plural, =1{1 score added} other{{count} scores added}}",
+  "@importAdded": {"placeholders": {"count": {"type": "int"}}},
+  "importNotAdded": "Not added",
+  "importProblemUnsupportedType": "Not a score file. Export your score as MusicXML, MIDI, ABC or LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).",
+  "importProblemEmpty": "The file is empty. Export the score again and pick the new file.",
+  "importProblemTooLarge": "The file is bigger than 2 MB, too large for a score. Export a single piece, not a whole book.",
+  "importProblemUnreadable": "The file is damaged or is not what its name says. Export it again from your notation app.",
+  "importProblemNoNotes": "No notes found. Check that the piano part is not empty, then export again.",
+  "importProblemUnsupportedMusic": "This score uses something Easy Piano cannot read yet, such as a time signature change, more than two voices per hand or more than 7 sharps or flats. Export a simpler version.",
+  "importProblemDuplicate": "This score is already in your library.",
+  "importProblemLibraryFull": "Your library is full. Delete a score you no longer need and try again.",
+  "importProblemStorageFull": "There is no room left on your device or browser to save this score. Delete a score and try again.",
+  "importProblemUnknown": "Something unexpected went wrong with this file. Try exporting it again.",
+  "scoreOpenLibrary": "Open library",
+  "scoreClose": "Close",
+  "scoreKey": "Key {key}",
+  "@scoreKey": {"placeholders": {"key": {"type": "String"}}},
+  "scoreTempo": "{bpm} BPM",
+  "@scoreTempo": {"placeholders": {"bpm": {"type": "int"}}},
+  "scoreHandsBoth": "Both hands",
+  "scoreHandsRight": "Right hand only",
+  "scoreHandsLeft": "Left hand only",
+  "scoreLevelLabel": "Estimated level",
+  "scoreLevelBeginner": "Beginner",
+  "scoreLevelIntermediate": "Intermediate",
+  "scoreLevelAdvanced": "Advanced",
+  "scoreRightsNotice": "Scores stay on this device and are never uploaded. Only import music you have the right to use."
 }

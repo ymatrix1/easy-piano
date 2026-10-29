@@ -36,7 +36,9 @@ Don't start a phase until the user approves it. Tick boxes in the PR that delive
 ## Phase 3: Mic and library
 
 - [x] Mic detection (single notes + chords) + calibration, web ([input](specs/input.md), [research](research/mic-input.md)); native capture pending
-- [ ] MusicXML/MIDI importers; song library with 30 PD pieces (parsers done in `core/score_import`, `piano-gy3o`; FFI and song conversion `piano-t6rt`; import UI `piano-uy13`; real-file validation pending, [spec §5](specs/score-import-and-page-view.md))
+- [x] MusicXML/MIDI/ABC/LilyPond importers (`core/score_import`, `piano-gy3o`; FFI and song conversion `piano-t6rt`; real-file validation `piano-niz2`)
+- [x] Import UI and device library: picker, drop, preview with staff, results summary, search and delete, practice through the normal stage (`piano-uy13`, [spec §5.6](specs/score-import-and-page-view.md); the drop on a real desktop window and a device Android run are still manual checks)
+- [ ] Song library with 30 PD pieces (content, not the import UI)
 - [ ] Daily workout, streaks, daily goal
 
 ## Phase 4: Content scale

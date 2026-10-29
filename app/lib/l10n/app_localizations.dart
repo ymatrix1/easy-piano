@@ -938,6 +938,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Microphone access was blocked. Allow it in the app\'s system settings and try again.'**
   String get micDeniedApp;
+
+  /// No description provided for @songLibraryNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No score matches \"{query}\".'**
+  String songLibraryNoMatch(String query);
+
+  /// No description provided for @importScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Import score'**
+  String get importScore;
+
+  /// No description provided for @importScoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a MusicXML, MIDI, ABC or LilyPond file.'**
+  String get importScoreDesc;
+
+  /// No description provided for @importScoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This file could not be imported.'**
+  String get importScoreFailed;
+
+  /// No description provided for @importScoreUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported file. Use .xml, .musicxml, .mxl, .mid, .midi, .abc or .ly.'**
+  String get importScoreUnsupported;
+
+  /// No description provided for @songLibraryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No imported scores yet. Import a file or drop it on the window.'**
+  String get songLibraryEmpty;
+
+  /// No description provided for @songLibrarySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search scores'**
+  String get songLibrarySearch;
+
+  /// No description provided for @scoreDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop score file to import'**
+  String get scoreDropHint;
+
+  /// No description provided for @scoreDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get scoreDelete;
+
+  /// No description provided for @scoreDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this score from your library?'**
+  String get scoreDeleteConfirm;
+
+  /// No description provided for @scorePractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice'**
+  String get scorePractice;
+
+  /// No description provided for @scoreBars.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} bars'**
+  String scoreBars(int count);
+
+  /// No description provided for @scoreTimeSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Time {time}'**
+  String scoreTimeSignature(String time);
+
+  /// No description provided for @importResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import results'**
+  String get importResultsTitle;
+
+  /// No description provided for @importAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 score added} other{{count} scores added}}'**
+  String importAdded(int count);
+
+  /// No description provided for @importNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added'**
+  String get importNotAdded;
+
+  /// No description provided for @importProblemUnsupportedType.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a score file. Export your score as MusicXML, MIDI, ABC or LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).'**
+  String get importProblemUnsupportedType;
+
+  /// No description provided for @importProblemEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is empty. Export the score again and pick the new file.'**
+  String get importProblemEmpty;
+
+  /// No description provided for @importProblemTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is bigger than 2 MB, too large for a score. Export a single piece, not a whole book.'**
+  String get importProblemTooLarge;
+
+  /// No description provided for @importProblemUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is damaged or is not what its name says. Export it again from your notation app.'**
+  String get importProblemUnreadable;
+
+  /// No description provided for @importProblemNoNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes found. Check that the piano part is not empty, then export again.'**
+  String get importProblemNoNotes;
+
+  /// No description provided for @importProblemUnsupportedMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'This score uses something Easy Piano cannot read yet, such as a time signature change, more than two voices per hand or more than 7 sharps or flats. Export a simpler version.'**
+  String get importProblemUnsupportedMusic;
+
+  /// No description provided for @importProblemDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'This score is already in your library.'**
+  String get importProblemDuplicate;
+
+  /// No description provided for @importProblemLibraryFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Your library is full. Delete a score you no longer need and try again.'**
+  String get importProblemLibraryFull;
+
+  /// No description provided for @importProblemStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no room left on your device or browser to save this score. Delete a score and try again.'**
+  String get importProblemStorageFull;
+
+  /// No description provided for @importProblemUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something unexpected went wrong with this file. Try exporting it again.'**
+  String get importProblemUnknown;
+
+  /// No description provided for @scoreOpenLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Open library'**
+  String get scoreOpenLibrary;
+
+  /// No description provided for @scoreClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get scoreClose;
+
+  /// No description provided for @scoreKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Key {key}'**
+  String scoreKey(String key);
+
+  /// No description provided for @scoreTempo.
+  ///
+  /// In en, this message translates to:
+  /// **'{bpm} BPM'**
+  String scoreTempo(int bpm);
+
+  /// No description provided for @scoreHandsBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both hands'**
+  String get scoreHandsBoth;
+
+  /// No description provided for @scoreHandsRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right hand only'**
+  String get scoreHandsRight;
+
+  /// No description provided for @scoreHandsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left hand only'**
+  String get scoreHandsLeft;
+
+  /// No description provided for @scoreLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated level'**
+  String get scoreLevelLabel;
+
+  /// No description provided for @scoreLevelBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get scoreLevelBeginner;
+
+  /// No description provided for @scoreLevelIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get scoreLevelIntermediate;
+
+  /// No description provided for @scoreLevelAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get scoreLevelAdvanced;
+
+  /// No description provided for @scoreRightsNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Scores stay on this device and are never uploaded. Only import music you have the right to use.'**
+  String get scoreRightsNotice;
 }
 
 class _AppLocalizationsDelegate

@@ -176,6 +176,9 @@ class ContentRepo {
   /// Locale tags that have a strings file.
   Iterable<String> get locales => _byLocale.keys;
 
+  /// All content strings by locale tag; a derived repo (imported scores) keeps them.
+  Map<String, Map<String, String>> get stringsByLocale => _byLocale;
+
   /// Active content locale tag. See docs/specs/i18n.md.
   String locale;
 

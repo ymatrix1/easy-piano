@@ -138,5 +138,64 @@
   "styleGame": "Videojuego",
   "midiUnavailableApp": "La entrada MIDI no está disponible en este dispositivo.",
   "micUnavailableApp": "La entrada por micrófono no está disponible en este dispositivo.",
-  "micDeniedApp": "Se bloqueó el acceso al micrófono. Permítelo en los ajustes del sistema de la app e inténtalo de nuevo."
+  "micDeniedApp": "Se bloqueó el acceso al micrófono. Permítelo en los ajustes del sistema de la app e inténtalo de nuevo.",
+  "importScore": "Importar partitura",
+  "importScoreDesc": "Abre un archivo MusicXML, MIDI, ABC o LilyPond.",
+  "importScoreFailed": "No se pudo importar este archivo.",
+  "importScoreUnsupported": "Archivo no compatible. Usa .xml, .musicxml, .mxl, .mid, .midi, .abc o .ly.",
+  "songLibraryEmpty": "Aún no hay partituras importadas. Importa un archivo o suéltalo en la ventana.",
+  "songLibrarySearch": "Buscar partituras",
+  "songLibraryNoMatch": "Ninguna partitura coincide con \"{query}\".",
+  "@songLibraryNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "scoreDropHint": "Suelta el archivo de partitura para importarlo",
+  "scoreDelete": "Eliminar",
+  "scoreDeleteConfirm": "¿Quitar esta partitura de tu biblioteca?",
+  "scorePractice": "Practicar",
+  "scoreBars": "{count} compases",
+  "@scoreBars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scoreTimeSignature": "Compás {time}",
+  "@scoreTimeSignature": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "importResultsTitle": "Resultado de la importación",
+  "importAdded": "{count, plural, =1{1 partitura añadida} other{{count} partituras añadidas}}",
+  "importNotAdded": "No añadidas",
+  "importProblemUnsupportedType": "No es un archivo de partitura. Exporta la partitura como MusicXML, MIDI, ABC o LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).",
+  "importProblemEmpty": "El archivo está vacío. Vuelve a exportar la partitura y elige el archivo nuevo.",
+  "importProblemTooLarge": "El archivo pesa más de 2 MB, demasiado para una partitura. Exporta una sola pieza, no un libro entero.",
+  "importProblemUnreadable": "El archivo está dañado o no es lo que dice su nombre. Vuelve a exportarlo desde tu programa de notación.",
+  "importProblemNoNotes": "No se encontraron notas. Comprueba que la parte de piano no esté vacía y exporta de nuevo.",
+  "importProblemUnsupportedMusic": "Esta partitura usa algo que Easy Piano aún no puede leer, como un cambio de compás, más de dos voces por mano o más de 7 alteraciones en la armadura. Exporta una versión más sencilla.",
+  "importProblemDuplicate": "Esta partitura ya está en tu biblioteca.",
+  "importProblemLibraryFull": "Tu biblioteca está llena. Elimina una partitura que ya no necesites e inténtalo de nuevo.",
+  "importProblemStorageFull": "No queda espacio en tu dispositivo o navegador para guardar esta partitura. Elimina una partitura e inténtalo de nuevo.",
+  "importProblemUnknown": "Algo inesperado falló con este archivo. Prueba a exportarlo de nuevo.",
+  "scoreOpenLibrary": "Abrir biblioteca",
+  "scoreClose": "Cerrar",
+  "scoreKey": "Tonalidad {key}",
+  "scoreTempo": "{bpm} BPM",
+  "scoreHandsBoth": "Ambas manos",
+  "scoreHandsRight": "Solo mano derecha",
+  "scoreHandsLeft": "Solo mano izquierda",
+  "scoreLevelLabel": "Nivel estimado",
+  "scoreLevelBeginner": "Fácil",
+  "scoreLevelIntermediate": "Intermedio",
+  "scoreLevelAdvanced": "Difícil",
+  "scoreRightsNotice": "Las partituras se quedan en este dispositivo y nunca se suben. Importa solo música que tengas derecho a usar."
 }

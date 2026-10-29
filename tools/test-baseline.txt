@@ -7,7 +7,6 @@ app/lib/audio/piano_synth_native.dart
 app/lib/audio/piano_synth_web.dart
 app/lib/audio/recording_synth.dart
 app/lib/home/learn_tab.dart
-app/lib/home/other_tabs.dart
 app/lib/input/mic/mic_input_native.dart
 app/lib/input/mic/mic_input_web.dart
 app/lib/input/midi_input_native.dart
@@ -28,7 +27,6 @@ app/lib/ui/staff/staff_spike_page.dart
 app/rust/src/android.rs
 app/rust/src/api/audio.rs
 app/rust/src/api/notation.rs
-app/rust/src/api/practice.rs
 app/rust/src/native_audio.rs
 tools/difficulty/calibrate.py
 tools/listening-test/build.py

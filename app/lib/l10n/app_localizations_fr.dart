@@ -486,4 +486,152 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get micDeniedApp =>
       'L\'accès au microphone est bloqué. Autorisez-le dans les réglages système de l\'application, puis réessayez.';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Aucune partition ne correspond à \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importer une partition';
+
+  @override
+  String get importScoreDesc =>
+      'Ouvrir un fichier MusicXML, MIDI, ABC ou LilyPond.';
+
+  @override
+  String get importScoreFailed => 'Ce fichier n\'a pas pu être importé.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Fichier non pris en charge. Utilisez .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Aucune partition importée pour l\'instant. Importez un fichier ou déposez-le dans la fenêtre.';
+
+  @override
+  String get songLibrarySearch => 'Rechercher des partitions';
+
+  @override
+  String get scoreDropHint =>
+      'Déposez le fichier de partition pour l\'importer';
+
+  @override
+  String get scoreDelete => 'Supprimer';
+
+  @override
+  String get scoreDeleteConfirm =>
+      'Retirer cette partition de votre bibliothèque ?';
+
+  @override
+  String get scorePractice => 'Pratiquer';
+
+  @override
+  String scoreBars(int count) {
+    return '$count mesures';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Mesure $time';
+  }
+
+  @override
+  String get importResultsTitle => 'Résultat de l\'importation';
+
+  @override
+  String importAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count partitions ajoutées',
+      one: '1 partition ajoutée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importNotAdded => 'Non ajoutées';
+
+  @override
+  String get importProblemUnsupportedType =>
+      'Ce n\'est pas un fichier de partition. Exportez la partition en MusicXML, MIDI, ABC ou LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).';
+
+  @override
+  String get importProblemEmpty =>
+      'Le fichier est vide. Exportez de nouveau la partition et choisissez le nouveau fichier.';
+
+  @override
+  String get importProblemTooLarge =>
+      'Le fichier dépasse 2 Mo, trop gros pour une partition. Exportez un seul morceau, pas un recueil entier.';
+
+  @override
+  String get importProblemUnreadable =>
+      'Le fichier est endommagé ou ne correspond pas à son nom. Exportez-le de nouveau depuis votre logiciel de notation.';
+
+  @override
+  String get importProblemNoNotes =>
+      'Aucune note trouvée. Vérifiez que la partie de piano n\'est pas vide, puis exportez de nouveau.';
+
+  @override
+  String get importProblemUnsupportedMusic =>
+      'Cette partition utilise un élément que Easy Piano ne sait pas encore lire, comme un changement de mesure, plus de deux voix par main ou plus de 7 altérations à la clé. Exportez une version plus simple.';
+
+  @override
+  String get importProblemDuplicate =>
+      'Cette partition est déjà dans votre bibliothèque.';
+
+  @override
+  String get importProblemLibraryFull =>
+      'Votre bibliothèque est pleine. Supprimez une partition dont vous n\'avez plus besoin et réessayez.';
+
+  @override
+  String get importProblemStorageFull =>
+      'Il n\'y a plus de place sur votre appareil ou dans votre navigateur pour enregistrer cette partition. Supprimez une partition et réessayez.';
+
+  @override
+  String get importProblemUnknown =>
+      'Un problème inattendu est survenu avec ce fichier. Essayez de l\'exporter de nouveau.';
+
+  @override
+  String get scoreOpenLibrary => 'Ouvrir la bibliothèque';
+
+  @override
+  String get scoreClose => 'Fermer';
+
+  @override
+  String scoreKey(String key) {
+    return 'Tonalité $key';
+  }
+
+  @override
+  String scoreTempo(int bpm) {
+    return '$bpm BPM';
+  }
+
+  @override
+  String get scoreHandsBoth => 'Deux mains';
+
+  @override
+  String get scoreHandsRight => 'Main droite seule';
+
+  @override
+  String get scoreHandsLeft => 'Main gauche seule';
+
+  @override
+  String get scoreLevelLabel => 'Niveau estimé';
+
+  @override
+  String get scoreLevelBeginner => 'Facile';
+
+  @override
+  String get scoreLevelIntermediate => 'Moyen';
+
+  @override
+  String get scoreLevelAdvanced => 'Difficile';
+
+  @override
+  String get scoreRightsNotice =>
+      'Les partitions restent sur cet appareil et ne sont jamais envoyées. N\'importez que de la musique que vous avez le droit d\'utiliser.';
 }

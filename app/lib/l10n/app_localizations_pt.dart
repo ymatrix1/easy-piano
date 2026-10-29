@@ -483,6 +483,151 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get micDeniedApp =>
       'O acesso ao microfone foi bloqueado. Permita nas configurações do sistema do app e tente de novo.';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Nenhuma partitura corresponde a \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importar partitura';
+
+  @override
+  String get importScoreDesc =>
+      'Abra um ficheiro MusicXML, MIDI, ABC ou LilyPond.';
+
+  @override
+  String get importScoreFailed => 'Não foi possível importar este ficheiro.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Ficheiro não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Nenhuma partitura importada ainda. Importe um ficheiro ou arraste-o para a janela.';
+
+  @override
+  String get songLibrarySearch => 'Pesquisar partituras';
+
+  @override
+  String get scoreDropHint => 'Largue o ficheiro da partitura para importar';
+
+  @override
+  String get scoreDelete => 'Eliminar';
+
+  @override
+  String get scoreDeleteConfirm => 'Remover esta partitura da biblioteca?';
+
+  @override
+  String get scorePractice => 'Praticar';
+
+  @override
+  String scoreBars(int count) {
+    return '$count compassos';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Compasso $time';
+  }
+
+  @override
+  String get importResultsTitle => 'Resultado da importação';
+
+  @override
+  String importAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count partituras adicionadas',
+      one: '1 partitura adicionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importNotAdded => 'Não adicionadas';
+
+  @override
+  String get importProblemUnsupportedType =>
+      'Não é um ficheiro de partitura. Exporte a partitura como MusicXML, MIDI, ABC ou LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).';
+
+  @override
+  String get importProblemEmpty =>
+      'O ficheiro está vazio. Exporte a partitura outra vez e escolha o novo ficheiro.';
+
+  @override
+  String get importProblemTooLarge =>
+      'O ficheiro tem mais de 2 MB, demasiado para uma partitura. Exporte uma só peça, não um livro inteiro.';
+
+  @override
+  String get importProblemUnreadable =>
+      'O ficheiro está danificado ou não é o que o nome diz. Exporte-o outra vez a partir da sua aplicação de notação.';
+
+  @override
+  String get importProblemNoNotes =>
+      'Não foram encontradas notas. Verifique se a parte de piano não está vazia e exporte outra vez.';
+
+  @override
+  String get importProblemUnsupportedMusic =>
+      'Esta partitura usa algo que o Easy Piano ainda não consegue ler, como uma mudança de compasso, mais de duas vozes por mão ou mais de 7 alterações na armadura. Exporte uma versão mais simples.';
+
+  @override
+  String get importProblemDuplicate => 'Esta partitura já está na biblioteca.';
+
+  @override
+  String get importProblemLibraryFull =>
+      'A biblioteca está cheia. Elimine uma partitura de que já não precisa e tente outra vez.';
+
+  @override
+  String get importProblemStorageFull =>
+      'Já não há espaço no dispositivo ou no navegador para guardar esta partitura. Elimine uma partitura e tente outra vez.';
+
+  @override
+  String get importProblemUnknown =>
+      'Ocorreu um problema inesperado com este ficheiro. Tente exportá-lo outra vez.';
+
+  @override
+  String get scoreOpenLibrary => 'Abrir biblioteca';
+
+  @override
+  String get scoreClose => 'Fechar';
+
+  @override
+  String scoreKey(String key) {
+    return 'Tonalidade $key';
+  }
+
+  @override
+  String scoreTempo(int bpm) {
+    return '$bpm BPM';
+  }
+
+  @override
+  String get scoreHandsBoth => 'Ambas as mãos';
+
+  @override
+  String get scoreHandsRight => 'Só mão direita';
+
+  @override
+  String get scoreHandsLeft => 'Só mão esquerda';
+
+  @override
+  String get scoreLevelLabel => 'Nível estimado';
+
+  @override
+  String get scoreLevelBeginner => 'Fácil';
+
+  @override
+  String get scoreLevelIntermediate => 'Intermédio';
+
+  @override
+  String get scoreLevelAdvanced => 'Difícil';
+
+  @override
+  String get scoreRightsNotice =>
+      'As partituras ficam neste dispositivo e nunca são enviadas. Importe apenas música que tem o direito de usar.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -607,4 +752,150 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get styleGame => 'Videogame';
+
+  @override
+  String songLibraryNoMatch(String query) {
+    return 'Nenhuma partitura corresponde a \"$query\".';
+  }
+
+  @override
+  String get importScore => 'Importar partitura';
+
+  @override
+  String get importScoreDesc =>
+      'Abra um arquivo MusicXML, MIDI, ABC ou LilyPond.';
+
+  @override
+  String get importScoreFailed => 'Não foi possível importar este arquivo.';
+
+  @override
+  String get importScoreUnsupported =>
+      'Arquivo não suportado. Use .xml, .musicxml, .mxl, .mid, .midi, .abc ou .ly.';
+
+  @override
+  String get songLibraryEmpty =>
+      'Nenhuma partitura importada ainda. Importe um arquivo ou solte-o na janela.';
+
+  @override
+  String get songLibrarySearch => 'Buscar partituras';
+
+  @override
+  String get scoreDropHint => 'Solte o arquivo da partitura para importar';
+
+  @override
+  String get scoreDelete => 'Excluir';
+
+  @override
+  String get scoreDeleteConfirm => 'Remover esta partitura da biblioteca?';
+
+  @override
+  String get scorePractice => 'Praticar';
+
+  @override
+  String scoreBars(int count) {
+    return '$count compassos';
+  }
+
+  @override
+  String scoreTimeSignature(String time) {
+    return 'Compasso $time';
+  }
+
+  @override
+  String get importResultsTitle => 'Resultado da importação';
+
+  @override
+  String importAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count partituras adicionadas',
+      one: '1 partitura adicionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importNotAdded => 'Não adicionadas';
+
+  @override
+  String get importProblemUnsupportedType =>
+      'Não é um arquivo de partitura. Exporte a partitura como MusicXML, MIDI, ABC ou LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).';
+
+  @override
+  String get importProblemEmpty =>
+      'O arquivo está vazio. Exporte a partitura de novo e escolha o novo arquivo.';
+
+  @override
+  String get importProblemTooLarge =>
+      'O arquivo tem mais de 2 MB, grande demais para uma partitura. Exporte uma única peça, não um livro inteiro.';
+
+  @override
+  String get importProblemUnreadable =>
+      'O arquivo está danificado ou não é o que o nome diz. Exporte-o de novo no seu programa de notação.';
+
+  @override
+  String get importProblemNoNotes =>
+      'Nenhuma nota encontrada. Confira se a parte de piano não está vazia e exporte de novo.';
+
+  @override
+  String get importProblemUnsupportedMusic =>
+      'Esta partitura usa algo que o Easy Piano ainda não consegue ler, como mudança de compasso, mais de duas vozes por mão ou mais de 7 acidentes na armadura. Exporte uma versão mais simples.';
+
+  @override
+  String get importProblemDuplicate =>
+      'Esta partitura já está na sua biblioteca.';
+
+  @override
+  String get importProblemLibraryFull =>
+      'Sua biblioteca está cheia. Exclua uma partitura de que não precisa mais e tente de novo.';
+
+  @override
+  String get importProblemStorageFull =>
+      'Não há mais espaço no seu dispositivo ou navegador para salvar esta partitura. Exclua uma partitura e tente de novo.';
+
+  @override
+  String get importProblemUnknown =>
+      'Algo inesperado deu errado com este arquivo. Tente exportá-lo de novo.';
+
+  @override
+  String get scoreOpenLibrary => 'Abrir biblioteca';
+
+  @override
+  String get scoreClose => 'Fechar';
+
+  @override
+  String scoreKey(String key) {
+    return 'Tonalidade $key';
+  }
+
+  @override
+  String scoreTempo(int bpm) {
+    return '$bpm BPM';
+  }
+
+  @override
+  String get scoreHandsBoth => 'Ambas as mãos';
+
+  @override
+  String get scoreHandsRight => 'Só a mão direita';
+
+  @override
+  String get scoreHandsLeft => 'Só a mão esquerda';
+
+  @override
+  String get scoreLevelLabel => 'Nível estimado';
+
+  @override
+  String get scoreLevelBeginner => 'Fácil';
+
+  @override
+  String get scoreLevelIntermediate => 'Intermediário';
+
+  @override
+  String get scoreLevelAdvanced => 'Difícil';
+
+  @override
+  String get scoreRightsNotice =>
+      'As partituras ficam neste dispositivo e nunca são enviadas. Importe só músicas que você tem o direito de usar.';
 }
