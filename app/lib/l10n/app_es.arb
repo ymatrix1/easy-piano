@@ -172,5 +172,30 @@
         "type": "String"
       }
     }
-  }
+  },
+  "importResultsTitle": "Resultado de la importación",
+  "importAdded": "{count, plural, =1{1 partitura añadida} other{{count} partituras añadidas}}",
+  "importNotAdded": "No añadidas",
+  "importProblemUnsupportedType": "No es un archivo de partitura. Exporta la partitura como MusicXML, MIDI, ABC o LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).",
+  "importProblemEmpty": "El archivo está vacío. Vuelve a exportar la partitura y elige el archivo nuevo.",
+  "importProblemTooLarge": "El archivo pesa más de 2 MB, demasiado para una partitura. Exporta una sola pieza, no un libro entero.",
+  "importProblemUnreadable": "El archivo está dañado o no es lo que dice su nombre. Vuelve a exportarlo desde tu programa de notación.",
+  "importProblemNoNotes": "No se encontraron notas. Comprueba que la parte de piano no esté vacía y exporta de nuevo.",
+  "importProblemUnsupportedMusic": "Esta partitura usa algo que Easy Piano aún no puede leer, como un cambio de compás, más de dos voces por mano o más de 7 alteraciones en la armadura. Exporta una versión más sencilla.",
+  "importProblemDuplicate": "Esta partitura ya está en tu biblioteca.",
+  "importProblemLibraryFull": "Tu biblioteca está llena. Elimina una partitura que ya no necesites e inténtalo de nuevo.",
+  "importProblemStorageFull": "No queda espacio en tu dispositivo o navegador para guardar esta partitura. Elimina una partitura e inténtalo de nuevo.",
+  "importProblemUnknown": "Algo inesperado falló con este archivo. Prueba a exportarlo de nuevo.",
+  "scoreOpenLibrary": "Abrir biblioteca",
+  "scoreClose": "Cerrar",
+  "scoreKey": "Tonalidad {key}",
+  "scoreTempo": "{bpm} BPM",
+  "scoreHandsBoth": "Ambas manos",
+  "scoreHandsRight": "Solo mano derecha",
+  "scoreHandsLeft": "Solo mano izquierda",
+  "scoreLevelLabel": "Nivel estimado",
+  "scoreLevelBeginner": "Fácil",
+  "scoreLevelIntermediate": "Intermedio",
+  "scoreLevelAdvanced": "Difícil",
+  "scoreRightsNotice": "Las partituras se quedan en este dispositivo y nunca se suben. Importa solo música que tengas derecho a usar."
 }

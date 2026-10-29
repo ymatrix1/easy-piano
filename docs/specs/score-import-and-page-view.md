@@ -120,7 +120,7 @@ Unlike `PracticeStage` (which scrolls horizontally in real-time tied to audio be
 #### 3. Drag-and-Drop Drop Target
 - The app window accepts dragged files (`.xml`, `.mxl`, `.mid`, `.abc`, `.ly`).
 - On drag hover: An animated glassmorphic overlay appears: *"Drop score file to import"*.
-- On drop: Automatically parses, adds to library, and displays the song preview modal.
+- On drop: imports each file, then shows the song preview (one new score) or a results summary (several files or any failure), see 5.6.
 
 ### 3.2 View Mode Switching (In-Song Navigation)
 When a song/level is opened, the user can toggle between:
@@ -236,8 +236,39 @@ Each limitation is a deliberate scope cut, not a bug, unless marked "bug candida
 - Not verified: the Web (wasm) build of the bridge, and an import from a real file; both belong to `piano-niz2` and the Web check of `piano-t6rt`. The import UI (`piano-uy13`) is built, see 5.6.
 
 ### 5.6 Import UI and library (`piano-uy13`)
-- Entry points: the Practice tab card "Song library" (opens the library), the TopBar import button (file picker), and a drop target over the whole window on desktop and web (overlay "Drop score file to import"). Several files can be dropped; the first imported score opens its preview.
-- Preview: title, composer, bar count and time signature, with Practice. Practice plays the score as one play-along stage on both hands (`LevelPage`).
-- Library: newest first, search by title or composer, delete with confirmation. Stored on the device (D41).
-- Not in this PR: study / sheet view of an imported score (the page view is separate), a 30-piece PD library (ROADMAP Phase 3), the Portuguese (BR) and other translations are first drafts to review.
-- Not verified on device: drop on a real desktop window and on web; both need a manual check. Widget tests cover the overlay, the library and the preview; the drop itself is a platform event.
+
+Reworked after review of the first draft. Phase: ROADMAP Phase 3 (bean parent `piano-kxi3`); the first draft listed it under Phase 2.
+
+**Flow.** File picker (several files) or a drop on the window. Each file is checked and imported in turn; one bad file never stops the others.
+- One new score and no failures: the preview opens.
+- Several scores or any failure: a results dialog lists each score added and, for each file not added, a plain-language reason and what to do. "Open library" is offered when something was added.
+
+**Preview.** Game panel (no stock dialog): title, composer, the first two bars on a staff (the practice stage's `StaffPainter`, notes from the core's `PracticeSession` targets), chips for key, tempo, time signature, bars, hands (a hand counts only when it plays a note) and an estimated level, a rights notice, Close and Practice. The level is a hint from notes per bar, pitch range, accidentals, hands and tempo (`score_info.dart`), not a grade.
+
+**Practice.** The score plays as one play-along stage on both hands through `LevelPage`, the same code as bundled songs. The core accepts imported songs (`source: custom`) without a content license or source URL: `Song::validate_playable`, used by `inspect_song` and `PracticeSession::create`. Content lint (`Song::validate`) is unchanged and still rejects them, so an imported song can never be committed as content.
+
+**Failures** (`ImportProblem`, text in all six locales; the parser's own message is never shown):
+
+| Problem | When | Next step shown |
+|---|---|---|
+| unsupportedType | extension not .xml .musicxml .mxl .mid .midi .abc .ly | export as one of these |
+| empty | 0 bytes | export again |
+| tooLarge | over 2 MB | export one piece, not a book |
+| unreadable | corrupt file, bad header, wrong content | export again from the notation app |
+| noNotes | parsed, no notes | check the piano part, export again |
+| unsupportedMusic | meter change inside the piece, more than two voices per hand, key beyond 7 sharps or flats, SMPTE MIDI, timewise MusicXML | export a simpler version |
+| duplicate | same music already in the library (ignoring id) | none needed |
+| libraryFull | 100 scores or about 3 million characters | delete a score |
+| storageFull | the device refused the write | delete a score |
+| unknown | anything else | try exporting again |
+
+**Storage.** `shared_preferences` (D41). The app has no progress store yet (HomePage keeps stars in memory), so D8's SQLite is not available; the library stays behind `ScoreStorage` and moves with the progress store. Quota failures no longer pass silently: the write is awaited, a refusal rolls the library back and shows `storageFull`, and the library is capped at 100 scores and 3 million characters (the web `localStorage` limit is about 5 million). Imports and deletes run one at a time.
+
+**Rights.** Imported files are read on the device, stored only in local storage and never uploaded or committed. A short notice in the preview and in the library says the player is responsible for having the right to use the music.
+
+**Not done / not verified.**
+- A real OS drag-and-drop on desktop or web: the drop path is a platform event; a synthetic drop in the browser fails inside `desktop_drop` (no `webkitGetAsEntry`), so only the picker path was exercised end to end in the browser. Widget tests cover the overlay and the flow with files handed to it.
+- Grace notes are skipped by the MusicXML importer without telling the player (the importer returns no warnings).
+- Stars earned on an imported score are not saved (no progress store).
+- Study / sheet view of an imported score from the library (page view is separate), a 30-piece PD library (ROADMAP Phase 3).
+- Android device run of the new UI.

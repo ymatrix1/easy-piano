@@ -6,7 +6,7 @@ type: feature
 priority: normal
 created_at: 2026-10-24T20:13:41Z
 updated_at: 2026-10-25T23:46:43Z
-parent: piano-r9p5
+parent: piano-kxi3
 blocked_by:
     - piano-gy3o
 ---
@@ -23,6 +23,17 @@ Seamless song import UX inspired by sightread.dev and Simply Piano.
 - [x] Quick-access import button in TopBar
 - [x] Library listing showing custom scores with search and delete
 - [x] Widget tests for file drop and library interactions (overlay, supported-file filter, library search and delete, preview)
+
+## Rework after review (PR #116)
+- [x] An imported song plays: the core's strict content lint rejected every imported song (license `user-provided`, no source URL), so Practice ended on a blank screen. `Song::validate_playable` waives those two rules for `source: custom`; tests in `core/src/song.rs` and `app/rust/src/api/practice.rs`.
+- [x] Every failure shows plain language and a next step, per file, in a game-style results dialog; no raw exception, no stock snackbar (`import_problem.dart`, `import_results_dialog.dart`).
+- [x] Empty, oversize (2 MB), corrupt, no-notes, unsupported-music and duplicate files are handled; the picker takes several files.
+- [x] Storage: writes are awaited, a refused write rolls back and reports `storageFull`, library capped at 100 scores and 3 million characters, imports and deletes serialised.
+- [x] Preview: staff of the first two bars, key, tempo, meter, bars, hands, estimated level, rights notice, working Practice.
+- [x] Library page and delete confirmation use the game kit; import button in the header and the empty state; checked at 320, 375 and wide widths.
+- [x] Locales: new strings in en, de, es, fr, pt, pt-BR; pt used "arquivo" in three strings, now "ficheiro" (pt-BR keeps "arquivo"); tests per locale.
+- [x] Docs: spec 5.6, D41 (still proposed), ROADMAP Phase 3 split; bean re-parented from Phase 2 to Phase 3 (`piano-kxi3`).
+- Still not verified: a real OS drop on desktop and web, an Android device run.
 
 ## Out of Scope
 - Cloud sync across devices

@@ -534,4 +534,102 @@ class AppLocalizationsDe extends AppLocalizations {
   String scoreTimeSignature(String time) {
     return 'Takt $time';
   }
+
+  @override
+  String get importResultsTitle => 'Importergebnis';
+
+  @override
+  String importAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Partituren hinzugefügt',
+      one: '1 Partitur hinzugefügt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importNotAdded => 'Nicht hinzugefügt';
+
+  @override
+  String get importProblemUnsupportedType =>
+      'Keine Partiturdatei. Exportiere die Partitur als MusicXML, MIDI, ABC oder LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).';
+
+  @override
+  String get importProblemEmpty =>
+      'Die Datei ist leer. Exportiere die Partitur erneut und wähle die neue Datei.';
+
+  @override
+  String get importProblemTooLarge =>
+      'Die Datei ist größer als 2 MB und damit zu groß für eine Partitur. Exportiere ein einzelnes Stück, kein ganzes Buch.';
+
+  @override
+  String get importProblemUnreadable =>
+      'Die Datei ist beschädigt oder nicht das, was ihr Name sagt. Exportiere sie erneut aus deiner Notensoftware.';
+
+  @override
+  String get importProblemNoNotes =>
+      'Keine Noten gefunden. Prüfe, ob die Klavierstimme nicht leer ist, und exportiere erneut.';
+
+  @override
+  String get importProblemUnsupportedMusic =>
+      'Diese Partitur enthält etwas, das Easy Piano noch nicht lesen kann, etwa einen Taktwechsel, mehr als zwei Stimmen pro Hand oder mehr als 7 Vorzeichen. Exportiere eine einfachere Fassung.';
+
+  @override
+  String get importProblemDuplicate =>
+      'Diese Partitur ist schon in deiner Bibliothek.';
+
+  @override
+  String get importProblemLibraryFull =>
+      'Deine Bibliothek ist voll. Lösche eine Partitur, die du nicht mehr brauchst, und versuche es erneut.';
+
+  @override
+  String get importProblemStorageFull =>
+      'Auf deinem Gerät oder im Browser ist kein Platz mehr, um diese Partitur zu speichern. Lösche eine Partitur und versuche es erneut.';
+
+  @override
+  String get importProblemUnknown =>
+      'Mit dieser Datei ist etwas Unerwartetes schiefgelaufen. Exportiere sie erneut.';
+
+  @override
+  String get scoreOpenLibrary => 'Bibliothek öffnen';
+
+  @override
+  String get scoreClose => 'Schließen';
+
+  @override
+  String scoreKey(String key) {
+    return 'Tonart $key';
+  }
+
+  @override
+  String scoreTempo(int bpm) {
+    return '$bpm BPM';
+  }
+
+  @override
+  String get scoreHandsBoth => 'Beide Hände';
+
+  @override
+  String get scoreHandsRight => 'Nur rechte Hand';
+
+  @override
+  String get scoreHandsLeft => 'Nur linke Hand';
+
+  @override
+  String get scoreLevelLabel => 'Geschätzte Stufe';
+
+  @override
+  String get scoreLevelBeginner => 'Leicht';
+
+  @override
+  String get scoreLevelIntermediate => 'Mittel';
+
+  @override
+  String get scoreLevelAdvanced => 'Schwer';
+
+  @override
+  String get scoreRightsNotice =>
+      'Partituren bleiben auf diesem Gerät und werden nie hochgeladen. Importiere nur Musik, die du nutzen darfst.';
 }

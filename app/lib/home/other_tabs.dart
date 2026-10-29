@@ -42,6 +42,13 @@ class PracticeTab extends StatelessWidget {
         onEndless,
       ),
       (
+        AppLocalizations.of(context).songLibrary,
+        AppLocalizations.of(context).songLibraryDesc,
+        Icons.library_music_rounded,
+        GameTone.red,
+        onSongLibrary,
+      ),
+      (
         AppLocalizations.of(context).sightReading,
         AppLocalizations.of(context).sightReadingDesc,
         Icons.visibility_rounded,
@@ -54,13 +61,6 @@ class PracticeTab extends StatelessWidget {
         Icons.av_timer_rounded,
         GameTone.green,
         null,
-      ),
-      (
-        AppLocalizations.of(context).songLibrary,
-        AppLocalizations.of(context).songLibraryDesc,
-        Icons.library_music_rounded,
-        GameTone.red,
-        onSongLibrary,
       ),
     ];
     return _TabScroll(

@@ -157,6 +157,21 @@ impl Song {
         (n > 0 && d > 0).then_some((n, d))
     }
 
+    /// Problems that stop the song from playing. Same as [`Song::validate`], except a
+    /// song a player imported (`source` is `custom`) needs no content license or
+    /// source URL: it stays on that device and is never shipped.
+    pub fn validate_playable(&self) -> Vec<String> {
+        let mut errs = self.validate();
+        if self.source == "custom" {
+            errs.retain(|e| {
+                !e.starts_with("license `")
+                    && !e.starts_with("composition_license `")
+                    && !e.starts_with("source_url required")
+            });
+        }
+        errs
+    }
+
     /// Every problem a content author must fix. Empty means the song is valid.
     pub fn validate(&self) -> Vec<String> {
         let mut errs = Vec::new();
@@ -476,6 +491,36 @@ mod tests {
             "composition_license":"public-domain","bpm":90,"time":"4/4","key":"C",
             "bars":{bars}{extra}}}"#
         )
+    }
+
+    #[test]
+    fn imported_song_needs_no_license_to_play() {
+        let json = song(r#"[{"RH":"C4:1"}]"#, "")
+            .replace(r#""source":"original""#, r#""source":"custom""#)
+            .replace(
+                r#""license":"CC-BY-SA-4.0""#,
+                r#""license":"user-provided""#,
+            )
+            .replace(
+                r#""composition_license":"public-domain""#,
+                r#""composition_license":"user-provided""#,
+            );
+        let s = Song::from_json(&json).unwrap();
+        assert!(!s.validate().is_empty(), "content lint still rejects it");
+        assert_eq!(s.validate_playable(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn playable_check_keeps_other_errors_for_imported_songs() {
+        let json = song(r#"[{"RH":"C4:2"}]"#, "")
+            .replace(r#""source":"original""#, r#""source":"custom""#)
+            .replace(
+                r#""license":"CC-BY-SA-4.0""#,
+                r#""license":"user-provided""#,
+            );
+        let errs = Song::from_json(&json).unwrap().validate_playable();
+        assert_eq!(errs.len(), 1, "{errs:?}");
+        assert!(errs[0].contains("bar 1"), "{errs:?}");
     }
 
     #[test]

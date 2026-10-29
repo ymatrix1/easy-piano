@@ -96,6 +96,13 @@ CustomScore scoreFromSongJson({
   );
 }
 
+/// Whether two song JSONs are the same music, ignoring the `id` each was given.
+bool sameScore(String a, String b) {
+  final x = jsonDecode(a) as Map<String, dynamic>..remove('id');
+  final y = jsonDecode(b) as Map<String, dynamic>..remove('id');
+  return jsonEncode(x) == jsonEncode(y);
+}
+
 /// The song JSON with its `id` replaced, so the library can hold two scores with
 /// the same id from the importer under different ids.
 String withSongId(String songJson, String id) {

@@ -527,4 +527,101 @@ class AppLocalizationsEn extends AppLocalizations {
   String scoreTimeSignature(String time) {
     return 'Time $time';
   }
+
+  @override
+  String get importResultsTitle => 'Import results';
+
+  @override
+  String importAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scores added',
+      one: '1 score added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importNotAdded => 'Not added';
+
+  @override
+  String get importProblemUnsupportedType =>
+      'Not a score file. Export your score as MusicXML, MIDI, ABC or LilyPond (.xml, .musicxml, .mxl, .mid, .midi, .abc, .ly).';
+
+  @override
+  String get importProblemEmpty =>
+      'The file is empty. Export the score again and pick the new file.';
+
+  @override
+  String get importProblemTooLarge =>
+      'The file is bigger than 2 MB, too large for a score. Export a single piece, not a whole book.';
+
+  @override
+  String get importProblemUnreadable =>
+      'The file is damaged or is not what its name says. Export it again from your notation app.';
+
+  @override
+  String get importProblemNoNotes =>
+      'No notes found. Check that the piano part is not empty, then export again.';
+
+  @override
+  String get importProblemUnsupportedMusic =>
+      'This score uses something Easy Piano cannot read yet, such as a time signature change, more than two voices per hand or more than 7 sharps or flats. Export a simpler version.';
+
+  @override
+  String get importProblemDuplicate => 'This score is already in your library.';
+
+  @override
+  String get importProblemLibraryFull =>
+      'Your library is full. Delete a score you no longer need and try again.';
+
+  @override
+  String get importProblemStorageFull =>
+      'There is no room left on your device or browser to save this score. Delete a score and try again.';
+
+  @override
+  String get importProblemUnknown =>
+      'Something unexpected went wrong with this file. Try exporting it again.';
+
+  @override
+  String get scoreOpenLibrary => 'Open library';
+
+  @override
+  String get scoreClose => 'Close';
+
+  @override
+  String scoreKey(String key) {
+    return 'Key $key';
+  }
+
+  @override
+  String scoreTempo(int bpm) {
+    return '$bpm BPM';
+  }
+
+  @override
+  String get scoreHandsBoth => 'Both hands';
+
+  @override
+  String get scoreHandsRight => 'Right hand only';
+
+  @override
+  String get scoreHandsLeft => 'Left hand only';
+
+  @override
+  String get scoreLevelLabel => 'Estimated level';
+
+  @override
+  String get scoreLevelBeginner => 'Beginner';
+
+  @override
+  String get scoreLevelIntermediate => 'Intermediate';
+
+  @override
+  String get scoreLevelAdvanced => 'Advanced';
+
+  @override
+  String get scoreRightsNotice =>
+      'Scores stay on this device and are never uploaded. Only import music you have the right to use.';
 }

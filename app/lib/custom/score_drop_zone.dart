@@ -5,13 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../ui/game/game_widgets.dart';
-import 'custom_score.dart';
-
-/// Score files among [files], in the order dropped.
-List<XFile> supportedScoreFiles(List<XFile> files) => [
-  for (final f in files)
-    if (isSupportedScoreFile(f.name)) f,
-];
 
 /// Whether files can be dropped on this platform (desktop and web; phones use the
 /// file picker).

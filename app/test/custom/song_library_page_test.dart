@@ -56,7 +56,7 @@ void main() {
   ) async {
     final c = await _loaded([]);
     await tester.pumpWidget(
-      _app(SongLibraryPage(controller: c, onPlay: (_) {})),
+      _app(SongLibraryPage(controller: c, onPlay: (_) {}, onImport: () {})),
     );
     await tester.pump();
 
@@ -72,7 +72,7 @@ void main() {
       _score('clair', 'Clair de lune', 'Debussy'),
     ]);
     await tester.pumpWidget(
-      _app(SongLibraryPage(controller: c, onPlay: (_) {})),
+      _app(SongLibraryPage(controller: c, onPlay: (_) {}, onImport: () {})),
     );
     await tester.pump();
 
@@ -94,7 +94,13 @@ void main() {
     final c = await _loaded([_score('ode', 'Ode to Joy', 'Beethoven')]);
     CustomScore? played;
     await tester.pumpWidget(
-      _app(SongLibraryPage(controller: c, onPlay: (s) => played = s)),
+      _app(
+        SongLibraryPage(
+          controller: c,
+          onPlay: (s) => played = s,
+          onImport: () {},
+        ),
+      ),
     );
     await tester.pump();
 
@@ -112,7 +118,7 @@ void main() {
       _score('clair', 'Clair de lune', 'Debussy'),
     ]);
     await tester.pumpWidget(
-      _app(SongLibraryPage(controller: c, onPlay: (_) {})),
+      _app(SongLibraryPage(controller: c, onPlay: (_) {}, onImport: () {})),
     );
     await tester.pump();
 
@@ -127,7 +133,7 @@ void main() {
     // Delete removes it from the list and the library.
     await tester.tap(find.byIcon(Icons.delete_outline_rounded).first);
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.tap(textCI('Delete'));
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(c.scores.map((s) => s.id), ['clair']);

@@ -1,7 +1,5 @@
-import 'dart:typed_data' show Uint8List;
 import 'dart:ui' show ImageFilter;
 
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -14,9 +12,10 @@ import '../practice/generated/tune_generator.dart';
 import '../custom/custom_score.dart';
 import '../custom/custom_score_controller.dart';
 import '../custom/score_drop_zone.dart';
-import '../custom/score_preview.dart';
+import '../custom/import_flow.dart';
 import '../custom/song_library_page.dart';
 import '../practice/level_page.dart';
+import '../src/rust/api/practice.dart' show inspectSong;
 import '../src/rust/api/score_import.dart';
 import '../ui/game/game_theme.dart';
 import '../ui/game/game_widgets.dart';
@@ -54,8 +53,18 @@ class _HomePageState extends State<HomePage> {
   /// Scores the player imported (piano-uy13), kept on this device.
   late final CustomScoreController _scores = CustomScoreController(
     storage: PrefsScoreStorage(),
-    importer: (name, data) => importScore(fileName: name, data: data),
+    importer: (name, data) async {
+      final json = await importScore(fileName: name, data: data);
+      inspectSong(json: json); // throws when the song cannot be played
+      return json;
+    },
   );
+  late final ScoreImportFlow _import = ScoreImportFlow(
+    controller: _scores,
+    onPlay: _playCustom,
+    onOpenLibrary: _openLibrary,
+  );
+  bool _libraryOpen = false;
 
   @override
   void initState() {
@@ -81,48 +90,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _importFile() async {
-    final file = await openFile(
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'scores', extensions: scoreFileExtensions),
-      ],
+  Future<void> _openLibrary() async {
+    if (_libraryOpen) return;
+    _libraryOpen = true;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SongLibraryPage(
+          controller: _scores,
+          onPlay: _playCustom,
+          onImport: () => _import.pickAndImport(context),
+        ),
+      ),
     );
-    if (file == null) return;
-    await _importMany([file]);
-  }
-
-  /// Imports each supported file; the first imported score opens its preview.
-  Future<void> _importMany(List<XFile> files) async {
-    final l = AppLocalizations.of(context);
-    final supported = supportedScoreFiles(files);
-    if (supported.isEmpty) {
-      _snack(l.importScoreUnsupported);
-      return;
-    }
-    CustomScore? first;
-    for (final file in supported) {
-      try {
-        final Uint8List bytes = await file.readAsBytes();
-        final score = await _scores.importFile(file.name, bytes);
-        first ??= score;
-      } on ScoreImportException catch (e) {
-        _snack(
-          e.reason == 'unsupported'
-              ? l.importScoreUnsupported
-              : l.importScoreFailed,
-        );
-      }
-    }
-    if (!mounted || first == null) return;
-    final score = first;
-    await showScorePreview(context, score, onPlay: () => _playCustom(score));
-  }
-
-  void _snack(String text) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+    _libraryOpen = false;
   }
 
   Future<void> _playLevel(String levelId, [int initialStageIndex = 0]) async {
@@ -171,9 +151,7 @@ class _HomePageState extends State<HomePage> {
         bottom: false,
         child: PracticeTab(
           onFreePlay: () => _push((_) => FreePlayPage(midi: widget.midi)),
-          onSongLibrary: () => _push(
-            (_) => SongLibraryPage(controller: _scores, onPlay: _playCustom),
-          ),
+          onSongLibrary: _openLibrary,
           onEndless: _generator == null || widget.repo.practice.isEmpty
               ? null
               : () => _push(
@@ -196,7 +174,7 @@ class _HomePageState extends State<HomePage> {
       ),
     ];
     return ScoreDropZone(
-      onFiles: _importMany,
+      onFiles: (files) => _import.importFiles(context, files),
       child: Scaffold(
         backgroundColor: GameColors.bgDeep,
         body: MenuBackground(
@@ -241,7 +219,7 @@ class _HomePageState extends State<HomePage> {
                         top: 0,
                         child: _TopBar(
                           stars: progress.totalStars,
-                          onImport: _importFile,
+                          onImport: () => _import.pickAndImport(context),
                         ),
                       ),
                       if (usesCustomTitleBar)
